@@ -58,7 +58,7 @@ bool gen_rct_tx_validation_base::generate_with(std::vector<test_event_entry>& ev
     CHECK_AND_ASSERT_MES(generator.construct_block_manually(blocks[n], *prev_block, miner_accounts[n],
         test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_timestamp | test_generator::bf_hf_version,
         2, 2, prev_block->timestamp + DIFFICULTY_BLOCKS_ESTIMATE_TIMESPAN * 2, // v2 has blocks twice as long
-          crypto::hash(), 0, transaction(), std::vector<crypto::hash>(), 0, 0, 2),
+          crypto::hash(), 0, transaction(), std::vector<crypto::hash>(), 0, 2),
         false, "Failed to generate block");
     events.push_back(blocks[n]);
     prev_block = blocks + n;
@@ -75,7 +75,7 @@ bool gen_rct_tx_validation_base::generate_with(std::vector<test_event_entry>& ev
       CHECK_AND_ASSERT_MES(generator.construct_block_manually(blk, blk_last, miner_account,
           test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_timestamp | test_generator::bf_hf_version,
           2, 2, blk_last.timestamp + DIFFICULTY_BLOCKS_ESTIMATE_TIMESPAN * 2, // v2 has blocks twice as long
-          crypto::hash(), 0, transaction(), std::vector<crypto::hash>(), 0, 0, 2),
+          crypto::hash(), 0, transaction(), std::vector<crypto::hash>(), 0, 2),
           false, "Failed to generate block");
       events.push_back(blk);
       blk_last = blk;
@@ -104,7 +104,6 @@ bool gen_rct_tx_validation_base::generate_with(std::vector<test_event_entry>& ev
     src.real_output = n;
     src.real_output_in_tx_index = index_in_tx;
     src.mask = rct::identity();
-    src.rct = false;
 
     //fill outputs entry
     tx_destination_entry td;
@@ -117,7 +116,7 @@ bool gen_rct_tx_validation_base::generate_with(std::vector<test_event_entry>& ev
     destinations.push_back(td); // 30 -> 7.39 * 4
 
     crypto::secret_key tx_key;
-    bool r = construct_tx_and_get_tx_key(miner_accounts[n].get_keys(), sources, destinations, std::vector<uint8_t>(), rct_txes[n], 0, tx_key, true);
+    bool r = construct_tx_and_get_tx_key(miner_accounts[n].get_keys(), sources, destinations, std::vector<uint8_t>(), rct_txes[n], 0, tx_key);
     CHECK_AND_ASSERT_MES(r, false, "failed to construct transaction");
     events.push_back(rct_txes[n]);
     starting_rct_tx_hashes.push_back(get_transaction_hash(rct_txes[n]));
@@ -136,9 +135,9 @@ bool gen_rct_tx_validation_base::generate_with(std::vector<test_event_entry>& ev
     }
 
     CHECK_AND_ASSERT_MES(generator.construct_block_manually(blk_txes[n], blk_last, miner_account,
-        test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_timestamp | test_generator::bf_tx_hashes | test_generator::bf_hf_version | test_generator::bf_max_outs,
+        test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_timestamp | test_generator::bf_tx_hashes | test_generator::bf_hf_version,
         4, 4, blk_last.timestamp + DIFFICULTY_BLOCKS_ESTIMATE_TIMESPAN * 2, // v2 has blocks twice as long
-        crypto::hash(), 0, transaction(), starting_rct_tx_hashes, 0, 6, 4),
+        crypto::hash(), 0, transaction(), starting_rct_tx_hashes, 0, 4),
         false, "Failed to generate block");
     events.push_back(blk_txes[n]);
     blk_last = blk_txes[n];
@@ -150,9 +149,9 @@ bool gen_rct_tx_validation_base::generate_with(std::vector<test_event_entry>& ev
     {
       cryptonote::block blk;
       CHECK_AND_ASSERT_MES(generator.construct_block_manually(blk, blk_last, miner_account,
-          test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_timestamp | test_generator::bf_hf_version | test_generator::bf_max_outs,
+          test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_timestamp | test_generator::bf_hf_version,
           4, 4, blk_last.timestamp + DIFFICULTY_BLOCKS_ESTIMATE_TIMESPAN * 2, // v2 has blocks twice as long
-          crypto::hash(), 0, transaction(), std::vector<crypto::hash>(), 0, 6, 4),
+          crypto::hash(), 0, transaction(), std::vector<crypto::hash>(), 0, 4),
           false, "Failed to generate block");
       events.push_back(blk);
       blk_last = blk;
@@ -176,7 +175,6 @@ bool gen_rct_tx_validation_base::generate_with(std::vector<test_event_entry>& ev
       src.real_out_tx_key = get_tx_pub_key_from_extra(rct_txes[rct_idx/4]);
       src.real_output_in_tx_index = rct_idx&3;
       src.mask = rct_tx_masks[rct_idx];
-      src.rct = true;
       for (int m = 0; m <= mixin; ++m) {
         rct::ctkey ctkey;
         ctkey.dest = rct::pk2rct(boost::get<txout_to_key>(rct_txes[rct_idx/4].vout[rct_idx&3].target).key);
@@ -195,7 +193,6 @@ bool gen_rct_tx_validation_base::generate_with(std::vector<test_event_entry>& ev
       src.real_out_tx_key = cryptonote::get_tx_pub_key_from_extra(blocks[pre_rct_idx].miner_tx);
       src.real_output_in_tx_index = 4;
       src.mask = rct::identity();
-      src.rct = false;
       for (int m = 0; m <= mixin; ++m) {
         src.push_output(m, boost::get<txout_to_key>(blocks[pre_rct_idx].miner_tx.vout[4].target).key, src.amount);
         ++pre_rct_idx;
@@ -215,7 +212,7 @@ bool gen_rct_tx_validation_base::generate_with(std::vector<test_event_entry>& ev
 
   transaction tx;
   crypto::secret_key tx_key;
-  bool r = construct_tx_and_get_tx_key(miner_accounts[0].get_keys(), sources, destinations, std::vector<uint8_t>(), tx, 0, tx_key, true);
+  bool r = construct_tx_and_get_tx_key(miner_accounts[0].get_keys(), sources, destinations, std::vector<uint8_t>(), tx, 0, tx_key);
   CHECK_AND_ASSERT_MES(r, false, "failed to construct transaction");
 
   if (post_tx)

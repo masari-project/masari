@@ -114,9 +114,3 @@ struct gen_v2_tx_unmixable_two : public gen_v2_tx_validation_base
   bool generate(std::vector<test_event_entry>& events) const;
 };
 template<> struct get_test_options<gen_v2_tx_unmixable_two>: public get_test_options<gen_v2_tx_validation_base> {};
-
-struct gen_v2_tx_dust : public gen_v2_tx_validation_base
-{
-  bool generate(std::vector<test_event_entry>& events) const;
-};
-template<> struct get_test_options<gen_v2_tx_dust>: public get_test_options<gen_v2_tx_validation_base> {};

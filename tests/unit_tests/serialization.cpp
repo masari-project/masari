@@ -857,7 +857,6 @@ TEST(Serialization, portability_outputs)
     crypto::key_image               m_key_image
     rct::key                        m_mask
     uint64_t                        m_amount
-    bool                            m_rct
     bool                            m_key_image_known
     size_t                          m_pk_index
   */
@@ -892,9 +891,6 @@ TEST(Serialization, portability_outputs)
   ASSERT_TRUE(td0.m_amount == 13400845012231);
   ASSERT_TRUE(td1.m_amount == 1200000000000);
   ASSERT_TRUE(td2.m_amount == 11066009260865);
-  ASSERT_TRUE(td0.m_rct);
-  ASSERT_TRUE(td1.m_rct);
-  ASSERT_TRUE(td2.m_rct);
   ASSERT_TRUE(td0.m_key_image_known);
   ASSERT_TRUE(td1.m_key_image_known);
   ASSERT_TRUE(td2.m_key_image_known);
@@ -938,7 +934,6 @@ TEST(Serialization, portability_unsigned_tx)
     std::list<size_t>                             selected_transfers
     std::vector<uint8_t>                          extra
     uint64_t                                      unlock_time
-    bool                                          use_rct
     std::vector<cryptonote::tx_destination_entry> dests
   
   fields of cryptonote::tx_source_entry to be checked:
@@ -982,7 +977,6 @@ TEST(Serialization, portability_unsigned_tx)
   ASSERT_TRUE(epee::string_tools::pod_to_hex(tse.real_out_tx_key) == "4d86c7ba1c285fe4bc1cd7b54ba894fa89fa02fc6b0bbeea67d53251acd14a05");
   ASSERT_TRUE(tse.real_output_in_tx_index == 1); 
   ASSERT_TRUE(tse.amount == 11066009260865);
-  ASSERT_TRUE(tse.rct);
   ASSERT_TRUE(epee::string_tools::pod_to_hex(tse.mask) == "789bafff169ef206aa21219342c69ca52ce1d78d776c10b21d14bdd960fc7703");
   // tcd.change_dts
   ASSERT_TRUE(tcd.change_dts.amount == 9631208773403);
@@ -1000,9 +994,8 @@ TEST(Serialization, portability_unsigned_tx)
   ASSERT_TRUE(tcd.selected_transfers.front() == 2);
   // tcd.extra
   ASSERT_TRUE(tcd.extra.size() == 68);
-  // tcd.{unlock_time, use_rct}
+  // tcd.{unlock_time}
   ASSERT_TRUE(tcd.unlock_time == 0);
-  ASSERT_TRUE(tcd.use_rct);
   // tcd.dests
   ASSERT_TRUE(tcd.dests.size() == 1);
   auto& dest = tcd.dests[0];
@@ -1040,9 +1033,6 @@ TEST(Serialization, portability_unsigned_tx)
   ASSERT_TRUE(td0.m_amount == 13400845012231);
   ASSERT_TRUE(td1.m_amount == 1200000000000);
   ASSERT_TRUE(td2.m_amount == 11066009260865);
-  ASSERT_TRUE(td0.m_rct);
-  ASSERT_TRUE(td1.m_rct);
-  ASSERT_TRUE(td2.m_rct);
   ASSERT_TRUE(td0.m_key_image_known);
   ASSERT_TRUE(td1.m_key_image_known);
   ASSERT_TRUE(td2.m_key_image_known);
@@ -1081,9 +1071,7 @@ TEST(Serialization, portability_signed_tx)
   
   fields of tools::walllet2::pending_tx to be checked:
     cryptonote::transaction                       tx                  // TODO
-    uint64_t                                      dust
     uint64_t                                      fee
-    bool                                          dust_added_to_fee
     cryptonote::tx_destination_entry              change_dts
     std::list<size_t>                             selected_transfers
     std::string                                   key_images
@@ -1094,10 +1082,8 @@ TEST(Serialization, portability_signed_tx)
   // ptx
   ASSERT_TRUE(exported_txs.ptx.size() == 1);
   auto& ptx = exported_txs.ptx[0];
-  // ptx.{dust, fee, dust_added_to_fee}
-  ASSERT_TRUE (ptx.dust == 0);
+  // ptx.{fee}
   ASSERT_TRUE (ptx.fee == 34800487462);
-  ASSERT_FALSE(ptx.dust_added_to_fee);
   // ptx.change.{amount, addr}
   ASSERT_TRUE(ptx.change_dts.amount == 9631208773403);
   ASSERT_TRUE(cryptonote::get_account_address_as_str(testnet, ptx.change_dts.addr) == "9svHk1wHPo3ULf2AZykghzcye6sitaRE4MaDjPC6uanTHCynHjJHZaiAb922PojE1GexhhRt1LVf5DC43feyrRZMLXQr3mk");
@@ -1137,7 +1123,6 @@ TEST(Serialization, portability_signed_tx)
   ASSERT_TRUE(epee::string_tools::pod_to_hex(tse.real_out_tx_key) == "4d86c7ba1c285fe4bc1cd7b54ba894fa89fa02fc6b0bbeea67d53251acd14a05");
   ASSERT_TRUE(tse.real_output_in_tx_index == 1); 
   ASSERT_TRUE(tse.amount == 11066009260865);
-  ASSERT_TRUE(tse.rct);
   ASSERT_TRUE(epee::string_tools::pod_to_hex(tse.mask) == "789bafff169ef206aa21219342c69ca52ce1d78d776c10b21d14bdd960fc7703");
   // ptx.construction_data.change_dts
   ASSERT_TRUE(tcd.change_dts.amount == 9631208773403);
@@ -1155,9 +1140,8 @@ TEST(Serialization, portability_signed_tx)
   ASSERT_TRUE(tcd.selected_transfers.front() == 2);
   // ptx.construction_data.extra
   ASSERT_TRUE(tcd.extra.size() == 68);
-  // ptx.construction_data.{unlock_time, use_rct}
+  // ptx.construction_data.{unlock_time}
   ASSERT_TRUE(tcd.unlock_time == 0);
-  ASSERT_TRUE(tcd.use_rct);
   // ptx.construction_data.dests
   ASSERT_TRUE(tcd.dests.size() == 1);
   auto& dest = tcd.dests[0];

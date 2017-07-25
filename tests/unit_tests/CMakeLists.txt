@@ -38,7 +38,6 @@ set(unit_tests_sources
   checkpoints.cpp
   command_line.cpp
   crypto.cpp
-  decompose_amount_into_digits.cpp
   dns_resolver.cpp
   epee_boosted_tcp_server.cpp
   epee_levin_protocol_handler_async.cpp

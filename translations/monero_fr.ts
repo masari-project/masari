@@ -1659,7 +1659,7 @@ Attention : Certaines clés d&apos;entrées étant dépensées sont issues de <
 To start synchronizing with the daemon, use &quot;refresh&quot; command.
 Use &quot;help&quot; command to see the list of available commands.
 Always use &quot;exit&quot; command when closing monero-wallet-cli to save your
-current session&apos;s state. Otherwise, you might need to synchronize 
+current session&apos;s state. Otherwise, you might need to synchronize
 your wallet again (your wallet keys are NOT at risk in any case).
 </source>
         <translation>Votre portefeuille a été généré !

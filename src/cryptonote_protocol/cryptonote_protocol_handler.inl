@@ -264,9 +264,9 @@ namespace cryptonote
     if(context.m_state == cryptonote_connection_context::state_synchronizing)
       return true;
 
-    // from v6, if the peer advertises a top block version, reject if it's not what it should be (will only work if no voting)
+    // if the peer advertises a top block version, reject if it's not what it should be (will only work if no voting)
     const uint8_t version = m_core.get_ideal_hard_fork_version(hshd.current_height - 1);
-    if (version >= 6 && version != hshd.top_version)
+    if (version != hshd.top_version)
     {
       if (version < hshd.top_version)
         MCLOG_RED(el::Level::Warning, "global", context << " peer claims higher version that we think - we may be forked from the network and a software upgrade may be needed");
@@ -295,12 +295,9 @@ namespace cryptonote
     Nz. */
     m_core.set_target_blockchain_height((hshd.current_height));
     int64_t diff = static_cast<int64_t>(hshd.current_height) - static_cast<int64_t>(m_core.get_current_blockchain_height());
-    uint64_t abs_diff = std::abs(diff);
-    uint64_t max_block_height = max(hshd.current_height,m_core.get_current_blockchain_height());
-    uint64_t last_block_v1 = m_core.get_testnet() ? 624633 : 1009826;
-    uint64_t diff_v2 = max_block_height > last_block_v1 ? min(abs_diff, max_block_height - last_block_v1) : 0;
+    int64_t max_block_height = max(static_cast<int64_t>(hshd.current_height),static_cast<int64_t>(m_core.get_current_blockchain_height()));
     MCLOG(is_inital ? el::Level::Info : el::Level::Debug, "global", context <<  "Sync data returned a new top block candidate: " << m_core.get_current_blockchain_height() << " -> " << hshd.current_height
-      << " [Your node is " << abs_diff << " blocks (" << ((abs_diff - diff_v2) / (24 * 60 * 60 / DIFFICULTY_TARGET_V1)) + (diff_v2 / (24 * 60 * 60 / DIFFICULTY_TARGET_V2)) << " days) "
+      << " [Your node is " << std::abs(diff) << " blocks (" << (abs(diff)  / (24 * 60 * 60 / DIFFICULTY_TARGET))  << " days) "
       << (0 <= diff ? std::string("behind") : std::string("ahead"))
       << "] " << ENDL << "SYNCHRONIZATION started");
       m_core.safesyncmode(false);

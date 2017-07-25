@@ -46,7 +46,6 @@ public:
     int status() const;
     std::string errorString() const;
     std::vector<uint64_t> amount() const;
-    std::vector<uint64_t> dust() const;
     std::vector<uint64_t> fee() const;
     std::vector<uint64_t> mixin() const;
     std::vector<std::string> paymentId() const;

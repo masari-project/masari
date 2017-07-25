@@ -47,7 +47,6 @@ public:
     std::string errorString() const;
     bool commit(const std::string &filename = "", bool overwrite = false);
     uint64_t amount() const;
-    uint64_t dust() const;
     uint64_t fee() const;
     std::vector<std::string> txid() const;
     uint64_t txCount() const;

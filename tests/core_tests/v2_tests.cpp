@@ -96,7 +96,6 @@ bool gen_v2_tx_validation_base::generate_with(std::vector<test_event_entry>& eve
     }
     src.real_out_tx_key = cryptonote::get_tx_pub_key_from_extra(blocks[0].miner_tx);
     src.real_output = 0;
-    src.rct = false;
     src.real_output_in_tx_index = out_idx[out_idx_idx];
   }
 
@@ -157,10 +156,3 @@ bool gen_v2_tx_unmixable_two::generate(std::vector<test_event_entry>& events) co
   return generate_with(events, out_idx, mixin, amount_paid, false);
 }
 
-bool gen_v2_tx_dust::generate(std::vector<test_event_entry>& events) const
-{
-  const int mixin = 2;
-  const int out_idx[] = {1, -1};
-  const uint64_t amount_paid = 10001;
-  return generate_with(events, out_idx, mixin, amount_paid, false);
-}

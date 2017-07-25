@@ -40,7 +40,6 @@ using namespace cryptonote;
 namespace
 {
   uint64_t const TEST_FEE = 5000000000; // 5 * 10^9
-  uint64_t const TEST_DUST_THRESHOLD = 5000000000; // 5 * 10^9
 }
 
 std::string generate_random_wallet_name()
@@ -86,7 +85,7 @@ bool do_send_money(tools::wallet2& w1, tools::wallet2& w2, size_t mix_in_factor,
   {
     tools::wallet2::pending_tx ptx;
     std::vector<size_t> indices = w1.select_available_outputs([](const tools::wallet2::transfer_details&) { return true; });
-    w1.transfer(dsts, mix_in_factor, indices, 0, TEST_FEE, std::vector<uint8_t>(), tools::detail::null_split_strategy, tools::tx_dust_policy(TEST_DUST_THRESHOLD), tx, ptx, true);
+    w1.transfer(dsts, mix_in_factor, indices, 0, TEST_FEE, std::vector<uint8_t>(), tx, ptx, true);
     w1.commit_tx(ptx);
     return true;
   }
@@ -261,12 +260,12 @@ bool transactions_flow_test(std::string& working_folder,
 
 
   LOG_PRINT_L0( "waiting some new blocks...");
-  misc_utils::sleep_no_w(DIFFICULTY_BLOCKS_ESTIMATE_TIMESPAN*20*1000);//wait two blocks before sync on another wallet on another daemon
+  misc_utils::sleep_no_w(DIFFICULTY_TARGET*20*1000);//wait two blocks before sync on another wallet on another daemon
   LOG_PRINT_L0( "refreshing...");
   bool recvd_money = false;
   while(w2.refresh(blocks_fetched, recvd_money, ok) && ( (blocks_fetched && recvd_money) || !blocks_fetched  ) )
   {
-    misc_utils::sleep_no_w(DIFFICULTY_BLOCKS_ESTIMATE_TIMESPAN*1000);//wait two blocks before sync on another wallet on another daemon
+    misc_utils::sleep_no_w(DIFFICULTY_TARGET*1000);//wait two blocks before sync on another wallet on another daemon
   }
 
   uint64_t money_2 = w2.balance();

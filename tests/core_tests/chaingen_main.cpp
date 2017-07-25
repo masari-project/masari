@@ -167,7 +167,6 @@ int main(int argc, char* argv[])
 //    GENERATE_AND_PLAY(gen_v2_tx_unmixable_only);
 //    GENERATE_AND_PLAY(gen_v2_tx_unmixable_one);
 //    GENERATE_AND_PLAY(gen_v2_tx_unmixable_two);
-    GENERATE_AND_PLAY(gen_v2_tx_dust);
 
     GENERATE_AND_PLAY(gen_rct_tx_valid_from_pre_rct);
     GENERATE_AND_PLAY(gen_rct_tx_valid_from_rct);

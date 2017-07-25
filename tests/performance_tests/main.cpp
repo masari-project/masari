@@ -57,47 +57,21 @@ int main(int argc, char** argv)
   performance_timer timer;
   timer.start();
 
-  TEST_PERFORMANCE3(test_construct_tx, 1, 1, false);
-  TEST_PERFORMANCE3(test_construct_tx, 1, 2, false);
-  TEST_PERFORMANCE3(test_construct_tx, 1, 10, false);
-  TEST_PERFORMANCE3(test_construct_tx, 1, 100, false);
-  TEST_PERFORMANCE3(test_construct_tx, 1, 1000, false);
+  TEST_PERFORMANCE2(test_construct_tx, 2, 1);
+  TEST_PERFORMANCE2(test_construct_tx, 2, 2);
+  TEST_PERFORMANCE2(test_construct_tx, 2, 10);
 
-  TEST_PERFORMANCE3(test_construct_tx, 2, 1, false);
-  TEST_PERFORMANCE3(test_construct_tx, 2, 2, false);
-  TEST_PERFORMANCE3(test_construct_tx, 2, 10, false);
-  TEST_PERFORMANCE3(test_construct_tx, 2, 100, false);
+  TEST_PERFORMANCE2(test_construct_tx, 10, 1);
+  TEST_PERFORMANCE2(test_construct_tx, 10, 2);
+  TEST_PERFORMANCE2(test_construct_tx, 10, 10);
 
-  TEST_PERFORMANCE3(test_construct_tx, 10, 1, false);
-  TEST_PERFORMANCE3(test_construct_tx, 10, 2, false);
-  TEST_PERFORMANCE3(test_construct_tx, 10, 10, false);
-  TEST_PERFORMANCE3(test_construct_tx, 10, 100, false);
+  TEST_PERFORMANCE2(test_construct_tx, 100, 1);
+  TEST_PERFORMANCE2(test_construct_tx, 100, 2);
+  TEST_PERFORMANCE2(test_construct_tx, 100, 10);
 
-  TEST_PERFORMANCE3(test_construct_tx, 100, 1, false);
-  TEST_PERFORMANCE3(test_construct_tx, 100, 2, false);
-  TEST_PERFORMANCE3(test_construct_tx, 100, 10, false);
-  TEST_PERFORMANCE3(test_construct_tx, 100, 100, false);
-
-  TEST_PERFORMANCE3(test_construct_tx, 2, 1, true);
-  TEST_PERFORMANCE3(test_construct_tx, 2, 2, true);
-  TEST_PERFORMANCE3(test_construct_tx, 2, 10, true);
-
-  TEST_PERFORMANCE3(test_construct_tx, 10, 1, true);
-  TEST_PERFORMANCE3(test_construct_tx, 10, 2, true);
-  TEST_PERFORMANCE3(test_construct_tx, 10, 10, true);
-
-  TEST_PERFORMANCE3(test_construct_tx, 100, 1, true);
-  TEST_PERFORMANCE3(test_construct_tx, 100, 2, true);
-  TEST_PERFORMANCE3(test_construct_tx, 100, 10, true);
-
-  TEST_PERFORMANCE2(test_check_tx_signature, 1, false);
-  TEST_PERFORMANCE2(test_check_tx_signature, 2, false);
-  TEST_PERFORMANCE2(test_check_tx_signature, 10, false);
-  TEST_PERFORMANCE2(test_check_tx_signature, 100, false);
-
-  TEST_PERFORMANCE2(test_check_tx_signature, 2, true);
-  TEST_PERFORMANCE2(test_check_tx_signature, 10, true);
-  TEST_PERFORMANCE2(test_check_tx_signature, 100, true);
+  TEST_PERFORMANCE1(test_check_tx_signature, 2);
+  TEST_PERFORMANCE1(test_check_tx_signature, 10);
+  TEST_PERFORMANCE1(test_check_tx_signature, 100);
 
   TEST_PERFORMANCE0(test_is_out_to_acc);
   TEST_PERFORMANCE0(test_generate_key_image_helper);

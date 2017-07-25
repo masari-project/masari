@@ -605,63 +605,6 @@ namespace tools
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
-  bool wallet_rpc_server::on_sweep_dust(const wallet_rpc::COMMAND_RPC_SWEEP_DUST::request& req, wallet_rpc::COMMAND_RPC_SWEEP_DUST::response& res, epee::json_rpc::error& er)
-  {
-    if (!m_wallet) return not_open(er);
-    if (m_wallet->restricted())
-    {
-      er.code = WALLET_RPC_ERROR_CODE_DENIED;
-      er.message = "Command unavailable in restricted mode.";
-      return false;
-    }
-
-    try
-    {
-      std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_unmixable_sweep_transactions(m_trusted_daemon);
-
-      if (!req.do_not_relay)
-        m_wallet->commit_tx(ptx_vector);
-
-      // populate response with tx hashes
-      for (auto & ptx : ptx_vector)
-      {
-        res.tx_hash_list.push_back(epee::string_tools::pod_to_hex(cryptonote::get_transaction_hash(ptx.tx)));
-        if (req.get_tx_keys)
-        {
-          res.tx_key_list.push_back(epee::string_tools::pod_to_hex(ptx.tx_key));
-        }
-        res.fee_list.push_back(ptx.fee);
-        if (req.get_tx_hex)
-        {
-          cryptonote::blobdata blob;
-          tx_to_blob(ptx.tx, blob);
-          res.tx_blob_list.push_back(epee::string_tools::buff_to_hex_nodelimer(blob));
-        }
-      }
-
-      return true;
-    }
-    catch (const tools::error::daemon_busy& e)
-    {
-      er.code = WALLET_RPC_ERROR_CODE_DAEMON_IS_BUSY;
-      er.message = e.what();
-      return false;
-    }
-    catch (const std::exception& e)
-    {
-      er.code = WALLET_RPC_ERROR_CODE_GENERIC_TRANSFER_ERROR;
-      er.message = e.what();
-      return false;
-    }
-    catch (...)
-    {
-      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-      er.message = "WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR";
-      return false;
-    }
-    return true;
-  }
-  //------------------------------------------------------------------------------------------------------------------------------
   bool wallet_rpc_server::on_sweep_all(const wallet_rpc::COMMAND_RPC_SWEEP_ALL::request& req, wallet_rpc::COMMAND_RPC_SWEEP_ALL::response& res, epee::json_rpc::error& er)
   {
     std::vector<cryptonote::tx_destination_entry> dsts;
