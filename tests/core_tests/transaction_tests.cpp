@@ -28,6 +28,7 @@
 // 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
+#include "chaingen.h"
 #include "include_base_utils.h"
 #include "cryptonote_basic/cryptonote_basic_impl.h"
 #include "cryptonote_basic/account.h"
@@ -121,15 +122,9 @@ bool test_transaction_generation_and_ring_signature()
   r = crypto::check_ring_signature(pref_hash, boost::get<txin_to_key>(tx_rc1.vin[0]).k_image, output_keys, &tx_rc1.signatures[0][0]);
   CHECK_AND_ASSERT_MES(r, false, "failed to check ring signature");
 
-  std::vector<size_t> outs;
-  uint64_t money = 0;
-
-  r = lookup_acc_outs(rv_acc.get_keys(), tx_rc1, get_tx_pub_key_from_extra(tx_rc1), outs,  money);
-  CHECK_AND_ASSERT_MES(r, false, "failed to lookup_acc_outs");
+  uint64_t money = get_tx_amount(tx_rc1, rv_acc);
   CHECK_AND_ASSERT_MES(td.amount == money, false, "wrong money amount in new transaction");
-  money = 0;
-  r = lookup_acc_outs(rv_acc2.get_keys(), tx_rc1, get_tx_pub_key_from_extra(tx_rc1), outs,  money);
-  CHECK_AND_ASSERT_MES(r, false, "failed to lookup_acc_outs");
+  money = get_tx_amount(tx_rc1, rv_acc2);
   CHECK_AND_ASSERT_MES(0 == money, false, "wrong money amount in new transaction");
   return true;
 }

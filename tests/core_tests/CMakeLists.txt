@@ -39,7 +39,6 @@ set(core_tests_sources
   ring_signature_1.cpp
   transaction_tests.cpp
   tx_validation.cpp
-  v2_tests.cpp
   rct.cpp)
 
 set(core_tests_headers
@@ -55,7 +54,6 @@ set(core_tests_headers
   ring_signature_1.h
   transaction_tests.h
   tx_validation.h
-  v2_tests.h
   rct.h)
 
 add_executable(coretests

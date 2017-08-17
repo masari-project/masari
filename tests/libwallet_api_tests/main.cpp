@@ -573,7 +573,7 @@ TEST_F(WalletTest1, WalletTransaction)
     ASSERT_TRUE(wallet1->status() == Monero::PendingTransaction::Status_Ok);
 
     std::string recepient_address = Utils::get_wallet_address(CURRENT_DST_WALLET, TESTNET_WALLET_PASS);
-    const int MIXIN_COUNT = 4;
+    const int MIXIN_COUNT = 12;
 
 
     Monero::PendingTransaction * transaction = wallet1->createTransaction(recepient_address,

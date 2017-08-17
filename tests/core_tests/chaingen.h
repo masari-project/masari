@@ -206,9 +206,9 @@ public:
     const cryptonote::account_base& miner_acc, int actual_params = bf_none, uint8_t major_ver = 0,
     uint8_t minor_ver = 0, uint64_t timestamp = 0, const crypto::hash& prev_id = crypto::hash(),
     const cryptonote::difficulty_type& diffic = 1, const cryptonote::transaction& miner_tx = cryptonote::transaction(),
-    const std::vector<crypto::hash>& tx_hashes = std::vector<crypto::hash>(), size_t txs_sizes = 0, uint8_t hf_version = 1);
+    const std::vector<crypto::hash>& tx_hashes = std::vector<crypto::hash>(), size_t txs_sizes = 0, uint8_t hf_version = 1, uint64_t block_fees = 0);
   bool construct_block_manually_tx(cryptonote::block& blk, const cryptonote::block& prev_block,
-    const cryptonote::account_base& miner_acc, const std::vector<crypto::hash>& tx_hashes, size_t txs_size);
+    const cryptonote::account_base& miner_acc, const std::vector<crypto::hash>& tx_hashes, size_t txs_size, uint64_t block_fees = 0);
 
 private:
   std::unordered_map<crypto::hash, block_info> m_blocks_info;
@@ -234,6 +234,8 @@ void fill_tx_sources_and_destinations(const std::vector<test_event_entry>& event
                                       uint64_t amount, uint64_t fee, size_t nmix,
                                       std::vector<cryptonote::tx_source_entry>& sources,
                                       std::vector<cryptonote::tx_destination_entry>& destinations);
+uint64_t get_tx_amount(const cryptonote::transaction &tx, const cryptonote::account_base& addr);
+uint64_t get_tx_amount_and_mask(const cryptonote::transaction &tx, const cryptonote::account_base& addr, size_t out_no, rct::key& mask);
 uint64_t get_balance(const cryptonote::account_base& addr, const std::vector<cryptonote::block>& blockchain, const map_hash2tx_t& mtx);
 
 //--------------------------------------------------------------------------
@@ -549,13 +551,13 @@ inline bool do_replay_file(const std::string& filename)
 #define REWIND_BLOCKS_N(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, COUNT)           \
   cryptonote::block BLK_NAME;                                                           \
   {                                                                                   \
-    cryptonote::block blk_last = PREV_BLOCK;                                            \
+    cryptonote::block _blk_last = PREV_BLOCK;                                         \
     for (size_t i = 0; i < COUNT; ++i)                                                \
     {                                                                                 \
-      MAKE_NEXT_BLOCK(VEC_EVENTS, blk, blk_last, MINER_ACC);                          \
-      blk_last = blk;                                                                 \
+      MAKE_NEXT_BLOCK(VEC_EVENTS, blk, _blk_last, MINER_ACC);                         \
+      _blk_last = blk;                                                                \
     }                                                                                 \
-    BLK_NAME = blk_last;                                                              \
+    BLK_NAME = _blk_last;                                                             \
   }
 
 #define REWIND_BLOCKS(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC) REWIND_BLOCKS_N(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW)
@@ -565,7 +567,7 @@ inline bool do_replay_file(const std::string& filename)
   construct_tx_to_key(VEC_EVENTS, TX_NAME, HEAD, FROM, TO, AMOUNT, TESTS_DEFAULT_FEE, NMIX); \
   VEC_EVENTS.push_back(TX_NAME);
 
-#define MAKE_TX(VEC_EVENTS, TX_NAME, FROM, TO, AMOUNT, HEAD) MAKE_TX_MIX(VEC_EVENTS, TX_NAME, FROM, TO, AMOUNT, 0, HEAD)
+#define MAKE_TX(VEC_EVENTS, TX_NAME, FROM, TO, AMOUNT, HEAD) MAKE_TX_MIX(VEC_EVENTS, TX_NAME, FROM, TO, AMOUNT, 12, HEAD)
 
 #define MAKE_TX_MIX_LIST(VEC_EVENTS, SET_NAME, FROM, TO, AMOUNT, NMIX, HEAD)             \
   {                                                                                      \
@@ -575,7 +577,7 @@ inline bool do_replay_file(const std::string& filename)
     VEC_EVENTS.push_back(t);                                                             \
   }
 
-#define MAKE_TX_LIST(VEC_EVENTS, SET_NAME, FROM, TO, AMOUNT, HEAD) MAKE_TX_MIX_LIST(VEC_EVENTS, SET_NAME, FROM, TO, AMOUNT, 0, HEAD)
+#define MAKE_TX_LIST(VEC_EVENTS, SET_NAME, FROM, TO, AMOUNT, HEAD) MAKE_TX_MIX_LIST(VEC_EVENTS, SET_NAME, FROM, TO, AMOUNT, 12, HEAD)
 
 #define MAKE_TX_LIST_START(VEC_EVENTS, SET_NAME, FROM, TO, AMOUNT, HEAD) \
     std::list<cryptonote::transaction> SET_NAME; \
@@ -659,4 +661,4 @@ inline bool do_replay_file(const std::string& filename)
 #define CHECK_EQ(v1, v2) CHECK_AND_ASSERT_MES(v1 == v2, false, "[" << perr_context << "] failed: \"" << QUOTEME(v1) << " == " << QUOTEME(v2) << "\", " << v1 << " != " << v2)
 #define CHECK_NOT_EQ(v1, v2) CHECK_AND_ASSERT_MES(!(v1 == v2), false, "[" << perr_context << "] failed: \"" << QUOTEME(v1) << " != " << QUOTEME(v2) << "\", " << v1 << " == " << v2)
 #define MK_COINS(amount) (UINT64_C(amount) * COIN)
-#define TESTS_DEFAULT_FEE ((uint64_t)20000000000) // 2 * pow(10, 10)
+#define TESTS_DEFAULT_FEE ((uint64_t)30000000000) // 3 * pow(10, 10)

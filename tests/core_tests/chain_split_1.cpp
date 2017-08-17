@@ -112,11 +112,14 @@ bool gen_simple_chain_split_1::generate(std::vector<test_event_entry> &events) c
   MAKE_NEXT_BLOCK(events, blk_23, blk_22, first_miner_account);                               //  28
   DO_CALLBACK(events, "check_split_switched_back_2");                                         //  29
 
-  REWIND_BLOCKS(events, blk_23r, blk_23, first_miner_account);                                //  30...N1
+  REWIND_BLOCKS_N(events, blk_23i, blk_23, first_miner_account, 10);                          //  30...N1
+  REWIND_BLOCKS_N(events, blk_23j, blk_23i, first_miner_account, 10);                         //  30...N1
+  REWIND_BLOCKS_N(events, blk_23k, blk_23j, first_miner_account, 10);                         //  30...N1
+  REWIND_BLOCKS(events, blk_23r, blk_23k, first_miner_account);                               //  30...N1
   GENERATE_ACCOUNT(alice);
-  MAKE_TX(events, tx_0, first_miner_account, alice, MK_COINS(10), blk_23);                    //  N1+1
-  MAKE_TX(events, tx_1, first_miner_account, alice, MK_COINS(20), blk_23);                    //  N1+2
-  MAKE_TX(events, tx_2, first_miner_account, alice, MK_COINS(30), blk_23);                    //  N1+3
+  MAKE_TX(events, tx_0, first_miner_account, alice, MK_COINS(10), blk_23i);                   //  N1+1
+  MAKE_TX(events, tx_1, first_miner_account, alice, MK_COINS(20), blk_23j);                   //  N1+2
+  MAKE_TX(events, tx_2, first_miner_account, alice, MK_COINS(30), blk_23k);                   //  N1+3
   DO_CALLBACK(events, "check_mempool_1");                                                     //  N1+4
   MAKE_NEXT_BLOCK_TX1(events, blk_24, blk_23r, first_miner_account, tx_0);                    //  N1+5
   DO_CALLBACK(events, "check_mempool_2");                                                     //  N1+6

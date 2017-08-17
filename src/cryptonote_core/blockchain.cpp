@@ -926,7 +926,7 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
 bool Blockchain::prevalidate_miner_transaction(const block& b, uint64_t height)
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
-  CHECK_AND_ASSERT_MES(b.miner_tx.vin.size() == 1, false, "coinbase transaction in the block has no inputs");
+  CHECK_AND_ASSERT_MES(b.miner_tx.vin.size() == 1, false, "coinbase transaction in the block has " << b.miner_tx.vin.size() << " inputs");
   CHECK_AND_ASSERT_MES(b.miner_tx.vin[0].type() == typeid(txin_gen), false, "coinbase transaction in the block has the wrong type");
   if(boost::get<txin_gen>(b.miner_tx.vin[0]).height != height)
   {
@@ -2308,7 +2308,7 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
   // if one output cannot mix with 2 others, we accept at most 1 output that can mix
   size_t n_unmixable = 0, n_mixable = 0;
   size_t mixin = std::numeric_limits<size_t>::max();
-  const size_t min_mixin = 4;
+  const size_t min_mixin = DEFAULT_MIXIN;
   for (const auto& txin : tx.vin)
   {
     // non txin_to_key inputs will be rejected below
