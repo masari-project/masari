@@ -2,24 +2,24 @@
  * rbtree.c -- generic red black tree
  *
  * Copyright (c) 2001-2007, NLnet Labs. All rights reserved.
- * 
+ *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -91,7 +91,7 @@ rbtree_create (int (*cmpf)(const void *, const void *))
 	return rbtree;
 }
 
-void 
+void
 rbtree_init(rbtree_type *rbtree, int (*cmpf)(const void *, const void *))
 {
 	/* Initialize it */
@@ -290,15 +290,15 @@ rbtree_search (rbtree_type *rbtree, const void *key)
 }
 
 /** helpers for delete: swap node colours */
-static void swap_int8(uint8_t* x, uint8_t* y) 
-{ 
-	uint8_t t = *x; *x = *y; *y = t; 
+static void swap_int8(uint8_t* x, uint8_t* y)
+{
+	uint8_t t = *x; *x = *y; *y = t;
 }
 
 /** helpers for delete: swap node pointers */
-static void swap_np(rbnode_type** x, rbnode_type** y) 
+static void swap_np(rbnode_type** x, rbnode_type** y)
 {
-	rbnode_type* t = *x; *x = *y; *y = t; 
+	rbnode_type* t = *x; *x = *y; *y = t;
 }
 
 /** Update parent pointers of child trees of 'parent' */
@@ -325,7 +325,7 @@ static void change_child_ptr(rbnode_type* child, rbnode_type* old,
 	if(child->parent == old) child->parent = new;
 }
 
-rbnode_type* 
+rbnode_type*
 rbtree_delete(rbtree_type *rbtree, const void *key)
 {
 	rbnode_type *to_delete;
@@ -433,7 +433,7 @@ static void rbtree_delete_fixup(rbtree_type* rbtree, rbnode_type* child,
 			else sibling = child_parent->right;
 		}
 
-		if(child_parent->color == BLACK 
+		if(child_parent->color == BLACK
 			&& sibling->color == BLACK
 			&& sibling->left->color == BLACK
 			&& sibling->right->color == BLACK)
@@ -453,7 +453,7 @@ static void rbtree_delete_fixup(rbtree_type* rbtree, rbnode_type* child,
 	if(child_parent->color == RED
 		&& sibling->color == BLACK
 		&& sibling->left->color == BLACK
-		&& sibling->right->color == BLACK) 
+		&& sibling->right->color == BLACK)
 	{
 		/* move red to sibling to rebalance */
 		if(sibling != RBTREE_NULL)
@@ -529,7 +529,7 @@ rbtree_find_less_equal(rbtree_type *rbtree, const void *key,
 			/* Exact match */
 			*result = node;
 			return 1;
-		} 
+		}
 		if (r < 0) {
 			node = node->left;
 		} else {
@@ -606,7 +606,7 @@ rbtree_previous(rbnode_type *node)
 }
 
 /** recursive descent traverse */
-static void 
+static void
 traverse_post(void (*func)(rbnode_type*, void*), void* arg, rbnode_type* node)
 {
 	if(!node || node == RBTREE_NULL)
@@ -618,7 +618,7 @@ traverse_post(void (*func)(rbnode_type*, void*), void* arg, rbnode_type* node)
 	(*func)(node, arg);
 }
 
-void 
+void
 traverse_postorder(rbtree_type* tree, void (*func)(rbnode_type*, void*),
 	void* arg)
 {

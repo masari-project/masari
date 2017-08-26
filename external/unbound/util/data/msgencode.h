@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -48,7 +48,7 @@ struct reply_info;
 struct regional;
 struct edns_data;
 
-/** 
+/**
  * Generate answer from reply_info.
  * @param qinf: query information that provides query section in packet.
  * @param rep: reply to fill in.
@@ -66,9 +66,9 @@ struct edns_data;
  * @param secure: if 1, the AD bit is set in the reply.
  * @return: 0 on error (server failure).
  */
-int reply_info_answer_encode(struct query_info* qinf, struct reply_info* rep, 
+int reply_info_answer_encode(struct query_info* qinf, struct reply_info* rep,
 	uint16_t id, uint16_t qflags, struct sldns_buffer* dest, time_t timenow,
-	int cached, struct regional* region, uint16_t udpsize, 
+	int cached, struct regional* region, uint16_t udpsize,
 	struct edns_data* edns, int dnssec, int secure);
 
 /**
@@ -85,11 +85,11 @@ int reply_info_answer_encode(struct query_info* qinf, struct reply_info* rep,
  * @param region: to store temporary data in.
  * @param udpsize: size of the answer, 512, from EDNS, or 64k for TCP.
  * @param dnssec: if 0 DNSSEC records are omitted from the answer.
- * @return: nonzero is success, or 
+ * @return: nonzero is success, or
  *	0 on error: malloc failure (no log_err has been done).
  */
-int reply_info_encode(struct query_info* qinfo, struct reply_info* rep, 
-	uint16_t id, uint16_t flags, struct sldns_buffer* buffer, time_t timenow, 
+int reply_info_encode(struct query_info* qinfo, struct reply_info* rep,
+	uint16_t id, uint16_t flags, struct sldns_buffer* buffer, time_t timenow,
 	struct regional* region, uint16_t udpsize, int dnssec);
 
 /**
@@ -114,7 +114,7 @@ uint16_t calc_edns_field_size(struct edns_data* edns);
  */
 void attach_edns_record(struct sldns_buffer* pkt, struct edns_data* edns);
 
-/** 
+/**
  * Encode an error. With QR and RA set.
  *
  * @param pkt: where to store the packet.

@@ -35,7 +35,7 @@
  */
 /**
  * \file
- * Calls negative cache unit tests. Exits with code 1 on a failure. 
+ * Calls negative cache unit tests. Exits with code 1 on a failure.
  */
 
 #include "config.h"
@@ -163,7 +163,7 @@ static void get_random_data(char** fromp, char** top, char* zname)
 			labnum1[i] = random()%100;
 		for(i=common; i<lab2; i++)
 			labnum2[i] = random()%100;
-	} 
+	}
 
 	/* construct first */
 	p = buf1;
@@ -204,7 +204,7 @@ static void add_item(struct val_neg_cache* neg)
 	lock_basic_lock(&neg->lock);
 	if(negverbose)
 		log_nametypeclass(0, "add to zone", (uint8_t*)zname, 0, 0);
-	z = neg_find_zone(neg, (uint8_t*)zname, strlen(zname)+1, 
+	z = neg_find_zone(neg, (uint8_t*)zname, strlen(zname)+1,
 		LDNS_RR_CLASS_IN);
 	if(!z) {
 		z = neg_create_zone(neg,  (uint8_t*)zname, strlen(zname)+1,
@@ -353,14 +353,14 @@ static void check_lru(struct val_neg_cache* neg)
 	inuse = sumtrees_inuse(neg);
 	if(negverbose)
 		printf("num lru %d, inuse %d, all %d\n",
-			(int)num, (int)sumtrees_inuse(neg), 
+			(int)num, (int)sumtrees_inuse(neg),
 			(int)sumtrees_all(neg));
 	unit_assert( num == inuse);
 	unit_assert( inuse <= sumtrees_all(neg));
 }
 
 /** sum up number of items inuse in subtree */
-static int sum_subtree_inuse(struct val_neg_zone* zone, 
+static int sum_subtree_inuse(struct val_neg_zone* zone,
 	struct val_neg_data* data)
 {
 	struct val_neg_data* d;
@@ -423,7 +423,7 @@ static void checkzonetree(struct val_neg_zone* zone)
 }
 
 /** check if negative cache is still valid */
-static void check_zone_invariants(struct val_neg_cache* neg, 
+static void check_zone_invariants(struct val_neg_cache* neg,
 	struct val_neg_zone* zone)
 {
 	unit_assert(zone->nsec3_hash == 0);
@@ -437,7 +437,7 @@ static void check_zone_invariants(struct val_neg_cache* neg,
 			/* details on error */
 			log_nametypeclass(0, "zone", zone->name, 0, 0);
 			log_err("inuse %d count=%d tree.count=%d",
-				zone->in_use, zone->count, 
+				zone->in_use, zone->count,
 				(int)zone->tree.count);
 			if(negverbose)
 				print_neg_cache(neg);

@@ -133,6 +133,8 @@ int rdln::readline_buffer::sync()
   }
   while ( this->snextc() != EOF );
 
+
+
 #if RL_READLINE_VERSION < 0x0700
   if (end || *rl_prompt)
   {

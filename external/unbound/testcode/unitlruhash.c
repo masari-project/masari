@@ -69,7 +69,7 @@ static testkey_type* newkey(int id) {
 }
 /** new data el */
 static testdata_type* newdata(int val) {
-	testdata_type* d = (testdata_type*)calloc(1, 
+	testdata_type* d = (testdata_type*)calloc(1,
 		sizeof(testdata_type));
 	if(!d) fatal_exit("out of memory");
 	d->data = val;
@@ -137,7 +137,7 @@ test_bin_find_entry(struct lruhash* table)
 	unit_assert( bin_find_entry(table, &bin, h, k) == &k->entry );
 
 	/* remove middle element */
-	unit_assert( bin_find_entry(table, &bin, k4->entry.hash, k4) 
+	unit_assert( bin_find_entry(table, &bin, k4->entry.hash, k4)
 		== &k4->entry );
 	lock_quick_lock(&bin.lock);
 	bin_overflow_remove(&bin, &k4->entry);
@@ -171,7 +171,7 @@ static void test_lru(struct lruhash* table)
 
 	/* add one */
 	lru_front(table, &k->entry);
-	unit_assert( table->lru_start == &k->entry && 
+	unit_assert( table->lru_start == &k->entry &&
 		table->lru_end == &k->entry);
 	/* remove it */
 	lru_remove(table, &k->entry);
@@ -179,21 +179,21 @@ static void test_lru(struct lruhash* table)
 
 	/* add two */
 	lru_front(table, &k->entry);
-	unit_assert( table->lru_start == &k->entry && 
+	unit_assert( table->lru_start == &k->entry &&
 		table->lru_end == &k->entry);
 	lru_front(table, &k2->entry);
-	unit_assert( table->lru_start == &k2->entry && 
+	unit_assert( table->lru_start == &k2->entry &&
 		table->lru_end == &k->entry);
 	/* remove first in list */
 	lru_remove(table, &k2->entry);
-	unit_assert( table->lru_start == &k->entry && 
+	unit_assert( table->lru_start == &k->entry &&
 		table->lru_end == &k->entry);
 	lru_front(table, &k2->entry);
-	unit_assert( table->lru_start == &k2->entry && 
+	unit_assert( table->lru_start == &k2->entry &&
 		table->lru_end == &k->entry);
 	/* remove last in list */
 	lru_remove(table, &k->entry);
-	unit_assert( table->lru_start == &k2->entry && 
+	unit_assert( table->lru_start == &k2->entry &&
 		table->lru_end == &k2->entry);
 
 	/* empty the list */
@@ -206,7 +206,7 @@ static void test_lru(struct lruhash* table)
 
 /** test hashtable using short sequence */
 static void
-test_short_table(struct lruhash* table) 
+test_short_table(struct lruhash* table)
 {
 	testkey_type* k = newkey(12);
 	testkey_type* k2 = newkey(14);
@@ -303,7 +303,7 @@ check_table(struct lruhash* table)
 	unit_assert(c == table->num);
 
 	/* this assertion is specific to the unit test */
-	unit_assert( table->space_used == 
+	unit_assert( table->space_used ==
 		table->num * test_slabhash_sizefunc(NULL, NULL) );
 	lock_quick_unlock(&table->lock);
 }
@@ -345,7 +345,7 @@ testlookup_unlim(struct lruhash* table, testdata_type** ref)
 		unit_assert(en->key);
 		unit_assert(en->data);
 	}
-	if(0 && ref) log_info("lookup unlim %d got %d, expect %d", num, en ? 
+	if(0 && ref) log_info("lookup unlim %d got %d, expect %d", num, en ?
 		data->data :-1, ref[num] ? ref[num]->data : -1);
 	if(data && ref) {
 		/* its okay for !data, it fell off the lru */
@@ -357,14 +357,14 @@ testlookup_unlim(struct lruhash* table, testdata_type** ref)
 
 /** test with long sequence of adds, removes and updates, and lookups */
 static void
-test_long_table(struct lruhash* table) 
+test_long_table(struct lruhash* table)
 {
 	/* assuming it all fits in the hashtable, this check will work */
 	testdata_type* ref[HASHTESTMAX * 100];
 	size_t i;
 	memset(ref, 0, sizeof(ref));
 	/* test assumption */
-	if(0) log_info(" size %d x %d < %d", (int)test_slabhash_sizefunc(NULL, NULL), 
+	if(0) log_info(" size %d x %d < %d", (int)test_slabhash_sizefunc(NULL, NULL),
 		(int)HASHTESTMAX, (int)table->space_max);
 	unit_assert( test_slabhash_sizefunc(NULL, NULL)*HASHTESTMAX < table->space_max);
 	if(0) lruhash_status(table, "unit test", 1);
@@ -429,7 +429,7 @@ struct test_thr {
 
 /** main routine for threaded hash table test */
 static void*
-test_thr_main(void* arg) 
+test_thr_main(void* arg)
 {
 	struct test_thr* t = (struct test_thr*)arg;
 	int i;
@@ -483,16 +483,16 @@ void lruhash_test(void)
 	/* also small in size so that reclaim has to be done quickly. */
 	struct lruhash* table ;
 	unit_show_feature("lruhash");
-	table = lruhash_create(2, 8192, 
-		test_slabhash_sizefunc, test_slabhash_compfunc, 
+	table = lruhash_create(2, 8192,
+		test_slabhash_sizefunc, test_slabhash_compfunc,
 		test_slabhash_delkey, test_slabhash_deldata, NULL);
 	test_bin_find_entry(table);
 	test_lru(table);
 	test_short_table(table);
 	test_long_table(table);
 	lruhash_delete(table);
-	table = lruhash_create(2, 8192, 
-		test_slabhash_sizefunc, test_slabhash_compfunc, 
+	table = lruhash_create(2, 8192,
+		test_slabhash_sizefunc, test_slabhash_compfunc,
 		test_slabhash_delkey, test_slabhash_deldata, NULL);
 	test_threaded_table(table);
 	lruhash_delete(table);

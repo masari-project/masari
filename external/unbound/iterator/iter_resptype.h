@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -50,15 +50,15 @@ struct delegpt;
  * The response type is used to interpret the response.
  */
 enum response_type {
-	/** 
-	 * 'untyped' means that the type of this response hasn't been 
-	 * assigned. 
+	/**
+	 * 'untyped' means that the type of this response hasn't been
+	 * assigned.
 	 */
 	RESPONSE_TYPE_UNTYPED   = 0,
 
-	/** 
-	 * 'answer' means that the response terminates the resolution 
-	 * process. 
+	/**
+	 * 'answer' means that the response terminates the resolution
+	 * process.
 	 */
 	RESPONSE_TYPE_ANSWER,
 
@@ -66,19 +66,19 @@ enum response_type {
 	RESPONSE_TYPE_REFERRAL,
 
 	/**
-	 * 'cname' means that the response is a cname without the final 
+	 * 'cname' means that the response is a cname without the final
 	 * answer, and thus must be restarted.
 	 */
 	RESPONSE_TYPE_CNAME,
 
 	/**
-	 * 'throwaway' means that this particular response should be 
+	 * 'throwaway' means that this particular response should be
 	 * discarded and the next nameserver should be contacted
 	 */
 	RESPONSE_TYPE_THROWAWAY,
 
 	/**
-	 * 'lame' means that this particular response indicates that 
+	 * 'lame' means that this particular response indicates that
 	 * the nameserver knew nothing about the question.
 	 */
 	RESPONSE_TYPE_LAME,
@@ -102,7 +102,7 @@ enum response_type {
  * @param request: the request that generated the response.
  * @return the response type (CNAME or ANSWER).
  */
-enum response_type response_type_from_cache(struct dns_msg* msg, 
+enum response_type response_type_from_cache(struct dns_msg* msg,
 	struct query_info* request);
 
 /**
@@ -121,7 +121,7 @@ enum response_type response_type_from_cache(struct dns_msg* msg,
  *          when the response was returned.
  * @return the response type (CNAME or ANSWER).
  */
-enum response_type response_type_from_server(int rdset, 
+enum response_type response_type_from_server(int rdset,
 	struct dns_msg* msg, struct query_info* request, struct delegpt* dp);
 
 #endif /* ITERATOR_ITER_RESPTYPE_H */

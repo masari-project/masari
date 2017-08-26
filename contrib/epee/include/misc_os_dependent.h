@@ -1,6 +1,6 @@
 // Copyright (c) 2006-2013, Andrey N. Sabelnikov, www.sabelnikov.net
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // * Redistributions of source code must retain the above copyright
@@ -11,7 +11,7 @@
 // * Neither the name of the Andrey N. Sabelnikov nor the
 // names of its contributors may be used to endorse or promote products
 // derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -22,18 +22,18 @@
 // ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 #ifdef WIN32
-  #ifndef WIN32_LEAN_AND_MEAN 
+  #ifndef WIN32_LEAN_AND_MEAN
   #define WIN32_LEAN_AND_MEAN
   #endif
 
-  //#ifdef _WIN32_WINNT 
+  //#ifdef _WIN32_WINNT
   //  #undef _WIN32_WINNT
   //  #define _WIN32_WINNT 0x0600
   //#endif
 
-  
+
 #include <windows.h>
 #endif
 
@@ -42,7 +42,7 @@
 #include <mach/mach.h>
 #endif
 
-#pragma once 
+#pragma once
 namespace epee
 {
 namespace misc_utils
@@ -85,13 +85,13 @@ namespace misc_utils
 
 
         inline int call_sys_cmd(const std::string& cmd)
-	{      
+	{
                 std::cout << "# " << cmd << std::endl;
 
 		FILE * fp ;
 		//char tstCommand[] ="ls *";
 		char path[1000] = {0};
-#if !defined(__GNUC__) 
+#if !defined(__GNUC__)
 		fp = _popen(cmd.c_str(), "r");
 #else
 		fp = popen(cmd.c_str(), "r");
@@ -99,7 +99,7 @@ namespace misc_utils
 		while ( fgets( path, 1000, fp ) != NULL )
 			std::cout << path;
 
-#if !defined(__GNUC__) 
+#if !defined(__GNUC__)
 		_pclose(fp);
 #else
 		pclose(fp);
@@ -113,7 +113,7 @@ namespace misc_utils
 	{
 #if defined(_WIN32)
 		return boost::lexical_cast<std::string>(GetCurrentThreadId());
-#elif defined(__GNUC__)  
+#elif defined(__GNUC__)
 		return boost::lexical_cast<std::string>(pthread_self());
 #endif
 	}

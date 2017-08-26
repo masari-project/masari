@@ -134,7 +134,7 @@ namespace cryptonote
 
     ss << std::setw(30) << std::left << "Remote Host"
       << std::setw(20) << "Peer id"
-      << std::setw(20) << "Support Flags"      
+      << std::setw(20) << "Support Flags"
       << std::setw(30) << "Recv/Sent (inactive,sec)"
       << std::setw(25) << "State"
       << std::setw(20) << "Livetime(sec)"
@@ -211,7 +211,7 @@ namespace cryptonote
       std::stringstream peer_id_str;
       peer_id_str << std::hex << std::setw(16) << peer_id;
       peer_id_str >> cnx.peer_id;
-      
+
       cnx.support_flags = support_flags;
 
       cnx.recv_count = cntxt.m_recv_cnt;
@@ -402,9 +402,9 @@ namespace cryptonote
       LOG_DEBUG_CC(context, "Received new block while syncing, ignored");
       return 1;
     }
-    
+
     m_core.pause_mine();
-      
+
     block new_block;
     transaction miner_tx;
     if(parse_and_validate_block_from_blob(arg.b.block, new_block))
@@ -417,29 +417,29 @@ namespace cryptonote
         {
           LOG_ERROR_CCONTEXT
           (
-            "NOTIFY_NEW_FLUFFY_BLOCK -> request/response mismatch, " 
+            "NOTIFY_NEW_FLUFFY_BLOCK -> request/response mismatch, "
             << "block = " << epee::string_tools::pod_to_hex(get_blob_hash(arg.b.block))
-            << ", requested = " << context.m_requested_objects.size() 
+            << ", requested = " << context.m_requested_objects.size()
             << ", received = " << new_block.tx_hashes.size()
             << ", dropping connection"
           );
-          
+
           drop_connection(context, false, false);
           m_core.resume_mine();
           return 1;
         }
-      }      
-      
+      }
+
       std::list<blobdata> have_tx;
-      
-      // Instead of requesting missing transactions by hash like BTC, 
+
+      // Instead of requesting missing transactions by hash like BTC,
       // we do it by index (thanks to a suggestion from moneromooo) because
       // we're way cooler .. and also because they're smaller than hashes.
-      // 
+      //
       // Also, remember to pepper some whitespace changes around to bother
-      // moneromooo ... only because I <3 him. 
+      // moneromooo ... only because I <3 him.
       std::vector<size_t> need_tx_indices;
-        
+
       transaction tx;
       crypto::hash tx_hash;
 
@@ -456,7 +456,7 @@ namespace cryptonote
                   "NOTIFY_NEW_FLUFFY_BLOCK: get_transaction_hash failed"
                   << ", dropping connection"
               );
-              
+
               drop_connection(context, false, false);
               m_core.resume_mine();
               return 1;
@@ -470,20 +470,20 @@ namespace cryptonote
                 << ", exception thrown"
                 << ", dropping connection"
             );
-                        
+
             drop_connection(context, false, false);
             m_core.resume_mine();
             return 1;
           }
-          
+
           // hijacking m_requested objects in connection context to patch up
           // a possible DOS vector pointed out by @monero-moo where peers keep
           // sending (0...n-1) transactions.
-          // If requested objects is not empty, then we must have asked for 
+          // If requested objects is not empty, then we must have asked for
           // some missing transacionts, make sure that they're all there.
           //
           // Can I safely re-use this field? I think so, but someone check me!
-          if(!context.m_requested_objects.empty()) 
+          if(!context.m_requested_objects.empty())
           {
             auto req_tx_it = context.m_requested_objects.find(tx_hash);
             if(req_tx_it == context.m_requested_objects.end())
@@ -494,21 +494,21 @@ namespace cryptonote
                 << "transaction with id = " << tx_hash << " wasn't requested, "
                 << "dropping connection"
               );
-              
+
               drop_connection(context, false, false);
               m_core.resume_mine();
               return 1;
             }
-            
+
             context.m_requested_objects.erase(req_tx_it);
-          }          
-          
+          }
+
           // we might already have the tx that the peer
           // sent in our pool, so don't verify again..
           if(!m_core.pool_has_tx(tx_hash))
           {
             MDEBUG("Incoming tx " << tx_hash << " not in pool, adding");
-            cryptonote::tx_verification_context tvc = AUTO_VAL_INIT(tvc);                        
+            cryptonote::tx_verification_context tvc = AUTO_VAL_INIT(tvc);
             if(!m_core.handle_incoming_tx(tx_blob, tvc, true, true, false) || tvc.m_verifivation_failed)
             {
               LOG_PRINT_CCONTEXT_L1("Block verification failed: transaction verification failed, dropping connection");
@@ -516,11 +516,11 @@ namespace cryptonote
               m_core.resume_mine();
               return 1;
             }
-            
+
             //
-            // future todo: 
+            // future todo:
             // tx should only not be added to pool if verification failed, but
-            // maybe in the future could not be added for other reasons 
+            // maybe in the future could not be added for other reasons
             // according to monero-moo so keep track of these separately ..
             //
           }
@@ -530,18 +530,18 @@ namespace cryptonote
           LOG_ERROR_CCONTEXT
           (
             "sent wrong tx: failed to parse and validate transaction: "
-            << epee::string_tools::buff_to_hex_nodelimer(tx_blob) 
+            << epee::string_tools::buff_to_hex_nodelimer(tx_blob)
             << ", dropping connection"
           );
-            
+
           drop_connection(context, false, false);
           m_core.resume_mine();
           return 1;
         }
       }
-      
+
       // The initial size equality check could have been fooled if the sender
-      // gave us the number of transactions we asked for, but not the right 
+      // gave us the number of transactions we asked for, but not the right
       // ones. This check make sure the transactions we asked for were the
       // ones we received.
       if(context.m_requested_objects.size())
@@ -550,15 +550,15 @@ namespace cryptonote
         (
           "NOTIFY_NEW_FLUFFY_BLOCK: peer sent the number of transaction requested"
           << ", but not the actual transactions requested"
-          << ", context.m_requested_objects.size() = " << context.m_requested_objects.size() 
+          << ", context.m_requested_objects.size() = " << context.m_requested_objects.size()
           << ", dropping connection"
         );
-        
+
         drop_connection(context, false, false);
         m_core.resume_mine();
         return 1;
-      }      
-      
+      }
+
       size_t tx_idx = 0;
       for(auto& tx_hash: new_block.tx_hashes)
       {
@@ -592,10 +592,10 @@ namespace cryptonote
             need_tx_indices.push_back(tx_idx);
           }
         }
-        
+
         ++tx_idx;
       }
-        
+
       if(!need_tx_indices.empty()) // drats, we don't have everything..
       {
         // request non-mempool txs
@@ -607,7 +607,7 @@ namespace cryptonote
         missing_tx_req.hop = arg.hop;
         missing_tx_req.current_blockchain_height = arg.current_blockchain_height;
         missing_tx_req.missing_tx_indices = std::move(need_tx_indices);
-        
+
         m_core.resume_mine();
         post_notify<NOTIFY_REQUEST_FLUFFY_MISSING_TX>(missing_tx_req, context);
       }
@@ -622,7 +622,7 @@ namespace cryptonote
         std::list<block_complete_entry> blocks;
         blocks.push_back(b);
         m_core.prepare_handle_incoming_blocks(blocks);
-          
+
         block_verification_context bvc = boost::value_initialized<block_verification_context>();
         m_core.handle_incoming_block(arg.b.block, bvc); // got block from handle_notify_new_block
         if (!m_core.cleanup_handle_incoming_blocks(true))
@@ -632,7 +632,7 @@ namespace cryptonote
           return 1;
         }
         m_core.resume_mine();
-        
+
         if( bvc.m_verifivation_failed )
         {
           LOG_PRINT_CCONTEXT_L0("Block verification failed, dropping connection");
@@ -656,32 +656,32 @@ namespace cryptonote
           m_core.get_short_chain_history(r.block_ids);
           LOG_PRINT_CCONTEXT_L2("-->>NOTIFY_REQUEST_CHAIN: m_block_ids.size()=" << r.block_ids.size() );
           post_notify<NOTIFY_REQUEST_CHAIN>(r, context);
-        }            
+        }
       }
-    } 
+    }
     else
     {
       LOG_ERROR_CCONTEXT
       (
         "sent wrong block: failed to parse and validate block: "
-        << epee::string_tools::buff_to_hex_nodelimer(arg.b.block) 
+        << epee::string_tools::buff_to_hex_nodelimer(arg.b.block)
         << ", dropping connection"
       );
-        
+
       m_core.resume_mine();
       drop_connection(context, false, false);
-        
-      return 1;     
+
+      return 1;
     }
-        
+
     return 1;
-  }  
-  //------------------------------------------------------------------------------------------------------------------------  
+  }
+  //------------------------------------------------------------------------------------------------------------------------
   template<class t_core>
   int t_cryptonote_protocol_handler<t_core>::handle_request_fluffy_missing_tx(int command, NOTIFY_REQUEST_FLUFFY_MISSING_TX::request& arg, cryptonote_connection_context& context)
   {
     MLOG_P2P_MESSAGE("Received NOTIFY_REQUEST_FLUFFY_MISSING_TX (" << arg.missing_tx_indices.size() << " txes), block hash " << arg.block_hash);
-    
+
     std::list<std::pair<cryptonote::blobdata, block>> local_blocks;
     std::list<cryptonote::blobdata> local_txs;
 
@@ -697,7 +697,7 @@ namespace cryptonote
     NOTIFY_NEW_FLUFFY_BLOCK::request fluffy_response;
     fluffy_response.b.block = t_serializable_object_to_blob(b);
     fluffy_response.current_blockchain_height = arg.current_blockchain_height;
-    fluffy_response.hop = arg.hop;    
+    fluffy_response.hop = arg.hop;
     for(auto& tx_idx: arg.missing_tx_indices)
     {
       if(tx_idx < b.tx_hashes.size())
@@ -715,11 +715,11 @@ namespace cryptonote
           << ", block_height = " << arg.current_blockchain_height
           << ", dropping connection"
         );
-        
+
         drop_connection(context, false, false);
         return 1;
       }
-    }    
+    }
 
     std::list<cryptonote::transaction> txs;
     std::list<crypto::hash> missed;
@@ -745,13 +745,13 @@ namespace cryptonote
 
     LOG_PRINT_CCONTEXT_L2
     (
-        "-->>NOTIFY_RESPONSE_FLUFFY_MISSING_TX: " 
+        "-->>NOTIFY_RESPONSE_FLUFFY_MISSING_TX: "
         << ", txs.size()=" << fluffy_response.b.txs.size()
         << ", rsp.current_blockchain_height=" << fluffy_response.current_blockchain_height
     );
-           
-    post_notify<NOTIFY_NEW_FLUFFY_BLOCK>(fluffy_response, context);    
-    return 1;        
+
+    post_notify<NOTIFY_NEW_FLUFFY_BLOCK>(fluffy_response, context);
+    return 1;
   }
   //------------------------------------------------------------------------------------------------------------------------
   template<class t_core>
@@ -1603,7 +1603,7 @@ skip:
   {
     NOTIFY_NEW_FLUFFY_BLOCK::request fluffy_arg = AUTO_VAL_INIT(fluffy_arg);
     fluffy_arg.hop = arg.hop;
-    fluffy_arg.current_blockchain_height = arg.current_blockchain_height;    
+    fluffy_arg.current_blockchain_height = arg.current_blockchain_height;
     std::list<blobdata> fluffy_txs;
     fluffy_arg.b = arg.b;
     fluffy_arg.b.txs = fluffy_txs;

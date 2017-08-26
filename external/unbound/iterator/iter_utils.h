@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -37,7 +37,7 @@
  * \file
  *
  * This file contains functions to assist the iterator module.
- * Configuration options. Forward zones. 
+ * Configuration options. Forward zones.
  */
 
 #ifndef ITERATOR_ITER_UTILS_H
@@ -73,7 +73,7 @@ int iter_apply_cfg(struct iter_env* iter_env, struct config_file* cfg);
  * Select a valid, nice target to send query to.
  * Sorting and removing unsuitable targets is combined.
  *
- * @param iter_env: iterator module global state, with ip6 enabled and 
+ * @param iter_env: iterator module global state, with ip6 enabled and
  *	do-not-query-addresses.
  * @param env: environment with infra cache (lameness, rtt info).
  * @param dp: delegation point with result list.
@@ -90,8 +90,8 @@ int iter_apply_cfg(struct iter_env* iter_env, struct config_file* cfg);
  * @return best target or NULL if no target.
  *	if not null, that target is removed from the result list in the dp.
  */
-struct delegpt_addr* iter_server_selection(struct iter_env* iter_env, 
-	struct module_env* env, struct delegpt* dp, uint8_t* name, 
+struct delegpt_addr* iter_server_selection(struct iter_env* iter_env,
+	struct module_env* env, struct delegpt* dp, uint8_t* name,
 	size_t namelen, uint16_t qtype, int* dnssec_lame,
 	int* chase_to_rd, int open_target, struct sock_list* blacklist);
 
@@ -102,7 +102,7 @@ struct delegpt_addr* iter_server_selection(struct iter_env* iter_env,
  * @param regional: regional to use for allocation.
  * @return newly allocated dns_msg, or NULL on memory error.
  */
-struct dns_msg* dns_alloc_msg(struct sldns_buffer* pkt, struct msg_parse* msg, 
+struct dns_msg* dns_alloc_msg(struct sldns_buffer* pkt, struct msg_parse* msg,
 	struct regional* regional);
 
 /**
@@ -163,14 +163,14 @@ void iter_mark_pside_cycle_targets(struct module_qstate* qstate,
 	struct delegpt* dp);
 
 /**
- * See if delegation is useful or offers immediately no targets for 
+ * See if delegation is useful or offers immediately no targets for
  * further recursion.
  * @param qinfo: query name and type
  * @param qflags: query flags with RD flag
  * @param dp: delegpt to check.
  * @return true if dp is useless.
  */
-int iter_dp_is_useless(struct query_info* qinfo, uint16_t qflags, 
+int iter_dp_is_useless(struct query_info* qinfo, uint16_t qflags,
 	struct delegpt* dp);
 
 /**
@@ -186,7 +186,7 @@ int iter_indicates_dnssec_fwd(struct module_env* env,
 	struct query_info *qinfo);
 
 /**
- * See if delegation is expected to have DNSSEC information (RRSIGs) in 
+ * See if delegation is expected to have DNSSEC information (RRSIGs) in
  * its answers, or not. Inspects delegation point (name), trust anchors,
  * and delegation message (DS RRset) to determine this.
  * @param env: module env with trust anchors.
@@ -200,8 +200,8 @@ int iter_indicates_dnssec(struct module_env* env, struct delegpt* dp,
 
 /**
  * See if a message contains DNSSEC.
- * This is examined by looking for RRSIGs. With DNSSEC a valid answer, 
- * nxdomain, nodata, referral or cname reply has RRSIGs in answer or auth 
+ * This is examined by looking for RRSIGs. With DNSSEC a valid answer,
+ * nxdomain, nodata, referral or cname reply has RRSIGs in answer or auth
  * sections, sigs on answer data, SOA, DS, or NSEC/NSEC3 records.
  * @param msg: message to examine.
  * @return true if DNSSEC information was found.
@@ -220,7 +220,7 @@ int iter_msg_has_dnssec(struct dns_msg* msg);
  * @return true if message is certain to be from zone in dp->name.
  *	false if not sure (empty msg), or not from the zone.
  */
-int iter_msg_from_zone(struct dns_msg* msg, struct delegpt* dp, 
+int iter_msg_from_zone(struct dns_msg* msg, struct delegpt* dp,
 	enum response_type type, uint16_t dclass);
 
 /**
@@ -252,14 +252,14 @@ void caps_strip_reply(struct reply_info* rep);
 int caps_failed_rcode(struct reply_info* rep);
 
 /**
- * Store parent-side rrset in seperate rrset cache entries for later 
- * last-resort * lookups in case the child-side versions of this information 
+ * Store parent-side rrset in seperate rrset cache entries for later
+ * last-resort * lookups in case the child-side versions of this information
  * fails.
  * @param env: environment with cache, time, ...
  * @param rrset: the rrset to store (copied).
  * Failure to store is logged, but otherwise ignored.
  */
-void iter_store_parentside_rrset(struct module_env* env, 
+void iter_store_parentside_rrset(struct module_env* env,
 	struct ub_packed_rrset_key* rrset);
 
 /**
@@ -278,7 +278,7 @@ void iter_store_parentside_NS(struct module_env* env, struct reply_info* rep);
  * @param rep: delegation response or answer response, to glean TTL from.
  * (malloc) failure is logged but otherwise ignored.
  */
-void iter_store_parentside_neg(struct module_env* env, 
+void iter_store_parentside_neg(struct module_env* env,
 	struct query_info* qinfo, struct reply_info* rep);
 
 /**
@@ -290,7 +290,7 @@ void iter_store_parentside_neg(struct module_env* env,
  * @param region: region to alloc result in.
  * @param qinfo: pertinent information, the qclass.
  * @return false on malloc failure.
- *	if true, the routine worked and if such cached information 
+ *	if true, the routine worked and if such cached information
  *	existed dp->has_parent_side_NS is set true.
  */
 int iter_lookup_parent_NS_from_cache(struct module_env* env,
@@ -346,7 +346,7 @@ void iter_dec_attempts(struct delegpt* dp, int d);
 void iter_merge_retry_counts(struct delegpt* dp, struct delegpt* old);
 
 /**
- * See if a DS response (type ANSWER) is too low: a nodata answer with 
+ * See if a DS response (type ANSWER) is too low: a nodata answer with
  * a SOA record in the authority section at-or-below the qchase.qname.
  * Also returns true if we are not sure (i.e. empty message, CNAME nosig).
  * @param msg: the response.

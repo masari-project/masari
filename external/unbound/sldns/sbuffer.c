@@ -46,7 +46,7 @@ sldns_buffer_new_frm_data(sldns_buffer *buffer, void *data, size_t size)
 {
 	assert(data != NULL);
 
-	buffer->_position = 0; 
+	buffer->_position = 0;
 	buffer->_limit = buffer->_capacity = size;
 	buffer->_fixed = 0;
 	buffer->_vfixed = 0;
@@ -178,7 +178,7 @@ sldns_buffer_export(sldns_buffer *buffer)
 	return buffer->_data;
 }
 
-void 
+void
 sldns_buffer_copy(sldns_buffer* result, sldns_buffer* from)
 {
 	size_t tocopy = sldns_buffer_limit(from);

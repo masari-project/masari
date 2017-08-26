@@ -4,22 +4,22 @@
  * Copyright (c) 2008, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -112,7 +112,7 @@ open_svr(const char* svr, int udp)
 
 /** write a query over the TCP fd */
 static void
-write_q(int fd, int udp, SSL* ssl, sldns_buffer* buf, uint16_t id, 
+write_q(int fd, int udp, SSL* ssl, sldns_buffer* buf, uint16_t id,
 	const char* strname, const char* strtype, const char* strclass)
 {
 	struct query_info qinfo;
@@ -161,7 +161,7 @@ write_q(int fd, int udp, SSL* ssl, sldns_buffer* buf, uint16_t id,
 #ifndef USE_WINSOCK
 				perror("send() len failed");
 #else
-				printf("send len: %s\n", 
+				printf("send len: %s\n",
 					wsa_strerror(WSAGetLastError()));
 #endif
 				exit(1);
@@ -176,7 +176,7 @@ write_q(int fd, int udp, SSL* ssl, sldns_buffer* buf, uint16_t id,
 		}
 	} else {
 		if(send(fd, (void*)sldns_buffer_begin(buf),
-			sldns_buffer_limit(buf), 0) < 
+			sldns_buffer_limit(buf), 0) <
 			(ssize_t)sldns_buffer_limit(buf)) {
 #ifndef USE_WINSOCK
 			perror("send() data failed");
@@ -208,7 +208,7 @@ recv_one(int fd, int udp, SSL* ssl, sldns_buffer* buf)
 #ifndef USE_WINSOCK
 				perror("read() len failed");
 #else
-				printf("read len: %s\n", 
+				printf("read len: %s\n",
 					wsa_strerror(WSAGetLastError()));
 #endif
 				exit(1);
@@ -227,12 +227,12 @@ recv_one(int fd, int udp, SSL* ssl, sldns_buffer* buf)
 			if(r != (int)len)
 				fatal_exit("ssl_read %d of %d", r, len);
 		} else {
-			if(recv(fd, (void*)sldns_buffer_begin(buf), len, 0) < 
+			if(recv(fd, (void*)sldns_buffer_begin(buf), len, 0) <
 				(ssize_t)len) {
 #ifndef USE_WINSOCK
 				perror("read() data failed");
 #else
-				printf("read data: %s\n", 
+				printf("read data: %s\n",
 					wsa_strerror(WSAGetLastError()));
 #endif
 				exit(1);
@@ -241,12 +241,12 @@ recv_one(int fd, int udp, SSL* ssl, sldns_buffer* buf)
 	} else {
 		ssize_t l;
 		sldns_buffer_clear(buf);
-		if((l=recv(fd, (void*)sldns_buffer_begin(buf), 
+		if((l=recv(fd, (void*)sldns_buffer_begin(buf),
 			sldns_buffer_capacity(buf), 0)) < 0) {
 #ifndef USE_WINSOCK
 			perror("read() data failed");
 #else
-			printf("read data: %s\n", 
+			printf("read data: %s\n",
 				wsa_strerror(WSAGetLastError()));
 #endif
 			exit(1);
@@ -349,7 +349,7 @@ extern int optind;
 extern char* optarg;
 
 /** main program for streamtcp */
-int main(int argc, char** argv) 
+int main(int argc, char** argv)
 {
 	int c;
 	const char* svr = "127.0.0.1";

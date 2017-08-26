@@ -42,7 +42,7 @@
 #define TESTCODE_READHEX_H
 struct sldns_buffer;
 
-/** 
+/**
  * Helper to convert hex string to packet buffer.
  * @param pkt: buffer to put result in.
  * @param hex: string of hex data. Spaces and ';...' comments are skipped.

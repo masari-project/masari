@@ -1,25 +1,25 @@
 /*
- * util/alloc.c - memory allocation service. 
+ * util/alloc.c - memory allocation service.
  *
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -59,7 +59,7 @@ alloc_setup_special(alloc_special_type* t)
 	t->entry.key = t;
 }
 
-/** prealloc some entries in the cache. To minimize contention. 
+/** prealloc some entries in the cache. To minimize contention.
  * Result is 1 lock per alloc_max newly created entries.
  * @param alloc: the structure to fill up.
  */
@@ -99,7 +99,7 @@ prealloc_blocks(struct alloc_cache* alloc, size_t num)
 	}
 }
 
-void 
+void
 alloc_init(struct alloc_cache* alloc, struct alloc_cache* super,
 	int thread_num)
 {
@@ -126,7 +126,7 @@ alloc_init(struct alloc_cache* alloc, struct alloc_cache* super,
 	}
 }
 
-void 
+void
 alloc_clear(struct alloc_cache* alloc)
 {
 	alloc_special_type* p, *np;
@@ -188,7 +188,7 @@ alloc_get_id(struct alloc_cache* alloc)
 	return id;
 }
 
-alloc_special_type* 
+alloc_special_type*
 alloc_special_obtain(struct alloc_cache* alloc)
 {
 	alloc_special_type* p;
@@ -228,13 +228,13 @@ alloc_special_obtain(struct alloc_cache* alloc)
 }
 
 /** push mem and some more items to the super */
-static void 
+static void
 pushintosuper(struct alloc_cache* alloc, alloc_special_type* mem)
 {
 	int i;
 	alloc_special_type *p = alloc->quar;
 	log_assert(p);
-	log_assert(alloc && alloc->super && 
+	log_assert(alloc && alloc->super &&
 		alloc->num_quar >= ALLOC_SPECIAL_MAX);
 	/* push ALLOC_SPECIAL_MAX/2 after mem */
 	alloc_set_special_next(mem, alloc->quar);
@@ -253,13 +253,13 @@ pushintosuper(struct alloc_cache* alloc, alloc_special_type* mem)
 	/* so 1 lock per mem+alloc/2 deletes */
 }
 
-void 
+void
 alloc_special_release(struct alloc_cache* alloc, alloc_special_type* mem)
 {
 	log_assert(alloc);
 	if(!mem)
 		return;
-	if(!alloc->super) { 
+	if(!alloc->super) {
 		lock_quick_lock(&alloc->lock); /* superalloc needs locking */
 	}
 
@@ -278,7 +278,7 @@ alloc_special_release(struct alloc_cache* alloc, alloc_special_type* mem)
 	}
 }
 
-void 
+void
 alloc_stats(struct alloc_cache* alloc)
 {
 	log_info("%salloc: %d in cache, %d blocks.", alloc->super?"":"sup",
@@ -289,7 +289,7 @@ size_t alloc_get_mem(struct alloc_cache* alloc)
 {
 	alloc_special_type* p;
 	size_t s = sizeof(*alloc);
-	if(!alloc->super) { 
+	if(!alloc->super) {
 		lock_quick_lock(&alloc->lock); /* superalloc needs locking */
 	}
 	s += sizeof(alloc_special_type) * alloc->num_quar;
@@ -303,7 +303,7 @@ size_t alloc_get_mem(struct alloc_cache* alloc)
 	return s;
 }
 
-struct regional* 
+struct regional*
 alloc_reg_obtain(struct alloc_cache* alloc)
 {
 	if(alloc->num_reg_blocks > 0) {
@@ -316,7 +316,7 @@ alloc_reg_obtain(struct alloc_cache* alloc)
 	return regional_create_custom(ALLOC_REG_SIZE);
 }
 
-void 
+void
 alloc_reg_release(struct alloc_cache* alloc, struct regional* r)
 {
 	if(alloc->num_reg_blocks >= alloc->max_reg_blocks) {
@@ -331,7 +331,7 @@ alloc_reg_release(struct alloc_cache* alloc, struct regional* r)
 	alloc->num_reg_blocks++;
 }
 
-void 
+void
 alloc_set_id_cleanup(struct alloc_cache* alloc, void (*cleanup)(void*),
         void* arg)
 {
@@ -454,7 +454,7 @@ void *unbound_stat_malloc_log(size_t size, const char* file, int line,
 void *unbound_stat_calloc_log(size_t nmemb, size_t size, const char* file,
         int line, const char* func)
 {
-	log_info("%s:%d %s calloc(%u, %u)", file, line, func, 
+	log_info("%s:%d %s calloc(%u, %u)", file, line, func,
 		(unsigned) nmemb, (unsigned)size);
 	return unbound_stat_calloc(nmemb, size);
 }
@@ -466,7 +466,7 @@ void unbound_stat_free_log(void *ptr, const char* file, int line,
 	if(ptr && memcmp(ptr-8, &mem_special, sizeof(mem_special)) == 0) {
 		size_t s;
 		memcpy(&s, ptr-16, sizeof(s));
-		log_info("%s:%d %s free(%p) size %u", 
+		log_info("%s:%d %s free(%p) size %u",
 			file, line, func, ptr, (unsigned)s);
 	} else
 		log_info("%s:%d %s unmatched free(%p)", file, line, func, ptr);
@@ -477,7 +477,7 @@ void unbound_stat_free_log(void *ptr, const char* file, int line,
 void *unbound_stat_realloc_log(void *ptr, size_t size, const char* file,
         int line, const char* func)
 {
-	log_info("%s:%d %s realloc(%p, %u)", file, line, func, 
+	log_info("%s:%d %s realloc(%p, %u)", file, line, func,
 		ptr, (unsigned)size);
 	return unbound_stat_realloc(ptr, size);
 }
@@ -542,7 +542,7 @@ void unbound_stat_free_lite(void *ptr, const char* file, int line,
 	if(memcmp(real+lite_pad+orig+sizeof(size_t), lite_post, lite_pad)!=0){
 		log_err("free(): suffix failed %s:%d %s", file, line, func);
 		log_err("alloc size is %d", (int)orig);
-		log_hex("suffix here", real+lite_pad+orig+sizeof(size_t), 
+		log_hex("suffix here", real+lite_pad+orig+sizeof(size_t),
 			lite_pad);
 		log_hex("  should be", lite_post, lite_pad);
 		fatal_exit("alloc assertion failed");
@@ -578,7 +578,7 @@ void *unbound_stat_realloc_lite(void *ptr, size_t size, const char* file,
 	if(memcmp(real+lite_pad+orig+sizeof(size_t), lite_post, lite_pad)!=0){
 		log_err("realloc(): suffix failed %s:%d %s", file, line, func);
 		log_err("alloc size is %d", (int)orig);
-		log_hex("suffix here", real+lite_pad+orig+sizeof(size_t), 
+		log_hex("suffix here", real+lite_pad+orig+sizeof(size_t),
 			lite_pad);
 		log_hex("  should be", lite_post, lite_pad);
 		fatal_exit("alloc assertion failed");
@@ -595,7 +595,7 @@ void *unbound_stat_realloc_lite(void *ptr, size_t size, const char* file,
 	return newa;
 }
 
-char* unbound_strdup_lite(const char* s, const char* file, int line, 
+char* unbound_strdup_lite(const char* s, const char* file, int line,
         const char* func)
 {
 	/* this routine is made to make sure strdup() uses the malloc_lite */
@@ -614,14 +614,14 @@ char* unbound_lite_wrapstr(char* s)
 }
 
 #undef sldns_pkt2wire
-sldns_status unbound_lite_pkt2wire(uint8_t **dest, const sldns_pkt *p, 
+sldns_status unbound_lite_pkt2wire(uint8_t **dest, const sldns_pkt *p,
 	size_t *size)
 {
 	uint8_t* md = NULL;
 	size_t ms = 0;
 	sldns_status s = sldns_pkt2wire(&md, p, &ms);
 	if(md) {
-		*dest = unbound_stat_malloc_lite(ms, __FILE__, __LINE__, 
+		*dest = unbound_stat_malloc_lite(ms, __FILE__, __LINE__,
 			__func__);
 		*size = ms;
 		if(!*dest) { free(md); return LDNS_STATUS_MEM_ERR; }
@@ -640,7 +640,7 @@ int unbound_lite_i2d_DSA_SIG(DSA_SIG* dsasig, unsigned char** sig)
 	unsigned char* n = NULL;
 	int r= i2d_DSA_SIG(dsasig, &n);
 	if(n) {
-		*sig = unbound_stat_malloc_lite((size_t)r, __FILE__, __LINE__, 
+		*sig = unbound_stat_malloc_lite((size_t)r, __FILE__, __LINE__,
 			__func__);
 		if(!*sig) return -1;
 		memcpy(*sig, n, (size_t)r);

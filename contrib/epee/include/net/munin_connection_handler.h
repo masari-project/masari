@@ -1,6 +1,6 @@
 // Copyright (c) 2006-2013, Andrey N. Sabelnikov, www.sabelnikov.net
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // * Redistributions of source code must retain the above copyright
@@ -11,7 +11,7 @@
 // * Neither the name of the Andrey N. Sabelnikov nor the
 // names of its contributors may be used to endorse or promote products
 // derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -22,7 +22,7 @@
 // ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 
 
 
@@ -102,8 +102,8 @@ namespace net_utils
 			typedef node_server_config config_type;
       typedef connection_context_base connection_context;
 
-			munin_node_server_connection_handler(i_service_endpoint* psnd_hndlr, config_type& config, const connection_context_base& context):m_psnd_hndlr(psnd_hndlr), 
-												m_machine_state(http_state_retriving_comand_line), 
+			munin_node_server_connection_handler(i_service_endpoint* psnd_hndlr, config_type& config, const connection_context_base& context):m_psnd_hndlr(psnd_hndlr),
+												m_machine_state(http_state_retriving_comand_line),
 												m_config(config)
 			{
 				init();
@@ -199,7 +199,7 @@ namespace net_utils
 			{
 				// list, nodes, config, fetch, version or quit
 				STATIC_REGEXP_EXPR_1(rexp_match_command_line, "^((list)|(nodes)|(config)|(fetch)|(version)|(quit))(\\s+(\\S+))?", boost::regex::icase | boost::regex::normal);
-				//											    12      3       4        5       6         7      8    9         
+				//											    12      3       4        5       6         7      8    9
 				size_t match_len = 0;
 				boost::smatch result;	
 				if(boost::regex_search(command, result, rexp_match_command_line, boost::match_default) && result[0].matched)
@@ -252,7 +252,7 @@ namespace net_utils
 			}
 			bool handle_nodes_command()
 			{
-				//supports only one node - host name 
+				//supports only one node - host name
 				send_hook(m_host_name + "\n.\n");
 				return true;
 			}
@@ -293,7 +293,7 @@ namespace net_utils
 
 				if(m_psnd_hndlr)
 					return m_psnd_hndlr->do_send(buff.data(), buff.size());
-				else 
+				else
 					return false;
 			}
 
@@ -322,7 +322,7 @@ namespace net_utils
 			std::string m_cache;
 			std::string m_host_name;
 		protected:
-			i_service_endpoint* m_psnd_hndlr; 
+			i_service_endpoint* m_psnd_hndlr;
 		};
 
 
@@ -334,7 +334,7 @@ namespace net_utils
 			sc.m_services.push_back(munin_service());
 			sc.m_services.back().m_service_name = "test_service";
 			
-			sc.m_services.back().m_service_config_string =     
+			sc.m_services.back().m_service_config_string =
 				"graph_args --base 1000 -l 0 --vertical-label N --upper-limit 329342976\n"
 				"graph_title REPORTS STATICTICS\n"
 				"graph_category bind\n"

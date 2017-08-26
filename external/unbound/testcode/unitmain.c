@@ -110,7 +110,7 @@ alloc_test(void) {
 
 #include "util/net_help.h"
 /** test net code */
-static void 
+static void
 net_test(void)
 {
 	const char* t4[] = {"\000\000\000\000",
@@ -344,7 +344,7 @@ net_test(void)
 #include "util/config_file.h"
 /** test config_file: cfg_parse_memsize */
 static void
-config_memsize_test(void) 
+config_memsize_test(void)
 {
 	size_t v = 0;
 	unit_show_func("util/config_file.c", "cfg_parse_memsize");
@@ -382,7 +382,7 @@ config_memsize_test(void)
 
 /** test config_file: test tag code */
 static void
-config_tag_test(void) 
+config_tag_test(void)
 {
 	unit_show_func("util/config_file.c", "taglist_intersect");
 	unit_assert( taglist_intersect(
@@ -422,7 +422,7 @@ rtt_test(void)
 	unit_assert( rtt_timeout(&r) >= 2000 );
 	rtt_lost(&r, rtt_timeout(&r) );
 	for(i=0; i<100; i++) {
-		rtt_lost(&r, rtt_timeout(&r) ); 
+		rtt_lost(&r, rtt_timeout(&r) );
 		unit_assert( rtt_timeout(&r) > RTT_MIN_TIMEOUT-1);
 		unit_assert( rtt_timeout(&r) < RTT_MAX_TIMEOUT+1);
 	}
@@ -475,17 +475,17 @@ infra_test(void)
 	unit_assert( vs == 0 && to == init && edns_lame == 0 );
 
 	unit_assert( infra_rtt_update(slab, &one, onelen, zone, zonelen, LDNS_RR_TYPE_A, -1, init, now) );
-	unit_assert( infra_host(slab, &one, onelen, zone, zonelen, 
+	unit_assert( infra_host(slab, &one, onelen, zone, zonelen,
 			now, &vs, &edns_lame, &to) );
 	unit_assert( vs == 0 && to == init*2 && edns_lame == 0 );
 
 	unit_assert( infra_edns_update(slab, &one, onelen, zone, zonelen, -1, now) );
-	unit_assert( infra_host(slab, &one, onelen, zone, zonelen, 
+	unit_assert( infra_host(slab, &one, onelen, zone, zonelen,
 			now, &vs, &edns_lame, &to) );
 	unit_assert( vs == -1 && to == init*2  && edns_lame == 1);
 
 	now += cfg->host_ttl + 10;
-	unit_assert( infra_host(slab, &one, onelen, zone, zonelen, 
+	unit_assert( infra_host(slab, &one, onelen, zone, zonelen,
 			now, &vs, &edns_lame, &to) );
 	unit_assert( vs == 0 && to == init && edns_lame == 0 );
 	
@@ -508,17 +508,17 @@ infra_test(void)
 
 	/* test that noEDNS cannot overwrite known-yesEDNS */
 	now += cfg->host_ttl + 10;
-	unit_assert( infra_host(slab, &one, onelen, zone, zonelen, 
+	unit_assert( infra_host(slab, &one, onelen, zone, zonelen,
 			now, &vs, &edns_lame, &to) );
 	unit_assert( vs == 0 && to == init && edns_lame == 0 );
 
 	unit_assert( infra_edns_update(slab, &one, onelen, zone, zonelen, 0, now) );
-	unit_assert( infra_host(slab, &one, onelen, zone, zonelen, 
+	unit_assert( infra_host(slab, &one, onelen, zone, zonelen,
 			now, &vs, &edns_lame, &to) );
 	unit_assert( vs == 0 && to == init && edns_lame == 1 );
 
 	unit_assert( infra_edns_update(slab, &one, onelen, zone, zonelen, -1, now) );
-	unit_assert( infra_host(slab, &one, onelen, zone, zonelen, 
+	unit_assert( infra_host(slab, &one, onelen, zone, zonelen,
 			now, &vs, &edns_lame, &to) );
 	unit_assert( vs == 0 && to == init && edns_lame == 1 );
 
@@ -840,7 +840,7 @@ void ecdsa_evp_workaround_init(void);
  * @param argv: array of commandline arguments.
  * @return program failure if test fails.
  */
-int 
+int
 main(int argc, char* argv[])
 {
 	log_init(NULL, 0, NULL);

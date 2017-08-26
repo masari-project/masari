@@ -18,7 +18,7 @@ extern "C" {
 #endif
 
 #ifdef S_SPLINT_S
-#  define INLINE 
+#  define INLINE
 #else
 #  ifdef SWIG
 #    define INLINE static
@@ -106,7 +106,7 @@ sldns_write_uint48(void *dst, uint64_t data)
  * This file contains the definition of sldns_buffer, and functions to manipulate those.
  */
 
-/** 
+/**
  * implementation of buffers to ease operations
  *
  * sldns_buffers can contain arbitrary information, per octet. You can write
@@ -115,7 +115,7 @@ sldns_write_uint48(void *dst, uint64_t data)
  */
 struct sldns_buffer
 {
-	/** The current position used for reading/writing */ 
+	/** The current position used for reading/writing */
 	size_t   _position;
 
 	/** The read/write limit */
@@ -789,7 +789,7 @@ void sldns_buffer_free(sldns_buffer *buffer);
 void *sldns_buffer_export(sldns_buffer *buffer);
 
 /**
- * Copy contents of the from buffer to the result buffer and then flips 
+ * Copy contents of the from buffer to the result buffer and then flips
  * the result buffer. Data will be silently truncated if the result buffer is
  * too small.
  * \param[out] *result resulting buffer which is copied to.

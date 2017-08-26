@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -142,7 +142,7 @@ struct outside_network {
 	/**
 	 * Array of tcp pending used for outgoing TCP connections.
 	 * Each can be used to establish a TCP connection with a server.
-	 * The file descriptors are -1 if they are free, and need to be 
+	 * The file descriptors are -1 if they are free, and need to be
 	 * opened for the tcp connection. Can be used for ip4 and ip6.
 	 */
 	struct pending_tcp **tcp_conns;
@@ -178,7 +178,7 @@ struct port_if {
 	/** the total number of available ports (size of the array) */
 	int avail_total;
 
-	/** array of the commpoints currently in use. 
+	/** array of the commpoints currently in use.
 	 * allocated for max number of fds, first part in use. */
 	struct port_comm** out;
 	/** max number of fds, size of out array */
@@ -261,7 +261,7 @@ struct pending_tcp {
  * Query waiting for TCP buffer.
  */
 struct waiting_tcp {
-	/** 
+	/**
 	 * next in waiting list.
 	 * if pkt==0, this points to the pending_tcp structure.
 	 */
@@ -275,7 +275,7 @@ struct waiting_tcp {
 	struct sockaddr_storage addr;
 	/** length of addr field in use. */
 	socklen_t addrlen;
-	/** 
+	/**
 	 * The query itself, the query packet to send.
 	 * allocated after the waiting_tcp structure.
 	 * set to NULL when the query is serviced and it part of pending_tcp.
@@ -363,7 +363,7 @@ struct serviced_query {
 		/** send UDP query with EDNS1480 (or 1280) */
 		serviced_query_UDP_EDNS_FRAG
 	} 	
-		/** variable with current status */ 
+		/** variable with current status */
 		status;
 	/** true if serviced_query is scheduled for deletion already */
 	int to_be_deleted;
@@ -399,7 +399,7 @@ struct serviced_query {
  * @param infra: pointer to infra cached used for serviced queries.
  * @param rnd: stored to create random numbers for serviced queries.
  * @param use_caps_for_id: enable to use 0x20 bits to encode id randomness.
- * @param availports: array of available ports. 
+ * @param availports: array of available ports.
  * @param numavailports: number of available ports in array.
  * @param unwanted_threshold: when to take defensive action.
  * @param unwanted_action: the action to take.
@@ -414,8 +414,8 @@ struct serviced_query {
  */
 struct outside_network* outside_network_create(struct comm_base* base,
 	size_t bufsize, size_t num_ports, char** ifs, int num_ifs,
-	int do_ip4, int do_ip6, size_t num_tcp, struct infra_cache* infra, 
-	struct ub_randstate* rnd, int use_caps_for_id, int* availports, 
+	int do_ip4, int do_ip6, size_t num_tcp, struct infra_cache* infra,
+	struct ub_randstate* rnd, int use_caps_for_id, int* availports,
 	int numavailports, size_t unwanted_threshold, int tcp_mss,
 	void (*unwanted_action)(void*), void* unwanted_param, int do_udp,
 	void* sslctx, int delayclose, struct dt_env *dtenv);
@@ -447,7 +447,7 @@ struct pending* pending_udp_query(struct serviced_query* sq,
 	void* callback_arg);
 
 /**
- * Send TCP query. May wait for TCP buffer. Selects ID to be random, and 
+ * Send TCP query. May wait for TCP buffer. Selects ID to be random, and
  * checks id.
  * @param sq: serviced query.
  * @param packet: wireformat query to send to destination. copied from.
@@ -528,7 +528,7 @@ size_t outnet_get_mem(struct outside_network* outnet);
  * Get memory size in use by serviced query while it is servicing callbacks.
  * This takes into account the pre-deleted status of it; it will be deleted
  * when the callbacks are done.
- * @param sq: serviced query. 
+ * @param sq: serviced query.
  * @return size in bytes.
  */
 size_t serviced_get_mem(struct serviced_query* sq);

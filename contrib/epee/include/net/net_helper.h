@@ -1,6 +1,6 @@
 // Copyright (c) 2006-2013, Andrey N. Sabelnikov, www.sabelnikov.net
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // * Redistributions of source code must retain the above copyright
@@ -11,7 +11,7 @@
 // * Neither the name of the Andrey N. Sabelnikov nor the
 // names of its contributors may be used to endorse or promote products
 // derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -22,7 +22,7 @@
 // ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 
 
 
@@ -85,10 +85,10 @@ namespace net_utils
 		
 	public:
 		inline
-			blocked_mode_client():m_socket(m_io_service), 
-                            m_initialized(false), 
-                            m_connected(false), 
-                            m_deadline(m_io_service), 
+			blocked_mode_client():m_socket(m_io_service),
+                            m_initialized(false),
+                            m_connected(false),
+                            m_deadline(m_io_service),
                             m_shutdowned(0)
 		{
 			
@@ -164,7 +164,7 @@ namespace net_utils
 				m_socket.async_connect(remote_endpoint, boost::lambda::var(ec) = boost::lambda::_1);
 				while (ec == boost::asio::error::would_block)
 				{	
-					m_io_service.run_one(); 
+					m_io_service.run_one();
 				}
 				
 				if (!ec && m_socket.is_open())
@@ -194,7 +194,7 @@ namespace net_utils
 		}
 
 
-		inline 
+		inline
 		bool disconnect()
 		{
 			try
@@ -221,7 +221,7 @@ namespace net_utils
 		}
 
 
-		inline 
+		inline
 		bool send(const std::string& buff, std::chrono::milliseconds timeout)
 		{
 
@@ -245,7 +245,7 @@ namespace net_utils
 				// Block until the asynchronous operation has completed.
 				while (ec == boost::asio::error::would_block)
 				{
-					m_io_service.run_one(); 
+					m_io_service.run_one();
 				}
 
 				if (ec)
@@ -273,7 +273,7 @@ namespace net_utils
 			return true;
 		}
 
-		inline 
+		inline
 			bool send(const void* data, size_t sz)
 		{
 			try
@@ -340,7 +340,7 @@ namespace net_utils
 			//CATCH_ENTRY_L0("is_connected", false)
 		}
 
-		inline 
+		inline
 		bool recv(std::string& buff, std::chrono::milliseconds timeout)
 		{
 
@@ -375,7 +375,7 @@ namespace net_utils
 				// Block until the asynchronous operation has completed.
 				while (ec == boost::asio::error::would_block && !boost::interprocess::ipcdetail::atomic_read32(&m_shutdowned))
 				{
-					m_io_service.run_one(); 
+					m_io_service.run_one();
 				}
 
 
@@ -458,7 +458,7 @@ namespace net_utils
 				// Block until the asynchronous operation has completed.
 				while (ec == boost::asio::error::would_block && !boost::interprocess::ipcdetail::atomic_read32(&m_shutdowned))
 				{
-					m_io_service.run_one(); 
+					m_io_service.run_one();
 				}
 
 				if (ec)
@@ -589,7 +589,7 @@ namespace net_utils
 			return true;
 		}
 
-		inline 
+		inline
 			bool send(const void* data, size_t sz)
 		{
 			try

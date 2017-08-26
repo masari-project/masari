@@ -1,25 +1,25 @@
 /*
- * util/winsock_event.c - implementation of the unbound winsock event handler. 
+ * util/winsock_event.c - implementation of the unbound winsock event handler.
  *
  * Copyright (c) 2008, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -125,7 +125,7 @@ void *event_init(time_t* time_secs, struct timeval* time_tv)
                 event_base_free(base);
                 return NULL;
         }
-	base->items = (struct event**)calloc(WSK_MAX_ITEMS, 
+	base->items = (struct event**)calloc(WSK_MAX_ITEMS,
 		sizeof(struct event*));
 	if(!base->items) {
                 event_base_free(base);
@@ -282,7 +282,7 @@ static int handle_select(struct event_base* base, struct timeval* wait)
 			log_err("WSAWaitForMultipleEvents failed: WSA_WAIT_IO_COMPLETION");
 			return -1;
 		} else if(ret == WSA_WAIT_FAILED) {
-			log_err("WSAWaitForMultipleEvents failed: %s", 
+			log_err("WSAWaitForMultipleEvents failed: %s",
 				wsa_strerror(WSAGetLastError()));
 			return -1;
 		} else if(ret == WSA_WAIT_TIMEOUT) {
@@ -290,7 +290,7 @@ static int handle_select(struct event_base* base, struct timeval* wait)
 		} else
 			startidx = ret - WSA_WAIT_EVENT_0;
 	}
-	verbose(VERB_CLIENT, "winsock_event wake was_timeout=%d startidx=%d", 
+	verbose(VERB_CLIENT, "winsock_event wake was_timeout=%d startidx=%d",
 		was_timeout, startidx);
 
 	/* get new time after wait */
@@ -330,11 +330,11 @@ static int handle_select(struct event_base* base, struct timeval* wait)
 			continue; /* not a network event at all */
 		eventlist[i]->just_checked = 0;
 
-		if(WSAEnumNetworkEvents(eventlist[i]->ev_fd, 
+		if(WSAEnumNetworkEvents(eventlist[i]->ev_fd,
 			base->waitfor[i], /* reset the event handle */
 			/*NULL,*/ /* do not reset the event handle */
 			&netev) != 0) {
-			log_err("WSAEnumNetworkEvents failed: %s", 
+			log_err("WSAEnumNetworkEvents failed: %s",
 				wsa_strerror(WSAGetLastError()));
 			return -1;
 		}
@@ -390,7 +390,7 @@ static int handle_select(struct event_base* base, struct timeval* wait)
 		}
 		if((bits & eventlist[i]->ev_events)) {
 			verbose(VERB_ALGO, "winsock event callback %p fd=%d "
-				"%s%s%s%s%s ; %s%s%s", 
+				"%s%s%s%s%s ; %s%s%s",
 				eventlist[i], eventlist[i]->ev_fd,
 				(netev.lNetworkEvents&FD_READ)?" FD_READ":"",
 				(netev.lNetworkEvents&FD_WRITE)?" FD_WRITE":"",
@@ -406,7 +406,7 @@ static int handle_select(struct event_base* base, struct timeval* wait)
                         fptr_ok(fptr_whitelist_event(
                                 eventlist[i]->ev_callback));
                         (*eventlist[i]->ev_callback)(eventlist[i]->ev_fd,
-                                bits & eventlist[i]->ev_events, 
+                                bits & eventlist[i]->ev_events,
 				eventlist[i]->ev_arg);
 		}
 		if(eventlist[i]->is_tcp && bits)
@@ -447,7 +447,7 @@ int event_base_dispatch(struct event_base *base)
         return 0;
 }
 
-int event_base_loopexit(struct event_base *base, 
+int event_base_loopexit(struct event_base *base,
 	struct timeval * ATTR_UNUSED(tv))
 {
 	verbose(VERB_CLIENT, "winsock_event loopexit");
@@ -466,7 +466,7 @@ void event_base_free(struct event_base *base)
         free(base);
 }
 
-void event_set(struct event *ev, int fd, short bits, 
+void event_set(struct event *ev, int fd, short bits,
 	void (*cb)(int, short, void *), void *arg)
 {
         ev->node.key = ev;
@@ -490,8 +490,8 @@ int event_base_set(struct event_base *base, struct event *ev)
 
 int event_add(struct event *ev, struct timeval *tv)
 {
-	verbose(VERB_ALGO, "event_add %p added=%d fd=%d tv=" ARG_LL "d %s%s%s", 
-		ev, ev->added, ev->ev_fd, 
+	verbose(VERB_ALGO, "event_add %p added=%d fd=%d tv=" ARG_LL "d %s%s%s",
+		ev, ev->added, ev->ev_fd,
 		(tv?(long long)tv->tv_sec*1000+(long long)tv->tv_usec/1000:-1),
 		(ev->ev_events&EV_READ)?" EV_READ":"",
 		(ev->ev_events&EV_WRITE)?" EV_WRITE":"",
@@ -546,7 +546,7 @@ int event_add(struct event *ev, struct timeval *tv)
 			log_err("WSAEventSelect failed: %s",
 				wsa_strerror(WSAGetLastError()));
 		}
-		if(ev->is_tcp && ev->stick_events && 
+		if(ev->is_tcp && ev->stick_events &&
 			(ev->ev_events & ev->old_events)) {
 			/* go to processing the sticky event right away */
 			ev->ev_base->tcp_reinvigorated = 1;
@@ -571,8 +571,8 @@ int event_add(struct event *ev, struct timeval *tv)
 
 int event_del(struct event *ev)
 {
-	verbose(VERB_ALGO, "event_del %p added=%d fd=%d tv=" ARG_LL "d %s%s%s", 
-		ev, ev->added, ev->ev_fd, 
+	verbose(VERB_ALGO, "event_del %p added=%d fd=%d tv=" ARG_LL "d %s%s%s",
+		ev, ev->added, ev->ev_fd,
 		(ev->ev_events&EV_TIMEOUT)?(long long)ev->ev_timeout.tv_sec*1000+
 		(long long)ev->ev_timeout.tv_usec/1000:-1,
 		(ev->ev_events&EV_READ)?" EV_READ":"",
@@ -586,7 +586,7 @@ int event_del(struct event *ev)
         if((ev->ev_events&(EV_READ|EV_WRITE)) && ev->ev_fd != -1) {
 		log_assert(ev->ev_base->max > 0);
 		/* remove item and compact the list */
-		ev->ev_base->items[ev->idx] = 
+		ev->ev_base->items[ev->idx] =
 			ev->ev_base->items[ev->ev_base->max-1];
 		ev->ev_base->items[ev->ev_base->max-1] = NULL;
 		ev->ev_base->max--;
@@ -645,14 +645,14 @@ int signal_del(struct event *ev)
 
 void winsock_tcp_wouldblock(struct event* ev, int eventbits)
 {
-	verbose(VERB_ALGO, "winsock: tcp wouldblock %s", 
+	verbose(VERB_ALGO, "winsock: tcp wouldblock %s",
 		eventbits==EV_READ?"EV_READ":"EV_WRITE");
 	ev->old_events &= (~eventbits);
 	if(ev->old_events == 0)
 		ev->stick_events = 0;
 		/* in case this is the last sticky event, we could
 		 * possibly run an empty handler loop to reset the base
-		 * tcp_stickies variable 
+		 * tcp_stickies variable
 		 */
 }
 

@@ -4,22 +4,22 @@
  * Copyright (c) 2008, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -111,7 +111,7 @@ struct tcp_send_list {
 };
 
 /**
- * List of TCP proxy fd pairs to TCP connect client to server 
+ * List of TCP proxy fd pairs to TCP connect client to server
  */
 struct tcp_proxy {
 	/** the fd to listen for client query */
@@ -155,7 +155,7 @@ static void usage(char* argv[])
 
 /** timeval compare, t1 < t2 */
 static int
-dl_tv_smaller(struct timeval* t1, const struct timeval* t2) 
+dl_tv_smaller(struct timeval* t1, const struct timeval* t2)
 {
 #ifndef S_SPLINT_S
 	if(t1->tv_sec < t2->tv_sec)
@@ -169,7 +169,7 @@ dl_tv_smaller(struct timeval* t1, const struct timeval* t2)
 
 /** timeval add, t1 += t2 */
 static void
-dl_tv_add(struct timeval* t1, const struct timeval* t2) 
+dl_tv_add(struct timeval* t1, const struct timeval* t2)
 {
 #ifndef S_SPLINT_S
 	t1->tv_sec += t2->tv_sec;
@@ -183,7 +183,7 @@ dl_tv_add(struct timeval* t1, const struct timeval* t2)
 
 /** timeval subtract, t1 -= t2 */
 static void
-dl_tv_subtract(struct timeval* t1, const struct timeval* t2) 
+dl_tv_subtract(struct timeval* t1, const struct timeval* t2)
 {
 #ifndef S_SPLINT_S
 	t1->tv_sec -= t2->tv_sec;
@@ -222,7 +222,7 @@ ring_delete(struct ringbuf* r)
 
 /** add entry to ringbuffer */
 static void
-ring_add(struct ringbuf* r, sldns_buffer* pkt, struct timeval* now, 
+ring_add(struct ringbuf* r, sldns_buffer* pkt, struct timeval* now,
 	struct timeval* delay, struct proxy* p)
 {
 	/* time -- proxy* -- 16bitlen -- message */
@@ -245,7 +245,7 @@ ring_add(struct ringbuf* r, sldns_buffer* pkt, struct timeval* now,
 			 * a completely full ringbuf */
 			if(r->size - r->high > sizeof(when)+sizeof(p)) {
 				/* zero entry at end of buffer */
-				memset(r->buf+r->high, 0, 
+				memset(r->buf+r->high, 0,
 					sizeof(when)+sizeof(p));
 			}
 			where = r->buf;
@@ -278,7 +278,7 @@ ring_add(struct ringbuf* r, sldns_buffer* pkt, struct timeval* now,
 	memmove(where, &when, sizeof(when));
 	memmove(where+sizeof(when), &p, sizeof(p));
 	memmove(where+sizeof(when)+sizeof(p), &len, sizeof(len));
-	memmove(where+sizeof(when)+sizeof(p)+sizeof(len), 
+	memmove(where+sizeof(when)+sizeof(p)+sizeof(len),
 		sldns_buffer_begin(pkt), len);
 }
 
@@ -300,7 +300,7 @@ ring_peek_time(struct ringbuf* r)
 
 /** get entry from ringbuffer */
 static int
-ring_pop(struct ringbuf* r, sldns_buffer* pkt, struct timeval* tv, 
+ring_pop(struct ringbuf* r, sldns_buffer* pkt, struct timeval* tv,
 	struct proxy** p)
 {
 	/* time -- proxy* -- 16bitlen -- message */
@@ -313,7 +313,7 @@ ring_pop(struct ringbuf* r, sldns_buffer* pkt, struct timeval* tv,
 	memmove(tv, where, sizeof(*tv));
 	memmove(p, where+sizeof(*tv), sizeof(*p));
 	memmove(&len, where+sizeof(*tv)+sizeof(*p), sizeof(len));
-	memmove(sldns_buffer_begin(pkt), 
+	memmove(sldns_buffer_begin(pkt),
 		where+sizeof(*tv)+sizeof(*p)+sizeof(len), len);
 	sldns_buffer_set_limit(pkt, (size_t)len);
 	done = sizeof(*tv)+sizeof(*p)+sizeof(len)+len;
@@ -359,17 +359,17 @@ service_send(struct ringbuf* ring, struct timeval* now, sldns_buffer* pkt,
 	struct proxy* p;
 	struct timeval tv;
 	ssize_t sent;
-	while(!ring_empty(ring) && 
+	while(!ring_empty(ring) &&
 		dl_tv_smaller(ring_peek_time(ring), now)) {
 		/* this items needs to be sent out */
 		if(!ring_pop(ring, pkt, &tv, &p))
 			fatal_exit("ringbuf error: pop failed");
-		verbose(1, "send out query %d.%6.6d", 
+		verbose(1, "send out query %d.%6.6d",
 			(unsigned)tv.tv_sec, (unsigned)tv.tv_usec);
 		log_addr(1, "from client", &p->addr, p->addr_len);
 		/* send it */
-		sent = sendto(p->s, (void*)sldns_buffer_begin(pkt), 
-			sldns_buffer_limit(pkt), 0, 
+		sent = sendto(p->s, (void*)sldns_buffer_begin(pkt),
+			sldns_buffer_limit(pkt), 0,
 			(struct sockaddr*)srv_addr, srv_len);
 		if(sent == -1) {
 #ifndef USE_WINSOCK
@@ -392,7 +392,7 @@ do_proxy(struct proxy* p, int retsock, sldns_buffer* pkt)
 	int i;
 	ssize_t r;
 	for(i=0; i<TRIES_PER_SELECT; i++) {
-		r = recv(p->s, (void*)sldns_buffer_begin(pkt), 
+		r = recv(p->s, (void*)sldns_buffer_begin(pkt),
 			sldns_buffer_capacity(pkt), 0);
 		if(r == -1) {
 #ifndef USE_WINSOCK
@@ -411,7 +411,7 @@ do_proxy(struct proxy* p, int retsock, sldns_buffer* pkt)
 		log_addr(1, "return reply to client", &p->addr, p->addr_len);
 		/* send reply back to the real client */
 		p->numreturn++;
-		r = sendto(retsock, (void*)sldns_buffer_begin(pkt), (size_t)r, 
+		r = sendto(retsock, (void*)sldns_buffer_begin(pkt), (size_t)r,
 			0, (struct sockaddr*)&p->addr, p->addr_len);
 		if(r == -1) {
 #ifndef USE_WINSOCK
@@ -425,7 +425,7 @@ do_proxy(struct proxy* p, int retsock, sldns_buffer* pkt)
 
 /** proxy return replies to clients */
 static void
-service_proxy(fd_set* rset, int retsock, struct proxy* proxies, 
+service_proxy(fd_set* rset, int retsock, struct proxy* proxies,
 	sldns_buffer* pkt, struct timeval* now)
 {
 	struct proxy* p;
@@ -488,9 +488,9 @@ find_create_proxy(struct sockaddr_storage* from, socklen_t from_len,
 
 /** recv new waiting packets */
 static void
-service_recv(int s, struct ringbuf* ring, sldns_buffer* pkt, 
+service_recv(int s, struct ringbuf* ring, sldns_buffer* pkt,
 	fd_set* rorig, int* max, struct proxy** proxies,
-	struct sockaddr_storage* srv_addr, socklen_t srv_len, 
+	struct sockaddr_storage* srv_addr, socklen_t srv_len,
 	struct timeval* now, struct timeval* delay, struct timeval* reuse)
 {
 	int i;
@@ -509,10 +509,10 @@ service_recv(int s, struct ringbuf* ring, sldns_buffer* pkt,
 				return;
 			fatal_exit("recvfrom: %s", strerror(errno));
 #else
-			if(WSAGetLastError() == WSAEWOULDBLOCK || 
+			if(WSAGetLastError() == WSAEWOULDBLOCK ||
 				WSAGetLastError() == WSAEINPROGRESS)
 				return;
-			fatal_exit("recvfrom: %s", 
+			fatal_exit("recvfrom: %s",
 				wsa_strerror(WSAGetLastError()));
 #endif
 		}
@@ -565,7 +565,7 @@ tcp_proxy_delete(struct tcp_proxy* p)
 /** accept new TCP connections, and set them up */
 static void
 service_tcp_listen(int s, fd_set* rorig, int* max, struct tcp_proxy** proxies,
-	struct sockaddr_storage* srv_addr, socklen_t srv_len, 
+	struct sockaddr_storage* srv_addr, socklen_t srv_len,
 	struct timeval* now, struct timeval* tcp_timeout)
 {
 	int newfd;
@@ -579,7 +579,7 @@ service_tcp_listen(int s, fd_set* rorig, int* max, struct tcp_proxy** proxies,
 			return;
 		fatal_exit("accept: %s", strerror(errno));
 #else
-		if(WSAGetLastError() == WSAEWOULDBLOCK || 
+		if(WSAGetLastError() == WSAEWOULDBLOCK ||
 			WSAGetLastError() == WSAEINPROGRESS ||
 			WSAGetLastError() == WSAECONNRESET)
 			return;
@@ -612,7 +612,7 @@ service_tcp_listen(int s, fd_set* rorig, int* max, struct tcp_proxy** proxies,
 #else
 		if(WSAGetLastError() != WSAEWOULDBLOCK &&
 			WSAGetLastError() != WSAEINPROGRESS) {
-			log_err("tcp connect: %s", 
+			log_err("tcp connect: %s",
 				wsa_strerror(WSAGetLastError()));
 			closesocket(p->server_s);
 			closesocket(p->client_s);
@@ -639,12 +639,12 @@ service_tcp_listen(int s, fd_set* rorig, int* max, struct tcp_proxy** proxies,
 
 /** relay TCP, read a part */
 static int
-tcp_relay_read(int s, struct tcp_send_list** first, 
-	struct tcp_send_list** last, struct timeval* now, 
+tcp_relay_read(int s, struct tcp_send_list** first,
+	struct tcp_send_list** last, struct timeval* now,
 	struct timeval* delay, sldns_buffer* pkt)
 {
 	struct tcp_send_list* item;
-	ssize_t r = recv(s, (void*)sldns_buffer_begin(pkt), 
+	ssize_t r = recv(s, (void*)sldns_buffer_begin(pkt),
 		sldns_buffer_capacity(pkt), 0);
 	if(r == -1) {
 #ifndef USE_WINSOCK
@@ -652,7 +652,7 @@ tcp_relay_read(int s, struct tcp_send_list** first,
 			return 1;
 		log_err("tcp read: %s", strerror(errno));
 #else
-		if(WSAGetLastError() == WSAEINPROGRESS || 
+		if(WSAGetLastError() == WSAEINPROGRESS ||
 			WSAGetLastError() == WSAEWOULDBLOCK)
 			return 1;
 		log_err("tcp read: %s", wsa_strerror(WSAGetLastError()));
@@ -692,7 +692,7 @@ tcp_relay_read(int s, struct tcp_send_list** first,
 
 /** relay TCP, write a part */
 static int
-tcp_relay_write(int s, struct tcp_send_list** first, 
+tcp_relay_write(int s, struct tcp_send_list** first,
 	struct tcp_send_list** last, struct timeval* now)
 {
 	ssize_t r;
@@ -710,10 +710,10 @@ tcp_relay_write(int s, struct tcp_send_list** first,
 				return 1;
 			log_err("tcp write: %s", strerror(errno));
 #else
-			if(WSAGetLastError() == WSAEWOULDBLOCK || 
+			if(WSAGetLastError() == WSAEWOULDBLOCK ||
 				WSAGetLastError() == WSAEINPROGRESS)
 				return 1;
-			log_err("tcp write: %s", 
+			log_err("tcp write: %s",
 				wsa_strerror(WSAGetLastError()));
 #endif
 			return 0;
@@ -758,7 +758,7 @@ service_tcp_relay(struct tcp_proxy** tcp_proxies, struct timeval* now,
 		if(!delete_it && FD_ISSET(p->client_s, rset)) {
 			p->timeout = tout;
 			log_addr(1, "read tcp query", &p->addr, p->addr_len);
-			if(!tcp_relay_read(p->client_s, &p->querylist, 
+			if(!tcp_relay_read(p->client_s, &p->querylist,
 				&p->querylast, now, delay, pkt))
 				delete_it = 1;
 		}
@@ -767,7 +767,7 @@ service_tcp_relay(struct tcp_proxy** tcp_proxies, struct timeval* now,
 			FD_ISSET(p->server_s, rset)) {
 			p->timeout = tout;
 			log_addr(1, "read tcp answer", &p->addr, p->addr_len);
-			if(!tcp_relay_read(p->server_s, &p->answerlist, 
+			if(!tcp_relay_read(p->server_s, &p->answerlist,
 				&p->answerlast, now, delay, pkt)) {
 #ifndef USE_WINSOCK
 				close(p->server_s);
@@ -783,9 +783,9 @@ service_tcp_relay(struct tcp_proxy** tcp_proxies, struct timeval* now,
 		if(!delete_it && p->querylist && p->server_s != -1) {
 			p->timeout = tout;
 			if(dl_tv_smaller(&p->querylist->wait, now))
-				log_addr(1, "write tcp query", 
+				log_addr(1, "write tcp query",
 					&p->addr, p->addr_len);
-			if(!tcp_relay_write(p->server_s, &p->querylist, 
+			if(!tcp_relay_write(p->server_s, &p->querylist,
 				&p->querylast, now))
 				delete_it = 1;
 			if(p->querylist && p->server_s != -1 &&
@@ -798,9 +798,9 @@ service_tcp_relay(struct tcp_proxy** tcp_proxies, struct timeval* now,
 		if(!delete_it && p->answerlist) {
 			p->timeout = tout;
 			if(dl_tv_smaller(&p->answerlist->wait, now))
-				log_addr(1, "write tcp answer", 
+				log_addr(1, "write tcp answer",
 					&p->addr, p->addr_len);
-			if(!tcp_relay_write(p->client_s, &p->answerlist, 
+			if(!tcp_relay_write(p->client_s, &p->answerlist,
 				&p->answerlast, now))
 				delete_it = 1;
 			if(p->answerlist && dl_tv_smaller(&p->answerlist->wait,
@@ -836,7 +836,7 @@ service_tcp_relay(struct tcp_proxy** tcp_proxies, struct timeval* now,
 
 /** find waiting time */
 static int
-service_findwait(struct timeval* now, struct timeval* wait, 
+service_findwait(struct timeval* now, struct timeval* wait,
 	struct ringbuf* ring, struct tcp_proxy* tcplist)
 {
 	/* first item is the time to wait */
@@ -887,19 +887,19 @@ proxy_list_clear(struct proxy* p)
 		np = p->next;
 		port = (int)ntohs(((struct sockaddr_in*)&p->addr)->sin_port);
 		if(addr_is_ip6(&p->addr, p->addr_len)) {
-			if(inet_ntop(AF_INET6, 
+			if(inet_ntop(AF_INET6,
 				&((struct sockaddr_in6*)&p->addr)->sin6_addr,
 				from, (socklen_t)sizeof(from)) == 0)
 				(void)strlcpy(from, "err", sizeof(from));
 		} else {
-			if(inet_ntop(AF_INET, 
+			if(inet_ntop(AF_INET,
 				&((struct sockaddr_in*)&p->addr)->sin_addr,
 				from, (socklen_t)sizeof(from)) == 0)
 				(void)strlcpy(from, "err", sizeof(from));
 		}
 		printf("client[%d]: last %s@%d of %d : %u in, %u out, "
 			"%u returned\n", i++, from, port, (int)p->numreuse+1,
-			(unsigned)p->numwait, (unsigned)p->numsent, 
+			(unsigned)p->numwait, (unsigned)p->numsent,
 			(unsigned)p->numreturn);
 #ifndef USE_WINSOCK
 		close(p->s);
@@ -925,9 +925,9 @@ tcp_proxy_list_clear(struct tcp_proxy* p)
 
 /** delayer service loop */
 static void
-service_loop(int udp_s, int listen_s, struct ringbuf* ring, 
+service_loop(int udp_s, int listen_s, struct ringbuf* ring,
 	struct timeval* delay, struct timeval* reuse,
-	struct sockaddr_storage* srv_addr, socklen_t srv_len, 
+	struct sockaddr_storage* srv_addr, socklen_t srv_len,
 	sldns_buffer* pkt)
 {
 	fd_set rset, rorig;
@@ -966,7 +966,7 @@ service_loop(int udp_s, int listen_s, struct ringbuf* ring,
 				continue;
 			fatal_exit("gettimeofday: %s", strerror(errno));
 		}
-		verbose(1, "process at %u.%6.6u\n", 
+		verbose(1, "process at %u.%6.6u\n",
 			(unsigned)now.tv_sec, (unsigned)now.tv_usec);
 		/* sendout delayed queries to master server (frees up buffer)*/
 		service_send(ring, &now, pkt, srv_addr, srv_len);
@@ -979,7 +979,7 @@ service_loop(int udp_s, int listen_s, struct ringbuf* ring,
 		service_tcp_listen(listen_s, &rorig, &max, &tcp_proxies,
 			srv_addr, srv_len, &now, &tcp_timeout);
 		/* service tcp connections */
-		service_tcp_relay(&tcp_proxies, &now, delay, &tcp_timeout, 
+		service_tcp_relay(&tcp_proxies, &now, delay, &tcp_timeout,
 			pkt, &rset, &rorig, &worig);
 		/* see what next timeout is (if any) */
 		have_wait = service_findwait(&now, &wait, ring, tcp_proxies);
@@ -990,7 +990,7 @@ service_loop(int udp_s, int listen_s, struct ringbuf* ring,
 
 /** delayer main service routine */
 static void
-service(const char* bind_str, int bindport, const char* serv_str, 
+service(const char* bind_str, int bindport, const char* serv_str,
 	size_t memsize, int delay_msec)
 {
 	struct sockaddr_storage bind_addr, srv_addr;
@@ -1104,7 +1104,7 @@ service(const char* bind_str, int bindport, const char* serv_str,
 
 	/* process loop */
 	do_quit = 0;
-	service_loop(s, listen_s, ring, &delay, &reuse, &srv_addr, srv_len, 
+	service_loop(s, listen_s, ring, &delay, &reuse, &srv_addr, srv_len,
 		pkt);
 
 	/* cleanup */
@@ -1126,7 +1126,7 @@ extern int optind;
 extern char* optarg;
 
 /** main program for delayer */
-int main(int argc, char** argv) 
+int main(int argc, char** argv)
 {
 	int c;		/* defaults */
 	const char* server = "127.0.0.1@53";
@@ -1178,7 +1178,7 @@ int main(int argc, char** argv)
 	if(argc != 0)
 		usage(argv);
 
-	printf("bind to %s @ %d and forward to %s after %d msec\n", 
+	printf("bind to %s @ %d and forward to %s after %d msec\n",
 		bindto, bindport, server, delay);
 	service(bindto, bindport, server, memsize, delay);
 	return 0;

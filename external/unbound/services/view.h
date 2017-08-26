@@ -4,22 +4,22 @@
  * Copyright (c) 2016, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -120,7 +120,7 @@ int view_cmp(const void* v1, const void* v2);
 void view_delete(struct view* v);
 
 /**
- * Debug helper. Print all views 
+ * Debug helper. Print all views
  * Takes care of locking.
  * @param v: the views tree
  */
@@ -130,7 +130,7 @@ void views_print(struct views* v);
  * @param vs: views
  * @param name: name of the view we are looking for
  * @param write: 1 for obtaining write lock on found view, 0 for read lock
- * @return: locked view or NULL. 
+ * @return: locked view or NULL.
  */
 struct view* views_find_view(struct views* vs, const char* name, int write);
 

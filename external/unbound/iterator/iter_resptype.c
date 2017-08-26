@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -48,8 +48,8 @@
 #include "sldns/rrdef.h"
 #include "sldns/pkthdr.h"
 
-enum response_type 
-response_type_from_cache(struct dns_msg* msg, 
+enum response_type
+response_type_from_cache(struct dns_msg* msg,
 	struct query_info* request)
 {
 	/* If the message is NXDOMAIN, then it is an ANSWER. */
@@ -61,7 +61,7 @@ response_type_from_cache(struct dns_msg* msg,
 	/* First we look at the answer section. This can tell us if this is
 	 * CNAME or positive ANSWER. */
 	if(msg->rep->an_numrrsets > 0) {
-		/* Now look at the answer section first. 3 states: 
+		/* Now look at the answer section first. 3 states:
 		 *	o our answer is there directly,
 		 *	o our answer is there after a cname,
 		 *	o or there is just a cname. */
@@ -71,10 +71,10 @@ response_type_from_cache(struct dns_msg* msg,
 		for(i=0; i<msg->rep->an_numrrsets; i++) {
 			struct ub_packed_rrset_key* s = msg->rep->rrsets[i];
 
-			/* If we have encountered an answer (before or 
-			 * after a CNAME), then we are done! Note that 
-			 * if qtype == CNAME then this will be noted as 
-			 * an ANSWER before it gets treated as a CNAME, 
+			/* If we have encountered an answer (before or
+			 * after a CNAME), then we are done! Note that
+			 * if qtype == CNAME then this will be noted as
+			 * an ANSWER before it gets treated as a CNAME,
 			 * as it should */
 			if(ntohs(s->rk.type) == request->qtype &&
 				ntohs(s->rk.rrset_class) == request->qclass &&
@@ -82,7 +82,7 @@ response_type_from_cache(struct dns_msg* msg,
 				return RESPONSE_TYPE_ANSWER;
 			}
 
-			/* If we have encountered a CNAME, make sure that 
+			/* If we have encountered a CNAME, make sure that
 			 * it is relevant. */
 			if(ntohs(s->rk.type) == LDNS_RR_TYPE_CNAME &&
 				query_dname_compare(mname, s->rk.dname) == 0) {
@@ -90,20 +90,20 @@ response_type_from_cache(struct dns_msg* msg,
 			}
 		}
 
-		/* if we encountered a CNAME (or a bunch of CNAMEs), and 
-		 * still got to here, then it is a CNAME response. (i.e., 
+		/* if we encountered a CNAME (or a bunch of CNAMEs), and
+		 * still got to here, then it is a CNAME response. (i.e.,
 		 * the CNAME chain didn't terminate in an answer rrset.) */
 		if(mname != request->qname) {
 			return RESPONSE_TYPE_CNAME;
 		}
 	}
 
-	/* At this point, since we don't need to detect REFERRAL or LAME 
+	/* At this point, since we don't need to detect REFERRAL or LAME
 	 * messages, it can only be an ANSWER. */
 	return RESPONSE_TYPE_ANSWER;
 }
 
-enum response_type 
+enum response_type
 response_type_from_server(int rdset,
 	struct dns_msg* msg, struct query_info* request, struct delegpt* dp)
 {
@@ -149,44 +149,44 @@ response_type_from_server(int rdset,
 		uint8_t* mname = request->qname;
 		size_t mname_len = request->qname_len;
 
-		/* Now look at the answer section first. 3 states: our 
-		 * answer is there directly, our answer is there after 
+		/* Now look at the answer section first. 3 states: our
+		 * answer is there directly, our answer is there after
 		 * a cname, or there is just a cname. */
 		for(i=0; i<msg->rep->an_numrrsets; i++) {
 			s = msg->rep->rrsets[i];
 			
-			/* if the answer section has NS rrset, and qtype ANY 
+			/* if the answer section has NS rrset, and qtype ANY
 		 	 * and the delegation is lower, and no CNAMEs followed,
 		 	 * this is a referral where the NS went to AN section */
 			if((request->qtype == LDNS_RR_TYPE_ANY ||
 				request->qtype == LDNS_RR_TYPE_NS) &&
 				ntohs(s->rk.type) == LDNS_RR_TYPE_NS &&
 				ntohs(s->rk.rrset_class) == request->qclass &&
-				dname_strict_subdomain_c(s->rk.dname, 
+				dname_strict_subdomain_c(s->rk.dname,
 				origzone)) {
 				if((msg->rep->flags&BIT_AA))
 					return RESPONSE_TYPE_ANSWER;
 				return RESPONSE_TYPE_REFERRAL;
 			}
 
-			/* If we have encountered an answer (before or 
-			 * after a CNAME), then we are done! Note that 
+			/* If we have encountered an answer (before or
+			 * after a CNAME), then we are done! Note that
 			 * if qtype == CNAME then this will be noted as an
-			 * ANSWER before it gets treated as a CNAME, as 
+			 * ANSWER before it gets treated as a CNAME, as
 			 * it should. */
 			if(ntohs(s->rk.type) == request->qtype &&
 				ntohs(s->rk.rrset_class) == request->qclass &&
 				query_dname_compare(mname, s->rk.dname) == 0) {
 				if((msg->rep->flags&BIT_AA))
 					return RESPONSE_TYPE_ANSWER;
-				/* If the AA bit isn't on, and we've seen 
-				 * the answer, we only provisionally say 
-				 * 'ANSWER' -- it very well could be a 
+				/* If the AA bit isn't on, and we've seen
+				 * the answer, we only provisionally say
+				 * 'ANSWER' -- it very well could be a
 				 * REFERRAL. */
 				break;
 			}
 
-			/* If we have encountered a CNAME, make sure that 
+			/* If we have encountered a CNAME, make sure that
 			 * it is relevant. */
 			if(ntohs(s->rk.type) == LDNS_RR_TYPE_CNAME &&
 				query_dname_compare(mname, s->rk.dname) == 0) {
@@ -196,15 +196,15 @@ response_type_from_server(int rdset,
 		/* not a referral, and qtype any, thus an answer */
 		if(request->qtype == LDNS_RR_TYPE_ANY)
 			return RESPONSE_TYPE_ANSWER;
-		/* if we encountered a CNAME (or a bunch of CNAMEs), and 
-		 * still got to here, then it is a CNAME response. 
+		/* if we encountered a CNAME (or a bunch of CNAMEs), and
+		 * still got to here, then it is a CNAME response.
 		 * (This is regardless of the AA bit at this point) */
 		if(mname != request->qname) {
 			return RESPONSE_TYPE_CNAME;
 		}
 	}
 
-	/* Looking at the authority section, we just look and see if 
+	/* Looking at the authority section, we just look and see if
 	 * there is a SOA record, that means a NOERROR/NODATA */
 	for(i = msg->rep->an_numrrsets; i < (msg->rep->an_numrrsets +
 		msg->rep->ns_numrrsets); i++) {
@@ -220,18 +220,18 @@ response_type_from_server(int rdset,
 			return RESPONSE_TYPE_ANSWER;
 		}
 	}
-	/* Looking at the authority section, we just look and see if 
-	 * there is a delegation NS set, turning it into a delegation. 
-	 * Otherwise, we will have to conclude ANSWER (either it is 
+	/* Looking at the authority section, we just look and see if
+	 * there is a delegation NS set, turning it into a delegation.
+	 * Otherwise, we will have to conclude ANSWER (either it is
 	 * NOERROR/NODATA, or an non-authoritative answer). */
 	for(i = msg->rep->an_numrrsets; i < (msg->rep->an_numrrsets +
 		msg->rep->ns_numrrsets); i++) {
 		s = msg->rep->rrsets[i];
 
-		/* Detect REFERRAL/LAME/ANSWER based on the relationship 
+		/* Detect REFERRAL/LAME/ANSWER based on the relationship
 		 * of the NS set to the originating zone name. */
 		if(ntohs(s->rk.type) == LDNS_RR_TYPE_NS) {
-			/* If we are getting an NS set for the zone we 
+			/* If we are getting an NS set for the zone we
 			 * thought we were contacting, then it is an answer.*/
 			if(query_dname_compare(s->rk.dname, origzone) == 0) {
 				/* see if mistakenly a recursive server was
@@ -240,7 +240,7 @@ response_type_from_server(int rdset,
 					!(msg->rep->flags&BIT_AA) && !rdset)
 					return RESPONSE_TYPE_REC_LAME;
 				/* Or if a lame server is deployed,
-				 * which gives ns==zone delegation from cache 
+				 * which gives ns==zone delegation from cache
 				 * without AA bit as well, with nodata nosoa*/
 				/* real answer must be +AA and SOA RFC(2308),
 				 * so this is wrong, and we SERVFAIL it if
@@ -252,24 +252,24 @@ response_type_from_server(int rdset,
 					return RESPONSE_TYPE_THROWAWAY;
 				return RESPONSE_TYPE_ANSWER;
 			}
-			/* If we are getting a referral upwards (or to 
+			/* If we are getting a referral upwards (or to
 			 * the same zone), then the server is 'lame'. */
 			if(dname_subdomain_c(origzone, s->rk.dname)) {
 				if(rdset) /* forward or reclame not LAME */
 					return RESPONSE_TYPE_THROWAWAY;
 				return RESPONSE_TYPE_LAME;
 			}
-			/* If the NS set is below the delegation point we 
-			 * are on, and it is non-authoritative, then it is 
+			/* If the NS set is below the delegation point we
+			 * are on, and it is non-authoritative, then it is
 			 * a referral, otherwise it is an answer. */
 			if(dname_subdomain_c(s->rk.dname, origzone)) {
-				/* NOTE: I no longer remember in what case 
-				 * we would like this to be an answer. 
-				 * NODATA should have a SOA or nothing, 
-				 * not an NS rrset. 
-				 * True, referrals should not have the AA 
+				/* NOTE: I no longer remember in what case
+				 * we would like this to be an answer.
+				 * NODATA should have a SOA or nothing,
+				 * not an NS rrset.
+				 * True, referrals should not have the AA
 				 * bit set, but... */
-				 
+				
 				/* if((msg->rep->flags&BIT_AA))
 					return RESPONSE_TYPE_ANSWER; */
 				return RESPONSE_TYPE_REFERRAL;
@@ -278,7 +278,7 @@ response_type_from_server(int rdset,
 		}
 	}
 
-	/* If we've gotten this far, this is NOERROR/NODATA (which could 
+	/* If we've gotten this far, this is NOERROR/NODATA (which could
 	 * be an entirely empty message) */
 	/* check if recursive answer; saying it has empty cache */
 	if( (msg->rep->flags&BIT_RA) && !(msg->rep->flags&BIT_AA) && !rdset)

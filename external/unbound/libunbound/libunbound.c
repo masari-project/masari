@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -36,7 +36,7 @@
 /**
  * \file
  *
- * This file contains functions to resolve DNS queries and 
+ * This file contains functions to resolve DNS queries and
  * validate the answers. Synchonously and asynchronously.
  *
  */
@@ -149,7 +149,7 @@ static struct ub_ctx* ub_ctx_create_nopipe(void)
 	return ctx;
 }
 
-struct ub_ctx* 
+struct ub_ctx*
 ub_ctx_create(void)
 {
 	struct ub_ctx* ctx = ub_ctx_create_nopipe();
@@ -181,7 +181,7 @@ ub_ctx_create(void)
 	return ctx;
 }
 
-struct ub_ctx* 
+struct ub_ctx*
 ub_ctx_create_ub_event(struct ub_event_base* ueb)
 {
 	struct ub_ctx* ctx = ub_ctx_create_nopipe();
@@ -195,7 +195,7 @@ ub_ctx_create_ub_event(struct ub_event_base* ueb)
 	return ctx;
 }
 
-struct ub_ctx* 
+struct ub_ctx*
 ub_ctx_create_event(struct event_base* eb)
 {
 	struct ub_ctx* ctx = ub_ctx_create_nopipe();
@@ -232,7 +232,7 @@ static void ub_stop_bg(struct ub_ctx* ctx)
 		uint32_t cmd = UB_LIBCMD_QUIT;
 		lock_basic_unlock(&ctx->cfglock);
 		lock_basic_lock(&ctx->qqpipe_lock);
-		(void)tube_write_msg(ctx->qq_pipe, (uint8_t*)&cmd, 
+		(void)tube_write_msg(ctx->qq_pipe, (uint8_t*)&cmd,
 			(uint32_t)sizeof(cmd), 0);
 		lock_basic_unlock(&ctx->qqpipe_lock);
 		lock_basic_lock(&ctx->rrpipe_lock);
@@ -267,7 +267,7 @@ static void ub_stop_bg(struct ub_ctx* ctx)
 	}
 }
 
-void 
+void
 ub_ctx_delete(struct ub_ctx* ctx)
 {
 	struct alloc_cache* a, *na;
@@ -321,7 +321,7 @@ ub_ctx_delete(struct ub_ctx* ctx)
 #endif
 }
 
-int 
+int
 ub_ctx_set_option(struct ub_ctx* ctx, const char* opt, const char* val)
 {
 	lock_basic_lock(&ctx->cfglock);
@@ -350,7 +350,7 @@ ub_ctx_get_option(struct ub_ctx* ctx, const char* opt, char** str)
 	return r;
 }
 
-int 
+int
 ub_ctx_config(struct ub_ctx* ctx, const char* fname)
 {
 	lock_basic_lock(&ctx->cfglock);
@@ -366,7 +366,7 @@ ub_ctx_config(struct ub_ctx* ctx, const char* fname)
 	return UB_NOERROR;
 }
 
-int 
+int
 ub_ctx_add_ta(struct ub_ctx* ctx, const char* ta)
 {
 	char* dup = strdup(ta);
@@ -386,7 +386,7 @@ ub_ctx_add_ta(struct ub_ctx* ctx, const char* ta)
 	return UB_NOERROR;
 }
 
-int 
+int
 ub_ctx_add_ta_file(struct ub_ctx* ctx, const char* fname)
 {
 	char* dup = strdup(fname);
@@ -426,7 +426,7 @@ int ub_ctx_add_ta_autr(struct ub_ctx* ctx, const char* fname)
 	return UB_NOERROR;
 }
 
-int 
+int
 ub_ctx_trustedkeys(struct ub_ctx* ctx, const char* fname)
 {
 	char* dup = strdup(fname);
@@ -466,7 +466,7 @@ int ub_ctx_debugout(struct ub_ctx* ctx, void* out)
 	return UB_NOERROR;
 }
 
-int 
+int
 ub_ctx_async(struct ub_ctx* ctx, int dothread)
 {
 #ifdef THREADS_DISABLED
@@ -483,14 +483,14 @@ ub_ctx_async(struct ub_ctx* ctx, int dothread)
 	return UB_NOERROR;
 }
 
-int 
+int
 ub_poll(struct ub_ctx* ctx)
 {
 	/* no need to hold lock while testing for readability. */
 	return tube_poll(ctx->rr_pipe);
 }
 
-int 
+int
 ub_fd(struct ub_ctx* ctx)
 {
 	return tube_read_fd(ctx->rr_pipe);
@@ -581,7 +581,7 @@ process_answer(struct ub_ctx* ctx, uint8_t* msg, uint32_t len)
 	return r;
 }
 
-int 
+int
 ub_process(struct ub_ctx* ctx)
 {
 	int r;
@@ -605,7 +605,7 @@ ub_process(struct ub_ctx* ctx)
 	return UB_NOERROR;
 }
 
-int 
+int
 ub_wait(struct ub_ctx* ctx)
 {
 	int err;
@@ -644,7 +644,7 @@ ub_wait(struct ub_ctx* ctx)
 				lock_basic_unlock(&ctx->rrpipe_lock);
 				continue;
 			}
-			r = process_answer_detail(ctx, msg, len, 
+			r = process_answer_detail(ctx, msg, len,
 				&cb, &cbarg, &err, &res);
 			lock_basic_unlock(&ctx->rrpipe_lock);
 			free(msg);
@@ -659,8 +659,8 @@ ub_wait(struct ub_ctx* ctx)
 	return UB_NOERROR;
 }
 
-int 
-ub_resolve(struct ub_ctx* ctx, const char* name, int rrtype, 
+int
+ub_resolve(struct ub_ctx* ctx, const char* name, int rrtype,
 	int rrclass, struct ub_result** result)
 {
 	struct ctx_query* q;
@@ -703,8 +703,8 @@ ub_resolve(struct ub_ctx* ctx, const char* name, int rrtype,
 	return UB_NOERROR;
 }
 
-int 
-ub_resolve_event(struct ub_ctx* ctx, const char* name, int rrtype, 
+int
+ub_resolve_event(struct ub_ctx* ctx, const char* name, int rrtype,
 	int rrclass, void* mydata, ub_event_callback_type callback,
 	int* async_id)
 {
@@ -746,8 +746,8 @@ ub_resolve_event(struct ub_ctx* ctx, const char* name, int rrtype,
 }
 
 
-int 
-ub_resolve_async(struct ub_ctx* ctx, const char* name, int rrtype, 
+int
+ub_resolve_async(struct ub_ctx* ctx, const char* name, int rrtype,
 	int rrclass, void* mydata, ub_callback_type callback, int* async_id)
 {
 	struct ctx_query* q;
@@ -809,7 +809,7 @@ ub_resolve_async(struct ub_ctx* ctx, const char* name, int rrtype,
 	return UB_NOERROR;
 }
 
-int 
+int
 ub_cancel(struct ub_ctx* ctx, int async_id)
 {
 	struct ctx_query* q;
@@ -850,7 +850,7 @@ ub_cancel(struct ub_ctx* ctx, int async_id)
 	return UB_NOERROR;
 }
 
-void 
+void
 ub_resolve_free(struct ub_result* result)
 {
 	char** p;
@@ -868,7 +868,7 @@ ub_resolve_free(struct ub_result* result)
 	free(result);
 }
 
-const char* 
+const char*
 ub_strerror(int err)
 {
 	switch(err) {
@@ -887,7 +887,7 @@ ub_strerror(int err)
 	}
 }
 
-int 
+int
 ub_ctx_set_fwd(struct ub_ctx* ctx, const char* addr)
 {
 	struct sockaddr_storage storage;
@@ -1041,7 +1041,7 @@ int ub_ctx_set_stub(struct ub_ctx* ctx, const char* zone, const char* addr,
 	return UB_NOERROR;
 }
 
-int 
+int
 ub_ctx_resolvconf(struct ub_ctx* ctx, const char* fname)
 {
 	FILE* in;
@@ -1059,7 +1059,7 @@ ub_ctx_resolvconf(struct ub_ctx* ctx, const char* fname)
 		IP_ADDR_STRING *ptr;
 
 		info = (FIXED_INFO *) malloc(sizeof (FIXED_INFO));
-		if (info == NULL) 
+		if (info == NULL)
 			return UB_READFILE;
 
 		if (GetNetworkParams(info, &buflen) == ERROR_BUFFER_OVERFLOW) {
@@ -1074,7 +1074,7 @@ ub_ctx_resolvconf(struct ub_ctx* ctx, const char* fname)
 			ptr = &(info->DnsServerList);
 			while (ptr) {
 				numserv++;
-				if((retval=ub_ctx_set_fwd(ctx, 
+				if((retval=ub_ctx_set_fwd(ctx,
 					ptr->IpAddress.String))!=0) {
 					free(info);
 					return retval;
@@ -1150,10 +1150,10 @@ ub_ctx_hosts(struct ub_ctx* ctx, const char* fname)
 		name = getenv("WINDIR");
 		if (name != NULL) {
 			int retval=0;
-			snprintf(buf, sizeof(buf), "%s%s", name, 
+			snprintf(buf, sizeof(buf), "%s%s", name,
 				"\\system32\\drivers\\etc\\hosts");
 			if((retval=ub_ctx_hosts(ctx, buf)) !=0 ) {
-				snprintf(buf, sizeof(buf), "%s%s", name, 
+				snprintf(buf, sizeof(buf), "%s%s", name,
 					"\\hosts");
 				retval=ub_ctx_hosts(ctx, buf);
 			}
@@ -1185,7 +1185,7 @@ ub_ctx_hosts(struct ub_ctx* ctx, const char* fname)
 			parse++;
 		if(*parse == '\n' || *parse == 0)
 			continue;
-		if(*parse == '%') 
+		if(*parse == '%')
 			continue; /* ignore macOSX fe80::1%lo0 localhost */
 		if(*parse != ' ' && *parse != '\t') {
 			/* must have whitespace after address */
@@ -1217,7 +1217,7 @@ ub_ctx_hosts(struct ub_ctx* ctx, const char* fname)
 				return UB_NOMEM;
 			}
 			lock_basic_lock(&ctx->cfglock);
-			if(!cfg_strlist_insert(&ctx->env->cfg->local_data, 
+			if(!cfg_strlist_insert(&ctx->env->cfg->local_data,
 				ins)) {
 				lock_basic_unlock(&ctx->cfglock);
 				fclose(in);
@@ -1246,7 +1246,7 @@ static int ub_ctx_finalize(struct ub_ctx* ctx)
 
 /* Print local zones and RR data */
 int ub_ctx_print_local_zones(struct ub_ctx* ctx)
-{   
+{
 	int res = ub_ctx_finalize(ctx);
 	if (res) return res;
 
@@ -1256,7 +1256,7 @@ int ub_ctx_print_local_zones(struct ub_ctx* ctx)
 }
 
 /* Add a new zone */
-int ub_ctx_zone_add(struct ub_ctx* ctx, const char *zone_name, 
+int ub_ctx_zone_add(struct ub_ctx* ctx, const char *zone_name,
 	const char *zone_type)
 {
 	enum localzone_type t;
@@ -1277,7 +1277,7 @@ int ub_ctx_zone_add(struct ub_ctx* ctx, const char *zone_name,
 	}
 
 	lock_rw_wrlock(&ctx->local_zones->lock);
-	if((z=local_zones_find(ctx->local_zones, nm, nmlen, nmlabs, 
+	if((z=local_zones_find(ctx->local_zones, nm, nmlen, nmlabs,
 		LDNS_RR_CLASS_IN))) {
 		/* already present in tree */
 		lock_rw_wrlock(&z->lock);
@@ -1287,7 +1287,7 @@ int ub_ctx_zone_add(struct ub_ctx* ctx, const char *zone_name,
 		free(nm);
 		return UB_NOERROR;
 	}
-	if(!local_zones_add_zone(ctx->local_zones, nm, nmlen, nmlabs, 
+	if(!local_zones_add_zone(ctx->local_zones, nm, nmlen, nmlabs,
 		LDNS_RR_CLASS_IN, t)) {
 		lock_rw_unlock(&ctx->local_zones->lock);
 		return UB_NOMEM;
@@ -1298,7 +1298,7 @@ int ub_ctx_zone_add(struct ub_ctx* ctx, const char *zone_name,
 
 /* Remove zone */
 int ub_ctx_zone_remove(struct ub_ctx* ctx, const char *zone_name)
-{   
+{
 	struct local_zone* z;
 	uint8_t* nm;
 	int nmlabs;
@@ -1312,7 +1312,7 @@ int ub_ctx_zone_remove(struct ub_ctx* ctx, const char *zone_name)
 	}
 
 	lock_rw_wrlock(&ctx->local_zones->lock);
-	if((z=local_zones_find(ctx->local_zones, nm, nmlen, nmlabs, 
+	if((z=local_zones_find(ctx->local_zones, nm, nmlen, nmlabs,
 		LDNS_RR_CLASS_IN))) {
 		/* present in tree */
 		local_zones_del_zone(ctx->local_zones, z);
@@ -1341,10 +1341,10 @@ int ub_ctx_data_remove(struct ub_ctx* ctx, const char *data)
 	int res = ub_ctx_finalize(ctx);
 	if (res) return res;
 
-	if(!parse_dname(data, &nm, &nmlen, &nmlabs)) 
+	if(!parse_dname(data, &nm, &nmlen, &nmlabs))
 		return UB_SYNTAX;
 
-	local_zones_del_data(ctx->local_zones, nm, nmlen, nmlabs, 
+	local_zones_del_data(ctx->local_zones, nm, nmlen, nmlabs,
 		LDNS_RR_CLASS_IN);
 
 	free(nm);
@@ -1356,7 +1356,7 @@ const char* ub_version(void)
 	return PACKAGE_VERSION;
 }
 
-int 
+int
 ub_ctx_set_event(struct ub_ctx* ctx, struct event_base* base) {
 	struct ub_event_base* new_base;
 

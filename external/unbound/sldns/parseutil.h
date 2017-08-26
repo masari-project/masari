@@ -16,9 +16,9 @@
 #define LDNS_PARSEUTIL_H
 struct tm;
 
-/** 
+/**
  *  A general purpose lookup table
- *  
+ *
  *  Lookup tables are arrays of (id, name) pairs,
  *  So you can for instance lookup the RCODE 3, which is "NXDOMAIN",
  *  and vice versa. The lookup tables themselves are defined wherever needed,
@@ -137,7 +137,7 @@ int sldns_b32_pton_extended_hex(const char* src_text, size_t src_text_length,
  */
 int sldns_parse_escape(uint8_t *ch_p, const char** str_p);
 
-/** 
+/**
  * Parse one character, with escape codes,
  * @param ch_p: the parsed character
  * @param str_p: the string. moved along for characters read.

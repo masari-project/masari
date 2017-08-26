@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -104,8 +104,8 @@ void server_stats_log(struct server_stats* stats, struct worker* worker,
 	log_info("server stats for thread %d: %u queries, "
 		"%u answers from cache, %u recursions, %u prefetch, %u rejected by "
 		"ip ratelimiting",
-		threadnum, (unsigned)stats->num_queries, 
-		(unsigned)(stats->num_queries - 
+		threadnum, (unsigned)stats->num_queries,
+		(unsigned)(stats->num_queries -
 			stats->num_queries_missed_cache),
 		(unsigned)stats->num_queries_missed_cache,
 		(unsigned)stats->num_queries_prefetch,
@@ -161,7 +161,7 @@ server_stats_compile(struct worker* worker, struct stats_info* s, int reset)
 	s->svr.ans_rcode_nodata += worker->env.mesh->ans_nodata;
 	for(i=0; i<16; i++)
 		s->svr.ans_rcode[i] += worker->env.mesh->ans_rcode[i];
-	timehist_export(worker->env.mesh->histogram, s->svr.hist, 
+	timehist_export(worker->env.mesh->histogram, s->svr.hist,
 		NUM_BUCKETS_HIST);
 	/* values from outside network */
 	s->svr.unwanted_replies = worker->back->unwanted_replies;
@@ -220,7 +220,7 @@ void server_stats_reply(struct worker* worker, int reset)
 	struct stats_info s;
 	server_stats_compile(worker, &s, reset);
 	verbose(VERB_ALGO, "write stats replymsg");
-	if(!tube_write_msg(worker->daemon->workers[0]->cmd, 
+	if(!tube_write_msg(worker->daemon->workers[0]->cmd,
 		(uint8_t*)&s, sizeof(s), 0))
 		fatal_exit("could not write stat values over cmd channel");
 }

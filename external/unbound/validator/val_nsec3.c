@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -58,17 +58,17 @@
 #include "validator/val_nsec.h"
 #include "sldns/sbuffer.h"
 
-/** 
- * This function we get from ldns-compat or from base system 
+/**
+ * This function we get from ldns-compat or from base system
  * it returns the number of data bytes stored at the target, or <0 on error.
  */
 int sldns_b32_ntop_extended_hex(uint8_t const *src, size_t srclength,
 	char *target, size_t targsize);
-/** 
- * This function we get from ldns-compat or from base system 
+/**
+ * This function we get from ldns-compat or from base system
  * it returns the number of data bytes stored at the target, or <0 on error.
  */
-int sldns_b32_pton_extended_hex(char const *src, size_t hashed_owner_str_len, 
+int sldns_b32_pton_extended_hex(char const *src, size_t hashed_owner_str_len,
 	uint8_t *target, size_t targsize);
 
 /**
@@ -255,7 +255,7 @@ size_t nsec3_hash_to_b32(uint8_t* hash, size_t hashlen, uint8_t* zone,
 	if(max < hashlen*2+1) /* quick approx of b32, as if hexb16 */
 		return 0;
 	ret = sldns_b32_ntop_extended_hex(hash, hashlen, (char*)buf+1, max-1);
-	if(ret < 1) 
+	if(ret < 1)
 		return 0;
 	buf[0] = (uint8_t)ret; /* length of b32 label */
 	ret++;
@@ -291,11 +291,11 @@ nsec3_has_type(struct ub_packed_rrset_key* rrset, int r, uint16_t type)
 	/* skip salt */
 	if(d->rr_len[r] < skiplen+1)
 		return 0; /* malformed, too short */
-	skiplen += 1+(size_t)d->rr_data[r][skiplen]; 
+	skiplen += 1+(size_t)d->rr_data[r][skiplen];
 	/* skip next hashed owner */
 	if(d->rr_len[r] < skiplen+1)
 		return 0; /* malformed, too short */
-	skiplen += 1+(size_t)d->rr_data[r][skiplen]; 
+	skiplen += 1+(size_t)d->rr_data[r][skiplen];
 	if(d->rr_len[r] < skiplen)
 		return 0; /* malformed, too short */
 	bitlen = d->rr_len[r] - skiplen;
@@ -303,19 +303,19 @@ nsec3_has_type(struct ub_packed_rrset_key* rrset, int r, uint16_t type)
 	return nsecbitmap_has_type_rdata(bitmap, bitlen, type);
 }
 	
-/** 
- * Iterate through NSEC3 list, per RR 
- * This routine gives the next RR in the list (or sets rrset null). 
+/**
+ * Iterate through NSEC3 list, per RR
+ * This routine gives the next RR in the list (or sets rrset null).
  * Usage:
  *
  * size_t rrsetnum;
  * int rrnum;
  * struct ub_packed_rrset_key* rrset;
- * for(rrset=filter_first(filter, &rrsetnum, &rrnum); rrset; 
+ * for(rrset=filter_first(filter, &rrsetnum, &rrnum); rrset;
  *	rrset=filter_next(filter, &rrsetnum, &rrnum))
  *		do_stuff;
- * 
- * Also filters out 
+ *
+ * Also filters out
  * 	o unknown flag NSEC3s
  * 	o unknown algorithm NSEC3s.
  * @param filter: nsec3 filter structure.
@@ -335,8 +335,8 @@ filter_next(struct nsec3_filter* filter, size_t* rrsetnum, int* rrnum)
 	for(i=*rrsetnum; i<filter->num; i++) {
 		/* see if RRset qualifies */
 		if(ntohs(filter->list[i]->rk.type) != LDNS_RR_TYPE_NSEC3 ||
-			ntohs(filter->list[i]->rk.rrset_class) != 
-			filter->fclass) 
+			ntohs(filter->list[i]->rk.rrset_class) !=
+			filter->fclass)
 			continue;
 		/* check RRset zone */
 		nm = filter->list[i]->rk.dname;
@@ -389,7 +389,7 @@ nsec3_rrset_has_known(struct ub_packed_rrset_key* s)
 	return 0;
 }
 
-/** 
+/**
  * Initialize the filter structure.
  * Finds the zone by looking at available NSEC3 records and best match.
  * 	(skips the unknown flag and unknown algo NSEC3s).
@@ -397,7 +397,7 @@ nsec3_rrset_has_known(struct ub_packed_rrset_key* s)
  * @param filter: nsec3 filter structure.
  * @param list: list of rrsets, an array of them.
  * @param num: number of rrsets in list.
- * @param qinfo: 
+ * @param qinfo:
  *	query name to match a zone for.
  *	query type (if DS a higher zone must be chosen)
  *	qclass, to filter NSEC3s with.
@@ -417,7 +417,7 @@ filter_init(struct nsec3_filter* filter, struct ub_packed_rrset_key** list,
 	for(i=0; i<num; i++) {
 		/* ignore other stuff in the list */
 		if(ntohs(list[i]->rk.type) != LDNS_RR_TYPE_NSEC3 ||
-			ntohs(list[i]->rk.rrset_class) != qinfo->qclass) 
+			ntohs(list[i]->rk.rrset_class) != qinfo->qclass)
 			continue;
 		/* skip unknown flags, algo */
 		if(!nsec3_rrset_has_known(list[i]))
@@ -433,7 +433,7 @@ filter_init(struct nsec3_filter* filter, struct ub_packed_rrset_key** list,
 		if(dname_subdomain_c(qinfo->qname, nm) && (!filter->zone ||
 			dname_subdomain_c(nm, filter->zone))) {
 			/* for a type DS do not accept a zone equal to qname*/
-			if(qinfo->qtype == LDNS_RR_TYPE_DS && 
+			if(qinfo->qtype == LDNS_RR_TYPE_DS &&
 				query_dname_compare(qinfo->qname, nm) == 0 &&
 				!dname_is_root(qinfo->qname))
 				continue;
@@ -463,7 +463,7 @@ get_max_iter(struct val_env* ve, size_t bits)
 	return ve->nsec3_maxiter[ve->nsec3_keyiter_count-1];
 }
 
-/** 
+/**
  * Determine if any of the NSEC3 rrs iteration count is too high, from key.
  * @param ve: validator environment with iteration count config settings.
  * @param filter: what NSEC3s to loop over.
@@ -471,7 +471,7 @@ get_max_iter(struct val_env* ve, size_t bits)
  * @return 1 if some nsec3s are above the max iteration count.
  */
 static int
-nsec3_iteration_count_high(struct val_env* ve, struct nsec3_filter* filter, 
+nsec3_iteration_count_high(struct val_env* ve, struct nsec3_filter* filter,
 	struct key_entry_key* kkey)
 {
 	size_t rrsetnum;
@@ -483,7 +483,7 @@ nsec3_iteration_count_high(struct val_env* ve, struct nsec3_filter* filter,
 	verbose(VERB_ALGO, "nsec3: keysize %d bits, max iterations %d",
 		(int)bits, (int)max_iter);
 
-	for(rrset=filter_first(filter, &rrsetnum, &rrnum); rrset; 
+	for(rrset=filter_first(filter, &rrsetnum, &rrnum); rrset;
 		rrset=filter_next(filter, &rrsetnum, &rrnum)) {
 		if(nsec3_get_iter(rrset, rrnum) > max_iter)
 			return 1;
@@ -493,7 +493,7 @@ nsec3_iteration_count_high(struct val_env* ve, struct nsec3_filter* filter,
 
 /* nsec3_cache_compare for rbtree */
 int
-nsec3_hash_cmp(const void* c1, const void* c2) 
+nsec3_hash_cmp(const void* c1, const void* c2)
 {
 	struct nsec3_cached_hash* h1 = (struct nsec3_cached_hash*)c1;
 	struct nsec3_cached_hash* h2 = (struct nsec3_cached_hash*)c2;
@@ -529,7 +529,7 @@ nsec3_hash_cmp(const void* c1, const void* c2)
 }
 
 size_t
-nsec3_get_hashed(sldns_buffer* buf, uint8_t* nm, size_t nmlen, int algo, 
+nsec3_get_hashed(sldns_buffer* buf, uint8_t* nm, size_t nmlen, int algo,
 	size_t iter, uint8_t* salt, size_t saltlen, uint8_t* res, size_t max)
 {
 	size_t i, hash_len;
@@ -564,7 +564,7 @@ nsec3_get_hashed(sldns_buffer* buf, uint8_t* nm, size_t nmlen, int algo,
 
 /** perform hash of name */
 static int
-nsec3_calc_hash(struct regional* region, sldns_buffer* buf, 
+nsec3_calc_hash(struct regional* region, sldns_buffer* buf,
 	struct nsec3_cached_hash* c)
 {
 	int algo = nsec3_get_algo(c->nsec3, c->rr);
@@ -603,7 +603,7 @@ nsec3_calc_hash(struct regional* region, sldns_buffer* buf,
 
 /** perform b32 encoding of hash */
 static int
-nsec3_calc_b32(struct regional* region, sldns_buffer* buf, 
+nsec3_calc_b32(struct regional* region, sldns_buffer* buf,
 	struct nsec3_cached_hash* c)
 {
 	int r;
@@ -615,7 +615,7 @@ nsec3_calc_b32(struct regional* region, sldns_buffer* buf,
 		return 0;
 	}
 	c->b32_len = (size_t)r;
-	c->b32 = regional_alloc_init(region, sldns_buffer_begin(buf), 
+	c->b32 = regional_alloc_init(region, sldns_buffer_begin(buf),
 		c->b32_len);
 	if(!c->b32)
 		return 0;
@@ -624,7 +624,7 @@ nsec3_calc_b32(struct regional* region, sldns_buffer* buf,
 
 int
 nsec3_hash_name(rbtree_type* table, struct regional* region, sldns_buffer* buf,
-	struct ub_packed_rrset_key* nsec3, int rr, uint8_t* dname, 
+	struct ub_packed_rrset_key* nsec3, int rr, uint8_t* dname,
 	size_t dname_len, struct nsec3_cached_hash** hash)
 {
 	struct nsec3_cached_hash* c;
@@ -696,15 +696,15 @@ label_compare_lower(uint8_t* lab1, uint8_t* lab2, size_t lablen)
  * @return true if matches exactly, false if not.
  */
 static int
-nsec3_hash_matches_owner(struct nsec3_filter* flt, 
+nsec3_hash_matches_owner(struct nsec3_filter* flt,
 	struct nsec3_cached_hash* hash, struct ub_packed_rrset_key* s)
 {
 	uint8_t* nm = s->rk.dname;
 	/* compare, does hash of name based on params in this NSEC3
-	 * match the owner name of this NSEC3? 
-	 * name must be: <hashlength>base32 . zone name 
+	 * match the owner name of this NSEC3?
+	 * name must be: <hashlength>base32 . zone name
 	 * so; first label must not be root label (not zero length),
-	 * and match the b32 encoded hash length, 
+	 * and match the b32 encoded hash length,
 	 * and the label content match the b32 encoded hash
 	 * and the rest must be the zone name.
 	 */
@@ -730,7 +730,7 @@ nsec3_hash_matches_owner(struct nsec3_filter* flt,
  */
 static int
 find_matching_nsec3(struct module_env* env, struct nsec3_filter* flt,
-	rbtree_type* ct, uint8_t* nm, size_t nmlen, 
+	rbtree_type* ct, uint8_t* nm, size_t nmlen,
 	struct ub_packed_rrset_key** rrset, int* rr)
 {
 	size_t i_rs;
@@ -740,7 +740,7 @@ find_matching_nsec3(struct module_env* env, struct nsec3_filter* flt,
 	int r;
 
 	/* this loop skips other-zone and unknown NSEC3s, also non-NSEC3 RRs */
-	for(s=filter_first(flt, &i_rs, &i_rr); s; 
+	for(s=filter_first(flt, &i_rs, &i_rr); s;
 		s=filter_next(flt, &i_rs, &i_rr)) {
 		/* get name hashed for this NSEC3 RR */
 		r = nsec3_hash_name(ct, env->scratch, env->scratch_buffer,
@@ -772,32 +772,32 @@ nsec3_covers(uint8_t* zone, struct nsec3_cached_hash* hash,
 		return 0; /* malformed RR proves nothing */
 
 	/* check the owner name is a hashed value . apex
-	 * base32 encoded values must have equal length. 
+	 * base32 encoded values must have equal length.
 	 * hash_value and next hash value must have equal length. */
-	if(nextlen != hash->hash_len || hash->hash_len==0||hash->b32_len==0|| 
+	if(nextlen != hash->hash_len || hash->hash_len==0||hash->b32_len==0||
 		(size_t)*rrset->rk.dname != hash->b32_len ||
 		query_dname_compare(rrset->rk.dname+1+
 			(size_t)*rrset->rk.dname, zone) != 0)
 		return 0; /* bad lengths or owner name */
 
 	/* This is the "normal case: owner < next and owner < hash < next */
-	if(label_compare_lower(rrset->rk.dname+1, hash->b32, 
-		hash->b32_len) < 0 && 
+	if(label_compare_lower(rrset->rk.dname+1, hash->b32,
+		hash->b32_len) < 0 &&
 		memcmp(hash->hash, next, nextlen) < 0)
 		return 1;
 
 	/* convert owner name from text to binary */
 	sldns_buffer_clear(buf);
 	owner = sldns_buffer_begin(buf);
-	len = sldns_b32_pton_extended_hex((char*)rrset->rk.dname+1, 
+	len = sldns_b32_pton_extended_hex((char*)rrset->rk.dname+1,
 		hash->b32_len, owner, sldns_buffer_limit(buf));
 	if(len<1)
 		return 0; /* bad owner name in some way */
 	if((size_t)len != hash->hash_len || (size_t)len != nextlen)
 		return 0; /* wrong length */
 
-	/* this is the end of zone case: next <= owner && 
-	 * 	(hash > owner || hash < next) 
+	/* this is the end of zone case: next <= owner &&
+	 * 	(hash > owner || hash < next)
 	 * this also covers the only-apex case of next==owner.
 	 */
 	if(memcmp(next, owner, nextlen) <= 0 &&
@@ -823,7 +823,7 @@ nsec3_covers(uint8_t* zone, struct nsec3_cached_hash* hash,
  */
 static int
 find_covering_nsec3(struct module_env* env, struct nsec3_filter* flt,
-        rbtree_type* ct, uint8_t* nm, size_t nmlen, 
+        rbtree_type* ct, uint8_t* nm, size_t nmlen,
 	struct ub_packed_rrset_key** rrset, int* rr)
 {
 	size_t i_rs;
@@ -833,7 +833,7 @@ find_covering_nsec3(struct module_env* env, struct nsec3_filter* flt,
 	int r;
 
 	/* this loop skips other-zone and unknown NSEC3s, also non-NSEC3 RRs */
-	for(s=filter_first(flt, &i_rs, &i_rr); s; 
+	for(s=filter_first(flt, &i_rs, &i_rr); s;
 		s=filter_next(flt, &i_rs, &i_rr)) {
 		/* get name hashed for this NSEC3 RR */
 		r = nsec3_hash_name(ct, env->scratch, env->scratch_buffer,
@@ -843,7 +843,7 @@ find_covering_nsec3(struct module_env* env, struct nsec3_filter* flt,
 			break; /* alloc failure */
 		} else if(r < 0)
 			continue; /* malformed NSEC3 */
-		else if(nsec3_covers(flt->zone, hash, s, i_rr, 
+		else if(nsec3_covers(flt->zone, hash, s, i_rr,
 			env->scratch_buffer)) {
 			*rrset = s; /* rrset with this name */
 			*rr = i_rr; /* covers hash with these parameters */
@@ -868,23 +868,23 @@ find_covering_nsec3(struct module_env* env, struct nsec3_filter* flt,
  * @return true if a closest encloser candidate is found, false if not.
  */
 static int
-nsec3_find_closest_encloser(struct module_env* env, struct nsec3_filter* flt, 
+nsec3_find_closest_encloser(struct module_env* env, struct nsec3_filter* flt,
 	rbtree_type* ct, struct query_info* qinfo, struct ce_response* ce)
 {
 	uint8_t* nm = qinfo->qname;
 	size_t nmlen = qinfo->qname_len;
 
-	/* This scans from longest name to shortest, so the first match 
+	/* This scans from longest name to shortest, so the first match
 	 * we find is the only viable candidate. */
 
-	/* (David:) FIXME: modify so that the NSEC3 matching the zone apex need 
+	/* (David:) FIXME: modify so that the NSEC3 matching the zone apex need
 	 * not be present. (Mark Andrews idea).
 	 * (Wouter:) But make sure you check for DNAME bit in zone apex,
 	 * if the NSEC3 you find is the only NSEC3 in the zone, then this
 	 * may be the case. */
 
 	while(dname_subdomain_c(nm, flt->zone)) {
-		if(find_matching_nsec3(env, flt, ct, nm, nmlen, 
+		if(find_matching_nsec3(env, flt, ct, nm, nmlen,
 			&ce->ce_rrset, &ce->ce_rr)) {
 			ce->ce = nm;
 			ce->ce_len = nmlen;
@@ -907,7 +907,7 @@ nsec3_find_closest_encloser(struct module_env* env, struct nsec3_filter* flt,
  * @param nmlen: length of nm.
  */
 static void
-next_closer(uint8_t* qname, size_t qnamelen, uint8_t* ce, 
+next_closer(uint8_t* qname, size_t qnamelen, uint8_t* ce,
 	uint8_t** nm, size_t* nmlen)
 {
 	int strip = dname_count_labels(qname) - dname_count_labels(ce) -1;
@@ -924,9 +924,9 @@ next_closer(uint8_t* qname, size_t qnamelen, uint8_t* ce,
  * @param flt: the NSEC3 RR filter, contains zone name and RRs.
  * @param ct: cached hashes table.
  * @param qinfo: query that is verified for.
- * @param prove_does_not_exist: If true, then if the closest encloser 
+ * @param prove_does_not_exist: If true, then if the closest encloser
  * 	turns out to be qname, then null is returned.
- * 	If set true, and the return value is true, then you can be 
+ * 	If set true, and the return value is true, then you can be
  * 	certain that the ce.nc_rrset and ce.nc_rr are set properly.
  * @param ce: closest encloser information is returned in here.
  * @return bogus if no closest encloser could be proven.
@@ -935,7 +935,7 @@ next_closer(uint8_t* qname, size_t qnamelen, uint8_t* ce,
  * 		that an insecure delegation exists above the qname.
  */
 static enum sec_status
-nsec3_prove_closest_encloser(struct module_env* env, struct nsec3_filter* flt, 
+nsec3_prove_closest_encloser(struct module_env* env, struct nsec3_filter* flt,
 	rbtree_type* ct, struct query_info* qinfo, int prove_does_not_exist,
 	struct ce_response* ce)
 {
@@ -957,13 +957,13 @@ nsec3_prove_closest_encloser(struct module_env* env, struct nsec3_filter* flt,
 				"proved that qname existed, bad");
 			return sec_status_bogus;
 		}
-		/* otherwise, we need to nothing else to prove that qname 
+		/* otherwise, we need to nothing else to prove that qname
 		 * is its own closest encloser. */
 		return sec_status_secure;
 	}
 
-	/* If the closest encloser is actually a delegation, then the 
-	 * response should have been a referral. If it is a DNAME, then 
+	/* If the closest encloser is actually a delegation, then the
+	 * response should have been a referral. If it is a DNAME, then
 	 * it should have been a DNAME response. */
 	if(nsec3_has_type(ce->ce_rrset, ce->ce_rr, LDNS_RR_TYPE_NS) &&
 		!nsec3_has_type(ce->ce_rrset, ce->ce_rr, LDNS_RR_TYPE_SOA)) {
@@ -984,7 +984,7 @@ nsec3_prove_closest_encloser(struct module_env* env, struct nsec3_filter* flt,
 	
 	/* Otherwise, we need to show that the next closer name is covered. */
 	next_closer(qinfo->qname, qinfo->qname_len, ce->ce, &nc, &nc_len);
-	if(!find_covering_nsec3(env, flt, ct, nc, nc_len, 
+	if(!find_covering_nsec3(env, flt, ct, nc, nc_len,
 		&ce->nc_rrset, &ce->nc_rr)) {
 		verbose(VERB_ALGO, "nsec3: Could not find proof that the "
 		          "candidate encloser was the closest encloser");
@@ -1015,7 +1015,7 @@ nsec3_ce_wildcard(struct regional* region, uint8_t* ce, size_t celen,
 
 /** Do the name error proof */
 static enum sec_status
-nsec3_do_prove_nameerror(struct module_env* env, struct nsec3_filter* flt, 
+nsec3_do_prove_nameerror(struct module_env* env, struct nsec3_filter* flt,
 	rbtree_type* ct, struct query_info* qinfo)
 {
 	struct ce_response ce;
@@ -1025,8 +1025,8 @@ nsec3_do_prove_nameerror(struct module_env* env, struct nsec3_filter* flt,
 	int wc_rr;
 	enum sec_status sec;
 
-	/* First locate and prove the closest encloser to qname. We will 
-	 * use the variant that fails if the closest encloser turns out 
+	/* First locate and prove the closest encloser to qname. We will
+	 * use the variant that fails if the closest encloser turns out
 	 * to be qname. */
 	sec = nsec3_prove_closest_encloser(env, flt, ct, qinfo, 1, &ce);
 	if(sec != sec_status_secure) {
@@ -1039,11 +1039,11 @@ nsec3_do_prove_nameerror(struct module_env* env, struct nsec3_filter* flt,
 	}
 	log_nametypeclass(VERB_ALGO, "nsec3 namerror: proven ce=", ce.ce,0,0);
 
-	/* At this point, we know that qname does not exist. Now we need 
+	/* At this point, we know that qname does not exist. Now we need
 	 * to prove that the wildcard does not exist. */
 	log_assert(ce.ce);
 	wc = nsec3_ce_wildcard(env->scratch, ce.ce, ce.ce_len, &wclen);
-	if(!wc || !find_covering_nsec3(env, flt, ct, wc, wclen, 
+	if(!wc || !find_covering_nsec3(env, flt, ct, wc, wclen,
 		&wc_rrset, &wc_rr)) {
 		verbose(VERB_ALGO, "nsec3 nameerror proof: could not prove "
 			"that the applicable wildcard did not exist.");
@@ -1073,19 +1073,19 @@ nsec3_prove_nameerror(struct module_env* env, struct val_env* ve,
 		return sec_status_bogus; /* no RRs */
 	if(nsec3_iteration_count_high(ve, &flt, kkey))
 		return sec_status_insecure; /* iteration count too high */
-	log_nametypeclass(VERB_ALGO, "start nsec3 nameerror proof, zone", 
+	log_nametypeclass(VERB_ALGO, "start nsec3 nameerror proof, zone",
 		flt.zone, 0, 0);
 	return nsec3_do_prove_nameerror(env, &flt, &ct, qinfo);
 }
 
-/* 
- * No code to handle qtype=NSEC3 specially. 
+/*
+ * No code to handle qtype=NSEC3 specially.
  * This existed in early drafts, but was later (-05) removed.
  */
 
 /** Do the nodata proof */
 static enum sec_status
-nsec3_do_prove_nodata(struct module_env* env, struct nsec3_filter* flt, 
+nsec3_do_prove_nodata(struct module_env* env, struct nsec3_filter* flt,
 	rbtree_type* ct, struct query_info* qinfo)
 {
 	struct ce_response ce;
@@ -1095,7 +1095,7 @@ nsec3_do_prove_nodata(struct module_env* env, struct nsec3_filter* flt,
 	int rr;
 	enum sec_status sec;
 
-	if(find_matching_nsec3(env, flt, ct, qinfo->qname, qinfo->qname_len, 
+	if(find_matching_nsec3(env, flt, ct, qinfo->qname, qinfo->qname_len,
 		&rrset, &rr)) {
 		/* cases 1 and 2 */
 		if(nsec3_has_type(rrset, rr, qinfo->qtype)) {
@@ -1108,9 +1108,9 @@ nsec3_do_prove_nodata(struct module_env* env, struct nsec3_filter* flt,
 			return sec_status_bogus;
 		}
 
-		/* 
+		/*
 		 * If type DS: filter_init zone find already found a parent
-		 *   zone, so this nsec3 is from a parent zone. 
+		 *   zone, so this nsec3 is from a parent zone.
 		 *   o can be not a delegation (unusual query for normal name,
 		 *   	no DS anyway, but we can verify that).
 		 *   o can be a delegation (which is the usual DS check).
@@ -1120,13 +1120,13 @@ nsec3_do_prove_nodata(struct module_env* env, struct nsec3_filter* flt,
 		 *
 		 * If not type DS: matching nsec3 must not be a delegation.
 		 */
-		if(qinfo->qtype == LDNS_RR_TYPE_DS && qinfo->qname_len != 1 
+		if(qinfo->qtype == LDNS_RR_TYPE_DS && qinfo->qname_len != 1
 			&& nsec3_has_type(rrset, rr, LDNS_RR_TYPE_SOA) &&
 			!dname_is_root(qinfo->qname)) {
 			verbose(VERB_ALGO, "proveNodata: apex NSEC3 "
 				"abused for no DS proof, bogus");
 			return sec_status_bogus;
-		} else if(qinfo->qtype != LDNS_RR_TYPE_DS && 
+		} else if(qinfo->qtype != LDNS_RR_TYPE_DS &&
 			nsec3_has_type(rrset, rr, LDNS_RR_TYPE_NS) &&
 			!nsec3_has_type(rrset, rr, LDNS_RR_TYPE_SOA)) {
 			if(!nsec3_has_type(rrset, rr, LDNS_RR_TYPE_DS)) {
@@ -1141,8 +1141,8 @@ nsec3_do_prove_nodata(struct module_env* env, struct nsec3_filter* flt,
 		return sec_status_secure;
 	}
 
-	/* For cases 3 - 5, we need the proven closest encloser, and it 
-	 * can't match qname. Although, at this point, we know that it 
+	/* For cases 3 - 5, we need the proven closest encloser, and it
+	 * can't match qname. Although, at this point, we know that it
 	 * won't since we just checked that. */
 	sec = nsec3_prove_closest_encloser(env, flt, ct, qinfo, 1, &ce);
 	if(sec == sec_status_bogus) {
@@ -1171,12 +1171,12 @@ nsec3_do_prove_nodata(struct module_env* env, struct nsec3_filter* flt,
 				"wildcard had a CNAME, bogus");
 			return sec_status_bogus;
 		}
-		if(qinfo->qtype == LDNS_RR_TYPE_DS && qinfo->qname_len != 1 
+		if(qinfo->qtype == LDNS_RR_TYPE_DS && qinfo->qname_len != 1
 			&& nsec3_has_type(rrset, rr, LDNS_RR_TYPE_SOA)) {
 			verbose(VERB_ALGO, "nsec3 nodata proof: matching "
 				"wildcard for no DS proof has a SOA, bogus");
 			return sec_status_bogus;
-		} else if(qinfo->qtype != LDNS_RR_TYPE_DS && 
+		} else if(qinfo->qtype != LDNS_RR_TYPE_DS &&
 			nsec3_has_type(rrset, rr, LDNS_RR_TYPE_NS) &&
 			!nsec3_has_type(rrset, rr, LDNS_RR_TYPE_SOA)) {
 			verbose(VERB_ALGO, "nsec3 nodata proof: matching "
@@ -1257,8 +1257,8 @@ nsec3_prove_wildcard(struct module_env* env, struct val_env* ve,
 	if(nsec3_iteration_count_high(ve, &flt, kkey))
 		return sec_status_insecure; /* iteration count too high */
 
-	/* We know what the (purported) closest encloser is by just 
-	 * looking at the supposed generating wildcard. 
+	/* We know what the (purported) closest encloser is by just
+	 * looking at the supposed generating wildcard.
 	 * The *. has already been removed from the wc name.
 	 */
 	memset(&ce, 0, sizeof(ce));
@@ -1268,7 +1268,7 @@ nsec3_prove_wildcard(struct module_env* env, struct val_env* ve,
 	/* Now we still need to prove that the original data did not exist.
 	 * Otherwise, we need to show that the next closer name is covered. */
 	next_closer(qinfo->qname, qinfo->qname_len, ce.ce, &nc, &nc_len);
-	if(!find_covering_nsec3(env, &flt, &ct, nc, nc_len, 
+	if(!find_covering_nsec3(env, &flt, &ct, nc, nc_len,
 		&ce.nc_rrset, &ce.nc_rr)) {
 		verbose(VERB_ALGO, "proveWildcard: did not find a covering "
 			"NSEC3 that covered the next closer name.");
@@ -1283,7 +1283,7 @@ nsec3_prove_wildcard(struct module_env* env, struct val_env* ve,
 
 /** test if list is all secure */
 static int
-list_is_secure(struct module_env* env, struct val_env* ve, 
+list_is_secure(struct module_env* env, struct val_env* ve,
 	struct ub_packed_rrset_key** list, size_t num,
 	struct key_entry_key* kkey, char** reason)
 {
@@ -1336,14 +1336,14 @@ nsec3_prove_nods(struct module_env* env, struct val_env* ve,
 	if(nsec3_iteration_count_high(ve, &flt, kkey))
 		return sec_status_insecure; /* iteration count too high */
 
-	/* Look for a matching NSEC3 to qname -- this is the normal 
+	/* Look for a matching NSEC3 to qname -- this is the normal
 	 * NODATA case. */
-	if(find_matching_nsec3(env, &flt, &ct, qinfo->qname, qinfo->qname_len, 
+	if(find_matching_nsec3(env, &flt, &ct, qinfo->qname, qinfo->qname_len,
 		&rrset, &rr)) {
-		/* If the matching NSEC3 has the SOA bit set, it is from 
-		 * the wrong zone (the child instead of the parent). If 
+		/* If the matching NSEC3 has the SOA bit set, it is from
+		 * the wrong zone (the child instead of the parent). If
 		 * it has the DS bit set, then we were lied to. */
-		if(nsec3_has_type(rrset, rr, LDNS_RR_TYPE_SOA) && 
+		if(nsec3_has_type(rrset, rr, LDNS_RR_TYPE_SOA) &&
 			qinfo->qname_len != 1) {
 			verbose(VERB_ALGO, "nsec3 provenods: NSEC3 is from"
 				" child zone, bogus");
@@ -1355,7 +1355,7 @@ nsec3_prove_nods(struct module_env* env, struct val_env* ve,
 			*reason = "NSEC3 has DS in bitmap";
 			return sec_status_bogus;
 		}
-		/* If the NSEC3 RR doesn't have the NS bit set, then 
+		/* If the NSEC3 RR doesn't have the NS bit set, then
 		 * this wasn't a delegation point. */
 		if(!nsec3_has_type(rrset, rr, LDNS_RR_TYPE_NS))
 			return sec_status_indeterminate;
@@ -1399,7 +1399,7 @@ nsec3_prove_nods(struct module_env* env, struct val_env* ve,
 
 enum sec_status
 nsec3_prove_nxornodata(struct module_env* env, struct val_env* ve,
-	struct ub_packed_rrset_key** list, size_t num, 
+	struct ub_packed_rrset_key** list, size_t num,
 	struct query_info* qinfo, struct key_entry_key* kkey, int* nodata)
 {
 	enum sec_status sec, secnx;

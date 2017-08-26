@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -83,7 +83,7 @@ libworker_delete_env(struct libworker* w)
 	if(w->env) {
 		outside_network_quit_prepare(w->back);
 		mesh_delete(w->env->mesh);
-		context_release_alloc(w->ctx, w->env->alloc, 
+		context_release_alloc(w->ctx, w->env->alloc,
 			!w->is_bg || w->is_bg_thread);
 		sldns_buffer_free(w->env->scratch_buffer);
 		regional_destroy(w->env->scratch);
@@ -148,12 +148,12 @@ libworker_setup(struct ub_ctx* ctx, int is_bg, struct ub_event_base* eb)
 	w->env->scratch = regional_create_custom(cfg->msg_buffer_size);
 	w->env->scratch_buffer = sldns_buffer_new(cfg->msg_buffer_size);
 	w->env->fwds = forwards_create();
-	if(w->env->fwds && !forwards_apply_cfg(w->env->fwds, cfg)) { 
+	if(w->env->fwds && !forwards_apply_cfg(w->env->fwds, cfg)) {
 		forwards_delete(w->env->fwds);
 		w->env->fwds = NULL;
 	}
 	w->env->hints = hints_create();
-	if(w->env->hints && !hints_apply_cfg(w->env->hints, cfg)) { 
+	if(w->env->hints && !hints_apply_cfg(w->env->hints, cfg)) {
 		hints_delete(w->env->hints);
 		w->env->hints = NULL;
 	}
@@ -228,7 +228,7 @@ libworker_setup(struct ub_ctx* ctx, int is_bg, struct ub_event_base* eb)
 	}
 	w->back = outside_network_create(w->base, cfg->msg_buffer_size,
 		(size_t)cfg->outgoing_num_ports, cfg->out_ifs,
-		cfg->num_out_ifs, cfg->do_ip4, cfg->do_ip6, 
+		cfg->num_out_ifs, cfg->do_ip4, cfg->do_ip6,
 		cfg->do_tcp?cfg->outgoing_num_tcp:0,
 		w->env->infra_cache, w->env->rnd, cfg->use_caps_bits_for_id,
 		ports, numports, cfg->unwanted_threshold,
@@ -291,7 +291,7 @@ libworker_do_cmd(struct libworker* w, uint8_t* msg, uint32_t len)
 	switch(context_serial_getcmd(msg, len)) {
 		default:
 		case UB_LIBCMD_ANSWER:
-			log_err("unknown command for bg worker %d", 
+			log_err("unknown command for bg worker %d",
 				(int)context_serial_getcmd(msg, len));
 			/* and fall through to quit */
 		case UB_LIBCMD_QUIT:
@@ -308,8 +308,8 @@ libworker_do_cmd(struct libworker* w, uint8_t* msg, uint32_t len)
 }
 
 /** handle control command coming into server */
-void 
-libworker_handle_control_cmd(struct tube* ATTR_UNUSED(tube), 
+void
+libworker_handle_control_cmd(struct tube* ATTR_UNUSED(tube),
 	uint8_t* msg, size_t len, int err, void* arg)
 {
 	struct libworker* w = (struct libworker*)arg;
@@ -344,7 +344,7 @@ libworker_dobg(void* arg)
 	tube_close_write(ctx->qq_pipe);
 	tube_close_read(ctx->rr_pipe);
 #endif
-	if(!tube_setup_bg_listen(ctx->qq_pipe, w->base, 
+	if(!tube_setup_bg_listen(ctx->qq_pipe, w->base,
 		libworker_handle_control_cmd, w)) {
 		log_err("libunbound bg worker init failed, no bglisten");
 		return NULL;
@@ -362,7 +362,7 @@ libworker_dobg(void* arg)
 	tube_remove_bg_listen(w->ctx->qq_pipe);
 	tube_remove_bg_write(w->ctx->rr_pipe);
 	libworker_delete(w);
-	(void)tube_write_msg(ctx->rr_pipe, (uint8_t*)&m, 
+	(void)tube_write_msg(ctx->rr_pipe, (uint8_t*)&m,
 		(uint32_t)sizeof(m), 0);
 #ifdef THREADS_DISABLED
 	/* close pipes from forked process before exit */
@@ -412,7 +412,7 @@ int libworker_bg(struct ub_ctx* ctx)
 				tube_close_write(ctx->rr_pipe);
 				break;
 		}
-#endif /* HAVE_FORK */ 
+#endif /* HAVE_FORK */
 	}
 	return UB_NOERROR;
 }
@@ -514,7 +514,7 @@ libworker_enter_result(struct ub_result* res, sldns_buffer* buf,
 		log_err("cannot parse buf");
 		return; /* error parsing buf, or out of memory */
 	}
-	if(!fill_res(res, reply_find_answer_rrset(&rq, rep), 
+	if(!fill_res(res, reply_find_answer_rrset(&rq, rep),
 		reply_find_final_cname_target(&rq, rep), &rq, rep))
 		return; /* out of memory */
 	/* rcode, havedata, nxdomain, secure, bogus */
@@ -531,7 +531,7 @@ libworker_enter_result(struct ub_result* res, sldns_buffer* buf,
 
 /** fillup fg results */
 static void
-libworker_fillup_fg(struct ctx_query* q, int rcode, sldns_buffer* buf, 
+libworker_fillup_fg(struct ctx_query* q, int rcode, sldns_buffer* buf,
 	enum sec_status s, char* why_bogus)
 {
 	if(why_bogus)
@@ -568,7 +568,7 @@ libworker_fg_done_cb(void* arg, int rcode, sldns_buffer* buf, enum sec_status s,
 
 /** setup qinfo and edns */
 static int
-setup_qinfo_edns(struct libworker* w, struct ctx_query* q, 
+setup_qinfo_edns(struct libworker* w, struct ctx_query* q,
 	struct query_info* qinfo, struct edns_data* edns)
 {
 	qinfo->qtype = (uint16_t)q->res->qtype;
@@ -609,18 +609,18 @@ int libworker_fg(struct ub_ctx* ctx, struct ctx_query* q)
 	/* see if there is a fixed answer */
 	sldns_buffer_write_u16_at(w->back->udp_buff, 0, qid);
 	sldns_buffer_write_u16_at(w->back->udp_buff, 2, qflags);
-	if(local_zones_answer(ctx->local_zones, w->env, &qinfo, &edns, 
+	if(local_zones_answer(ctx->local_zones, w->env, &qinfo, &edns,
 		w->back->udp_buff, w->env->scratch, NULL, NULL, 0, NULL, 0,
 		NULL, 0, NULL, 0, NULL)) {
 		regional_free_all(w->env->scratch);
-		libworker_fillup_fg(q, LDNS_RCODE_NOERROR, 
+		libworker_fillup_fg(q, LDNS_RCODE_NOERROR,
 			w->back->udp_buff, sec_status_insecure, NULL);
 		libworker_delete(w);
 		free(qinfo.qname);
 		return UB_NOERROR;
 	}
 	/* process new query */
-	if(!mesh_new_callback(w->env->mesh, &qinfo, qflags, &edns, 
+	if(!mesh_new_callback(w->env->mesh, &qinfo, qflags, &edns,
 		w->back->udp_buff, qid, libworker_fg_done_cb, q)) {
 		free(qinfo.qname);
 		return UB_NOMEM;
@@ -680,7 +680,7 @@ int libworker_attach_mesh(struct ub_ctx* ctx, struct ctx_query* q,
 	/* see if there is a fixed answer */
 	sldns_buffer_write_u16_at(w->back->udp_buff, 0, qid);
 	sldns_buffer_write_u16_at(w->back->udp_buff, 2, qflags);
-	if(local_zones_answer(ctx->local_zones, w->env, &qinfo, &edns, 
+	if(local_zones_answer(ctx->local_zones, w->env, &qinfo, &edns,
 		w->back->udp_buff, w->env->scratch, NULL, NULL, 0, NULL, 0,
 		NULL, 0, NULL, 0, NULL)) {
 		regional_free_all(w->env->scratch);
@@ -692,7 +692,7 @@ int libworker_attach_mesh(struct ub_ctx* ctx, struct ctx_query* q,
 	/* process new query */
 	if(async_id)
 		*async_id = q->querynum;
-	if(!mesh_new_callback(w->env->mesh, &qinfo, qflags, &edns, 
+	if(!mesh_new_callback(w->env->mesh, &qinfo, qflags, &edns,
 		w->back->udp_buff, qid, libworker_event_done_cb, q)) {
 		free(qinfo.qname);
 		return UB_NOMEM;
@@ -703,7 +703,7 @@ int libworker_attach_mesh(struct ub_ctx* ctx, struct ctx_query* q,
 
 /** add result to the bg worker result queue */
 static void
-add_bg_result(struct libworker* w, struct ctx_query* q, sldns_buffer* pkt, 
+add_bg_result(struct libworker* w, struct ctx_query* q, sldns_buffer* pkt,
 	int err, char* reason)
 {
 	uint8_t* msg = NULL;
@@ -718,9 +718,9 @@ add_bg_result(struct libworker* w, struct ctx_query* q, sldns_buffer* pkt,
 			q->msg_len = sldns_buffer_remaining(pkt);
 			q->msg = memdup(sldns_buffer_begin(pkt), q->msg_len);
 			if(!q->msg)
-				msg = context_serialize_answer(q, UB_NOMEM, 
+				msg = context_serialize_answer(q, UB_NOMEM,
 				NULL, &len);
-			else	msg = context_serialize_answer(q, err, 
+			else	msg = context_serialize_answer(q, err,
 				NULL, &len);
 		} else msg = context_serialize_answer(q, err, NULL, &len);
 		lock_basic_unlock(&w->ctx->cfglock);
@@ -801,7 +801,7 @@ handle_newq(struct libworker* w, uint8_t* buf, uint32_t len)
 	/* see if there is a fixed answer */
 	sldns_buffer_write_u16_at(w->back->udp_buff, 0, qid);
 	sldns_buffer_write_u16_at(w->back->udp_buff, 2, qflags);
-	if(local_zones_answer(w->ctx->local_zones, w->env, &qinfo, &edns, 
+	if(local_zones_answer(w->ctx->local_zones, w->env, &qinfo, &edns,
 		w->back->udp_buff, w->env->scratch, NULL, NULL, 0, NULL, 0,
 		NULL, 0, NULL, 0, NULL)) {
 		regional_free_all(w->env->scratch);
@@ -812,7 +812,7 @@ handle_newq(struct libworker* w, uint8_t* buf, uint32_t len)
 	}
 	q->w = w;
 	/* process new query */
-	if(!mesh_new_callback(w->env->mesh, &qinfo, qflags, &edns, 
+	if(!mesh_new_callback(w->env->mesh, &qinfo, qflags, &edns,
 		w->back->udp_buff, qid, libworker_bg_done_cb, q)) {
 		add_bg_result(w, q, NULL, UB_NOMEM, NULL);
 	}
@@ -847,7 +847,7 @@ struct outbound_entry* libworker_send_query(struct query_info* qinfo,
 	return e;
 }
 
-int 
+int
 libworker_handle_reply(struct comm_point* c, void* arg, int error,
         struct comm_reply* reply_info)
 {
@@ -868,7 +868,7 @@ libworker_handle_reply(struct comm_point* c, void* arg, int error,
 		|| LDNS_QDCOUNT(sldns_buffer_begin(c->buffer)) > 1) {
 		/* error becomes timeout for the module as if this reply
 		 * never arrived. */
-		mesh_report_reply(lw->env->mesh, &e, reply_info, 
+		mesh_report_reply(lw->env->mesh, &e, reply_info,
 			NETEVENT_TIMEOUT);
 		return 0;
 	}
@@ -876,7 +876,7 @@ libworker_handle_reply(struct comm_point* c, void* arg, int error,
 	return 0;
 }
 
-int 
+int
 libworker_handle_service_reply(struct comm_point* c, void* arg, int error,
         struct comm_reply* reply_info)
 {
@@ -894,7 +894,7 @@ libworker_handle_service_reply(struct comm_point* c, void* arg, int error,
 		|| LDNS_QDCOUNT(sldns_buffer_begin(c->buffer)) > 1) {
 		/* error becomes timeout for the module as if this reply
 		 * never arrived. */
-		mesh_report_reply(lw->env->mesh, e, reply_info, 
+		mesh_report_reply(lw->env->mesh, e, reply_info,
 			NETEVENT_TIMEOUT);
 		return 0;
 	}
@@ -903,14 +903,14 @@ libworker_handle_service_reply(struct comm_point* c, void* arg, int error,
 }
 
 /* --- fake callbacks for fptr_wlist to work --- */
-void worker_handle_control_cmd(struct tube* ATTR_UNUSED(tube), 
+void worker_handle_control_cmd(struct tube* ATTR_UNUSED(tube),
 	uint8_t* ATTR_UNUSED(buffer), size_t ATTR_UNUSED(len),
 	int ATTR_UNUSED(error), void* ATTR_UNUSED(arg))
 {
 	log_assert(0);
 }
 
-int worker_handle_request(struct comm_point* ATTR_UNUSED(c), 
+int worker_handle_request(struct comm_point* ATTR_UNUSED(c),
 	void* ATTR_UNUSED(arg), int ATTR_UNUSED(error),
         struct comm_reply* ATTR_UNUSED(repinfo))
 {
@@ -918,7 +918,7 @@ int worker_handle_request(struct comm_point* ATTR_UNUSED(c),
 	return 0;
 }
 
-int worker_handle_reply(struct comm_point* ATTR_UNUSED(c), 
+int worker_handle_reply(struct comm_point* ATTR_UNUSED(c),
 	void* ATTR_UNUSED(arg), int ATTR_UNUSED(error),
         struct comm_reply* ATTR_UNUSED(reply_info))
 {
@@ -926,7 +926,7 @@ int worker_handle_reply(struct comm_point* ATTR_UNUSED(c),
 	return 0;
 }
 
-int worker_handle_service_reply(struct comm_point* ATTR_UNUSED(c), 
+int worker_handle_service_reply(struct comm_point* ATTR_UNUSED(c),
 	void* ATTR_UNUSED(arg), int ATTR_UNUSED(error),
         struct comm_reply* ATTR_UNUSED(reply_info))
 {
@@ -934,7 +934,7 @@ int worker_handle_service_reply(struct comm_point* ATTR_UNUSED(c),
 	return 0;
 }
 
-int remote_accept_callback(struct comm_point* ATTR_UNUSED(c), 
+int remote_accept_callback(struct comm_point* ATTR_UNUSED(c),
 	void* ATTR_UNUSED(arg), int ATTR_UNUSED(error),
         struct comm_reply* ATTR_UNUSED(repinfo))
 {
@@ -942,7 +942,7 @@ int remote_accept_callback(struct comm_point* ATTR_UNUSED(c),
 	return 0;
 }
 
-int remote_control_callback(struct comm_point* ATTR_UNUSED(c), 
+int remote_control_callback(struct comm_point* ATTR_UNUSED(c),
 	void* ATTR_UNUSED(arg), int ATTR_UNUSED(error),
         struct comm_reply* ATTR_UNUSED(repinfo))
 {
@@ -966,7 +966,7 @@ struct outbound_entry* worker_send_query(struct query_info* ATTR_UNUSED(qinfo),
 	return 0;
 }
 
-void 
+void
 worker_alloc_cleanup(void* ATTR_UNUSED(arg))
 {
 	log_assert(0);
@@ -1018,7 +1018,7 @@ void remote_get_opt_ssl(char* ATTR_UNUSED(str), void* ATTR_UNUSED(arg))
 
 #ifdef UB_ON_WINDOWS
 void
-worker_win_stop_cb(int ATTR_UNUSED(fd), short ATTR_UNUSED(ev), void* 
+worker_win_stop_cb(int ATTR_UNUSED(fd), short ATTR_UNUSED(ev), void*
         ATTR_UNUSED(arg)) {
         log_assert(0);
 }

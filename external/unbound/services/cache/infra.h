@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -84,7 +84,7 @@ struct infra_data {
 	/** edns version that the host supports, -1 means no EDNS */
 	int edns_version;
 	/** if the EDNS lameness is already known or not.
-	 * EDNS lame is when EDNS queries or replies are dropped, 
+	 * EDNS lame is when EDNS queries or replies are dropped,
 	 * and cause a timeout */
 	uint8_t edns_lame_known;
 
@@ -107,7 +107,7 @@ struct infra_data {
 };
 
 /**
- * Infra cache 
+ * Infra cache
  */
 struct infra_cache {
 	/** The hash table with hosts */
@@ -210,7 +210,7 @@ void infra_delete(struct infra_cache* infra);
  * @param cfg: config options.
  * @return the new infra cache pointer or NULL on error.
  */
-struct infra_cache* infra_adjust(struct infra_cache* infra, 
+struct infra_cache* infra_adjust(struct infra_cache* infra,
 	struct config_file* cfg);
 
 /**
@@ -229,7 +229,7 @@ struct lruhash_entry* infra_lookup_nottl(struct infra_cache* infra,
 
 /**
  * Find host information to send a packet. Creates new entry if not found.
- * Lameness is empty. EDNS is 0 (try with first), and rtt is returned for 
+ * Lameness is empty. EDNS is 0 (try with first), and rtt is returned for
  * the first message to it.
  * Use this to send a packet only, because it also locks out others when
  * probing is restricted.
@@ -245,7 +245,7 @@ struct lruhash_entry* infra_lookup_nottl(struct infra_cache* infra,
  * @param to: timeout to use, is returned.
  * @return: 0 on error.
  */
-int infra_host(struct infra_cache* infra, struct sockaddr_storage* addr, 
+int infra_host(struct infra_cache* infra, struct sockaddr_storage* addr,
 	socklen_t addrlen, uint8_t* name, size_t namelen,
 	time_t timenow, int* edns_vs, uint8_t* edns_lame_known, int* to);
 
@@ -277,7 +277,7 @@ int infra_set_lame(struct infra_cache* infra,
  * @param name: zone name
  * @param namelen: zone name length
  * @param qtype: query type.
- * @param roundtrip: estimate of roundtrip time in milliseconds or -1 for 
+ * @param roundtrip: estimate of roundtrip time in milliseconds or -1 for
  * 	timeout.
  * @param orig_rtt: original rtt for the query that timed out (roundtrip==-1).
  * 	ignored if roundtrip != -1.
@@ -335,8 +335,8 @@ int infra_edns_update(struct infra_cache* infra,
  * @return if found in cache, or false if not (or TTL bad).
  */
 int infra_get_lame_rtt(struct infra_cache* infra,
-        struct sockaddr_storage* addr, socklen_t addrlen, 
-	uint8_t* name, size_t namelen, uint16_t qtype, 
+        struct sockaddr_storage* addr, socklen_t addrlen,
+	uint8_t* name, size_t namelen, uint16_t qtype,
 	int* lame, int* dnsseclame, int* reclame, int* rtt, time_t timenow);
 
 /**

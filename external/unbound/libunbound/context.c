@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -51,7 +51,7 @@
 #include "util/storage/slabhash.h"
 #include "sldns/sbuffer.h"
 
-int 
+int
 context_finalize(struct ub_ctx* ctx)
 {
 	struct config_file* cfg = ctx->env->cfg;
@@ -69,7 +69,7 @@ context_finalize(struct ub_ctx* ctx)
 	if(!local_zones_apply_cfg(ctx->local_zones, cfg))
 		return UB_INITFAIL;
 	if(!ctx->env->msg_cache ||
-	   cfg->msg_cache_size != slabhash_get_size(ctx->env->msg_cache) || 
+	   cfg->msg_cache_size != slabhash_get_size(ctx->env->msg_cache) ||
 	   cfg->msg_cache_slabs != ctx->env->msg_cache->size) {
 		slabhash_delete(ctx->env->msg_cache);
 		ctx->env->msg_cache = slabhash_create(cfg->msg_cache_slabs,
@@ -100,7 +100,7 @@ int context_query_cmp(const void* a, const void* b)
 }
 
 void
-context_query_delete(struct ctx_query* q) 
+context_query_delete(struct ctx_query* q)
 {
 	if(!q) return;
 	ub_resolve_free(q->res);
@@ -125,8 +125,8 @@ find_id(struct ub_ctx* ctx, int* id)
 	return 1;
 }
 
-struct ctx_query* 
-context_new(struct ub_ctx* ctx, const char* name, int rrtype, int rrclass, 
+struct ctx_query*
+context_new(struct ub_ctx* ctx, const char* name, int rrtype, int rrclass,
 	ub_callback_type cb, void* cbarg)
 {
 	struct ctx_query* q = (struct ctx_query*)calloc(1, sizeof(*q));
@@ -165,7 +165,7 @@ context_new(struct ub_ctx* ctx, const char* name, int rrtype, int rrclass,
 	return q;
 }
 
-struct alloc_cache* 
+struct alloc_cache*
 context_obtain_alloc(struct ub_ctx* ctx, int locking)
 {
 	struct alloc_cache* a;
@@ -191,7 +191,7 @@ context_obtain_alloc(struct ub_ctx* ctx, int locking)
 	return a;
 }
 
-void 
+void
 context_release_alloc(struct ub_ctx* ctx, struct alloc_cache* alloc,
 	int locking)
 {
@@ -207,7 +207,7 @@ context_release_alloc(struct ub_ctx* ctx, struct alloc_cache* alloc,
 	}
 }
 
-uint8_t* 
+uint8_t*
 context_serialize_new_query(struct ctx_query* q, uint32_t* len)
 {
 	/* format for new query is
@@ -230,7 +230,7 @@ context_serialize_new_query(struct ctx_query* q, uint32_t* len)
 	return p;
 }
 
-struct ctx_query* 
+struct ctx_query*
 context_deserialize_new_query(struct ub_ctx* ctx, uint8_t* p, uint32_t len)
 {
 	struct ctx_query* q = (struct ctx_query*)calloc(1, sizeof(*q));
@@ -263,7 +263,7 @@ context_deserialize_new_query(struct ub_ctx* ctx, uint8_t* p, uint32_t len)
 	return q;
 }
 
-struct ctx_query* 
+struct ctx_query*
 context_lookup_new_query(struct ub_ctx* ctx, uint8_t* p, uint32_t len)
 {
 	struct ctx_query* q;
@@ -281,7 +281,7 @@ context_lookup_new_query(struct ub_ctx* ctx, uint8_t* p, uint32_t len)
 	return q;
 }
 
-uint8_t* 
+uint8_t*
 context_serialize_answer(struct ctx_query* q, int err, sldns_buffer* pkt,
 	uint32_t* len)
 {
@@ -309,12 +309,12 @@ context_serialize_answer(struct ctx_query* q, int err, sldns_buffer* pkt,
 	if(wlen > 0)
 		memmove(p+5*sizeof(uint32_t), q->res->why_bogus, wlen);
 	if(pkt_len > 0)
-		memmove(p+5*sizeof(uint32_t)+wlen, 
+		memmove(p+5*sizeof(uint32_t)+wlen,
 			sldns_buffer_begin(pkt), pkt_len);
 	return p;
 }
 
-struct ctx_query* 
+struct ctx_query*
 context_deserialize_answer(struct ub_ctx* ctx,
         uint8_t* p, uint32_t len, int* err)
 {
@@ -325,7 +325,7 @@ context_deserialize_answer(struct ub_ctx* ctx,
 	log_assert( sldns_read_uint32(p) == UB_LIBCMD_ANSWER);
 	id = (int)sldns_read_uint32(p+sizeof(uint32_t));
 	q = (struct ctx_query*)rbtree_search(&ctx->queries, &id);
-	if(!q) return NULL; 
+	if(!q) return NULL;
 	*err = (int)sldns_read_uint32(p+2*sizeof(uint32_t));
 	q->msg_security = sldns_read_uint32(p+3*sizeof(uint32_t));
 	wlen = (size_t)sldns_read_uint32(p+4*sizeof(uint32_t));
@@ -343,7 +343,7 @@ context_deserialize_answer(struct ub_ctx* ctx,
 	}
 	if(len > 5*sizeof(uint32_t)+wlen) {
 		q->msg_len = len - 5*sizeof(uint32_t) - wlen;
-		q->msg = (uint8_t*)memdup(p+5*sizeof(uint32_t)+wlen, 
+		q->msg = (uint8_t*)memdup(p+5*sizeof(uint32_t)+wlen,
 			q->msg_len);
 		if(!q->msg) {
 			/* pass malloc failure to the user callback */
@@ -351,11 +351,11 @@ context_deserialize_answer(struct ub_ctx* ctx,
 			*err = UB_NOMEM;
 			return q;
 		}
-	} 
+	}
 	return q;
 }
 
-uint8_t* 
+uint8_t*
 context_serialize_cancel(struct ctx_query* q, uint32_t* len)
 {
 	/* format of cancel:
@@ -381,7 +381,7 @@ struct ctx_query* context_deserialize_cancel(struct ub_ctx* ctx,
 	return q;
 }
 
-uint8_t* 
+uint8_t*
 context_serialize_quit(uint32_t* len)
 {
 	uint8_t* p = (uint8_t*)malloc(sizeof(uint32_t));

@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -36,7 +36,7 @@
 /**
  * \file
  *
- * This program signs rrsets with the given keys. It can be used to 
+ * This program signs rrsets with the given keys. It can be used to
  * construct input to test the validator with.
  */
 #include "config.h"
@@ -74,7 +74,7 @@ usage(void)
 	exit(1);
 }
 
-static time_t 
+static time_t
 convert_timeval(const char* str)
 {
 	time_t t;
@@ -82,7 +82,7 @@ convert_timeval(const char* str)
 	memset(&tm, 0, sizeof(tm));
 	if(strlen(str) < 14)
 		return 0;
-	if(sscanf(str, "%4d%2d%2d%2d%2d%2d", &tm.tm_year, &tm.tm_mon, 
+	if(sscanf(str, "%4d%2d%2d%2d%2d%2d", &tm.tm_year, &tm.tm_mon,
 		&tm.tm_mday, &tm.tm_hour, &tm.tm_min, &tm.tm_sec) != 6)
 		return 0;
 	tm.tm_year -= 1900;
@@ -178,7 +178,7 @@ read_rrs(FILE* in)
 	while(!feof(in)) {
 		s = ldns_rr_new_frm_fp_l(&rr, in, &my_ttl, &my_origin,
 			&my_prev, &line_nr);
-		if(s == LDNS_STATUS_SYNTAX_TTL || 
+		if(s == LDNS_STATUS_SYNTAX_TTL ||
 			s == LDNS_STATUS_SYNTAX_ORIGIN ||
 			s == LDNS_STATUS_SYNTAX_EMPTY)
 			continue;
@@ -256,7 +256,7 @@ process_nsec3(int argc, char* argv[])
 		ldns_rdf_print(stdout, in);
 		printf(" -> ");
 		/* arg 3 is flags, unused */
-		out = ldns_nsec3_hash_name(in, (uint8_t)atoi(argv[2]), 
+		out = ldns_nsec3_hash_name(in, (uint8_t)atoi(argv[2]),
 			(uint16_t)atoi(argv[4]),
 			ldns_rdf_data(salt)[0], ldns_rdf_data(salt)+1);
 		if(!out)

@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -50,7 +50,7 @@
 #include "services/cache/rrset.h"
 
 /** get ttl of rrset */
-static uint32_t 
+static uint32_t
 rrset_get_ttl(struct ub_packed_rrset_key* k)
 {
 	struct packed_rrset_data* d = (struct packed_rrset_data*)k->entry.data;
@@ -74,7 +74,7 @@ nsecbitmap_has_type_rdata(uint8_t* bitmap, size_t len, uint16_t type)
 		win = *bitmap++;
 		winlen = *bitmap++;
 		len -= 2;
-		if(len < winlen || winlen < 1 || winlen > 32) 
+		if(len < winlen || winlen < 1 || winlen > 32)
 			return 0;	/* bad window length */
 		if(win == type_window) {
 			/* search window bitmap for the correct byte */
@@ -104,7 +104,7 @@ nsec_has_type(struct ub_packed_rrset_key* nsec, uint16_t type)
 	len = dname_valid(d->rr_data[0]+2, d->rr_len[0]-2);
 	if(!len)
 		return 0;
-	return nsecbitmap_has_type_rdata(d->rr_data[0]+2+len, 
+	return nsecbitmap_has_type_rdata(d->rr_data[0]+2+len,
 		d->rr_len[0]-2-len, type);
 }
 
@@ -116,7 +116,7 @@ nsec_has_type(struct ub_packed_rrset_key* nsec, uint16_t type)
  * @param ln: length of nm is returned.
  * @return false on a bad NSEC RR (too short, malformed dname).
  */
-static int 
+static int
 nsec_get_next(struct ub_packed_rrset_key* nsec, uint8_t** nm, size_t* ln)
 {
 	struct packed_rrset_data* d = (struct packed_rrset_data*)nsec->
@@ -141,30 +141,30 @@ nsec_get_next(struct ub_packed_rrset_key* nsec, uint8_t** nm, size_t* ln)
  *
  * @param nsec: NSEC for proof, must be trusted.
  * @param qinfo: what is queried for.
- * @return if secure the nsec proves that no DS is present, or 
+ * @return if secure the nsec proves that no DS is present, or
  *	insecure if it proves it is not a delegation point.
  *	or bogus if something was wrong.
  */
-static enum sec_status 
-val_nsec_proves_no_ds(struct ub_packed_rrset_key* nsec, 
+static enum sec_status
+val_nsec_proves_no_ds(struct ub_packed_rrset_key* nsec,
 	struct query_info* qinfo)
 {
 	log_assert(qinfo->qtype == LDNS_RR_TYPE_DS);
 	log_assert(ntohs(nsec->rk.type) == LDNS_RR_TYPE_NSEC);
 
 	if(nsec_has_type(nsec, LDNS_RR_TYPE_SOA) && qinfo->qname_len != 1) {
-		/* SOA present means that this is the NSEC from the child, 
+		/* SOA present means that this is the NSEC from the child,
 		 * not the parent (so it is the wrong one). */
 		return sec_status_bogus;
 	}
 	if(nsec_has_type(nsec, LDNS_RR_TYPE_DS)) {
-		/* DS present means that there should have been a positive 
+		/* DS present means that there should have been a positive
 		 * response to the DS query, so there is something wrong. */
 		return sec_status_bogus;
 	}
 
 	if(!nsec_has_type(nsec, LDNS_RR_TYPE_NS)) {
-		/* If there is no NS at this point at all, then this 
+		/* If there is no NS at this point at all, then this
 		 * doesn't prove anything one way or the other. */
 		return sec_status_insecure;
 	}
@@ -174,8 +174,8 @@ val_nsec_proves_no_ds(struct ub_packed_rrset_key* nsec,
 
 /** check security status from cache or verify rrset, returns true if secure */
 static int
-nsec_verify_rrset(struct module_env* env, struct val_env* ve, 
-	struct ub_packed_rrset_key* nsec, struct key_entry_key* kkey, 
+nsec_verify_rrset(struct module_env* env, struct val_env* ve,
+	struct ub_packed_rrset_key* nsec, struct key_entry_key* kkey,
 	char** reason)
 {
 	struct packed_rrset_data* d = (struct packed_rrset_data*)
@@ -193,13 +193,13 @@ nsec_verify_rrset(struct module_env* env, struct val_env* ve,
 	return 0;
 }
 
-enum sec_status 
-val_nsec_prove_nodata_dsreply(struct module_env* env, struct val_env* ve, 
-	struct query_info* qinfo, struct reply_info* rep, 
+enum sec_status
+val_nsec_prove_nodata_dsreply(struct module_env* env, struct val_env* ve,
+	struct query_info* qinfo, struct reply_info* rep,
 	struct key_entry_key* kkey, time_t* proof_ttl, char** reason)
 {
 	struct ub_packed_rrset_key* nsec = reply_find_rrset_section_ns(
-		rep, qinfo->qname, qinfo->qname_len, LDNS_RR_TYPE_NSEC, 
+		rep, qinfo->qname, qinfo->qname_len, LDNS_RR_TYPE_NSEC,
 		qinfo->qclass);
 	enum sec_status sec;
 	size_t i;
@@ -207,7 +207,7 @@ val_nsec_prove_nodata_dsreply(struct module_env* env, struct val_env* ve,
 	int valid_nsec = 0;
 	struct ub_packed_rrset_key* wc_nsec = NULL;
 
-	/* If we have a NSEC at the same name, it must prove one 
+	/* If we have a NSEC at the same name, it must prove one
 	 * of two things
 	 * --
 	 * 1) this is a delegation point and there is no DS
@@ -234,11 +234,11 @@ val_nsec_prove_nodata_dsreply(struct module_env* env, struct val_env* ve,
 		/* if unchecked, fall through to next proof */
 	}
 
-	/* Otherwise, there is no NSEC at qname. This could be an ENT. 
+	/* Otherwise, there is no NSEC at qname. This could be an ENT.
 	 * (ENT=empty non terminal). If not, this is broken. */
 	
 	/* verify NSEC rrsets in auth section */
-	for(i=rep->an_numrrsets; i < rep->an_numrrsets+rep->ns_numrrsets; 
+	for(i=rep->an_numrrsets; i < rep->an_numrrsets+rep->ns_numrrsets;
 		i++) {
 		if(rep->rrsets[i]->rk.type != htons(LDNS_RR_TYPE_NSEC))
 			continue;
@@ -251,12 +251,12 @@ val_nsec_prove_nodata_dsreply(struct module_env* env, struct val_env* ve,
 			verbose(VERB_ALGO, "NSEC for empty non-terminal "
 				"proved no DS.");
 			*proof_ttl = rrset_get_ttl(rep->rrsets[i]);
-			if(wc && dname_is_wild(rep->rrsets[i]->rk.dname)) 
+			if(wc && dname_is_wild(rep->rrsets[i]->rk.dname))
 				wc_nsec = rep->rrsets[i];
 			valid_nsec = 1;
 		}
 		if(val_nsec_proves_name_error(rep->rrsets[i], qinfo->qname)) {
-			ce = nsec_closest_encloser(qinfo->qname, 
+			ce = nsec_closest_encloser(qinfo->qname,
 				rep->rrsets[i]);
 		}
 	}
@@ -264,7 +264,7 @@ val_nsec_prove_nodata_dsreply(struct module_env* env, struct val_env* ve,
 		valid_nsec = 0;
 	else if(wc && ce) {
 		/* ce and wc must match */
-		if(query_dname_compare(wc, ce) != 0) 
+		if(query_dname_compare(wc, ce) != 0)
 			valid_nsec = 0;
 		else if(!wc_nsec)
 			valid_nsec = 0;
@@ -283,7 +283,7 @@ val_nsec_prove_nodata_dsreply(struct module_env* env, struct val_env* ve,
 	return sec_status_unchecked;
 }
 
-int nsec_proves_nodata(struct ub_packed_rrset_key* nsec, 
+int nsec_proves_nodata(struct ub_packed_rrset_key* nsec,
 	struct query_info* qinfo, uint8_t** wc)
 {
 	log_assert(wc);
@@ -291,27 +291,27 @@ int nsec_proves_nodata(struct ub_packed_rrset_key* nsec,
 		uint8_t* nm;
 		size_t ln;
 
-		/* empty-non-terminal checking. 
+		/* empty-non-terminal checking.
 		 * Done before wildcard, because this is an exact match,
 		 * and would prevent a wildcard from matching. */
 
-		/* If the nsec is proving that qname is an ENT, the nsec owner 
-		 * will be less than qname, and the next name will be a child 
+		/* If the nsec is proving that qname is an ENT, the nsec owner
+		 * will be less than qname, and the next name will be a child
 		 * domain of the qname. */
 		if(!nsec_get_next(nsec, &nm, &ln))
 			return 0; /* bad nsec */
 		if(dname_strict_subdomain_c(nm, qinfo->qname) &&
-			dname_canonical_compare(nsec->rk.dname, 
+			dname_canonical_compare(nsec->rk.dname,
 				qinfo->qname) < 0) {
 			return 1; /* proves ENT */
 		}
 
 		/* wildcard checking. */
 
-		/* If this is a wildcard NSEC, make sure that a) it was 
-		 * possible to have generated qname from the wildcard and 
-		 * b) the type map does not contain qtype. Note that this 
-		 * does NOT prove that this wildcard was the applicable 
+		/* If this is a wildcard NSEC, make sure that a) it was
+		 * possible to have generated qname from the wildcard and
+		 * b) the type map does not contain qtype. Note that this
+		 * does NOT prove that this wildcard was the applicable
 		 * wildcard. */
 		if(dname_is_wild(nsec->rk.dname)) {
 			/* the purported closest encloser. */
@@ -319,8 +319,8 @@ int nsec_proves_nodata(struct ub_packed_rrset_key* nsec,
 			size_t ce_len = nsec->rk.dname_len;
 			dname_remove_label(&ce, &ce_len);
 
-			/* The qname must be a strict subdomain of the 
-			 * closest encloser, for the wildcard to apply 
+			/* The qname must be a strict subdomain of the
+			 * closest encloser, for the wildcard to apply
 			 */
 			if(dname_strict_subdomain_c(qinfo->qname, ce)) {
 				/* here we have a matching NSEC for the qname,
@@ -329,7 +329,7 @@ int nsec_proves_nodata(struct ub_packed_rrset_key* nsec,
 				   /* should have gotten the wildcard CNAME */
 					return 0;
 				}
-				if(nsec_has_type(nsec, LDNS_RR_TYPE_NS) && 
+				if(nsec_has_type(nsec, LDNS_RR_TYPE_NS) &&
 				   !nsec_has_type(nsec, LDNS_RR_TYPE_SOA)) {
 				   /* wrong parentside (wildcard) NSEC used */
 					return 0;
@@ -364,7 +364,7 @@ int nsec_proves_nodata(struct ub_packed_rrset_key* nsec,
 			}
 		}
 
-		/* Otherwise, this NSEC does not prove ENT and is not a 
+		/* Otherwise, this NSEC does not prove ENT and is not a
 		 * wildcard, so it does not prove NODATA. */
 		return 0;
 	}
@@ -379,13 +379,13 @@ int nsec_proves_nodata(struct ub_packed_rrset_key* nsec,
 		return 0;
 	}
 
-	/* If an NS set exists at this name, and NOT a SOA (so this is a 
-	 * zone cut, not a zone apex), then we should have gotten a 
-	 * referral (or we just got the wrong NSEC). 
+	/* If an NS set exists at this name, and NOT a SOA (so this is a
+	 * zone cut, not a zone apex), then we should have gotten a
+	 * referral (or we just got the wrong NSEC).
 	 * The reverse of this check is used when qtype is DS, since that
 	 * must use the NSEC from above the zone cut. */
 	if(qinfo->qtype != LDNS_RR_TYPE_DS &&
-		nsec_has_type(nsec, LDNS_RR_TYPE_NS) && 
+		nsec_has_type(nsec, LDNS_RR_TYPE_NS) &&
 		!nsec_has_type(nsec, LDNS_RR_TYPE_SOA)) {
 		return 0;
 	} else if(qinfo->qtype == LDNS_RR_TYPE_DS &&
@@ -397,7 +397,7 @@ int nsec_proves_nodata(struct ub_packed_rrset_key* nsec,
 	return 1;
 }
 
-int 
+int
 val_nsec_proves_name_error(struct ub_packed_rrset_key* nsec, uint8_t* qname)
 {
 	uint8_t* owner = nsec->rk.dname;
@@ -412,11 +412,11 @@ val_nsec_proves_name_error(struct ub_packed_rrset_key* nsec, uint8_t* qname)
 	}
 
 	/* If NSEC is a parent of qname, we need to check the type map
-	 * If the parent name has a DNAME or is a delegation point, then 
+	 * If the parent name has a DNAME or is a delegation point, then
 	 * this NSEC is being misused. */
-	if(dname_subdomain_c(qname, owner) && 
+	if(dname_subdomain_c(qname, owner) &&
 		(nsec_has_type(nsec, LDNS_RR_TYPE_DNAME) ||
-		(nsec_has_type(nsec, LDNS_RR_TYPE_NS) 
+		(nsec_has_type(nsec, LDNS_RR_TYPE_NS)
 			&& !nsec_has_type(nsec, LDNS_RR_TYPE_SOA))
 		)) {
 		return 0;
@@ -431,8 +431,8 @@ val_nsec_proves_name_error(struct ub_packed_rrset_key* nsec, uint8_t* qname)
 	}
 	else if(dname_canonical_compare(owner, next) > 0) {
 		/* this is the last nsec, ....(bigger) NSEC zonename(smaller) */
-		/* the names after the last (owner) name do not exist 
-		 * there are no names before the zone name in the zone 
+		/* the names after the last (owner) name do not exist
+		 * there are no names before the zone name in the zone
 		 * but the qname must be a subdomain of the zone name(next). */
 		if(dname_canonical_compare(owner, qname) < 0 &&
 			dname_strict_subdomain_c(qname, next))
@@ -447,7 +447,7 @@ val_nsec_proves_name_error(struct ub_packed_rrset_key* nsec, uint8_t* qname)
 	return 0;
 }
 
-int val_nsec_proves_insecuredelegation(struct ub_packed_rrset_key* nsec, 
+int val_nsec_proves_insecuredelegation(struct ub_packed_rrset_key* nsec,
 	struct query_info* qinfo)
 {
 	if(nsec_has_type(nsec, LDNS_RR_TYPE_NS) &&
@@ -468,7 +468,7 @@ int val_nsec_proves_insecuredelegation(struct ub_packed_rrset_key* nsec,
 	return 0;
 }
 
-uint8_t* 
+uint8_t*
 nsec_closest_encloser(uint8_t* qname, struct ub_packed_rrset_key* nsec)
 {
 	uint8_t* next;
@@ -484,11 +484,11 @@ nsec_closest_encloser(uint8_t* qname, struct ub_packed_rrset_key* nsec)
 	return common2;
 }
 
-int val_nsec_proves_positive_wildcard(struct ub_packed_rrset_key* nsec, 
+int val_nsec_proves_positive_wildcard(struct ub_packed_rrset_key* nsec,
 	struct query_info* qinf, uint8_t* wc)
 {
 	uint8_t* ce;
-	/*  1) prove that qname doesn't exist and 
+	/*  1) prove that qname doesn't exist and
 	 *  2) that the correct wildcard was used
 	 *  nsec has been verified already. */
 	if(!val_nsec_proves_name_error(nsec, qinf->qname))
@@ -503,11 +503,11 @@ int val_nsec_proves_positive_wildcard(struct ub_packed_rrset_key* nsec,
 	return 1;
 }
 
-int 
-val_nsec_proves_no_wc(struct ub_packed_rrset_key* nsec, uint8_t* qname, 
+int
+val_nsec_proves_no_wc(struct ub_packed_rrset_key* nsec, uint8_t* qname,
 	size_t qnamelen)
 {
-	/* Determine if a NSEC record proves the non-existence of a 
+	/* Determine if a NSEC record proves the non-existence of a
 	 * wildcard that could have produced qname. */
 	int labs;
 	int i;
@@ -519,7 +519,7 @@ val_nsec_proves_no_wc(struct ub_packed_rrset_key* nsec, uint8_t* qname,
 		return 0;
 	/* we can subtract the closest encloser count - since that is the
 	 * largest shared topdomain with owner and next NSEC name,
-	 * because the NSEC is no proof for names shorter than the owner 
+	 * because the NSEC is no proof for names shorter than the owner
 	 * and next names. */
 	labs = dname_count_labels(qname) - dname_count_labels(ce);
 
@@ -552,8 +552,8 @@ dlv_topdomain(struct ub_packed_rrset_key* nsec, uint8_t* qname,
 
 	/* because, if empty nonterminal, then right is subdomain of qname.
 	 * and any shared topdomain would be empty nonterminals.
-	 * 
-	 * If nxdomain, then the right is bigger, and could have an 
+	 *
+	 * If nxdomain, then the right is bigger, and could have an
 	 * interesting shared topdomain, but if it does have one, it is
 	 * an empty nonterminal. An empty nonterminal shared with the left
 	 * one. */
@@ -590,7 +590,7 @@ int val_nsec_check_dlv(struct query_info* qinfo,
 					return 0;
 				dname_remove_label(nm, nm_len);
 				return 1;
-			} else if(c < 0 && 
+			} else if(c < 0 &&
 				dname_strict_subdomain_c(next, qinfo->qname)) {
 				/* ENT */
 				dlv_topdomain(rep->rrsets[i], qinfo->qname,
@@ -608,10 +608,10 @@ int val_nsec_check_dlv(struct query_info* qinfo,
 		for(i=0; i<rep->ns_numrrsets; i++) {
 			if(htons(rep->rrsets[i]->rk.type) != LDNS_RR_TYPE_NSEC)
 				continue;
-			if(val_nsec_proves_name_error(rep->rrsets[i], 
+			if(val_nsec_proves_name_error(rep->rrsets[i],
 				qinfo->qname)) {
 				log_nametypeclass(VERB_ALGO, "topdomain on",
-					rep->rrsets[i]->rk.dname, 
+					rep->rrsets[i]->rk.dname,
 					ntohs(rep->rrsets[i]->rk.type), 0);
 				dlv_topdomain(rep->rrsets[i], qinfo->qname,
 					nm, nm_len);

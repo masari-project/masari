@@ -2,24 +2,24 @@
  * mini-event.h - micro implementation of libevent api, using select() only.
  *
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
- * 
+ *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -42,7 +42,7 @@
  *
  * Although limited to select() and a max (1024) open fds, it
  * is efficient:
- * o dispatch call caches fd_sets to use. 
+ * o dispatch call caches fd_sets to use.
  * o handler calling takes time ~ to the number of fds.
  * o timeouts are stored in a redblack tree, sorted, so take log(n).
  * Timeouts are only accurate to the second (no subsecond accuracy).
@@ -56,7 +56,7 @@
 
 #ifndef HAVE_EVENT_BASE_FREE
 #define HAVE_EVENT_BASE_FREE
-#endif 
+#endif
 
 /* redefine to use our own namespace so that on platforms where
  * linkers crosslink library-private symbols with other symbols, it works */
@@ -104,13 +104,13 @@ struct event_base
 	/** capacity - size of the fds array */
 	int capfd;
 	/* fdset for read write, for fds ready, and added */
-	fd_set 
+	fd_set
 		/** fds for reading */
-		reads, 
+		reads,
 		/** fds for writing */
-		writes, 
+		writes,
 		/** fds determined ready for use */
-		ready, 
+		ready,
 		/** ready plus newly added events. */
 		content;
 	/** array of 0 - maxsig of ptr to event for it */

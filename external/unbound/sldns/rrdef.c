@@ -35,7 +35,7 @@ static const sldns_rdf_type type_md_wireformat[] = { LDNS_RDF_TYPE_DNAME };
 static const sldns_rdf_type type_mf_wireformat[] = { LDNS_RDF_TYPE_DNAME };
 static const sldns_rdf_type type_cname_wireformat[] = { LDNS_RDF_TYPE_DNAME };
 static const sldns_rdf_type type_soa_wireformat[] = {
-	LDNS_RDF_TYPE_DNAME, LDNS_RDF_TYPE_DNAME, LDNS_RDF_TYPE_INT32, 
+	LDNS_RDF_TYPE_DNAME, LDNS_RDF_TYPE_DNAME, LDNS_RDF_TYPE_INT32,
 	LDNS_RDF_TYPE_PERIOD, LDNS_RDF_TYPE_PERIOD, LDNS_RDF_TYPE_PERIOD,
 	LDNS_RDF_TYPE_PERIOD
 };

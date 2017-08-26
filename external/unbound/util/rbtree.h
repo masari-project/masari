@@ -2,24 +2,24 @@
  * rbtree.h -- generic red-black tree
  *
  * Copyright (c) 2001-2007, NLnet Labs. All rights reserved.
- * 
+ *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -80,32 +80,32 @@ struct rbtree_type {
 	/** The number of the nodes in the tree */
 	size_t          count;
 
-	/** 
-	 * Key compare function. <0,0,>0 like strcmp. 
-	 * Return 0 on two NULL ptrs. 
+	/**
+	 * Key compare function. <0,0,>0 like strcmp.
+	 * Return 0 on two NULL ptrs.
 	 */
 	int (*cmp) (const void *, const void *);
 };
 
-/** 
- * Create new tree (malloced) with given key compare function. 
+/**
+ * Create new tree (malloced) with given key compare function.
  * @param cmpf: compare function (like strcmp) takes pointers to two keys.
  * @return: new tree, empty.
  */
 rbtree_type *rbtree_create(int (*cmpf)(const void *, const void *));
 
-/** 
- * Init a new tree (malloced by caller) with given key compare function. 
+/**
+ * Init a new tree (malloced by caller) with given key compare function.
  * @param rbtree: uninitialised memory for new tree, returned empty.
  * @param cmpf: compare function (like strcmp) takes pointers to two keys.
  */
 void rbtree_init(rbtree_type *rbtree, int (*cmpf)(const void *, const void *));
 
-/** 
- * Insert data into the tree. 
+/**
+ * Insert data into the tree.
  * @param rbtree: tree to insert to.
- * @param data: element to insert. 
- * @return: data ptr or NULL if key already present. 
+ * @param data: element to insert.
+ * @return: data ptr or NULL if key already present.
  */
 rbnode_type *rbtree_insert(rbtree_type *rbtree, rbnode_type *data);
 
@@ -113,8 +113,8 @@ rbnode_type *rbtree_insert(rbtree_type *rbtree, rbnode_type *data);
  * Delete element from tree.
  * @param rbtree: tree to delete from.
  * @param key: key of item to delete.
- * @return: node that is now unlinked from the tree. User to delete it. 
- * returns 0 if node not present 
+ * @return: node that is now unlinked from the tree. User to delete it.
+ * returns 0 if node not present
  */
 rbnode_type *rbtree_delete(rbtree_type *rbtree, const void *key);
 
@@ -133,9 +133,9 @@ rbnode_type *rbtree_search(rbtree_type *rbtree, const void *key);
  * @param result: set to the exact node if present, otherwise to element that
  *   precedes the position of key in the tree. NULL if no smaller element.
  * @return: true if exact match in result. Else result points to <= element,
- * or NULL if key is smaller than the smallest key. 
+ * or NULL if key is smaller than the smallest key.
  */
-int rbtree_find_less_equal(rbtree_type *rbtree, const void *key, 
+int rbtree_find_less_equal(rbtree_type *rbtree, const void *key,
 	rbnode_type **result);
 
 /**
@@ -168,7 +168,7 @@ rbnode_type *rbtree_previous(rbnode_type *rbtree);
 
 /**
  * Call with node=variable of struct* with rbnode_type as first element.
- * with type is the type of a pointer to that struct. 
+ * with type is the type of a pointer to that struct.
  */
 #define RBTREE_FOR(node, type, rbtree) \
 	for(node=(type)rbtree_first(rbtree); \

@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -80,26 +80,26 @@ struct rbtree_type;
 #define MINIMISE_MULTIPLE_LABS	(MAX_MINIMISE_COUNT - MINIMISE_ONE_LAB)
 /** at what query-sent-count to stop target fetch policy */
 #define TARGET_FETCH_STOP	3
-/** how nice is a server without further information, in msec 
+/** how nice is a server without further information, in msec
  * Equals rtt initial timeout value.
  */
 #define UNKNOWN_SERVER_NICENESS 376
-/** maximum timeout before a host is deemed unsuitable, in msec. 
- * After host_ttl this will be timed out and the host will be tried again. 
+/** maximum timeout before a host is deemed unsuitable, in msec.
+ * After host_ttl this will be timed out and the host will be tried again.
  * Equals RTT_MAX_TIMEOUT
  */
 #define USEFUL_SERVER_TOP_TIMEOUT	120000
 /** number of retries on outgoing queries */
 #define OUTBOUND_MSG_RETRY 5
 /** RTT band, within this amount from the best, servers are chosen randomly.
- * Chosen so that the UNKNOWN_SERVER_NICENESS falls within the band of a 
+ * Chosen so that the UNKNOWN_SERVER_NICENESS falls within the band of a
  * fast server, this causes server exploration as a side benefit. msec. */
 #define RTT_BAND 400
 /** Start value for blacklisting a host, 2*USEFUL_SERVER_TOP_TIMEOUT in sec */
 #define INFRA_BACKOFF_INITIAL 240
 
 /**
- * Global state for the iterator. 
+ * Global state for the iterator.
  */
 struct iter_env {
 	/** A flag to indicate whether or not we have an IPv6 route */
@@ -121,10 +121,10 @@ struct iter_env {
 	int max_dependency_depth;
 
 	/**
-	 * The target fetch policy for each dependency level. This is 
-	 * described as a simple number (per dependency level): 
-	 *	negative numbers (usually just -1) mean fetch-all, 
-	 *	0 means only fetch on demand, and 
+	 * The target fetch policy for each dependency level. This is
+	 * described as a simple number (per dependency level):
+	 *	negative numbers (usually just -1) mean fetch-all,
+	 *	0 means only fetch on demand, and
 	 *	positive numbers mean to fetch at most that many targets.
 	 * array of max_dependency_depth+1 size.
 	 */
@@ -168,27 +168,27 @@ enum iter_state {
 	INIT_REQUEST_STATE = 0,
 
 	/**
-	 * Root priming events reactivate here, most other events pass 
+	 * Root priming events reactivate here, most other events pass
 	 * through this naturally as the 2nd part of the INIT_REQUEST_STATE.
 	 */
 	INIT_REQUEST_2_STATE,
 
 	/**
-	 * Stub priming events reactivate here, most other events pass 
+	 * Stub priming events reactivate here, most other events pass
 	 * through this naturally as the 3rd part of the INIT_REQUEST_STATE.
 	 */
 	INIT_REQUEST_3_STATE,
 
 	/**
-	 * Each time a delegation point changes for a given query or a 
-	 * query times out and/or wakes up, this state is (re)visited. 
-	 * This state is reponsible for iterating through a list of 
+	 * Each time a delegation point changes for a given query or a
+	 * query times out and/or wakes up, this state is (re)visited.
+	 * This state is reponsible for iterating through a list of
 	 * nameserver targets.
 	 */
 	QUERYTARGETS_STATE,
 
 	/**
-	 * Responses to queries start at this state. This state handles 
+	 * Responses to queries start at this state. This state handles
 	 * the decision tree associated with handling responses.
 	 */
 	QUERY_RESP_STATE,
@@ -204,7 +204,7 @@ enum iter_state {
 	 * NS spot until we find it */
 	DSNS_FIND_STATE,
 
-	/** Responses that are to be returned upstream end at this state. 
+	/** Responses that are to be returned upstream end at this state.
 	 * As well as responses to target queries. */
 	FINISHED_STATE
 };
@@ -213,25 +213,25 @@ enum iter_state {
  * Per query state for the iterator module.
  */
 struct iter_qstate {
-	/** 
+	/**
 	 * State of the iterator module.
-	 * This is the state that event is in or should sent to -- all 
-	 * requests should start with the INIT_REQUEST_STATE. All 
-	 * responses should start with QUERY_RESP_STATE. Subsequent 
+	 * This is the state that event is in or should sent to -- all
+	 * requests should start with the INIT_REQUEST_STATE. All
+	 * responses should start with QUERY_RESP_STATE. Subsequent
 	 * processing of the event will change this state.
 	 */
 	enum iter_state state;
 
-	/** 
+	/**
 	 * Final state for the iterator module.
-	 * This is the state that responses should be routed to once the 
-	 * response is final. For externally initiated queries, this 
-	 * will be FINISHED_STATE, locally initiated queries will have 
+	 * This is the state that responses should be routed to once the
+	 * response is final. For externally initiated queries, this
+	 * will be FINISHED_STATE, locally initiated queries will have
 	 * different final states.
 	 */
 	enum iter_state final_state;
 
-	/** 
+	/**
 	 * The depth of this query, this means the depth of recursion.
 	 * This address is needed for another query, which is an address
 	 * needed for another query, etc. Original client query has depth 0.
@@ -243,8 +243,8 @@ struct iter_qstate {
 	 */
 	struct dns_msg* response;
 
-	/** 
-	 * This is a list of RRsets that must be prepended to the 
+	/**
+	 * This is a list of RRsets that must be prepended to the
 	 * ANSWER section of a response before being sent upstream.
 	 */
 	struct iter_prep_list* an_prepend_list;
@@ -260,7 +260,7 @@ struct iter_qstate {
 	struct iter_prep_list* ns_prepend_last;
 
 	/** query name used for chasing the results. Initially the same as
-	 * the state qinfo, but after CNAMEs this will be different. 
+	 * the state qinfo, but after CNAMEs this will be different.
 	 * The query info used to elicit the results needed. */
 	struct query_info qchase;
 	/** query flags to use when chasing the answer (i.e. RD flag) */
@@ -268,7 +268,7 @@ struct iter_qstate {
 	/** true if we set RD bit because of last resort recursion lame query*/
 	int chase_to_rd;
 
-	/** 
+	/**
 	 * This is the current delegation point for an in-progress query. This
 	 * object retains state as to which delegation targets need to be
 	 * (sub)queried for vs which ones have already been visited.
@@ -321,8 +321,8 @@ struct iter_qstate {
 	 * The query is for parent-side glue(A or AAAA) for a nameserver.
 	 * If the item is seen as glue in a referral, and pside_glue is NULL,
 	 * then it is stored in pside_glue for later.
-	 * If it was never seen, at the end, then a negative caching element 
-	 * must be created.  
+	 * If it was never seen, at the end, then a negative caching element
+	 * must be created.
 	 * The (data or negative) RR cache element then throttles retries.
 	 */
 	int query_for_pside_glue;
@@ -334,8 +334,8 @@ struct iter_qstate {
 	/** length of the dname in dsns_point */
 	size_t dsns_point_len;
 
-	/** 
-	 * expected dnssec information for this iteration step. 
+	/**
+	 * expected dnssec information for this iteration step.
 	 * If dnssec rrsigs are expected and not given, the server is marked
 	 * lame (dnssec-lame).
 	 */
@@ -348,8 +348,8 @@ struct iter_qstate {
 	int dnssec_lame_query;
 
 	/**
-	 * This is flag that, if true, means that this event is 
-	 * waiting for a stub priming query. 
+	 * This is flag that, if true, means that this event is
+	 * waiting for a stub priming query.
 	 */
 	int wait_priming_stub;
 
@@ -429,7 +429,7 @@ void iter_operate(struct module_qstate* qstate, enum module_ev event, int id,
 
 /**
  * Return priming query results to interestes super querystates.
- * 
+ *
  * Sets the delegation point and delegation message (not nonRD queries).
  * This is a callback from walk_supers.
  *
@@ -437,7 +437,7 @@ void iter_operate(struct module_qstate* qstate, enum module_ev event, int id,
  * @param id: module id.
  * @param super: the qstate to inform.
  */
-void iter_inform_super(struct module_qstate* qstate, int id, 
+void iter_inform_super(struct module_qstate* qstate, int id,
 	struct module_qstate* super);
 
 /** iterator cleanup query state */

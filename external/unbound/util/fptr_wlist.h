@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -38,10 +38,10 @@
  *
  * This file contains functions that check function pointers.
  * The functions contain a whitelist of known good callback values.
- * Any other values lead to an error. 
- * 
+ * Any other values lead to an error.
+ *
  * This prevent heap overflow based exploits, where the callback pointer
- * is overwritten by a buffer overflow (apart from this defense, buffer 
+ * is overwritten by a buffer overflow (apart from this defense, buffer
  * overflows should be fixed of course).
  *
  * Function pointers are used in
@@ -230,7 +230,7 @@ int fptr_whitelist_modenv_detach_subs(void (*fptr)(
  * @return false if not in whitelist.
  */
 int fptr_whitelist_modenv_attach_sub(int (*fptr)(
-	struct module_qstate* qstate, struct query_info* qinfo, 
+	struct module_qstate* qstate, struct query_info* qinfo,
 	uint16_t qflags, int prime, int valrec, struct module_qstate** newq));
 
 /**
@@ -248,7 +248,7 @@ int fptr_whitelist_modenv_kill_sub(void (*fptr)(struct module_qstate* newq));
  * @return false if not in whitelist.
  */
 int fptr_whitelist_modenv_detect_cycle(int (*fptr)(
-	struct module_qstate* qstate, struct query_info* qinfo, 
+	struct module_qstate* qstate, struct query_info* qinfo,
 	uint16_t flags, int prime, int valrec));
 
 /**
@@ -273,7 +273,7 @@ int fptr_whitelist_mod_deinit(void (*fptr)(struct module_env* env, int id));
  * @param fptr: function pointer to check.
  * @return false if not in whitelist.
  */
-int fptr_whitelist_mod_operate(void (*fptr)(struct module_qstate* qstate, 
+int fptr_whitelist_mod_operate(void (*fptr)(struct module_qstate* qstate,
 	enum module_ev event, int id, struct outbound_entry* outbound));
 
 /**
@@ -291,7 +291,7 @@ int fptr_whitelist_mod_inform_super(void (*fptr)(
  * @param fptr: function pointer to check.
  * @return false if not in whitelist.
  */
-int fptr_whitelist_mod_clear(void (*fptr)(struct module_qstate* qstate, 
+int fptr_whitelist_mod_clear(void (*fptr)(struct module_qstate* qstate,
 	int id));
 
 /**
@@ -369,16 +369,16 @@ int fptr_whitelist_inplace_cb_query_response(
 
 /** Due to module breakage by fptr wlist, these test app declarations
  * are presented here */
-/** 
- * compare two order_ids from lock-verify test app 
+/**
+ * compare two order_ids from lock-verify test app
  * @param e1: first order_id
  * @param e2: second order_id
  * @return compare code -1, 0, +1 (like memcmp).
  */
 int order_lock_cmp(const void* e1, const void* e2);
 
-/** 
- * compare two codeline structs for rbtree from memstats test app 
+/**
+ * compare two codeline structs for rbtree from memstats test app
  * @param a: codeline
  * @param b: codeline
  * @return compare code -1, 0, +1 (like memcmp).

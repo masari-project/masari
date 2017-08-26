@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -89,7 +89,7 @@
  *	  the hashbinlock. The next thread that comes in and needs the same
  * 	  hashbin will wait for the lock while holding the hashtable lock.
  *	  thus halting the entire system on hashtable.
- *	  This is because of the delete protection. 
+ *	  This is because of the delete protection.
  *	  Readlocks will be easier on the rwlock on entries.
  *	  While the writer is holding writelock, similar problems happen with
  *	  a reader or writer needing the same item.
@@ -118,9 +118,9 @@ struct lruhash_entry;
 /** the type of a hash value */
 typedef uint32_t hashvalue_type;
 
-/** 
+/**
  * Type of function that calculates the size of an entry.
- * Result must include the size of struct lruhash_entry. 
+ * Result must include the size of struct lruhash_entry.
  * Keys that are identical must also calculate to the same size.
  * size = func(key, data).
  */
@@ -129,7 +129,7 @@ typedef size_t (*lruhash_sizefunc_type)(void*, void*);
 /** type of function that compares two keys. return 0 if equal. */
 typedef int (*lruhash_compfunc_type)(void*, void*);
 
-/** old keys are deleted. 
+/** old keys are deleted.
  * The RRset type has to revoke its ID number, markdel() is used first.
  * This function is called: func(key, userarg) */
 typedef void (*lruhash_delkeyfunc_type)(void*, void*);
@@ -137,7 +137,7 @@ typedef void (*lruhash_delkeyfunc_type)(void*, void*);
 /** old data is deleted. This function is called: func(data, userarg). */
 typedef void (*lruhash_deldatafunc_type)(void*, void*);
 
-/** mark a key as pending to be deleted (and not to be used by anyone). 
+/** mark a key as pending to be deleted (and not to be used by anyone).
  * called: func(key) */
 typedef void (*lruhash_markdelfunc_type)(void*);
 
@@ -184,7 +184,7 @@ struct lruhash {
  * A single bin with a linked list of entries in it.
  */
 struct lruhash_bin {
-	/** 
+	/**
 	 * Lock for exclusive access to the linked list
 	 * This lock makes deletion of items safe in this overflow list.
 	 */
@@ -201,7 +201,7 @@ struct lruhash_bin {
  * to get the surrounding structure. Data should be allocated on its own.
  */
 struct lruhash_entry {
-	/** 
+	/**
 	 * rwlock for access to the contents of the entry
 	 * Note that it does _not_ cover the lru_ and overflow_ ptrs.
 	 * Even with a writelock, you cannot change hash and key.
@@ -231,7 +231,7 @@ struct lruhash_entry {
  * @param delkeyfunc: deletes key.
  *   Calling both delkey and deldata will also free the struct lruhash_entry.
  *   Make it part of the key structure and delete it in delkeyfunc.
- * @param deldatafunc: deletes data. 
+ * @param deldatafunc: deletes data.
  * @param arg: user argument that is passed to user function calls.
  * @return: new hash table or NULL on malloc failure.
  */
@@ -247,14 +247,14 @@ struct lruhash* lruhash_create(size_t start_size, size_t maxmem,
 void lruhash_delete(struct lruhash* table);
 
 /**
- * Clear hash table. Entries are all deleted, while locking them before 
+ * Clear hash table. Entries are all deleted, while locking them before
  * doing so. At end the table is empty.
  * @param table: to make empty.
  */
 void lruhash_clear(struct lruhash* table);
 
 /**
- * Insert a new element into the hashtable. 
+ * Insert a new element into the hashtable.
  * If key is already present data pointer in that entry is updated.
  * The space calculation function is called with the key, data.
  * If necessary the least recently used entries are deleted to make space.
@@ -269,7 +269,7 @@ void lruhash_clear(struct lruhash* table);
  * @param data: the data.
  * @param cb_override: if not null overrides the cb_arg for the deletefunc.
  */
-void lruhash_insert(struct lruhash* table, hashvalue_type hash, 
+void lruhash_insert(struct lruhash* table, hashvalue_type hash,
 	struct lruhash_entry* entry, void* data, void* cb_override);
 
 /**
@@ -317,7 +317,7 @@ void lru_demote(struct lruhash* table, struct lruhash_entry* entry);
  * element of it exits.
  *
  * If key is already present data pointer in that entry is kept.
- * If it is not present, a new entry is created. In that case, 
+ * If it is not present, a new entry is created. In that case,
  * the space calculation function is called with the key, data.
  * If necessary the least recently used entries are deleted to make space.
  * If necessary the hash array is grown up.
@@ -341,7 +341,7 @@ struct lruhash_entry* lruhash_insert_or_retrieve(struct lruhash* table, hashvalu
  * Delfunc is called for the entry.
  * @param table: hash table.
  * @param hash: hash of key.
- * @param key: what to look for. 
+ * @param key: what to look for.
  */
 void lruhash_remove(struct lruhash* table, hashvalue_type hash, void* key);
 
@@ -351,7 +351,7 @@ void bin_init(struct lruhash_bin* array, size_t size);
 /** delete the hash bin and entries inside it */
 void bin_delete(struct lruhash* table, struct lruhash_bin* bin);
 
-/** 
+/**
  * Find entry in hash bin. You must have locked the bin.
  * @param table: hash table with function pointers.
  * @param bin: hash bin to look into.
@@ -359,7 +359,7 @@ void bin_delete(struct lruhash* table, struct lruhash_bin* bin);
  * @param key: key to look for.
  * @return: the entry or NULL if not found.
  */
-struct lruhash_entry* bin_find_entry(struct lruhash* table, 
+struct lruhash_entry* bin_find_entry(struct lruhash* table,
 	struct lruhash_bin* bin, hashvalue_type hash, void* key);
 
 /**
@@ -368,7 +368,7 @@ struct lruhash_entry* bin_find_entry(struct lruhash* table,
  * @param bin: hash bin to look into.
  * @param entry: entry ptr that needs removal.
  */
-void bin_overflow_remove(struct lruhash_bin* bin, 
+void bin_overflow_remove(struct lruhash_bin* bin,
 	struct lruhash_entry* entry);
 
 /**
@@ -381,10 +381,10 @@ void bin_overflow_remove(struct lruhash_bin* bin,
  * @param newa: new increased array.
  * @param newmask: new lookup mask.
  */
-void bin_split(struct lruhash* table, struct lruhash_bin* newa, 
+void bin_split(struct lruhash* table, struct lruhash_bin* newa,
 	int newmask);
 
-/** 
+/**
  * Try to make space available by deleting old entries.
  * Assumes that the lock on the hashtable is being held by caller.
  * Caller must not hold bin locks.

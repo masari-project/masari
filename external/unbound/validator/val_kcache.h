@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -36,7 +36,7 @@
 /**
  * \file
  *
- * This file contains functions for caching validated key entries. 
+ * This file contains functions for caching validated key entries.
  */
 
 #ifndef VALIDATOR_VAL_KCACHE_H
@@ -105,7 +105,7 @@ void key_cache_remove(struct key_cache* kcache,
  * 	Otherwise, NULL is returned.
  */
 struct key_entry_key* key_cache_obtain(struct key_cache* kcache,
-	uint8_t* name, size_t namelen, uint16_t key_class, 
+	uint8_t* name, size_t namelen, uint16_t key_class,
 	struct regional* region, time_t now);
 
 /**

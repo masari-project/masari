@@ -14,9 +14,9 @@
  *
  * Since those functions heavily rely op cryptographic operations,
  * this module is dependent on openssl.
- * 
+ *
  */
- 
+
 #ifndef LDNS_KEYRAW_H
 #define LDNS_KEYRAW_H
 
@@ -47,7 +47,7 @@ size_t sldns_rr_dnskey_key_size_raw(const unsigned char *keydata,
 uint16_t sldns_calc_keytag_raw(uint8_t* key, size_t keysize);
 
 #if LDNS_BUILD_CONFIG_HAVE_SSL
-/** 
+/**
  * Get the PKEY id for GOST, loads GOST into openssl as a side effect.
  * Only available if GOST is compiled into the library and openssl.
  * \return the gost id for EVP_CTX creation.
@@ -100,7 +100,7 @@ RSA *sldns_key_buf2rsa_raw(unsigned char* key, size_t len);
  * \param[in] md the message digest to use.
  * \return true if worked, false on failure.
  */
-int sldns_digest_evp(unsigned char* data, unsigned int len, 
+int sldns_digest_evp(unsigned char* data, unsigned int len,
 	unsigned char* dest, const EVP_MD* md);
 
 #endif /* LDNS_BUILD_CONFIG_HAVE_SSL */

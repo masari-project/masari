@@ -33,10 +33,10 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  */
- 
+
 /**
  * \file
- * Calls ecs related unit tests. Exits with code 1 on a failure. 
+ * Calls ecs related unit tests. Exits with code 1 on a failure.
  */
 
 #include "config.h"
@@ -76,7 +76,7 @@
 			if (node->edge[i]) {
 				for (s = 0; s < indent; s++) printf(" ");
 				printkey(node->edge[i]->str, node->edge[i]->len);
-				printf("(len %d bits, %d bytes) ", node->edge[i]->len, 
+				printf("(len %d bits, %d bytes) ", node->edge[i]->len,
 					node->edge[i]->len/8 + ((node->edge[i]->len%8)>0));
 				print_tree(node->edge[i]->node, indent+1, maxdepth);
 			}
@@ -86,12 +86,12 @@
 */
 
 /* what should we check?
- * X - is it balanced? (a node with 1 child shoudl not have  
+ * X - is it balanced? (a node with 1 child shoudl not have
  * a node with 1 child MUST have elem
  * child must be sub of parent
  * edge must be longer than parent edge
  * */
-static int addrtree_inconsistent_subtree(struct addrtree* tree, 
+static int addrtree_inconsistent_subtree(struct addrtree* tree,
 	struct addredge* parent_edge, addrlen_t depth)
 {
 	struct addredge* edge;

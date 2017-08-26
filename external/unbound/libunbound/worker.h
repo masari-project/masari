@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -85,15 +85,15 @@ void libworker_handle_control_cmd(struct tube* tube, uint8_t* msg, size_t len,
 	int err, void* arg);
 
 /** mesh callback with fg results */
-void libworker_fg_done_cb(void* arg, int rcode, sldns_buffer* buf, 
+void libworker_fg_done_cb(void* arg, int rcode, sldns_buffer* buf,
 	enum sec_status s, char* why_bogus);
 
 /** mesh callback with bg results */
-void libworker_bg_done_cb(void* arg, int rcode, sldns_buffer* buf, 
+void libworker_bg_done_cb(void* arg, int rcode, sldns_buffer* buf,
 	enum sec_status s, char* why_bogus);
 
 /** mesh callback with event results */
-void libworker_event_done_cb(void* arg, int rcode, struct sldns_buffer* buf, 
+void libworker_event_done_cb(void* arg, int rcode, struct sldns_buffer* buf,
 	enum sec_status s, char* why_bogus);
 
 /**
@@ -124,8 +124,8 @@ struct outbound_entry* worker_send_query(struct query_info* qinfo,
 	struct sockaddr_storage* addr, socklen_t addrlen, uint8_t* zone,
 	size_t zonelen, int ssl_upstream, struct module_qstate* q);
 
-/** 
- * process control messages from the main thread. Frees the control 
+/**
+ * process control messages from the main thread. Frees the control
  * command message.
  * @param tube: tube control message came on.
  * @param msg: message contents.  Is freed.
@@ -141,11 +141,11 @@ int worker_handle_request(struct comm_point* c, void* arg, int error,
 	struct comm_reply* repinfo);
 
 /** process incoming replies from the network */
-int worker_handle_reply(struct comm_point* c, void* arg, int error, 
+int worker_handle_reply(struct comm_point* c, void* arg, int error,
 	struct comm_reply* reply_info);
 
 /** process incoming serviced query replies from the network */
-int worker_handle_service_reply(struct comm_point* c, void* arg, int error, 
+int worker_handle_service_reply(struct comm_point* c, void* arg, int error,
 	struct comm_reply* reply_info);
 
 /** cleanup the cache to remove all rrset IDs from it, arg is worker */

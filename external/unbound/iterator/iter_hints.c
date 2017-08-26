@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -50,7 +50,7 @@
 #include "sldns/str2wire.h"
 #include "sldns/wire2str.h"
 
-struct iter_hints* 
+struct iter_hints*
 hints_create(void)
 {
 	struct iter_hints* hints = (struct iter_hints*)calloc(1,
@@ -78,10 +78,10 @@ static void hints_del_tree(struct iter_hints* hints)
 	traverse_postorder(&hints->tree, &delhintnode, NULL);
 }
 
-void 
+void
 hints_delete(struct iter_hints* hints)
 {
-	if(!hints) 
+	if(!hints)
 		return;
 	hints_del_tree(hints);
 	free(hints);
@@ -111,7 +111,7 @@ ah(struct delegpt* dp, const char* sv, const char* ip)
 }
 
 /** obtain compiletime provided root hints */
-static struct delegpt* 
+static struct delegpt*
 compile_time_root_prime(int do_ip4, int do_ip6)
 {
 	/* from:
@@ -188,7 +188,7 @@ hints_insert(struct iter_hints* hints, uint16_t c, struct delegpt* dp,
 }
 
 /** set stub name */
-static struct delegpt* 
+static struct delegpt*
 read_stubs_name(struct config_stub* s)
 {
 	struct delegpt* dp;
@@ -213,7 +213,7 @@ read_stubs_name(struct config_stub* s)
 }
 
 /** set stub host names */
-static int 
+static int
 read_stubs_host(struct config_stub* s, struct delegpt* dp)
 {
 	struct config_strlist* p;
@@ -223,7 +223,7 @@ read_stubs_host(struct config_stub* s, struct delegpt* dp)
 		log_assert(p->str);
 		dname = sldns_str2wire_dname(p->str, &dname_len);
 		if(!dname) {
-			log_err("cannot parse stub %s nameserver name: '%s'", 
+			log_err("cannot parse stub %s nameserver name: '%s'",
 				s->name, p->str);
 			return 0;
 		}
@@ -238,7 +238,7 @@ read_stubs_host(struct config_stub* s, struct delegpt* dp)
 }
 
 /** set stub server addresses */
-static int 
+static int
 read_stubs_addr(struct config_stub* s, struct delegpt* dp)
 {
 	struct config_strlist* p;
@@ -247,7 +247,7 @@ read_stubs_addr(struct config_stub* s, struct delegpt* dp)
 	for(p = s->addrs; p; p = p->next) {
 		log_assert(p->str);
 		if(!extstrtoaddr(p->str, &addr, &addrlen)) {
-			log_err("cannot parse stub %s ip address: '%s'", 
+			log_err("cannot parse stub %s ip address: '%s'",
 				s->name, p->str);
 			return 0;
 		}
@@ -260,7 +260,7 @@ read_stubs_addr(struct config_stub* s, struct delegpt* dp)
 }
 
 /** read stubs config */
-static int 
+static int
 read_stubs(struct iter_hints* hints, struct config_file* cfg)
 {
 	struct config_stub* s;
@@ -286,7 +286,7 @@ read_stubs(struct iter_hints* hints, struct config_file* cfg)
 }
 
 /** read root hints from file */
-static int 
+static int
 read_root_hints(struct iter_hints* hints, char* fname)
 {
 	struct sldns_file_parse_state pstate;
@@ -346,11 +346,11 @@ read_root_hints(struct iter_hints* hints, char* fname)
 			memset(&sa, 0, len);
 			sa.sin_family = AF_INET;
 			sa.sin_port = (in_port_t)htons(UNBOUND_DNS_PORT);
-			memmove(&sa.sin_addr, 
+			memmove(&sa.sin_addr,
 				sldns_wirerr_get_rdata(rr, rr_len, dname_len),
 				INET_SIZE);
 			if(!delegpt_add_target_mlc(dp, rr, dname_len,
-					(struct sockaddr_storage*)&sa, len, 
+					(struct sockaddr_storage*)&sa, len,
 					0, 0)) {
 				log_err("out of memory reading root hints");
 				goto stop_read;
@@ -363,7 +363,7 @@ read_root_hints(struct iter_hints* hints, char* fname)
 			memset(&sa, 0, len);
 			sa.sin6_family = AF_INET6;
 			sa.sin6_port = (in_port_t)htons(UNBOUND_DNS_PORT);
-			memmove(&sa.sin6_addr, 
+			memmove(&sa.sin6_addr,
 				sldns_wirerr_get_rdata(rr, rr_len, dname_len),
 				INET6_SIZE);
 			if(!delegpt_add_target_mlc(dp, rr, dname_len,
@@ -399,7 +399,7 @@ stop_read:
 }
 
 /** read root hints list */
-static int 
+static int
 read_root_hints_list(struct iter_hints* hints, struct config_file* cfg)
 {
 	struct config_strlist* p;
@@ -408,7 +408,7 @@ read_root_hints_list(struct iter_hints* hints, struct config_file* cfg)
 		if(p->str && p->str[0]) {
 			char* f = p->str;
 			if(cfg->chrootdir && cfg->chrootdir[0] &&
-				strncmp(p->str, cfg->chrootdir, 
+				strncmp(p->str, cfg->chrootdir,
 				strlen(cfg->chrootdir)) == 0)
 				f += strlen(cfg->chrootdir);
 			if(!read_root_hints(hints, f))
@@ -418,7 +418,7 @@ read_root_hints_list(struct iter_hints* hints, struct config_file* cfg)
 	return 1;
 }
 
-int 
+int
 hints_apply_cfg(struct iter_hints* hints, struct config_file* cfg)
 {
 	hints_del_tree(hints);
@@ -437,7 +437,7 @@ hints_apply_cfg(struct iter_hints* hints, struct config_file* cfg)
 		struct delegpt* dp = compile_time_root_prime(cfg->do_ip4,
 			cfg->do_ip6);
 		verbose(VERB_ALGO, "no config, using builtin root hints.");
-		if(!dp) 
+		if(!dp)
 			return 0;
 		if(!hints_insert(hints, LDNS_RR_CLASS_IN, dp, 0))
 			return 0;
@@ -447,7 +447,7 @@ hints_apply_cfg(struct iter_hints* hints, struct config_file* cfg)
 	return 1;
 }
 
-struct delegpt* 
+struct delegpt*
 hints_lookup_root(struct iter_hints* hints, uint16_t qclass)
 {
 	uint8_t rootlab = 0;
@@ -459,8 +459,8 @@ hints_lookup_root(struct iter_hints* hints, uint16_t qclass)
 	return stub->dp;
 }
 
-struct iter_hints_stub* 
-hints_lookup_stub(struct iter_hints* hints, uint8_t* qname, 
+struct iter_hints_stub*
+hints_lookup_stub(struct iter_hints* hints, uint8_t* qname,
 	uint16_t qclass, struct delegpt* cache_dp)
 {
 	size_t len;
@@ -487,7 +487,7 @@ hints_lookup_stub(struct iter_hints* hints, uint8_t* qname,
 	if(r->noprime && query_dname_compare(cache_dp->name, r->dp->name)==0)
 		return r; /* use this stub instead of cached dp */
 	
-	/* 
+	/*
 	 * If our cached delegation point is above the hint, we need to prime.
 	 */
 	if(dname_strict_subdomain(r->dp->name, r->dp->namelabs,
@@ -501,7 +501,7 @@ int hints_next_root(struct iter_hints* hints, uint16_t* qclass)
 	return name_tree_next_root(&hints->tree, qclass);
 }
 
-size_t 
+size_t
 hints_get_mem(struct iter_hints* hints)
 {
 	size_t s;
@@ -514,7 +514,7 @@ hints_get_mem(struct iter_hints* hints)
 	return s;
 }
 
-int 
+int
 hints_add_stub(struct iter_hints* hints, uint16_t c, struct delegpt* dp,
 	int noprime)
 {
@@ -530,7 +530,7 @@ hints_add_stub(struct iter_hints* hints, uint16_t c, struct delegpt* dp,
 	return 1;
 }
 
-void 
+void
 hints_delete_stub(struct iter_hints* hints, uint16_t c, uint8_t* nm)
 {
 	struct iter_hints_stub *z;

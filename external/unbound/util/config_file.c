@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -82,7 +82,7 @@ struct config_parser_state* cfg_parser = 0;
 /** init ports possible for use */
 static void init_outgoing_availports(int* array, int num);
 
-struct config_file* 
+struct config_file*
 config_create(void)
 {
 	struct config_file* cfg;
@@ -128,7 +128,7 @@ config_create(void)
 	cfg->outgoing_num_ports = 48; /* windows is limited in num fds */
 	cfg->num_queries_per_thread = 24;
 	cfg->outgoing_num_tcp = 2; /* leaves 64-52=12 for: 4if,1stop,thread4 */
-	cfg->incoming_num_tcp = 2; 
+	cfg->incoming_num_tcp = 2;
 #endif
 	cfg->edns_buffer_size = 4096; /* 4k from rfc recommendation */
 	cfg->msg_buffer_size = 65552; /* 64 k + a small margin */
@@ -239,13 +239,13 @@ config_create(void)
 	cfg->minimal_responses = 0;
 	cfg->rrset_roundrobin = 0;
 	cfg->max_udp_size = 4096;
-	if(!(cfg->server_key_file = strdup(RUN_DIR"/unbound_server.key"))) 
+	if(!(cfg->server_key_file = strdup(RUN_DIR"/unbound_server.key")))
 		goto error_exit;
-	if(!(cfg->server_cert_file = strdup(RUN_DIR"/unbound_server.pem"))) 
+	if(!(cfg->server_cert_file = strdup(RUN_DIR"/unbound_server.pem")))
 		goto error_exit;
-	if(!(cfg->control_key_file = strdup(RUN_DIR"/unbound_control.key"))) 
+	if(!(cfg->control_key_file = strdup(RUN_DIR"/unbound_control.key")))
 		goto error_exit;
-	if(!(cfg->control_cert_file = strdup(RUN_DIR"/unbound_control.pem"))) 
+	if(!(cfg->control_cert_file = strdup(RUN_DIR"/unbound_control.pem")))
 		goto error_exit;
 
 #ifdef CLIENT_SUBNET
@@ -253,7 +253,7 @@ config_create(void)
 #else
 	if(!(cfg->module_conf = strdup("validator iterator"))) goto error_exit;
 #endif
-	if(!(cfg->val_nsec3_key_iterations = 
+	if(!(cfg->val_nsec3_key_iterations =
 		strdup("1024 150 2048 500 4096 2500"))) goto error_exit;
 #if defined(DNSTAP_SOCKET_PATH)
 	if(!(cfg->dnstap_socket_path = strdup(DNSTAP_SOCKET_PATH)))
@@ -281,7 +281,7 @@ config_create(void)
 	cfg->dnscrypt_secret_key = NULL;
 	return cfg;
 error_exit:
-	config_delete(cfg); 
+	config_delete(cfg);
 	return NULL;
 }
 
@@ -369,10 +369,10 @@ int config_set_option(struct config_file* cfg, const char* opt,
 		/* not supported, library must have 1 thread in bgworker */
 		return 0;
 	} else if(strcmp(opt, "outgoing-port-permit:") == 0) {
-		return cfg_mark_ports(val, 1, 
+		return cfg_mark_ports(val, 1,
 			cfg->outgoing_avail_ports, 65536);
 	} else if(strcmp(opt, "outgoing-port-avoid:") == 0) {
-		return cfg_mark_ports(val, 0, 
+		return cfg_mark_ports(val, 0,
 			cfg->outgoing_avail_ports, 65536);
 	} else if(strcmp(opt, "local-zone:") == 0) {
 		return cfg_parse_local_zone(cfg, val);
@@ -386,7 +386,7 @@ int config_set_option(struct config_file* cfg, const char* opt,
 			if(atoi(val) == 0) return 0;
 			cfg->val_date_override = (uint32_t)atoi(val);
 		}
-	} else if(strcmp(opt, "local-data-ptr:") == 0) { 
+	} else if(strcmp(opt, "local-data-ptr:") == 0) {
 		char* ptr = cfg_ptr_reverse((char*)opt);
 		return cfg_strlist_insert(&cfg->local_data, ptr);
 	} else if(strcmp(opt, "logfile:") == 0) {
@@ -549,7 +549,7 @@ int config_set_option(struct config_file* cfg, const char* opt,
 	{ IS_NUMBER_OR_ZERO; cfg->val_sig_skew_max = (int32_t)atoi(val); }
 	else if (strcmp(opt, "outgoing-interface:") == 0) {
 		char* d = strdup(val);
-		char** oi = 
+		char** oi =
 		(char**)reallocarray(NULL, (size_t)cfg->num_out_ifs+1, sizeof(char*));
 		if(!d || !oi) { free(d); free(oi); return -1; }
 		if(cfg->out_ifs && cfg->num_out_ifs) {
@@ -560,13 +560,13 @@ int config_set_option(struct config_file* cfg, const char* opt,
 		cfg->out_ifs = oi;
 	} else {
 		/* unknown or unsupported (from the set_option interface):
-		 * interface, outgoing-interface, access-control, 
+		 * interface, outgoing-interface, access-control,
 		 * stub-zone, name, stub-addr, stub-host, stub-prime
 		 * forward-first, stub-first, forward-ssl-upstream,
 		 * stub-ssl-upstream, forward-zone,
 		 * name, forward-addr, forward-host,
 		 * ratelimit-for-domain, ratelimit-below-domain,
-		 * local-zone-tag, access-control-view 
+		 * local-zone-tag, access-control-view
 		 * send-client-subnet client-subnet-always-forward
 		 * max-client-subnet-ipv4 max-client-subnet-ipv6 */
 		return 0;
@@ -641,7 +641,7 @@ config_collate_cat(struct config_strlist* list)
 	for(s=list; s; s=s->next)
 		total += strlen(s->str) + 1; /* len + newline */
 	left = total+1; /* one extra for nul at end */
-	r = malloc(left); 
+	r = malloc(left);
 	if(!r)
 		return NULL;
 	w = r;
@@ -720,7 +720,7 @@ config_collate_cat(struct config_strlist* list)
 	}
 
 int
-config_get_option(struct config_file* cfg, const char* opt, 
+config_get_option(struct config_file* cfg, const char* opt,
 	void (*func)(char*,void*), void* arg)
 {
 	char buf[1024];
@@ -900,7 +900,7 @@ create_cfg_parser(struct config_file* cfg, char* filename, const char* chroot)
 	init_cfg_parse();
 }
 
-int 
+int
 config_read(struct config_file* cfg, const char* filename, const char* chroot)
 {
 	FILE *in;
@@ -940,7 +940,7 @@ config_read(struct config_file* cfg, const char* filename, const char* chroot)
 			if(r == GLOB_NOMATCH) {
 				verbose(VERB_QUERY, "include: "
 				"no matches for %s", fname);
-				return 1; 
+				return 1;
 			} else if(r == GLOB_NOSPACE) {
 				log_err("include: %s: "
 					"fnametern out of memory", fname);
@@ -1109,7 +1109,7 @@ config_del_strbytelist(struct config_strbytelist* p)
 	}
 }
 
-void 
+void
 config_delete(struct config_file* cfg)
 {
 	if(!cfg) return;
@@ -1172,7 +1172,7 @@ config_delete(struct config_file* cfg)
 	free(cfg);
 }
 
-static void 
+static void
 init_outgoing_availports(int* a, int num)
 {
 	/* generated with make iana_update */
@@ -1185,7 +1185,7 @@ init_outgoing_availports(int* a, int num)
 	for(i=1024; i<num; i++) {
 		a[i] = i;
 	}
-	/* create empty spot at 49152 to keep ephemeral ports available 
+	/* create empty spot at 49152 to keep ephemeral ports available
 	 * to other programs */
 	for(i=49152; i<49152+256; i++)
 		a[i] = 0;
@@ -1196,7 +1196,7 @@ init_outgoing_availports(int* a, int num)
 	}
 }
 
-int 
+int
 cfg_mark_ports(const char* str, int allow, int* avail, int num)
 {
 	char* mid = strchr(str, '-');
@@ -1236,7 +1236,7 @@ cfg_mark_ports(const char* str, int allow, int* avail, int num)
 	return 1;
 }
 
-int 
+int
 cfg_scan_ports(int* avail, int num)
 {
 	int i;
@@ -1315,7 +1315,7 @@ int cfg_strlist_append(struct config_strlist_head* list, char* item)
 	return 1;
 }
 
-int 
+int
 cfg_region_strlist_insert(struct regional* region,
 	struct config_strlist** head, char* item)
 {
@@ -1332,7 +1332,7 @@ cfg_region_strlist_insert(struct regional* region,
 	return 1;
 }
 
-int 
+int
 cfg_strlist_insert(struct config_strlist** head, char* item)
 {
 	struct config_strlist *s;
@@ -1347,7 +1347,7 @@ cfg_strlist_insert(struct config_strlist** head, char* item)
 	return 1;
 }
 
-int 
+int
 cfg_str2list_insert(struct config_str2list** head, char* item, char* i2)
 {
 	struct config_str2list *s;
@@ -1363,7 +1363,7 @@ cfg_str2list_insert(struct config_str2list** head, char* item, char* i2)
 	return 1;
 }
 
-int 
+int
 cfg_str3list_insert(struct config_str3list** head, char* item, char* i2,
 	char* i3)
 {
@@ -1399,7 +1399,7 @@ cfg_strbytelist_insert(struct config_strbytelist** head, char* item,
 	return 1;
 }
 
-time_t 
+time_t
 cfg_convert_timeval(const char* str)
 {
 	time_t t;
@@ -1407,7 +1407,7 @@ cfg_convert_timeval(const char* str)
 	memset(&tm, 0, sizeof(tm));
 	if(strlen(str) < 14)
 		return 0;
-	if(sscanf(str, "%4d%2d%2d%2d%2d%2d", &tm.tm_year, &tm.tm_mon, 
+	if(sscanf(str, "%4d%2d%2d%2d%2d%2d", &tm.tm_year, &tm.tm_mon,
 		&tm.tm_mday, &tm.tm_hour, &tm.tm_min, &tm.tm_sec) != 6)
 		return 0;
 	tm.tm_year -= 1900;
@@ -1424,7 +1424,7 @@ cfg_convert_timeval(const char* str)
 	return t;
 }
 
-int 
+int
 cfg_count_numbers(const char* s)
 {
 	/* format ::= (sp num)+ sp  */
@@ -1459,7 +1459,7 @@ static int isalldigit(const char* str, size_t l)
 	return 1;
 }
 
-int 
+int
 cfg_parse_memsize(const char* str, size_t* res)
 {
 	size_t len;
@@ -1475,9 +1475,9 @@ cfg_parse_memsize(const char* str, size_t* res)
 	/* check appended num */
 	while(len>0 && str[len-1]==' ')
 		len--;
-	if(len > 1 && str[len-1] == 'b') 
+	if(len > 1 && str[len-1] == 'b')
 		len--;
-	else if(len > 1 && str[len-1] == 'B') 
+	else if(len > 1 && str[len-1] == 'B')
 		len--;
 	
 	if(len > 1 && tolower((unsigned char)str[len-1]) == 'g')
@@ -1620,7 +1620,7 @@ int taglist_intersect(uint8_t* list1, size_t list1len, uint8_t* list2,
 	return 0;
 }
 
-void 
+void
 config_apply(struct config_file* config)
 {
 	MAX_TTL = (time_t)config->max_ttl;
@@ -1650,7 +1650,7 @@ void config_lookup_uid(struct config_file* cfg)
 #endif
 }
 
-/** 
+/**
  * Calculate string length of full pathname in original filesys
  * @param fname: the path name to convert.
  * 	Must not be null or empty.
@@ -1664,7 +1664,7 @@ strlen_after_chroot(const char* fname, struct config_file* cfg, int use_chdir)
 {
 	size_t len = 0;
 	int slashit = 0;
-	if(cfg->chrootdir && cfg->chrootdir[0] && 
+	if(cfg->chrootdir && cfg->chrootdir[0] &&
 		strncmp(cfg->chrootdir, fname, strlen(cfg->chrootdir)) == 0) {
 		/* already full pathname, return it */
 		return strlen(fname);
@@ -1687,8 +1687,8 @@ strlen_after_chroot(const char* fname, struct config_file* cfg, int use_chdir)
 		/* prepend chdir */
 		if(slashit && cfg->directory[0] != '/')
 			len++;
-		if(cfg->chrootdir && cfg->chrootdir[0] && 
-			strncmp(cfg->chrootdir, cfg->directory, 
+		if(cfg->chrootdir && cfg->chrootdir[0] &&
+			strncmp(cfg->chrootdir, cfg->directory,
 			strlen(cfg->chrootdir)) == 0)
 			len += strlen(cfg->directory)-strlen(cfg->chrootdir);
 		else	len += strlen(cfg->directory);
@@ -1711,7 +1711,7 @@ fname_after_chroot(const char* fname, struct config_file* cfg, int use_chdir)
 		return NULL;
 	buf[0] = 0;
 	/* is fname already in chroot ? */
-	if(cfg->chrootdir && cfg->chrootdir[0] && 
+	if(cfg->chrootdir && cfg->chrootdir[0] &&
 		strncmp(cfg->chrootdir, fname, strlen(cfg->chrootdir)) == 0) {
 		/* already full pathname, return it */
 		(void)strlcpy(buf, fname, len);
@@ -1737,10 +1737,10 @@ fname_after_chroot(const char* fname, struct config_file* cfg, int use_chdir)
 		if(slashit && cfg->directory[0] != '/')
 			(void)strlcat(buf, "/", len);
 		/* is the directory already in the chroot? */
-		if(cfg->chrootdir && cfg->chrootdir[0] && 
-			strncmp(cfg->chrootdir, cfg->directory, 
+		if(cfg->chrootdir && cfg->chrootdir[0] &&
+			strncmp(cfg->chrootdir, cfg->directory,
 			strlen(cfg->chrootdir)) == 0)
-			(void)strlcat(buf, cfg->directory+strlen(cfg->chrootdir), 
+			(void)strlcat(buf, cfg->directory+strlen(cfg->chrootdir),
 				   len);
 		else (void)strlcat(buf, cfg->directory, len);
 		slashit = 1;
@@ -1777,7 +1777,7 @@ static char* last_space_pos(const char* str)
 	return (sp>tab)?sp:tab;
 }
 
-int 
+int
 cfg_parse_local_zone(struct config_file* cfg, const char* val)
 {
 	const char *type, *name_end, *name;
@@ -1812,7 +1812,7 @@ cfg_parse_local_zone(struct config_file* cfg, const char* val)
 	}
 
 	if(strcmp(type, "nodefault")==0) {
-		return cfg_strlist_insert(&cfg->local_zones_nodefault, 
+		return cfg_strlist_insert(&cfg->local_zones_nodefault,
 			strdup(name));
 	} else {
 		return cfg_str2list_insert(&cfg->local_zones, strdup(buf),
@@ -1866,7 +1866,7 @@ char* cfg_ptr_reverse(char* str)
 		const char* hex = "0123456789abcdef";
 		char *p = buf;
 		int i;
-		memmove(ad, &((struct sockaddr_in6*)&addr)->sin6_addr, 
+		memmove(ad, &((struct sockaddr_in6*)&addr)->sin6_addr,
 			sizeof(ad));
 		for(i=15; i>=0; i--) {
 			uint8_t b = ad[i];
@@ -1878,7 +1878,7 @@ char* cfg_ptr_reverse(char* str)
 		snprintf(buf+16*4, sizeof(buf)-16*4, "ip6.arpa. ");
 	} else {
 		uint8_t ad[4];
-		memmove(ad, &((struct sockaddr_in*)&addr)->sin_addr, 
+		memmove(ad, &((struct sockaddr_in*)&addr)->sin_addr,
 			sizeof(ad));
 		snprintf(buf, sizeof(buf), "%u.%u.%u.%u.in-addr.arpa. ",
 			(unsigned)ad[3], (unsigned)ad[2],
@@ -1889,7 +1889,7 @@ char* cfg_ptr_reverse(char* str)
 	while(*ip_end && isspace((unsigned char)*ip_end))
 		ip_end++;
 	if(name>ip_end) {
-		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%.*s", 
+		snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), "%.*s",
 			(int)(name-ip_end), ip_end);
 	}
 	snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), " PTR %s", name);
@@ -1979,7 +1979,7 @@ void errinf(struct module_qstate* qstate, const char* str)
 	/* add at end */
 	if(qstate->errinf) {
 		struct config_strlist* q = qstate->errinf;
-		while(q->next) 
+		while(q->next)
 			q = q->next;
 		q->next = p;
 	} else	qstate->errinf = p;
@@ -1996,9 +1996,9 @@ void errinf_origin(struct module_qstate* qstate, struct sock_list *origin)
 			snprintf(buf, sizeof(buf), "from ");
 		else	snprintf(buf, sizeof(buf), "and ");
 		if(p->len == 0)
-			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf), 
+			snprintf(buf+strlen(buf), sizeof(buf)-strlen(buf),
 				"cache");
-		else 
+		else
 			addr_to_str(&p->addr, p->len, buf+strlen(buf),
 				sizeof(buf)-strlen(buf));
 		errinf(qstate, buf);

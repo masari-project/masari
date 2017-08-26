@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -49,7 +49,7 @@
 #define HASH_DEFAULT_SLABS 4
 
 /**
- * Hash table formed from several smaller ones. 
+ * Hash table formed from several smaller ones.
  * This results in a partitioned lruhash table, a 'slashtable'.
  * None of the data inside the slabhash may be altered.
  * Therefore, no locks are needed to access the structure.
@@ -75,13 +75,13 @@ struct slabhash {
  * @param sizefunc: calculates memory usage of entries.
  * @param compfunc: compares entries, 0 on equality.
  * @param delkeyfunc: deletes key.
- * @param deldatafunc: deletes data. 
+ * @param deldatafunc: deletes data.
  * @param arg: user argument that is passed to user function calls.
  * @return: new hash table or NULL on malloc failure.
  */
-struct slabhash* slabhash_create(size_t numtables, size_t start_size, 
-	size_t maxmem, lruhash_sizefunc_type sizefunc, 
-	lruhash_compfunc_type compfunc, lruhash_delkeyfunc_type delkeyfunc, 
+struct slabhash* slabhash_create(size_t numtables, size_t start_size,
+	size_t maxmem, lruhash_sizefunc_type sizefunc,
+	lruhash_compfunc_type compfunc, lruhash_delkeyfunc_type delkeyfunc,
 	lruhash_deldatafunc_type deldatafunc, void* arg);
 
 /**
@@ -97,7 +97,7 @@ void slabhash_delete(struct slabhash* table);
 void slabhash_clear(struct slabhash* table);
 
 /**
- * Insert a new element into the hashtable, uses lruhash_insert. 
+ * Insert a new element into the hashtable, uses lruhash_insert.
  * If key is already present data pointer in that entry is updated.
  *
  * @param table: hash table.
@@ -109,7 +109,7 @@ void slabhash_clear(struct slabhash* table);
  * @param data: the data.
  * @param cb_override: if not NULL overrides the cb_arg for deletfunc.
  */
-void slabhash_insert(struct slabhash* table, hashvalue_type hash, 
+void slabhash_insert(struct slabhash* table, hashvalue_type hash,
 	struct lruhash_entry* entry, void* data, void* cb_override);
 
 /**
@@ -125,7 +125,7 @@ void slabhash_insert(struct slabhash* table, hashvalue_type hash,
  * @return: pointer to the entry or NULL. The entry is locked.
  *    The user must unlock the entry when done.
  */
-struct lruhash_entry* slabhash_lookup(struct slabhash* table, 
+struct lruhash_entry* slabhash_lookup(struct slabhash* table,
 	hashvalue_type hash, void* key, int wr);
 
 /**
@@ -133,7 +133,7 @@ struct lruhash_entry* slabhash_lookup(struct slabhash* table,
  * Delfunc is called for the entry. Uses lruhash_remove.
  * @param table: hash table.
  * @param hash: hash of key.
- * @param key: what to look for. 
+ * @param key: what to look for.
  */
 void slabhash_remove(struct slabhash* table, hashvalue_type hash, void* key);
 

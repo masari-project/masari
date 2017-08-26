@@ -201,13 +201,13 @@ std::vector<uint64_t> UnsignedTransactionImpl::fee() const
         for (const auto &i: utx.sources) fee += i.amount;
         for (const auto &i: utx.splitted_dsts) fee -= i.amount;
         result.push_back(fee);
-    }   
+    }
     return result;
-} 
+}
 
 std::vector<uint64_t> UnsignedTransactionImpl::mixin() const
 {
-    std::vector<uint64_t> result;    
+    std::vector<uint64_t> result;
     for (const auto &utx: m_unsigned_tx_set.txes) {
         size_t min_mixin = ~0;
         // TODO: Is this loop needed or is sources[0] ?
@@ -219,17 +219,17 @@ std::vector<uint64_t> UnsignedTransactionImpl::mixin() const
         result.push_back(min_mixin);
     }
     return result;
-}    
+}
 
 uint64_t UnsignedTransactionImpl::txCount() const
 {
     return m_unsigned_tx_set.txes.size();
 }
 
-std::vector<std::string> UnsignedTransactionImpl::paymentId() const 
+std::vector<std::string> UnsignedTransactionImpl::paymentId() const
 {
     std::vector<string> result;
-    for (const auto &utx: m_unsigned_tx_set.txes) {     
+    for (const auto &utx: m_unsigned_tx_set.txes) {
         crypto::hash payment_id = cryptonote::null_hash;
         cryptonote::tx_extra_nonce extra_nonce;
         std::vector<cryptonote::tx_extra_field> tx_extra_fields;
@@ -245,7 +245,7 @@ std::vector<std::string> UnsignedTransactionImpl::paymentId() const
           else if (!cryptonote::get_payment_id_from_tx_extra_nonce(extra_nonce.nonce, payment_id))
           {
             payment_id = cryptonote::null_hash;
-          }      
+          }
         }
         if(payment_id != cryptonote::null_hash)
             result.push_back(epee::string_tools::pod_to_hex(payment_id));
@@ -255,7 +255,7 @@ std::vector<std::string> UnsignedTransactionImpl::paymentId() const
     return result;
 }
 
-std::vector<std::string> UnsignedTransactionImpl::recipientAddress() const 
+std::vector<std::string> UnsignedTransactionImpl::recipientAddress() const
 {
     // TODO: return integrated address if short payment ID exists
     std::vector<string> result;
@@ -266,8 +266,8 @@ std::vector<std::string> UnsignedTransactionImpl::recipientAddress() const
 }
 
 uint64_t UnsignedTransactionImpl::minMixinCount() const
-{    
-    uint64_t min_mixin = ~0;  
+{
+    uint64_t min_mixin = ~0;
     for (const auto &utx: m_unsigned_tx_set.txes) {
         for (size_t s = 0; s < utx.sources.size(); ++s) {
             size_t mixin = utx.sources[s].outputs.size() - 1;

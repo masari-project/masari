@@ -1,25 +1,25 @@
-/* 
+/*
  * util/data/msgparse.c - parse wireformat DNS messages.
- * 
+ *
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
- * 
+ *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -50,7 +50,7 @@
 
 /** smart comparison of (compressed, valid) dnames from packet */
 static int
-smart_compare(sldns_buffer* pkt, uint8_t* dnow, 
+smart_compare(sldns_buffer* pkt, uint8_t* dnow,
 	uint8_t* dprfirst, uint8_t* dprlast)
 {
 	if(LABEL_IS_PTR(*dnow)) {
@@ -69,10 +69,10 @@ smart_compare(sldns_buffer* pkt, uint8_t* dnow,
 /**
  * Allocate new rrset in region, fill with data.
  */
-static struct rrset_parse* 
-new_rrset(struct msg_parse* msg, uint8_t* dname, size_t dnamelen, 
-	uint16_t type, uint16_t dclass, hashvalue_type hash, 
-	uint32_t rrset_flags, sldns_pkt_section section, 
+static struct rrset_parse*
+new_rrset(struct msg_parse* msg, uint8_t* dname, size_t dnamelen,
+	uint16_t type, uint16_t dclass, hashvalue_type hash,
+	uint32_t rrset_flags, sldns_pkt_section section,
 	struct regional* region)
 {
 	struct rrset_parse* p = regional_alloc(region, sizeof(*p));
@@ -160,7 +160,7 @@ pkt_rrset_flags(sldns_buffer* pkt, uint16_t type, sldns_pkt_section sec)
 }
 
 hashvalue_type
-pkt_hash_rrset(sldns_buffer* pkt, uint8_t* dname, uint16_t type, 
+pkt_hash_rrset(sldns_buffer* pkt, uint8_t* dname, uint16_t type,
 	uint16_t dclass, uint32_t rrset_flags)
 {
 	/* note this MUST be identical to rrset_key_hash in packed_rrset.c */
@@ -187,7 +187,7 @@ pkt_hash_rrset_first(sldns_buffer* pkt, uint8_t* dname)
 
 /** create a rrset hash from a partial dname hash */
 static hashvalue_type
-pkt_hash_rrset_rest(hashvalue_type dname_h, uint16_t type, uint16_t dclass, 
+pkt_hash_rrset_rest(hashvalue_type dname_h, uint16_t type, uint16_t dclass,
 	uint32_t rrset_flags)
 {
 	/* works together with pkt_hash_rrset_first */
@@ -201,8 +201,8 @@ pkt_hash_rrset_rest(hashvalue_type dname_h, uint16_t type, uint16_t dclass,
 
 /** compare rrset_parse with data */
 static int
-rrset_parse_equals(struct rrset_parse* p, sldns_buffer* pkt, hashvalue_type h, 
-	uint32_t rrset_flags, uint8_t* dname, size_t dnamelen, 
+rrset_parse_equals(struct rrset_parse* p, sldns_buffer* pkt, hashvalue_type h,
+	uint32_t rrset_flags, uint8_t* dname, size_t dnamelen,
 	uint16_t type, uint16_t dclass)
 {
 	if(p->hash == h && p->dname_len == dnamelen && p->type == type &&
@@ -214,7 +214,7 @@ rrset_parse_equals(struct rrset_parse* p, sldns_buffer* pkt, hashvalue_type h,
 
 
 struct rrset_parse*
-msgparse_hashtable_lookup(struct msg_parse* msg, sldns_buffer* pkt, 
+msgparse_hashtable_lookup(struct msg_parse* msg, sldns_buffer* pkt,
 	hashvalue_type h, uint32_t rrset_flags, uint8_t* dname,
 	size_t dnamelen, uint16_t type, uint16_t dclass)
 {
@@ -334,7 +334,7 @@ rrset_has_sigover(sldns_buffer* pkt, struct rrset_parse* rrset, uint16_t type,
 
 /** move rrsigs from sigset to dataset */
 static int
-moveover_rrsigs(sldns_buffer* pkt, struct regional* region, 
+moveover_rrsigs(sldns_buffer* pkt, struct regional* region,
 	struct rrset_parse* sigset, struct rrset_parse* dataset, int duplicate)
 {
 	struct rr_parse* sig = sigset->rr_first;
@@ -343,7 +343,7 @@ moveover_rrsigs(sldns_buffer* pkt, struct regional* region,
 	struct rr_parse* nextsig;
 	while(sig) {
 		nextsig = sig->next;
-		if(pkt_rrsig_covered_equals(pkt, sig->ttl_data, 
+		if(pkt_rrsig_covered_equals(pkt, sig->ttl_data,
 			dataset->type)) {
 			if(duplicate) {
 				/* new */
@@ -368,7 +368,7 @@ moveover_rrsigs(sldns_buffer* pkt, struct regional* region,
 			/* add to dataset */
 			dataset->rrsig_count++;
 			insert->next = 0;
-			if(dataset->rrsig_last) 
+			if(dataset->rrsig_last)
 				dataset->rrsig_last->next = insert;
 			else	dataset->rrsig_first = insert;
 			dataset->rrsig_last = insert;
@@ -383,21 +383,21 @@ moveover_rrsigs(sldns_buffer* pkt, struct regional* region,
 
 /** change an rrsig rrset for use as data rrset */
 static struct rrset_parse*
-change_rrsig_rrset(struct rrset_parse* sigset, struct msg_parse* msg, 
+change_rrsig_rrset(struct rrset_parse* sigset, struct msg_parse* msg,
 	sldns_buffer* pkt, uint16_t datatype, uint32_t rrset_flags,
 	int hasother, sldns_pkt_section section, struct regional* region)
 {
 	struct rrset_parse* dataset = sigset;
-	hashvalue_type hash = pkt_hash_rrset(pkt, sigset->dname, datatype, 
+	hashvalue_type hash = pkt_hash_rrset(pkt, sigset->dname, datatype,
 		sigset->rrset_class, rrset_flags);
 	log_assert( sigset->type == LDNS_RR_TYPE_RRSIG );
 	log_assert( datatype != LDNS_RR_TYPE_RRSIG );
 	if(hasother) {
 		/* need to make new rrset to hold data type */
-		dataset = new_rrset(msg, sigset->dname, sigset->dname_len, 
-			datatype, sigset->rrset_class, hash, rrset_flags, 
+		dataset = new_rrset(msg, sigset->dname, sigset->dname_len,
+			datatype, sigset->rrset_class, hash, rrset_flags,
 			section, region);
-		if(!dataset) 
+		if(!dataset)
 			return NULL;
 		switch(section) {
 			case LDNS_SECTION_ANSWER: msg->an_rrsets++; break;
@@ -405,7 +405,7 @@ change_rrsig_rrset(struct rrset_parse* sigset, struct msg_parse* msg,
 			case LDNS_SECTION_ADDITIONAL: msg->ar_rrsets++; break;
 			default: log_assert(0);
 		}
-		if(!moveover_rrsigs(pkt, region, sigset, dataset, 
+		if(!moveover_rrsigs(pkt, region, sigset, dataset,
 			msg->qtype == LDNS_RR_TYPE_RRSIG ||
 			(msg->qtype == LDNS_RR_TYPE_ANY &&
 			section != LDNS_SECTION_ANSWER) ))
@@ -454,8 +454,8 @@ change_rrsig_rrset(struct rrset_parse* sigset, struct msg_parse* msg,
  * @return 0 on out of memory.
  */
 static int
-find_rrset(struct msg_parse* msg, sldns_buffer* pkt, uint8_t* dname, 
-	size_t dnamelen, uint16_t type, uint16_t dclass, hashvalue_type* hash, 
+find_rrset(struct msg_parse* msg, sldns_buffer* pkt, uint8_t* dname,
+	size_t dnamelen, uint16_t type, uint16_t dclass, hashvalue_type* hash,
 	uint32_t* rrset_flags,
 	uint8_t** prev_dname_first, uint8_t** prev_dname_last,
 	size_t* prev_dnamelen, uint16_t* prev_type,
@@ -468,7 +468,7 @@ find_rrset(struct msg_parse* msg, sldns_buffer* pkt, uint8_t* dname,
 		/* check if equal to previous item */
 		if(type == *prev_type && dclass == *prev_dclass &&
 			dnamelen == *prev_dnamelen &&
-			smart_compare(pkt, dname, *prev_dname_first, 
+			smart_compare(pkt, dname, *prev_dname_first,
 				*prev_dname_last) == 0 &&
 			type != LDNS_RR_TYPE_RRSIG) {
 			/* same as previous */
@@ -490,19 +490,19 @@ find_rrset(struct msg_parse* msg, sldns_buffer* pkt, uint8_t* dname,
 	*rrset_flags = pkt_rrset_flags(pkt, type, section);
 	
 	/* if rrsig - try to lookup matching data set first */
-	if(type == LDNS_RR_TYPE_RRSIG && pkt_rrsig_covered(pkt, 
+	if(type == LDNS_RR_TYPE_RRSIG && pkt_rrsig_covered(pkt,
 		sldns_buffer_current(pkt), &covtype)) {
-		*hash = pkt_hash_rrset_rest(dname_h, covtype, dclass, 
+		*hash = pkt_hash_rrset_rest(dname_h, covtype, dclass,
 			*rrset_flags);
-		*rrset_prev = msgparse_hashtable_lookup(msg, pkt, *hash, 
+		*rrset_prev = msgparse_hashtable_lookup(msg, pkt, *hash,
 			*rrset_flags, dname, dnamelen, covtype, dclass);
 		if(!*rrset_prev && covtype == LDNS_RR_TYPE_NSEC) {
 			/* if NSEC try with NSEC apex bit twiddled */
 			*rrset_flags ^= PACKED_RRSET_NSEC_AT_APEX;
-			*hash = pkt_hash_rrset_rest(dname_h, covtype, dclass, 
+			*hash = pkt_hash_rrset_rest(dname_h, covtype, dclass,
 				*rrset_flags);
-			*rrset_prev = msgparse_hashtable_lookup(msg, pkt, 
-				*hash, *rrset_flags, dname, dnamelen, covtype, 
+			*rrset_prev = msgparse_hashtable_lookup(msg, pkt,
+				*hash, *rrset_flags, dname, dnamelen, covtype,
 				dclass);
 			if(!*rrset_prev) /* untwiddle if not found */
 				*rrset_flags ^= PACKED_RRSET_NSEC_AT_APEX;
@@ -510,10 +510,10 @@ find_rrset(struct msg_parse* msg, sldns_buffer* pkt, uint8_t* dname,
 		if(!*rrset_prev && covtype == LDNS_RR_TYPE_SOA) {
 			/* if SOA try with SOA neg flag twiddled */
 			*rrset_flags ^= PACKED_RRSET_SOA_NEG;
-			*hash = pkt_hash_rrset_rest(dname_h, covtype, dclass, 
+			*hash = pkt_hash_rrset_rest(dname_h, covtype, dclass,
 				*rrset_flags);
-			*rrset_prev = msgparse_hashtable_lookup(msg, pkt, 
-				*hash, *rrset_flags, dname, dnamelen, covtype, 
+			*rrset_prev = msgparse_hashtable_lookup(msg, pkt,
+				*hash, *rrset_flags, dname, dnamelen, covtype,
 				dclass);
 			if(!*rrset_prev) /* untwiddle if not found */
 				*rrset_flags ^= PACKED_RRSET_SOA_NEG;
@@ -530,10 +530,10 @@ find_rrset(struct msg_parse* msg, sldns_buffer* pkt, uint8_t* dname,
 	if(type != LDNS_RR_TYPE_RRSIG) {
 		int hasother = 0;
 		/* find matching rrsig */
-		*hash = pkt_hash_rrset_rest(dname_h, LDNS_RR_TYPE_RRSIG, 
+		*hash = pkt_hash_rrset_rest(dname_h, LDNS_RR_TYPE_RRSIG,
 			dclass, 0);
-		*rrset_prev = msgparse_hashtable_lookup(msg, pkt, *hash, 
-			0, dname, dnamelen, LDNS_RR_TYPE_RRSIG, 
+		*rrset_prev = msgparse_hashtable_lookup(msg, pkt, *hash,
+			0, dname, dnamelen, LDNS_RR_TYPE_RRSIG,
 			dclass);
 		if(*rrset_prev && rrset_has_sigover(pkt, *rrset_prev, type,
 			&hasother)) {
@@ -543,8 +543,8 @@ find_rrset(struct msg_parse* msg, sldns_buffer* pkt, uint8_t* dname,
 			*prev_dnamelen = dnamelen;
 			*prev_type = type;
 			*prev_dclass = dclass;
-			*rrset_prev = change_rrsig_rrset(*rrset_prev, msg, 
-				pkt, type, *rrset_flags, hasother, section, 
+			*rrset_prev = change_rrsig_rrset(*rrset_prev, msg,
+				pkt, type, *rrset_flags, hasother, section,
 				region);
 			if(!*rrset_prev) return 0;
 			return 1;
@@ -552,7 +552,7 @@ find_rrset(struct msg_parse* msg, sldns_buffer* pkt, uint8_t* dname,
 	}
 
 	*hash = pkt_hash_rrset_rest(dname_h, type, dclass, *rrset_flags);
-	*rrset_prev = msgparse_hashtable_lookup(msg, pkt, *hash, *rrset_flags, 
+	*rrset_prev = msgparse_hashtable_lookup(msg, pkt, *hash, *rrset_flags,
 		dname, dnamelen, type, dclass);
 	if(*rrset_prev)
 		*prev_dname_first = (*rrset_prev)->dname;
@@ -565,7 +565,7 @@ find_rrset(struct msg_parse* msg, sldns_buffer* pkt, uint8_t* dname,
 }
 
 /**
- * Parse query section. 
+ * Parse query section.
  * @param pkt: packet, position at call must be at start of query section.
  *	at end position is after query section.
  * @param msg: store results here.
@@ -685,7 +685,7 @@ calc_size(sldns_buffer* pkt, uint16_t type, struct rr_parse* rr)
 
 /** skip rr ttl and rdata */
 static int
-skip_ttl_rdata(sldns_buffer* pkt) 
+skip_ttl_rdata(sldns_buffer* pkt)
 {
 	uint16_t rdatalen;
 	if(sldns_buffer_remaining(pkt) < 6) /* ttl + rdatalen */
@@ -705,7 +705,7 @@ sig_is_double(sldns_buffer* pkt, struct rrset_parse* rrset, uint8_t* ttldata)
 	uint16_t rlen, siglen;
 	size_t pos = sldns_buffer_position(pkt);
 	struct rr_parse* sig;
-	if(sldns_buffer_remaining(pkt) < 6) 
+	if(sldns_buffer_remaining(pkt) < 6)
 		return 0;
 	sldns_buffer_skip(pkt, 4); /* ttl */
 	rlen = sldns_buffer_read_u16(pkt);
@@ -725,11 +725,11 @@ sig_is_double(sldns_buffer* pkt, struct rrset_parse* rrset, uint8_t* ttldata)
 		 * to have compressed dnames anyway. If it is compressed anyway
 		 * it will lead to duplicate rrs for qtype=RRSIG. (or ANY).
 		 *
-		 * Cannot use sig->size because size of the other one is not 
+		 * Cannot use sig->size because size of the other one is not
 		 * calculated yet.
 		 */
 		if(siglen == rlen) {
-			if(siglen>0 && memcmp(sig->ttl_data+6, ttldata+6, 
+			if(siglen>0 && memcmp(sig->ttl_data+6, ttldata+6,
 				siglen) == 0) {
 				/* same! */
 				return 1;
@@ -742,8 +742,8 @@ sig_is_double(sldns_buffer* pkt, struct rrset_parse* rrset, uint8_t* ttldata)
 
 /** Add rr (from packet here) to rrset, skips rr */
 static int
-add_rr_to_rrset(struct rrset_parse* rrset, sldns_buffer* pkt, 
-	struct msg_parse* msg, struct regional* region, 
+add_rr_to_rrset(struct rrset_parse* rrset, sldns_buffer* pkt,
+	struct msg_parse* msg, struct regional* region,
 	sldns_pkt_section section, uint16_t type)
 {
 	struct rr_parse* rr;
@@ -751,8 +751,8 @@ add_rr_to_rrset(struct rrset_parse* rrset, sldns_buffer* pkt,
 	if(rrset->section != section && type != LDNS_RR_TYPE_RRSIG &&
 		rrset->type != LDNS_RR_TYPE_RRSIG) {
 		/* silently drop it - we drop the last part, since
-		 * trust in rr data depends on the section it is in. 
-		 * the less trustworthy part is discarded. 
+		 * trust in rr data depends on the section it is in.
+		 * the less trustworthy part is discarded.
 		 * also the last part is more likely to be incomplete.
 		 * RFC 2181: must put RRset only once in response. */
 		/*
@@ -764,10 +764,10 @@ add_rr_to_rrset(struct rrset_parse* rrset, sldns_buffer* pkt,
 		if(!skip_ttl_rdata(pkt))
 			return LDNS_RCODE_FORMERR;
 		return 0;
-	} 
+	}
 
 	if( (msg->qtype == LDNS_RR_TYPE_RRSIG ||
-	     msg->qtype == LDNS_RR_TYPE_ANY) 
+	     msg->qtype == LDNS_RR_TYPE_ANY)
 	    && sig_is_double(pkt, rrset, sldns_buffer_current(pkt))) {
 		if(!skip_ttl_rdata(pkt))
 			return LDNS_RCODE_FORMERR;
@@ -781,7 +781,7 @@ add_rr_to_rrset(struct rrset_parse* rrset, sldns_buffer* pkt,
 	rr->ttl_data = sldns_buffer_current(pkt);
 	rr->next = 0;
 	if(type == LDNS_RR_TYPE_RRSIG && rrset->type != LDNS_RR_TYPE_RRSIG) {
-		if(rrset->rrsig_last) 
+		if(rrset->rrsig_last)
 			rrset->rrsig_last->next = rr;
 		else	rrset->rrsig_first = rr;
 		rrset->rrsig_last = rr;
@@ -803,7 +803,7 @@ add_rr_to_rrset(struct rrset_parse* rrset, sldns_buffer* pkt,
 }
 
 /**
- * Parse packet RR section, for answer, authority and additional sections. 
+ * Parse packet RR section, for answer, authority and additional sections.
  * @param pkt: packet, position at call must be at start of section.
  *	at end position is after section.
  * @param msg: store results here.
@@ -814,8 +814,8 @@ add_rr_to_rrset(struct rrset_parse* rrset, sldns_buffer* pkt,
  * @return: 0 if OK, or rcode on error.
  */
 static int
-parse_section(sldns_buffer* pkt, struct msg_parse* msg, 
-	struct regional* region, sldns_pkt_section section, 
+parse_section(sldns_buffer* pkt, struct msg_parse* msg,
+	struct regional* region, sldns_pkt_section section,
 	uint16_t num_rrs, size_t* num_rrsets)
 {
 	uint16_t i;
@@ -845,7 +845,7 @@ parse_section(sldns_buffer* pkt, struct msg_parse* msg,
 		if(0) { /* debug show what is being parsed. */
 			if(type == LDNS_RR_TYPE_RRSIG) {
 				uint16_t t;
-				if(pkt_rrsig_covered(pkt, 
+				if(pkt_rrsig_covered(pkt,
 					sldns_buffer_current(pkt), &t))
 					fprintf(stderr, "parse of %s(%d) [%s(%d)]",
 					sldns_rr_descript(type)?
@@ -860,18 +860,18 @@ parse_section(sldns_buffer* pkt, struct msg_parse* msg,
 				sldns_rr_descript(type)->_name: "??",
 				(int)type);
 			fprintf(stderr, " %s(%d) ",
-				sldns_lookup_by_id(sldns_rr_classes, 
+				sldns_lookup_by_id(sldns_rr_classes,
 				(int)ntohs(dclass))?sldns_lookup_by_id(
-				sldns_rr_classes, (int)ntohs(dclass))->name: 
+				sldns_rr_classes, (int)ntohs(dclass))->name:
 				"??", (int)ntohs(dclass));
 			dname_print(stderr, pkt, dname);
 			fprintf(stderr, "\n");
 		}
 
 		/* see if it is part of an existing RR set */
-		if(!find_rrset(msg, pkt, dname, dnamelen, type, dclass, &hash, 
-			&rrset_flags, &prev_dname_f, &prev_dname_l, 
-			&prev_dnamelen, &prev_type, &prev_dclass, &rrset, 
+		if(!find_rrset(msg, pkt, dname, dnamelen, type, dclass, &hash,
+			&rrset_flags, &prev_dname_f, &prev_dname_l,
+			&prev_dnamelen, &prev_type, &prev_dclass, &rrset,
 			section, region))
 			return LDNS_RCODE_SERVFAIL;
 		if(!rrset) {
@@ -879,10 +879,10 @@ parse_section(sldns_buffer* pkt, struct msg_parse* msg,
 			(*num_rrsets)++;
 			rrset = new_rrset(msg, dname, dnamelen, type, dclass,
 				hash, rrset_flags, section, region);
-			if(!rrset) 
+			if(!rrset)
 				return LDNS_RCODE_SERVFAIL;
 		}
-		else if(0)	{ 
+		else if(0)	{
 			fprintf(stderr, "is part of existing: ");
 			dname_print(stderr, pkt, rrset->dname);
 			fprintf(stderr, " type %s(%d)\n",
@@ -891,7 +891,7 @@ parse_section(sldns_buffer* pkt, struct msg_parse* msg,
 				(int)rrset->type);
 		}
 		/* add to rrset. */
-		if((r=add_rr_to_rrset(rrset, pkt, msg, region, section, 
+		if((r=add_rr_to_rrset(rrset, pkt, msg, region, section,
 			type)) != 0)
 			return r;
 	}
@@ -959,7 +959,7 @@ parse_edns_options(uint8_t* rdata_ptr, size_t rdata_len,
 	return 1;
 }
 
-int 
+int
 parse_extract_edns(struct msg_parse* msg, struct edns_data* edns,
 	struct regional* region)
 {
@@ -990,13 +990,13 @@ parse_extract_edns(struct msg_parse* msg, struct edns_data* edns,
 	/* check the found RRset */
 	/* most lenient check possible. ignore dname, use last opt */
 	if(found->section != LDNS_SECTION_ADDITIONAL)
-		return LDNS_RCODE_FORMERR; 
+		return LDNS_RCODE_FORMERR;
 	if(found->rr_count == 0)
 		return LDNS_RCODE_FORMERR;
 	if(0) { /* strict checking of dname and RRcount */
-		if(found->dname_len != 1 || !found->dname 
-			|| found->dname[0] != 0) return LDNS_RCODE_FORMERR; 
-		if(found->rr_count != 1) return LDNS_RCODE_FORMERR; 
+		if(found->dname_len != 1 || !found->dname
+			|| found->dname[0] != 0) return LDNS_RCODE_FORMERR;
+		if(found->rr_count != 1) return LDNS_RCODE_FORMERR;
 	}
 	log_assert(found->rr_first && found->rr_last);
 
@@ -1028,7 +1028,7 @@ parse_extract_edns(struct msg_parse* msg, struct edns_data* edns,
 	return 0;
 }
 
-int 
+int
 parse_edns_from_pkt(sldns_buffer* pkt, struct edns_data* edns,
 	struct regional* region)
 {

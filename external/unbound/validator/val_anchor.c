@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -68,11 +68,11 @@ anchor_cmp(const void* k1, const void* k2)
 			return -1;
 		return 1;
 	}
-	return dname_lab_cmp(n1->name, n1->namelabs, n2->name, n2->namelabs, 
+	return dname_lab_cmp(n1->name, n1->namelabs, n2->name, n2->namelabs,
 		&m);
 }
 
-struct val_anchors* 
+struct val_anchors*
 anchors_create(void)
 {
 	struct val_anchors* a = (struct val_anchors*)calloc(1, sizeof(*a));
@@ -136,7 +136,7 @@ anchors_delfunc(rbnode_type* elem, void* ATTR_UNUSED(arg))
 	}
 }
 
-void 
+void
 anchors_delete(struct val_anchors* anchors)
 {
 	if(!anchors)
@@ -155,7 +155,7 @@ void
 anchors_init_parents_locked(struct val_anchors* anchors)
 {
 	struct trust_anchor* node, *prev = NULL, *p;
-	int m; 
+	int m;
 	/* nobody else can grab locks because we hold the main lock.
 	 * Thus the previous items, after unlocked, are not deleted */
 	RBTREE_FOR(node, struct trust_anchor*, anchors->tree) {
@@ -166,7 +166,7 @@ anchors_init_parents_locked(struct val_anchors* anchors)
 			lock_basic_unlock(&node->lock);
 			continue;
 		}
-		(void)dname_lab_cmp(prev->name, prev->namelabs, node->name, 
+		(void)dname_lab_cmp(prev->name, prev->namelabs, node->name,
 			node->namelabs, &m); /* we know prev is smaller */
 		/* sort order like: . com. bla.com. zwb.com. net. */
 		/* find the previous, or parent-parent-parent */
@@ -403,7 +403,7 @@ anchor_store_str(struct val_anchors* anchors, sldns_buffer* buffer,
 	int status = sldns_str2wire_rr_buf(str, rr, &len, &dname_len,
 		0, NULL, 0, NULL, 0);
 	if(status != 0) {
-		log_err("error parsing trust anchor %s: at %d: %s", 
+		log_err("error parsing trust anchor %s: at %d: %s",
 			str, LDNS_WIREPARSE_OFFSET(status),
 			sldns_get_errorstr_parse(status));
 		return NULL;
@@ -467,7 +467,7 @@ anchor_read_file(struct val_anchors* anchors, sldns_buffer* buffer,
 		if(onlyone && ta && ta != tanew) {
 			log_err("error at %s line %d: no multiple anchor "
 				"domains allowed (you can have multiple "
-				"keys, but they must have the same name).", 
+				"keys, but they must have the same name).",
 				fname, pst.lineno);
 			ok = 0;
 			break;
@@ -506,8 +506,8 @@ is_bind_special(int c)
 	return 0;
 }
 
-/** 
- * Read a keyword skipping bind comments; spaces, specials, restkeywords. 
+/**
+ * Read a keyword skipping bind comments; spaces, specials, restkeywords.
  * The file is split into the following tokens:
  *	* special characters, on their own, rdlen=1, { } doublequote ;
  *	* whitespace becomes a single ' ' or tab. Newlines become spaces.
@@ -524,7 +524,7 @@ is_bind_special(int c)
  *	if 1, comments are skipped entirely.
  *	In BIND files, this is when reading quoted strings, for example
  *	" base 64 text with / / in there "
- * @return the number of character written to the buffer. 
+ * @return the number of character written to the buffer.
  *	0 on end of file.
  */
 static int
@@ -538,7 +538,7 @@ readkeyword_bindfile(FILE* in, sldns_buffer* buf, int* line, int comments)
 			(*line)++;
 			continue;
 		} else if(comments && c=='/' && numdone>0 && /* /_/ bla*/
-			sldns_buffer_read_u8_at(buf, 
+			sldns_buffer_read_u8_at(buf,
 			sldns_buffer_position(buf)-1) == '/') {
 			sldns_buffer_skip(buf, -1);
 			numdone--;
@@ -546,7 +546,7 @@ readkeyword_bindfile(FILE* in, sldns_buffer* buf, int* line, int comments)
 			(*line)++;
 			continue;
 		} else if(comments && c=='*' && numdone>0 && /* /_* bla *_/ */
-			sldns_buffer_read_u8_at(buf, 
+			sldns_buffer_read_u8_at(buf,
 			sldns_buffer_position(buf)-1) == '/') {
 			sldns_buffer_skip(buf, -1);
 			numdone--;
@@ -602,8 +602,8 @@ readkeyword_bindfile(FILE* in, sldns_buffer* buf, int* line, int comments)
 }
 
 /** skip through file to { or ; */
-static int 
-skip_to_special(FILE* in, sldns_buffer* buf, int* line, int spec) 
+static int
+skip_to_special(FILE* in, sldns_buffer* buf, int* line, int spec)
 {
 	int rdlen;
 	sldns_buffer_clear(buf);
@@ -614,7 +614,7 @@ skip_to_special(FILE* in, sldns_buffer* buf, int* line, int spec)
 		}
 		if(rdlen != 1 || *sldns_buffer_begin(buf) != (uint8_t)spec) {
 			sldns_buffer_write_u8(buf, 0);
-			log_err("trusted-keys, line %d, expected %c", 
+			log_err("trusted-keys, line %d, expected %c",
 				*line, spec);
 			return 0;
 		}
@@ -624,7 +624,7 @@ skip_to_special(FILE* in, sldns_buffer* buf, int* line, int spec)
 	return 0;
 }
 
-/** 
+/**
  * read contents of trusted-keys{ ... ; clauses and insert keys into storage.
  * @param anchors: where to store keys
  * @param buf: buffer to use
@@ -633,7 +633,7 @@ skip_to_special(FILE* in, sldns_buffer* buf, int* line, int spec)
  * @return 0 on error.
  */
 static int
-process_bind_contents(struct val_anchors* anchors, sldns_buffer* buf, 
+process_bind_contents(struct val_anchors* anchors, sldns_buffer* buf,
 	int* line, FILE* in)
 {
 	/* loop over contents, collate strings before ; */
@@ -703,7 +703,7 @@ process_bind_contents(struct val_anchors* anchors, sldns_buffer* buf,
 				return 0;
 			}
 			return 1;
-		} else if(rdlen == 1 && 
+		} else if(rdlen == 1 &&
 			isspace((unsigned char)sldns_buffer_current(buf)[-1])) {
 			/* leave whitespace here */
 		} else {
@@ -789,12 +789,12 @@ anchor_read_bind_file_wild(struct val_anchors* anchors, sldns_buffer* buffer,
 	glob_t g;
 	size_t i;
 	int r, flags;
-	if(!strchr(pat, '*') && !strchr(pat, '?') && !strchr(pat, '[') && 
+	if(!strchr(pat, '*') && !strchr(pat, '?') && !strchr(pat, '[') &&
 		!strchr(pat, '{') && !strchr(pat, '~')) {
 		return anchor_read_bind_file(anchors, buffer, pat);
 	}
 	verbose(VERB_QUERY, "wildcard found, processing %s", pat);
-	flags = 0 
+	flags = 0
 #ifdef GLOB_ERR
 		| GLOB_ERR
 #endif
@@ -827,7 +827,7 @@ anchor_read_bind_file_wild(struct val_anchors* anchors, sldns_buffer* buffer,
 				"failed (%s)", pat, strerror(errno));
 		}
 		/* ignore globs that yield no files */
-		return 1; 
+		return 1;
 	}
 	/* process files found, if any */
 	for(i=0; i<(size_t)g.gl_pathc; i++) {
@@ -845,8 +845,8 @@ anchor_read_bind_file_wild(struct val_anchors* anchors, sldns_buffer* buffer,
 #endif /* HAVE_GLOB */
 }
 
-/** 
- * Assemble an rrset structure for the type 
+/**
+ * Assemble an rrset structure for the type
  * @param ta: trust anchor.
  * @param num: number of items to fetch from list.
  * @param type: fetch only items of this type.
@@ -954,7 +954,7 @@ anchors_ds_unsupported(struct trust_anchor* ta)
 {
 	size_t i, num = 0;
 	for(i=0; i<ta->numDS; i++) {
-		if(!ds_digest_algo_is_supported(ta->ds_rrset, i) || 
+		if(!ds_digest_algo_is_supported(ta->ds_rrset, i) ||
 			!ds_key_algo_is_supported(ta->ds_rrset, i))
 			num++;
 	}
@@ -1008,12 +1008,12 @@ anchors_assemble_rrsets(struct val_anchors* anchors)
 		nokey = anchors_dnskey_unsupported(ta);
 		if(nods) {
 			log_nametypeclass(0, "warning: unsupported "
-				"algorithm for trust anchor", 
+				"algorithm for trust anchor",
 				ta->name, LDNS_RR_TYPE_DS, ta->dclass);
 		}
 		if(nokey) {
 			log_nametypeclass(0, "warning: unsupported "
-				"algorithm for trust anchor", 
+				"algorithm for trust anchor",
 				ta->name, LDNS_RR_TYPE_DNSKEY, ta->dclass);
 		}
 		if(nods == ta->numDS && nokey == ta->numDNSKEY) {
@@ -1043,7 +1043,7 @@ anchors_assemble_rrsets(struct val_anchors* anchors)
 	return 1;
 }
 
-int 
+int
 anchors_apply_cfg(struct val_anchors* anchors, struct config_file* cfg)
 {
 	struct config_strlist* f;
@@ -1111,7 +1111,7 @@ anchors_apply_cfg(struct val_anchors* anchors, struct config_file* cfg)
 			nm += strlen(cfg->chrootdir);
 		if(!(dlva = anchor_read_file(anchors, parsebuf,
 			nm, 1))) {
-			log_err("error reading dlv-anchor-file: %s", 
+			log_err("error reading dlv-anchor-file: %s",
 				cfg->dlv_anchor_file);
 			sldns_buffer_free(parsebuf);
 			return 0;
@@ -1144,7 +1144,7 @@ anchors_apply_cfg(struct val_anchors* anchors, struct config_file* cfg)
 			cfg->chrootdir, strlen(cfg->chrootdir)) == 0)
 			nm += strlen(cfg->chrootdir);
 		if(!autr_read_file(anchors, nm)) {
-			log_err("error reading auto-trust-anchor-file: %s", 
+			log_err("error reading auto-trust-anchor-file: %s",
 				f->str);
 			sldns_buffer_free(parsebuf);
 			return 0;
@@ -1158,7 +1158,7 @@ anchors_apply_cfg(struct val_anchors* anchors, struct config_file* cfg)
 	return 1;
 }
 
-struct trust_anchor* 
+struct trust_anchor*
 anchors_lookup(struct val_anchors* anchors,
         uint8_t* qname, size_t qname_len, uint16_t qclass)
 {
@@ -1198,7 +1198,7 @@ anchors_lookup(struct val_anchors* anchors,
 	return result;
 }
 
-size_t 
+size_t
 anchors_get_mem(struct val_anchors* anchors)
 {
 	struct trust_anchor *ta;

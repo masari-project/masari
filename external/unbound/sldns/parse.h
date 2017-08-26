@@ -1,5 +1,5 @@
 /*
- * parse.h 
+ * parse.h
  *
  * a Net::DNS like library for C
  * LibDNS Team @ NLnet Labs
@@ -29,7 +29,7 @@ extern "C" {
  * Contains some low-level parsing functions, mostly used in the _frm_str
  * family of functions.
  */
- 
+
 /**
  * different type of directives in zone files
  * We now deal with $TTL, $ORIGIN and $INCLUDE.
@@ -43,7 +43,7 @@ enum sldns_enum_directive
 };
 typedef enum sldns_enum_directive sldns_directive;
 
-/** 
+/**
  * returns a token/char from the stream F.
  * This function deals with ( and ) in the stream,
  * and ignores them when encountered
@@ -55,7 +55,7 @@ typedef enum sldns_enum_directive sldns_directive;
  */
 ssize_t sldns_fget_token(FILE *f, char *token, const char *delim, size_t limit);
 
-/** 
+/**
  * returns a token/char from the stream F.
  * This function deals with ( and ) in the stream,
  * and ignores when it finds them.
@@ -81,7 +81,7 @@ ssize_t sldns_fget_token_l(FILE *f, char *token, const char *delim, size_t limit
  * to zero after last bget in string (for parse error).  If you pass NULL,
  * the entire parenthesized string is read in.
  * \param[in] skipw string with whitespace to skip before the start of the
- * token, like " ", or " \t", or NULL for none.  
+ * token, like " ", or " \t", or NULL for none.
  * \returns 0 on error of EOF of b. Otherwise return the length of what is read
  */
 ssize_t sldns_bget_token_par(struct sldns_buffer *b, char *token, const char *delim, size_t limit, int* par, const char* skipw);
@@ -103,8 +103,8 @@ ssize_t sldns_bget_token(struct sldns_buffer *b, char *token, const char *delim,
  * after the keyword + k_del until we hit d_del
  * \param[in] f file pointer to read from
  * \param[in] keyword keyword to look for
- * \param[in] k_del keyword delimeter 
- * \param[out] data the data found 
+ * \param[in] k_del keyword delimeter
+ * \param[out] data the data found
  * \param[in] d_del the data delimeter
  * \param[in] data_limit maximum size the the data buffer
  * \return the number of character read
@@ -116,8 +116,8 @@ ssize_t sldns_fget_keyword_data(FILE *f, const char *keyword, const char *k_del,
  * after the keyword + k_del until we hit d_del
  * \param[in] f file pointer to read from
  * \param[in] keyword keyword to look for
- * \param[in] k_del keyword delimeter 
- * \param[out] data the data found 
+ * \param[in] k_del keyword delimeter
+ * \param[out] data the data found
  * \param[in] d_del the data delimeter
  * \param[in] data_limit maximum size the the data buffer
  * \param[in] line_nr pointer to an integer containing the current line number (for
@@ -131,8 +131,8 @@ ssize_t sldns_fget_keyword_data_l(FILE *f, const char *keyword, const char *k_de
  * after the keyword + k_del until we hit d_del
  * \param[in] b buffer pointer to read from
  * \param[in] keyword keyword to look for
- * \param[in] k_del keyword delimeter 
- * \param[out] data the data found 
+ * \param[in] k_del keyword delimeter
+ * \param[out] data the data found
  * \param[in] d_del the data delimeter
  * \param[in] data_limit maximum size the the data buffer
  * \return the number of character read

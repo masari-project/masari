@@ -4,22 +4,22 @@
  * Copyright (c) 2008, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -86,7 +86,7 @@ static int read_addrs(struct iter_priv* priv, struct config_file* cfg)
 
 	for(p = cfg->private_address; p; p = p->next) {
 		log_assert(p->str);
-		if(!netblockstrtoaddr(p->str, UNBOUND_DNS_PORT, &addr, 
+		if(!netblockstrtoaddr(p->str, UNBOUND_DNS_PORT, &addr,
 			&addrlen, &net)) {
 			log_err("cannot parse private-address: %s", p->str);
 			return 0;
@@ -170,7 +170,7 @@ int priv_apply_cfg(struct iter_priv* priv, struct config_file* cfg)
  * @param addrlen: length of addr.
  * @return: true if the address must not be queried. false if unlisted.
  */
-static int 
+static int
 priv_lookup_addr(struct iter_priv* priv, struct sockaddr_storage* addr,
 	socklen_t addrlen)
 {
@@ -186,7 +186,7 @@ priv_lookup_addr(struct iter_priv* priv, struct sockaddr_storage* addr,
  * @param dclass: class to check.
  * @return: true if the name is OK. false if unlisted.
  */
-static int 
+static int
 priv_lookup_name(struct iter_priv* priv, sldns_buffer* pkt,
 	uint8_t* name, size_t name_len, uint16_t dclass)
 {
@@ -232,7 +232,7 @@ remove_rr(const char* str, sldns_buffer* pkt, struct rrset_parse* rrset,
 int priv_rrset_bad(struct iter_priv* priv, sldns_buffer* pkt,
 	struct rrset_parse* rrset)
 {
-	if(priv->a.count == 0) 
+	if(priv->a.count == 0)
 		return 0; /* there are no blocked addresses */
 
 	/* see if it is a private name, that is allowed to have any */
@@ -252,12 +252,12 @@ int priv_rrset_bad(struct iter_priv* priv, sldns_buffer* pkt,
 			sa.sin_family = AF_INET;
 			sa.sin_port = (in_port_t)htons(UNBOUND_DNS_PORT);
 			for(rr = rrset->rr_first; rr; rr = rr->next) {
-				if(sldns_read_uint16(rr->ttl_data+4) 
+				if(sldns_read_uint16(rr->ttl_data+4)
 					!= INET_SIZE) {
 					prev = rr;
 					continue;
 				}
-				memmove(&sa.sin_addr, rr->ttl_data+4+2, 
+				memmove(&sa.sin_addr, rr->ttl_data+4+2,
 					INET_SIZE);
 				memmove(&addr, &sa, len);
 				if(priv_lookup_addr(priv, &addr, len)) {
@@ -275,12 +275,12 @@ int priv_rrset_bad(struct iter_priv* priv, sldns_buffer* pkt,
 			sa.sin6_family = AF_INET6;
 			sa.sin6_port = (in_port_t)htons(UNBOUND_DNS_PORT);
 			for(rr = rrset->rr_first; rr; rr = rr->next) {
-				if(sldns_read_uint16(rr->ttl_data+4) 
+				if(sldns_read_uint16(rr->ttl_data+4)
 					!= INET6_SIZE) {
 					prev = rr;
 					continue;
 				}
-				memmove(&sa.sin6_addr, rr->ttl_data+4+2, 
+				memmove(&sa.sin6_addr, rr->ttl_data+4+2,
 					INET6_SIZE);
 				memmove(&addr, &sa, len);
 				if(priv_lookup_addr(priv, &addr, len)) {
@@ -290,7 +290,7 @@ int priv_rrset_bad(struct iter_priv* priv, sldns_buffer* pkt,
 				}
 				prev = rr;
 			}
-		} 
+		}
 	}
 	return 0;
 }

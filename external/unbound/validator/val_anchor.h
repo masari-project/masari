@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -104,7 +104,7 @@ struct trust_anchor {
 	int namelabs;
 	/** the ancestor in the trustanchor tree */
 	struct trust_anchor* parent;
-	/** 
+	/**
 	 * List of DS or DNSKEY rrs that form the trust anchor.
 	 */
 	struct ta_key* keylist;
@@ -174,7 +174,7 @@ struct trust_anchor* anchors_lookup(struct val_anchors* anchors,
  * @param dclass: class of trust anchor
  * @return NULL if not found. The anchor is locked.
  */
-struct trust_anchor* anchor_find(struct val_anchors* anchors, 
+struct trust_anchor* anchor_find(struct val_anchors* anchors,
 	uint8_t* name, int namelabs, size_t namelen, uint16_t dclass);
 
 /**
@@ -184,7 +184,7 @@ struct trust_anchor* anchor_find(struct val_anchors* anchors,
  * @param str: string.
  * @return NULL on error.
  */
-struct trust_anchor* anchor_store_str(struct val_anchors* anchors, 
+struct trust_anchor* anchor_store_str(struct val_anchors* anchors,
 	struct sldns_buffer* buffer, const char* str);
 
 /**

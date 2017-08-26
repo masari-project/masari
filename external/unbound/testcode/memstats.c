@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -221,13 +221,13 @@ printstats(rbtree_type* tree)
 	struct codeline* cl;
 	uint64_t total = 0, tcalls = 0;
 	RBTREE_FOR(cl, struct codeline*, tree) {
-		printf("%12lld / %8lld in %s %s\n", (long long)cl->alloc, 
+		printf("%12lld / %8lld in %s %s\n", (long long)cl->alloc,
 			(long long)cl->calls, cl->codeline, cl->func);
 		total += cl->alloc;
 		tcalls += cl->calls;
 	}
 	printf("------------\n");
-	printf("%12lld / %8lld total in %ld code lines\n", (long long)total, 
+	printf("%12lld / %8lld total in %ld code lines\n", (long long)total,
 		(long long)tcalls, (long)tree->count);
 	printf("\n");
 }

@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -68,7 +68,7 @@
 #endif
 
 /** number of queued TCP connections for listen() */
-#define TCP_BACKLOG 256 
+#define TCP_BACKLOG 256
 
 /**
  * Debug print of the getaddrinfo returned address.
@@ -90,12 +90,12 @@ verbose_print_addr(struct addrinfo *addr)
 			(void)strlcpy(buf, "(null)", sizeof(buf));
 		}
 		buf[sizeof(buf)-1] = 0;
-		verbose(VERB_ALGO, "creating %s%s socket %s %d", 
+		verbose(VERB_ALGO, "creating %s%s socket %s %d",
 			addr->ai_socktype==SOCK_DGRAM?"udp":
 			addr->ai_socktype==SOCK_STREAM?"tcp":"otherproto",
 			addr->ai_family==AF_INET?"4":
 			addr->ai_family==AF_INET6?"6":
-			"_otherfam", buf, 
+			"_otherfam", buf,
 			ntohs(((struct sockaddr_in*)addr->ai_addr)->sin_port));
 	}
 }
@@ -207,12 +207,12 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 		}
 		log_err("can't create socket: %s", strerror(errno));
 #else
-		if(WSAGetLastError() == WSAEAFNOSUPPORT || 
+		if(WSAGetLastError() == WSAEAFNOSUPPORT ||
 			WSAGetLastError() == WSAEPROTONOSUPPORT) {
 			*noproto = 1;
 			return -1;
 		}
-		log_err("can't create socket: %s", 
+		log_err("can't create socket: %s",
 			wsa_strerror(WSAGetLastError()));
 #endif
 		*noproto = 0;
@@ -225,7 +225,7 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 #endif
 	if(listen) {
 #ifdef SO_REUSEADDR
-		if(setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (void*)&on, 
+		if(setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (void*)&on,
 			(socklen_t)sizeof(on)) < 0) {
 #ifndef USE_WINSOCK
 			log_err("setsockopt(.. SO_REUSEADDR ..) failed: %s",
@@ -297,9 +297,9 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 		socklen_t slen = (socklen_t)sizeof(got);
 #  ifdef SO_RCVBUFFORCE
 		/* Linux specific: try to use root permission to override
-		 * system limits on rcvbuf. The limit is stored in 
+		 * system limits on rcvbuf. The limit is stored in
 		 * /proc/sys/net/core/rmem_max or sysctl net.core.rmem_max */
-		if(setsockopt(s, SOL_SOCKET, SO_RCVBUFFORCE, (void*)&rcv, 
+		if(setsockopt(s, SOL_SOCKET, SO_RCVBUFFORCE, (void*)&rcv,
 			(socklen_t)sizeof(rcv)) < 0) {
 			if(errno != EPERM) {
 #    ifndef USE_WINSOCK
@@ -308,7 +308,7 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 				close(s);
 #    else
 				log_err("setsockopt(..., SO_RCVBUFFORCE, "
-					"...) failed: %s", 
+					"...) failed: %s",
 					wsa_strerror(WSAGetLastError()));
 				closesocket(s);
 #    endif
@@ -317,7 +317,7 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 				return -1;
 			}
 #  endif /* SO_RCVBUFFORCE */
-			if(setsockopt(s, SOL_SOCKET, SO_RCVBUF, (void*)&rcv, 
+			if(setsockopt(s, SOL_SOCKET, SO_RCVBUF, (void*)&rcv,
 				(socklen_t)sizeof(rcv)) < 0) {
 #  ifndef USE_WINSOCK
 				log_err("setsockopt(..., SO_RCVBUF, "
@@ -325,7 +325,7 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 				close(s);
 #  else
 				log_err("setsockopt(..., SO_RCVBUF, "
-					"...) failed: %s", 
+					"...) failed: %s",
 					wsa_strerror(WSAGetLastError()));
 				closesocket(s);
 #  endif
@@ -335,7 +335,7 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 			}
 			/* check if we got the right thing or if system
 			 * reduced to some system max.  Warn if so */
-			if(getsockopt(s, SOL_SOCKET, SO_RCVBUF, (void*)&got, 
+			if(getsockopt(s, SOL_SOCKET, SO_RCVBUF, (void*)&got,
 				&slen) >= 0 && got < rcv/2) {
 				log_warn("so-rcvbuf %u was not granted. "
 					"Got %u. To fix: start with "
@@ -356,9 +356,9 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 		socklen_t slen = (socklen_t)sizeof(got);
 #  ifdef SO_SNDBUFFORCE
 		/* Linux specific: try to use root permission to override
-		 * system limits on sndbuf. The limit is stored in 
+		 * system limits on sndbuf. The limit is stored in
 		 * /proc/sys/net/core/wmem_max or sysctl net.core.wmem_max */
-		if(setsockopt(s, SOL_SOCKET, SO_SNDBUFFORCE, (void*)&snd, 
+		if(setsockopt(s, SOL_SOCKET, SO_SNDBUFFORCE, (void*)&snd,
 			(socklen_t)sizeof(snd)) < 0) {
 			if(errno != EPERM) {
 #    ifndef USE_WINSOCK
@@ -367,7 +367,7 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 				close(s);
 #    else
 				log_err("setsockopt(..., SO_SNDBUFFORCE, "
-					"...) failed: %s", 
+					"...) failed: %s",
 					wsa_strerror(WSAGetLastError()));
 				closesocket(s);
 #    endif
@@ -376,7 +376,7 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 				return -1;
 			}
 #  endif /* SO_SNDBUFFORCE */
-			if(setsockopt(s, SOL_SOCKET, SO_SNDBUF, (void*)&snd, 
+			if(setsockopt(s, SOL_SOCKET, SO_SNDBUF, (void*)&snd,
 				(socklen_t)sizeof(snd)) < 0) {
 #  ifndef USE_WINSOCK
 				log_err("setsockopt(..., SO_SNDBUF, "
@@ -384,7 +384,7 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 				close(s);
 #  else
 				log_err("setsockopt(..., SO_SNDBUF, "
-					"...) failed: %s", 
+					"...) failed: %s",
 					wsa_strerror(WSAGetLastError()));
 				closesocket(s);
 #  endif
@@ -394,7 +394,7 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 			}
 			/* check if we got the right thing or if system
 			 * reduced to some system max.  Warn if so */
-			if(getsockopt(s, SOL_SOCKET, SO_SNDBUF, (void*)&got, 
+			if(getsockopt(s, SOL_SOCKET, SO_SNDBUF, (void*)&got,
 				&slen) >= 0 && got < snd/2) {
 				log_warn("so-sndbuf %u was not granted. "
 					"Got %u. To fix: start with "
@@ -412,7 +412,7 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 # if defined(IPV6_V6ONLY)
 		if(v6only) {
 			int val=(v6only==2)?0:1;
-			if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, 
+			if (setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY,
 				(void*)&val, (socklen_t)sizeof(val)) < 0) {
 #ifndef USE_WINSOCK
 				log_err("setsockopt(..., IPV6_V6ONLY"
@@ -420,7 +420,7 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 				close(s);
 #else
 				log_err("setsockopt(..., IPV6_V6ONLY"
-					", ...) failed: %s", 
+					", ...) failed: %s",
 					wsa_strerror(WSAGetLastError()));
 				closesocket(s);
 #endif
@@ -447,7 +447,7 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 			close(s);
 #  else
 			log_err("setsockopt(..., IPV6_USE_MIN_MTU, "
-				"...) failed: %s", 
+				"...) failed: %s",
 				wsa_strerror(WSAGetLastError()));
 			closesocket(s);
 #  endif
@@ -464,11 +464,11 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 		if (setsockopt(s, IPPROTO_IPV6, IPV6_MTU,
 			(void*)&mtu, (socklen_t)sizeof(mtu)) < 0) {
 #  ifndef USE_WINSOCK
-			log_err("setsockopt(..., IPV6_MTU, ...) failed: %s", 
+			log_err("setsockopt(..., IPV6_MTU, ...) failed: %s",
 				strerror(errno));
 			close(s);
 #  else
-			log_err("setsockopt(..., IPV6_MTU, ...) failed: %s", 
+			log_err("setsockopt(..., IPV6_MTU, ...) failed: %s",
 				wsa_strerror(WSAGetLastError()));
 			closesocket(s);
 #  endif
@@ -489,7 +489,7 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 		int action;
 #   if defined(IP_PMTUDISC_OMIT)
 		action = IP_PMTUDISC_OMIT;
-		if (setsockopt(s, IPPROTO_IP, IP_MTU_DISCOVER, 
+		if (setsockopt(s, IPPROTO_IP, IP_MTU_DISCOVER,
 			&action, (socklen_t)sizeof(action)) < 0) {
 
 			if (errno != EINVAL) {
@@ -529,7 +529,7 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 		}
 #  elif defined(IP_DONTFRAG)
 		int off = 0;
-		if (setsockopt(s, IPPROTO_IP, IP_DONTFRAG, 
+		if (setsockopt(s, IPPROTO_IP, IP_DONTFRAG,
 			&off, (socklen_t)sizeof(off)) < 0) {
 			log_err("setsockopt(..., IP_DONTFRAG, ...) failed: %s",
 				strerror(errno));
@@ -566,7 +566,7 @@ create_udp_sock(int family, int socktype, struct sockaddr* addr,
 #else /* USE_WINSOCK */
 		if(WSAGetLastError() != WSAEADDRINUSE &&
 			WSAGetLastError() != WSAEADDRNOTAVAIL) {
-			log_err_addr("can't bind socket", 
+			log_err_addr("can't bind socket",
 				wsa_strerror(WSAGetLastError()),
 				(struct sockaddr_storage*)addr, addrlen);
 		}
@@ -631,7 +631,7 @@ create_tcp_accept_sock(struct addrinfo *addr, int v6only, int* noproto,
 			*noproto = 1;
 			return -1;
 		}
-		log_err("can't create socket: %s", 
+		log_err("can't create socket: %s",
 			wsa_strerror(WSAGetLastError()));
 #endif
 		return -1;
@@ -661,7 +661,7 @@ create_tcp_accept_sock(struct addrinfo *addr, int v6only, int* noproto,
     }
 #endif
 #ifdef SO_REUSEADDR
-	if(setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (void*)&on, 
+	if(setsockopt(s, SOL_SOCKET, SO_REUSEADDR, (void*)&on,
 		(socklen_t)sizeof(on)) < 0) {
 #ifndef USE_WINSOCK
 		log_err("setsockopt(.. SO_REUSEADDR ..) failed: %s",
@@ -704,7 +704,7 @@ create_tcp_accept_sock(struct addrinfo *addr, int v6only, int* noproto,
 #endif /* defined(SO_REUSEPORT) */
 #if defined(IPV6_V6ONLY)
 	if(addr->ai_family == AF_INET6 && v6only) {
-		if(setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY, 
+		if(setsockopt(s, IPPROTO_IPV6, IPV6_V6ONLY,
 			(void*)&on, (socklen_t)sizeof(on)) < 0) {
 #ifndef USE_WINSOCK
 			log_err("setsockopt(..., IPV6_V6ONLY, ...) failed: %s",
@@ -753,7 +753,7 @@ create_tcp_accept_sock(struct addrinfo *addr, int v6only, int* noproto,
 		}
 		close(s);
 #else
-		log_err_addr("can't bind socket", 
+		log_err_addr("can't bind socket",
 			wsa_strerror(WSAGetLastError()),
 			(struct sockaddr_storage*)addr->ai_addr,
 			addr->ai_addrlen);
@@ -790,7 +790,7 @@ create_tcp_accept_sock(struct addrinfo *addr, int v6only, int* noproto,
 	/* 5 is recommended on linux */
 	qlen = 5;
 #endif
-	if ((setsockopt(s, IPPROTO_TCP, TCP_FASTOPEN, &qlen, 
+	if ((setsockopt(s, IPPROTO_TCP, TCP_FASTOPEN, &qlen,
 		  sizeof(qlen))) == -1 ) {
 		log_err("Setting TCP Fast Open as server failed: %s", strerror(errno));
 	}
@@ -882,7 +882,7 @@ err:
  * Create socket from getaddrinfo results
  */
 static int
-make_sock(int stype, const char* ifname, const char* port, 
+make_sock(int stype, const char* ifname, const char* port,
 	struct addrinfo *hints, int v6only, int* noip6, size_t rcv, size_t snd,
 	int* reuseport, int transparent, int tcp_mss, int freebind, int use_systemd)
 {
@@ -897,7 +897,7 @@ make_sock(int stype, const char* ifname, const char* port,
 			return -1;
 		}
 #endif
-		log_err("node %s:%s getaddrinfo: %s %s", 
+		log_err("node %s:%s getaddrinfo: %s %s",
 			ifname?ifname:"default", port, gai_strerror(r),
 #ifdef EAI_SYSTEM
 			r==EAI_SYSTEM?(char*)strerror(errno):""
@@ -931,7 +931,7 @@ make_sock(int stype, const char* ifname, const char* port,
 
 /** make socket and first see if ifname contains port override info */
 static int
-make_sock_port(int stype, const char* ifname, const char* port, 
+make_sock_port(int stype, const char* ifname, const char* port,
 	struct addrinfo *hints, int v6only, int* noip6, size_t rcv, size_t snd,
 	int* reuseport, int transparent, int tcp_mss, int freebind, int use_systemd)
 {
@@ -984,7 +984,7 @@ port_insert(struct listen_port** list, int s, enum listen_type ftype)
 
 /** set fd to receive source address packet info */
 static int
-set_recvpktinfo(int s, int family) 
+set_recvpktinfo(int s, int family)
 {
 #if defined(IPV6_RECVPKTINFO) || defined(IPV6_PKTINFO) || (defined(IP_RECVDSTADDR) && defined(IP_SENDSRCADDR)) || defined(IP_PKTINFO)
 	int on = 1;
@@ -1060,14 +1060,14 @@ set_recvpktinfo(int s, int family)
  * @return: returns false on error.
  */
 static int
-ports_create_if(const char* ifname, int do_auto, int do_udp, int do_tcp, 
+ports_create_if(const char* ifname, int do_auto, int do_udp, int do_tcp,
 	struct addrinfo *hints, const char* port, struct listen_port** list,
 	size_t rcv, size_t snd, int ssl_port, int* reuseport, int transparent,
 	int tcp_mss, int freebind, int use_systemd, int dnscrypt_port)
 {
 	int s, noip6=0;
 #ifdef USE_DNSCRYPT
-	int is_dnscrypt = ((strchr(ifname, '@') && 
+	int is_dnscrypt = ((strchr(ifname, '@') &&
 			atoi(strchr(ifname, '@')+1) == dnscrypt_port) ||
 			(!strchr(ifname, '@') && atoi(port) == dnscrypt_port));
 #else
@@ -1078,7 +1078,7 @@ ports_create_if(const char* ifname, int do_auto, int do_udp, int do_tcp,
 	if(!do_udp && !do_tcp)
 		return 0;
 	if(do_auto) {
-		if((s = make_sock_port(SOCK_DGRAM, ifname, port, hints, 1, 
+		if((s = make_sock_port(SOCK_DGRAM, ifname, port, hints, 1,
 			&noip6, rcv, snd, reuseport, transparent,
 			tcp_mss, freebind, use_systemd)) == -1) {
 			if(noip6) {
@@ -1107,7 +1107,7 @@ ports_create_if(const char* ifname, int do_auto, int do_udp, int do_tcp,
 		}
 	} else if(do_udp) {
 		/* regular udp socket */
-		if((s = make_sock_port(SOCK_DGRAM, ifname, port, hints, 1, 
+		if((s = make_sock_port(SOCK_DGRAM, ifname, port, hints, 1,
 			&noip6, rcv, snd, reuseport, transparent,
 			tcp_mss, freebind, use_systemd)) == -1) {
 			if(noip6) {
@@ -1127,10 +1127,10 @@ ports_create_if(const char* ifname, int do_auto, int do_udp, int do_tcp,
 		}
 	}
 	if(do_tcp) {
-		int is_ssl = ((strchr(ifname, '@') && 
+		int is_ssl = ((strchr(ifname, '@') &&
 			atoi(strchr(ifname, '@')+1) == ssl_port) ||
 			(!strchr(ifname, '@') && atoi(port) == ssl_port));
-		if((s = make_sock_port(SOCK_STREAM, ifname, port, hints, 1, 
+		if((s = make_sock_port(SOCK_STREAM, ifname, port, hints, 1,
 			&noip6, 0, 0, reuseport, transparent, tcp_mss,
 			freebind, use_systemd)) == -1) {
 			if(noip6) {
@@ -1154,7 +1154,7 @@ ports_create_if(const char* ifname, int do_auto, int do_udp, int do_tcp,
 	return 1;
 }
 
-/** 
+/**
  * Add items to commpoint list in front.
  * @param c: commpoint to add.
  * @param front: listen struct.
@@ -1173,7 +1173,7 @@ listen_cp_insert(struct comm_point* c, struct listen_dnsport* front)
 	return 1;
 }
 
-struct listen_dnsport* 
+struct listen_dnsport*
 listen_create(struct comm_base* base, struct listen_port* ports,
 	size_t bufsize, int tcp_accept_count, void* sslctx,
 	struct dt_env* dtenv, comm_point_callback_type* cb, void *cb_arg)
@@ -1197,19 +1197,19 @@ listen_create(struct comm_base* base, struct listen_port* ports,
 		struct comm_point* cp = NULL;
 		if(ports->ftype == listen_type_udp ||
 		   ports->ftype == listen_type_udp_dnscrypt)
-			cp = comm_point_create_udp(base, ports->fd, 
+			cp = comm_point_create_udp(base, ports->fd,
 				front->udp_buff, cb, cb_arg);
 		else if(ports->ftype == listen_type_tcp ||
 				ports->ftype == listen_type_tcp_dnscrypt)
-			cp = comm_point_create_tcp(base, ports->fd, 
+			cp = comm_point_create_tcp(base, ports->fd,
 				tcp_accept_count, bufsize, cb, cb_arg);
 		else if(ports->ftype == listen_type_ssl) {
-			cp = comm_point_create_tcp(base, ports->fd, 
+			cp = comm_point_create_tcp(base, ports->fd,
 				tcp_accept_count, bufsize, cb, cb_arg);
 			cp->ssl = sslctx;
 		} else if(ports->ftype == listen_type_udpancil ||
 				  ports->ftype == listen_type_udpancil_dnscrypt)
-			cp = comm_point_create_udp_ancil(base, ports->fd, 
+			cp = comm_point_create_udp_ancil(base, ports->fd,
 				front->udp_buff, cb, cb_arg);
 		if(!cp) {
 			log_err("can't create commpoint");	
@@ -1262,10 +1262,10 @@ listen_list_delete(struct listen_list* list)
 	}
 }
 
-void 
+void
 listen_delete(struct listen_dnsport* front)
 {
-	if(!front) 
+	if(!front)
 		return;
 	listen_list_delete(front->cps);
 #ifdef USE_DNSCRYPT
@@ -1278,7 +1278,7 @@ listen_delete(struct listen_dnsport* front)
 	free(front);
 }
 
-struct listen_port* 
+struct listen_port*
 listening_ports_open(struct config_file* cfg, int* reuseport)
 {
 	struct listen_port* list = NULL;
@@ -1311,8 +1311,8 @@ listening_ports_open(struct config_file* cfg, int* reuseport)
 	if(do_auto || cfg->num_ifs == 0) {
 		if(do_ip6) {
 			hints.ai_family = AF_INET6;
-			if(!ports_create_if(do_auto?"::0":"::1", 
-				do_auto, cfg->do_udp, do_tcp, 
+			if(!ports_create_if(do_auto?"::0":"::1",
+				do_auto, cfg->do_udp, do_tcp,
 				&hints, portbuf, &list,
 				cfg->so_rcvbuf, cfg->so_sndbuf,
 				cfg->ssl_port, reuseport,
@@ -1325,8 +1325,8 @@ listening_ports_open(struct config_file* cfg, int* reuseport)
 		}
 		if(do_ip4) {
 			hints.ai_family = AF_INET;
-			if(!ports_create_if(do_auto?"0.0.0.0":"127.0.0.1", 
-				do_auto, cfg->do_udp, do_tcp, 
+			if(!ports_create_if(do_auto?"0.0.0.0":"127.0.0.1",
+				do_auto, cfg->do_udp, do_tcp,
 				&hints, portbuf, &list,
 				cfg->so_rcvbuf, cfg->so_sndbuf,
 				cfg->ssl_port, reuseport,
@@ -1342,8 +1342,8 @@ listening_ports_open(struct config_file* cfg, int* reuseport)
 			if(!do_ip6)
 				continue;
 			hints.ai_family = AF_INET6;
-			if(!ports_create_if(cfg->ifs[i], 0, cfg->do_udp, 
-				do_tcp, &hints, portbuf, &list, 
+			if(!ports_create_if(cfg->ifs[i], 0, cfg->do_udp,
+				do_tcp, &hints, portbuf, &list,
 				cfg->so_rcvbuf, cfg->so_sndbuf,
 				cfg->ssl_port, reuseport,
 				cfg->ip_transparent,
@@ -1356,8 +1356,8 @@ listening_ports_open(struct config_file* cfg, int* reuseport)
 			if(!do_ip4)
 				continue;
 			hints.ai_family = AF_INET;
-			if(!ports_create_if(cfg->ifs[i], 0, cfg->do_udp, 
-				do_tcp, &hints, portbuf, &list, 
+			if(!ports_create_if(cfg->ifs[i], 0, cfg->do_udp,
+				do_tcp, &hints, portbuf, &list,
 				cfg->so_rcvbuf, cfg->so_sndbuf,
 				cfg->ssl_port, reuseport,
 				cfg->ip_transparent,
@@ -1391,8 +1391,8 @@ void listening_ports_free(struct listen_port* list)
 size_t listen_get_mem(struct listen_dnsport* listen)
 {
 	struct listen_list* p;
-	size_t s = sizeof(*listen) + sizeof(*listen->base) + 
-		sizeof(*listen->udp_buff) + 
+	size_t s = sizeof(*listen) + sizeof(*listen->base) +
+		sizeof(*listen->udp_buff) +
 		sldns_buffer_capacity(listen->udp_buff);
 #ifdef USE_DNSCRYPT
 	s += sizeof(*listen->dnscrypt_udp_buff);

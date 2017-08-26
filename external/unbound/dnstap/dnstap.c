@@ -141,7 +141,7 @@ dt_create(const char *socket_path, unsigned num_workers)
 
 	fwopt = fstrm_writer_options_init();
 #ifdef UNBOUND_DEBUG
-	res = 
+	res =
 #else
 	(void)
 #endif

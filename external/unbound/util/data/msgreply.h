@@ -1,25 +1,25 @@
 /*
- * util/data/msgreply.h - store message and reply data. 
+ * util/data/msgreply.h - store message and reply data.
  *
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -67,8 +67,8 @@ struct dns_msg;
  * different.
  */
 struct query_info {
-	/** 
-	 * Salient data on the query: qname, in wireformat. 
+	/**
+	 * Salient data on the query: qname, in wireformat.
 	 * can be allocated or a pointer to outside buffer.
 	 * User has to keep track on the status of this.
 	 */
@@ -111,7 +111,7 @@ struct rrset_ref {
 /**
  * Structure to store DNS query and the reply packet.
  * To use it, copy over the flags from reply and modify using flags from
- * the query (RD,CD if not AA). prepend ID. 
+ * the query (RD,CD if not AA). prepend ID.
  *
  * Memory layout is:
  *	o struct
@@ -127,8 +127,8 @@ struct reply_info {
 	uint16_t flags;
 
 	/**
-	 * This flag informs unbound the answer is authoritative and 
-	 * the AA flag should be preserved. 
+	 * This flag informs unbound the answer is authoritative and
+	 * the AA flag should be preserved.
 	 */
 	uint8_t authoritative;
 
@@ -143,7 +143,7 @@ struct reply_info {
 	/** 32 bit padding to pad struct member alignment to 64 bits. */
 	uint32_t padding;
 
-	/** 
+	/**
 	 * TTL of the entire reply (for negative caching).
 	 * only for use when there are 0 RRsets in this message.
 	 * if there are RRsets, check those instead.
@@ -164,36 +164,36 @@ struct reply_info {
 	/**
 	 * Number of RRsets in each section.
 	 * The answer section. Add up the RRs in every RRset to calculate
-	 * the number of RRs, and the count for the dns packet. 
+	 * the number of RRs, and the count for the dns packet.
 	 * The number of RRs in RRsets can change due to RRset updates.
 	 */
 	size_t an_numrrsets;
 
 	/** Count of authority section RRsets */
-	size_t ns_numrrsets; 
+	size_t ns_numrrsets;
 	/** Count of additional section RRsets */
 	size_t ar_numrrsets;
 
 	/** number of RRsets: an_numrrsets + ns_numrrsets + ar_numrrsets */
 	size_t rrset_count;
 
-	/** 
-	 * List of pointers (only) to the rrsets in the order in which 
-	 * they appear in the reply message.  
+	/**
+	 * List of pointers (only) to the rrsets in the order in which
+	 * they appear in the reply message.
 	 * Number of elements is ancount+nscount+arcount RRsets.
-	 * This is a pointer to that array. 
+	 * This is a pointer to that array.
 	 * Use the accessor function for access.
 	 */
 	struct ub_packed_rrset_key** rrsets;
 
-	/** 
+	/**
 	 * Packed array of ids (see counts) and pointers to packed_rrset_key.
-	 * The number equals ancount+nscount+arcount RRsets. 
+	 * The number equals ancount+nscount+arcount RRsets.
 	 * These are sorted in ascending pointer, the locking order. So
-	 * this list can be locked (and id, ttl checked), to see if 
+	 * this list can be locked (and id, ttl checked), to see if
 	 * all the data is available and recent enough.
 	 *
-	 * This is defined as an array of size 1, so that the compiler 
+	 * This is defined as an array of size 1, so that the compiler
 	 * associates the identifier with this position in the structure.
 	 * Array bound overflow on this array then gives access to the further
 	 * elements of the array, which are allocated after the main structure.
@@ -235,8 +235,8 @@ construct_reply_info_base(struct regional* region, uint16_t flags, size_t qd,
 		time_t ttl, time_t prettl, size_t an, size_t ns, size_t ar,
 		size_t total, enum sec_status sec);
 
-/** 
- * Parse wire query into a queryinfo structure, return 0 on parse error. 
+/**
+ * Parse wire query into a queryinfo structure, return 0 on parse error.
  * initialises the (prealloced) queryinfo structure as well.
  * This query structure contains a pointer back info the buffer!
  * This pointer avoids memory allocation. allocqname does memory allocation.
@@ -263,7 +263,7 @@ int query_info_parse(struct query_info* m, struct sldns_buffer* query);
  *	o SERVFAIL for memory allocation errors.
  */
 int reply_info_parse(struct sldns_buffer* pkt, struct alloc_cache* alloc,
-	struct query_info* qinf, struct reply_info** rep, 
+	struct query_info* qinf, struct reply_info** rep,
 	struct regional* region, struct edns_data* edns);
 
 /**
@@ -293,13 +293,13 @@ void reply_info_sortref(struct reply_info* rep);
 
 /**
  * Set TTLs inside the replyinfo to absolute values.
- * @param rep: reply info. rrsets must be filled in. 
+ * @param rep: reply info. rrsets must be filled in.
  *	Also refs must be filled in.
  * @param timenow: the current time.
  */
 void reply_info_set_ttls(struct reply_info* rep, time_t timenow);
 
-/** 
+/**
  * Delete reply_info and packed_rrsets (while they are not yet added to the
  * hashtables.). Returns rrsets to the alloc cache.
  * @param rep: reply_info to delete.
@@ -308,7 +308,7 @@ void reply_info_set_ttls(struct reply_info* rep, time_t timenow);
 void reply_info_parsedelete(struct reply_info* rep, struct alloc_cache* alloc);
 
 /**
- * Compare two queryinfo structures, on query and type, class. 
+ * Compare two queryinfo structures, on query and type, class.
  * It is _not_ sorted in canonical ordering.
  * @param m1: struct query_info* , void* here to ease use as function pointer.
  * @param m2: struct query_info* , void* here to ease use as function pointer.
@@ -353,7 +353,7 @@ struct msgreply_entry* query_info_entrysetup(struct query_info* q,
  *	and no rrset_ref array in the reply is built up.
  * @return new reply info or NULL on memory error.
  */
-struct reply_info* reply_info_copy(struct reply_info* rep, 
+struct reply_info* reply_info_copy(struct reply_info* rep,
 	struct alloc_cache* alloc, struct regional* region);
 
 /**
@@ -383,7 +383,7 @@ int reply_info_alloc_rrset_keys(struct reply_info* rep,
  * @return false on alloc failure.
  */
 int parse_copy_decompress_rrset(struct sldns_buffer* pkt, struct msg_parse* msg,
-	struct rrset_parse *pset, struct regional* region, 
+	struct rrset_parse *pset, struct regional* region,
 	struct ub_packed_rrset_key* pk);
 
 /**
@@ -489,7 +489,7 @@ void log_reply_info(enum verbosity_value v, struct query_info *qinf,
  * @param str: string of message.
  * @param qinf: query info structure with name, type and class.
  */
-void log_query_info(enum verbosity_value v, const char* str, 
+void log_query_info(enum verbosity_value v, const char* str,
 	struct query_info* qinf);
 
 /**
@@ -630,7 +630,7 @@ int inplace_cb_query_call(struct module_env* env, struct query_info* qinfo,
  * @param qstate: module qstate.
  * @return false on failure (a callback function returned an error).
  */
-int inplace_cb_edns_back_parsed_call(struct module_env* env, 
+int inplace_cb_edns_back_parsed_call(struct module_env* env,
 	struct module_qstate* qstate);
 
 /**

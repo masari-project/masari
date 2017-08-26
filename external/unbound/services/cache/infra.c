@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -65,7 +65,7 @@ int infra_dp_ratelimit = 0;
  *  in queries per second. */
 int infra_ip_ratelimit = 0;
 
-size_t 
+size_t
 infra_sizefunc(void* k, void* ATTR_UNUSED(d))
 {
 	struct infra_key* key = (struct infra_key*)k;
@@ -73,7 +73,7 @@ infra_sizefunc(void* k, void* ATTR_UNUSED(d))
 		+ lock_get_mem(&key->entry.lock);
 }
 
-int 
+int
 infra_compfunc(void* key1, void* key2)
 {
 	struct infra_key* k1 = (struct infra_key*)key1;
@@ -89,7 +89,7 @@ infra_compfunc(void* key1, void* key2)
 	return query_dname_compare(k1->zonename, k2->zonename);
 }
 
-void 
+void
 infra_delkeyfunc(void* k, void* ATTR_UNUSED(arg))
 {
 	struct infra_key* key = (struct infra_key*)k;
@@ -100,14 +100,14 @@ infra_delkeyfunc(void* k, void* ATTR_UNUSED(arg))
 	free(key);
 }
 
-void 
+void
 infra_deldatafunc(void* d, void* ATTR_UNUSED(arg))
 {
 	struct infra_data* data = (struct infra_data*)d;
 	free(data);
 }
 
-size_t 
+size_t
 rate_sizefunc(void* k, void* ATTR_UNUSED(d))
 {
 	struct rate_key* key = (struct rate_key*)k;
@@ -115,7 +115,7 @@ rate_sizefunc(void* k, void* ATTR_UNUSED(d))
 		+ lock_get_mem(&key->entry.lock);
 }
 
-int 
+int
 rate_compfunc(void* key1, void* key2)
 {
 	struct rate_key* k1 = (struct rate_key*)key1;
@@ -128,7 +128,7 @@ rate_compfunc(void* key1, void* key2)
 	return query_dname_compare(k1->name, k2->name);
 }
 
-void 
+void
 rate_delkeyfunc(void* k, void* ATTR_UNUSED(arg))
 {
 	struct rate_key* key = (struct rate_key*)k;
@@ -139,7 +139,7 @@ rate_delkeyfunc(void* k, void* ATTR_UNUSED(arg))
 	free(key);
 }
 
-void 
+void
 rate_deldatafunc(void* d, void* ATTR_UNUSED(arg))
 {
 	struct rate_data* data = (struct rate_data*)d;
@@ -215,10 +215,10 @@ static int infra_ratelimit_cfg_insert(struct infra_cache* infra,
 	return 1;
 }
 
-struct infra_cache* 
+struct infra_cache*
 infra_create(struct config_file* cfg)
 {
-	struct infra_cache* infra = (struct infra_cache*)calloc(1, 
+	struct infra_cache* infra = (struct infra_cache*)calloc(1,
 		sizeof(struct infra_cache));
 	size_t maxmem = cfg->infra_cache_numhosts * (sizeof(struct infra_key)+
 		sizeof(struct infra_data)+INFRA_BYTES_NAME);
@@ -268,7 +268,7 @@ static void domain_limit_free(rbnode_type* n, void* ATTR_UNUSED(arg))
 	}
 }
 
-void 
+void
 infra_delete(struct infra_cache* infra)
 {
 	if(!infra)
@@ -280,7 +280,7 @@ infra_delete(struct infra_cache* infra)
 	free(infra);
 }
 
-struct infra_cache* 
+struct infra_cache*
 infra_adjust(struct infra_cache* infra, struct config_file* cfg)
 {
 	size_t maxmem;
@@ -332,7 +332,7 @@ hash_infra(struct sockaddr_storage* addr, socklen_t addrlen, uint8_t* name)
 }
 
 /** lookup version that does not check host ttl (you check it) */
-struct lruhash_entry* 
+struct lruhash_entry*
 infra_lookup_nottl(struct infra_cache* infra, struct sockaddr_storage* addr,
 	socklen_t addrlen, uint8_t* name, size_t namelen, int wr)
 {
@@ -349,7 +349,7 @@ infra_lookup_nottl(struct infra_cache* infra, struct sockaddr_storage* addr,
 
 /** init the data elements */
 static void
-data_entry_init(struct infra_cache* infra, struct lruhash_entry* e, 
+data_entry_init(struct infra_cache* infra, struct lruhash_entry* e,
 	time_t timenow)
 {
 	struct infra_data* data = (struct infra_data*)e->data;
@@ -367,8 +367,8 @@ data_entry_init(struct infra_cache* infra, struct lruhash_entry* e,
 	data->timeout_other = 0;
 }
 
-/** 
- * Create and init a new entry for a host 
+/**
+ * Create and init a new entry for a host
  * @param infra: infra structure with config parameters.
  * @param addr: host address.
  * @param addrlen: length of addr.
@@ -378,7 +378,7 @@ data_entry_init(struct infra_cache* infra, struct lruhash_entry* e,
  * @return: the new entry or NULL on malloc failure.
  */
 static struct lruhash_entry*
-new_entry(struct infra_cache* infra, struct sockaddr_storage* addr, 
+new_entry(struct infra_cache* infra, struct sockaddr_storage* addr,
 	socklen_t addrlen, uint8_t* name, size_t namelen, time_t tm)
 {
 	struct infra_data* data;
@@ -407,7 +407,7 @@ new_entry(struct infra_cache* infra, struct sockaddr_storage* addr,
 	return &key->entry;
 }
 
-int 
+int
 infra_host(struct infra_cache* infra, struct sockaddr_storage* addr,
         socklen_t addrlen, uint8_t* nm, size_t nmlen, time_t timenow,
 	int* edns_vs, uint8_t* edns_lame_known, int* to)
@@ -476,7 +476,7 @@ infra_host(struct infra_cache* infra, struct sockaddr_storage* addr,
 	return 1;
 }
 
-int 
+int
 infra_set_lame(struct infra_cache* infra, struct sockaddr_storage* addr,
 	socklen_t addrlen, uint8_t* nm, size_t nmlen, time_t timenow,
 	int dnsseclame, int reclame, uint16_t qtype)
@@ -514,7 +514,7 @@ infra_set_lame(struct infra_cache* infra, struct sockaddr_storage* addr,
 	return 1;
 }
 
-void 
+void
 infra_update_tcp_works(struct infra_cache* infra,
         struct sockaddr_storage* addr, socklen_t addrlen, uint8_t* nm,
 	size_t nmlen)
@@ -532,7 +532,7 @@ infra_update_tcp_works(struct infra_cache* infra,
 	lock_rw_unlock(&e->lock);
 }
 
-int 
+int
 infra_rtt_update(struct infra_cache* infra, struct sockaddr_storage* addr,
 	socklen_t addrlen, uint8_t* nm, size_t nmlen, int qtype,
 	int roundtrip, int orig_rtt, time_t timenow)
@@ -611,7 +611,7 @@ long long infra_get_host_rto(struct infra_cache* infra,
 	return ttl;
 }
 
-int 
+int
 infra_edns_update(struct infra_cache* infra, struct sockaddr_storage* addr,
 	socklen_t addrlen, uint8_t* nm, size_t nmlen, int edns_version,
 	time_t timenow)
@@ -645,13 +645,13 @@ infra_edns_update(struct infra_cache* infra, struct sockaddr_storage* addr,
 int
 infra_get_lame_rtt(struct infra_cache* infra,
         struct sockaddr_storage* addr, socklen_t addrlen,
-        uint8_t* name, size_t namelen, uint16_t qtype, 
+        uint8_t* name, size_t namelen, uint16_t qtype,
 	int* lame, int* dnsseclame, int* reclame, int* rtt, time_t timenow)
 {
 	struct infra_data* host;
 	struct lruhash_entry* e = infra_lookup_nottl(infra, addr, addrlen,
 		name, namelen, 0);
-	if(!e) 
+	if(!e)
 		return 0;
 	host = (struct infra_data*)e->data;
 	*rtt = rtt_unclamped(&host->rtt);
@@ -952,7 +952,7 @@ int infra_ratelimit_exceeded(struct infra_cache* infra, uint8_t* name,
 	return (max >= lim);
 }
 
-size_t 
+size_t
 infra_get_mem(struct infra_cache* infra)
 {
 	size_t s = sizeof(*infra) + slabhash_get_mem(infra->hosts);

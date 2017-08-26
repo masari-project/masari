@@ -1,25 +1,25 @@
 /*
  * util/random.c - thread safe random generator, which is reasonably secure.
- * 
+ *
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
- * 
+ *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -72,7 +72,7 @@
 #include "yarrow.h"
 #endif
 
-/** 
+/**
  * Max random value.  Similar to RAND_MAX, but more portable
  * (mingw uses only 15 bits random).
  */
@@ -85,7 +85,7 @@ ub_systemseed(unsigned int ATTR_UNUSED(seed))
 	/* arc4random_uniform does not need seeds, it gets kernel entropy */
 }
 
-struct ub_randstate* 
+struct ub_randstate*
 ub_initstate(unsigned int ATTR_UNUSED(seed),
 	struct ub_randstate* ATTR_UNUSED(from))
 {
@@ -97,7 +97,7 @@ ub_initstate(unsigned int ATTR_UNUSED(seed),
 	return s;
 }
 
-long int 
+long int
 ub_random(struct ub_randstate* ATTR_UNUSED(s))
 {
 	/* This relies on MAX_VALUE being 0x7fffffff. */
@@ -123,7 +123,7 @@ void ub_systemseed(unsigned int ATTR_UNUSED(seed))
 {
 }
 
-struct ub_randstate* ub_initstate(unsigned int ATTR_UNUSED(seed), 
+struct ub_randstate* ub_initstate(unsigned int ATTR_UNUSED(seed),
 	struct ub_randstate* ATTR_UNUSED(from))
 {
 	struct ub_randstate* s = (struct ub_randstate*)calloc(1, sizeof(*s));
@@ -225,7 +225,7 @@ ub_random_max(struct ub_randstate* state, long int x)
 }
 #endif /* HAVE_NSS or HAVE_NETTLE */
 
-void 
+void
 ub_randfree(struct ub_randstate* s)
 {
 	free(s);

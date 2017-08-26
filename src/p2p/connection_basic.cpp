@@ -3,23 +3,23 @@
 /// @brief base for connection, contains e.g. the ratelimit hooks
 
 // Copyright (c) 2014-2017, The Monero Project
-// 
+//
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -53,8 +53,8 @@
 
 #include "syncobj.h"
 
-#include "net/net_utils_base.h" 
-#include "misc_log_ex.h" 
+#include "net/net_utils_base.h"
+#include "misc_log_ex.h"
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/uuid/random_generator.hpp>
@@ -100,7 +100,7 @@ namespace net_utils
 	    return std::string("RPC");
 	  else if (type == e_connection_type_P2P)
 	    return std::string("P2P");
-	  
+	
 	  return std::string("UNKNOWN");
   }
 
@@ -147,14 +147,14 @@ int connection_basic_pimpl::m_default_tos;
 
 // methods:
 connection_basic::connection_basic(boost::asio::io_service& io_service, std::atomic<long> &ref_sock_count, std::atomic<long> &sock_number)
-	: 
+	:
 	mI( new connection_basic_pimpl("peer") ),
 	strand_(io_service),
 	socket_(io_service),
-	m_want_close_connection(false), 
+	m_want_close_connection(false),
 	m_was_shutdown(false),
 	m_ref_sock_count(ref_sock_count)
-{ 
+{
 	++ref_sock_count; // increase the global counter
 	mI->m_peer_number = sock_number.fetch_add(1); // use, and increase the generated number
 
@@ -218,7 +218,7 @@ uint64_t connection_basic::get_rate_down_limit() {
 
 void connection_basic::save_limit_to_file(int limit) {
 }
- 
+
 void connection_basic::set_tos_flag(int tos) {
 	connection_basic_pimpl::m_default_tos = tos;
 }
@@ -231,12 +231,12 @@ void connection_basic::sleep_before_packet(size_t packet_size, int phase,  int q
 	double delay=0; // will be calculated
 	do
 	{ // rate limiting
-		if (m_was_shutdown) { 
+		if (m_was_shutdown) {
 			_dbg2("m_was_shutdown - so abort sleep");
 			return;
 		}
 
-		{ 
+		{
 			CRITICAL_REGION_LOCAL(	network_throttle_manager::m_lock_get_global_throttle_out );
 			delay = network_throttle_manager::get_global_throttle_out().get_sleep_time_after_tick( packet_size ); // decission from global
 		}

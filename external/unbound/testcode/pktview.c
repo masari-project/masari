@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -79,13 +79,13 @@ static void analyze_dname(sldns_buffer* pkt)
 	len = pkt_dname_len(pkt);
 	printf(" len=%d", (int)len);
 	if(sldns_buffer_position(pkt)-oldpos != len)
-		printf(" comprlen=%d\n", 
+		printf(" comprlen=%d\n",
 			(int)(sldns_buffer_position(pkt)-oldpos));
 	else	printf("\n");
 }
 
 /** analyze rdata in packet */
-static void analyze_rdata(sldns_buffer*pkt, const sldns_rr_descriptor* desc, 
+static void analyze_rdata(sldns_buffer*pkt, const sldns_rr_descriptor* desc,
 	uint16_t rdlen)
 {
 	int rdf = 0;
@@ -132,10 +132,10 @@ static void analyze_rr(sldns_buffer* pkt, int q)
 	analyze_dname(pkt);
 	type = sldns_buffer_read_u16(pkt);
 	dclass = sldns_buffer_read_u16(pkt);
-	printf("type %s(%d)", sldns_rr_descript(type)?  
+	printf("type %s(%d)", sldns_rr_descript(type)?
 		sldns_rr_descript(type)->_name: "??" , (int)type);
-	printf(" class %s(%d) ", sldns_lookup_by_id(sldns_rr_classes, 
-		(int)dclass)?sldns_lookup_by_id(sldns_rr_classes, 
+	printf(" class %s(%d) ", sldns_lookup_by_id(sldns_rr_classes,
+		(int)dclass)?sldns_lookup_by_id(sldns_rr_classes,
 		(int)dclass)->name:"??", (int)dclass);
 	if(q) {
 		printf("\n");
@@ -173,11 +173,11 @@ static void analyze(sldns_buffer* pkt)
 	
 	printf(";-- query section\n");
 	while(sldns_buffer_remaining(pkt) > 0) {
-		if(rrnum == (int)qd) 
+		if(rrnum == (int)qd)
 			printf(";-- answer section\n");
-		if(rrnum == (int)qd+(int)an) 
+		if(rrnum == (int)qd+(int)an)
 			printf(";-- authority section\n");
-		if(rrnum == (int)qd+(int)an+(int)ns) 
+		if(rrnum == (int)qd+(int)an+(int)ns)
 			printf(";-- additional section\n");
 		printf("rr %d ", rrnum);
 		analyze_rr(pkt, rrnum < (int)qd);
@@ -186,7 +186,7 @@ static void analyze(sldns_buffer* pkt)
 }
 
 /** main program for pktview */
-int main(int argc, char* argv[]) 
+int main(int argc, char* argv[])
 {
 	sldns_buffer* pkt = sldns_buffer_new(65553);
 	if(argc != 1) {

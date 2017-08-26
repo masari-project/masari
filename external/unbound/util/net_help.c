@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -73,8 +73,8 @@ str_is_ip6(const char* str)
 	else    return 0;
 }
 
-int 
-fd_set_nonblock(int s) 
+int
+fd_set_nonblock(int s)
 {
 #ifdef HAVE_FCNTL
 	int flag;
@@ -90,15 +90,15 @@ fd_set_nonblock(int s)
 #elif defined(HAVE_IOCTLSOCKET)
 	unsigned long on = 1;
 	if(ioctlsocket(s, FIONBIO, &on) != 0) {
-		log_err("can't ioctlsocket FIONBIO on: %s", 
+		log_err("can't ioctlsocket FIONBIO on: %s",
 			wsa_strerror(WSAGetLastError()));
 	}
 #endif
 	return 1;
 }
 
-int 
-fd_set_block(int s) 
+int
+fd_set_block(int s)
 {
 #ifdef HAVE_FCNTL
 	int flag;
@@ -114,21 +114,21 @@ fd_set_block(int s)
 #elif defined(HAVE_IOCTLSOCKET)
 	unsigned long off = 0;
 	if(ioctlsocket(s, FIONBIO, &off) != 0) {
-		log_err("can't ioctlsocket FIONBIO off: %s", 
+		log_err("can't ioctlsocket FIONBIO off: %s",
 			wsa_strerror(WSAGetLastError()));
 	}
 #endif	
 	return 1;
 }
 
-int 
+int
 is_pow2(size_t num)
 {
 	if(num == 0) return 1;
 	return (num & (num-1)) == 0;
 }
 
-void* 
+void*
 memdup(void* data, size_t len)
 {
 	void* d;
@@ -141,7 +141,7 @@ memdup(void* data, size_t len)
 }
 
 void
-log_addr(enum verbosity_value v, const char* str, 
+log_addr(enum verbosity_value v, const char* str,
 	struct sockaddr_storage* addr, socklen_t addrlen)
 {
 	uint16_t port;
@@ -170,12 +170,12 @@ log_addr(enum verbosity_value v, const char* str,
 	dest[sizeof(dest)-1] = 0;
 	port = ntohs(((struct sockaddr_in*)addr)->sin_port);
 	if(verbosity >= 4)
-		verbose(v, "%s %s %s port %d (len %d)", str, family, dest, 
+		verbose(v, "%s %s %s port %d (len %d)", str, family, dest,
 			(int)port, (int)addrlen);
 	else	verbose(v, "%s %s port %d", str, dest, (int)port);
 }
 
-int 
+int
 extstrtoaddr(const char* str, struct sockaddr_storage* addr,
 	socklen_t* addrlen)
 {
@@ -198,7 +198,7 @@ extstrtoaddr(const char* str, struct sockaddr_storage* addr,
 }
 
 
-int 
+int
 ipstrtoaddr(const char* ip, int port, struct sockaddr_storage* addr,
 	socklen_t* addrlen)
 {
@@ -271,12 +271,12 @@ int netblockstrtoaddr(const char* str, int port, struct sockaddr_storage* addr,
 }
 
 void
-log_nametypeclass(enum verbosity_value v, const char* str, uint8_t* name, 
+log_nametypeclass(enum verbosity_value v, const char* str, uint8_t* name,
 	uint16_t type, uint16_t dclass)
 {
 	char buf[LDNS_MAX_DOMAINLEN+1];
 	char t[12], c[12];
-	const char *ts, *cs; 
+	const char *ts, *cs;
 	if(verbosity < v)
 		return;
 	dname_str(name, buf);
@@ -302,7 +302,7 @@ log_nametypeclass(enum verbosity_value v, const char* str, uint8_t* name,
 	log_info("%s %s %s %s", str, buf, ts, cs);
 }
 
-void log_name_addr(enum verbosity_value v, const char* str, uint8_t* zone, 
+void log_name_addr(enum verbosity_value v, const char* str, uint8_t* zone,
 	struct sockaddr_storage* addr, socklen_t addrlen)
 {
 	uint16_t port;
@@ -355,7 +355,7 @@ void log_err_addr(const char* str, const char* err,
 }
 
 int
-sockaddr_cmp(struct sockaddr_storage* addr1, socklen_t len1, 
+sockaddr_cmp(struct sockaddr_storage* addr1, socklen_t len1,
 	struct sockaddr_storage* addr2, socklen_t len2)
 {
 	struct sockaddr_in* p1_in = (struct sockaddr_in*)addr1;
@@ -388,7 +388,7 @@ sockaddr_cmp(struct sockaddr_storage* addr1, socklen_t len1,
 		if(p1_in6->sin6_port > p2_in6->sin6_port)
 			return 1;
 		log_assert(p1_in6->sin6_port == p2_in6->sin6_port);
-		return memcmp(&p1_in6->sin6_addr, &p2_in6->sin6_addr, 
+		return memcmp(&p1_in6->sin6_addr, &p2_in6->sin6_addr,
 			INET6_SIZE);
 	} else {
 		/* eek unknown type, perform this comparison for sanity. */
@@ -397,7 +397,7 @@ sockaddr_cmp(struct sockaddr_storage* addr1, socklen_t len1,
 }
 
 int
-sockaddr_cmp_addr(struct sockaddr_storage* addr1, socklen_t len1, 
+sockaddr_cmp_addr(struct sockaddr_storage* addr1, socklen_t len1,
 	struct sockaddr_storage* addr2, socklen_t len2)
 {
 	struct sockaddr_in* p1_in = (struct sockaddr_in*)addr1;
@@ -418,7 +418,7 @@ sockaddr_cmp_addr(struct sockaddr_storage* addr1, socklen_t len1,
 	if( p1_in->sin_family == AF_INET ) {
 		return memcmp(&p1_in->sin_addr, &p2_in->sin_addr, INET_SIZE);
 	} else if (p1_in6->sin6_family == AF_INET6) {
-		return memcmp(&p1_in6->sin6_addr, &p2_in6->sin6_addr, 
+		return memcmp(&p1_in6->sin6_addr, &p2_in6->sin6_addr,
 			INET6_SIZE);
 	} else {
 		/* eek unknown type, perform this comparison for sanity. */
@@ -491,8 +491,8 @@ addr_in_common(struct sockaddr_storage* addr1, int net1,
 	return match;
 }
 
-void 
-addr_to_str(struct sockaddr_storage* addr, socklen_t addrlen, 
+void
+addr_to_str(struct sockaddr_storage* addr, socklen_t addrlen,
 	char* buf, size_t len)
 {
 	int af = (int)((struct sockaddr_in*)addr)->sin_family;
@@ -504,11 +504,11 @@ addr_to_str(struct sockaddr_storage* addr, socklen_t addrlen,
 	}
 }
 
-int 
+int
 addr_is_ip4mapped(struct sockaddr_storage* addr, socklen_t addrlen)
 {
 	/* prefix for ipv4 into ipv6 mapping is ::ffff:x.x.x.x */
-	const uint8_t map_prefix[16] = 
+	const uint8_t map_prefix[16] =
 		{0,0,0,0,  0,0,0,0, 0,0,0xff,0xff, 0,0,0,0};
 	uint8_t* s;
 	if(!addr_is_ip6(addr, addrlen))
@@ -560,7 +560,7 @@ void sock_list_insert(struct sock_list** list, struct sockaddr_storage* addr,
 void sock_list_prepend(struct sock_list** list, struct sock_list* add)
 {
 	struct sock_list* last = add;
-	if(!last) 
+	if(!last)
 		return;
 	while(last->next)
 		last = last->next;
@@ -573,7 +573,7 @@ int sock_list_find(struct sock_list* list, struct sockaddr_storage* addr,
 {
 	while(list) {
 		if(len == list->len) {
-			if(len == 0 || sockaddr_cmp_addr(addr, len, 
+			if(len == 0 || sockaddr_cmp_addr(addr, len,
 				&list->addr, list->len) == 0)
 				return 1;
 		}

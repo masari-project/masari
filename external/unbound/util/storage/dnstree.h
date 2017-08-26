@@ -4,22 +4,22 @@
  * Copyright (c) 2008, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -105,7 +105,7 @@ void name_tree_init(rbtree_type* tree);
  * @param dclass: class of name
  * @return false on error (duplicate element).
  */
-int name_tree_insert(rbtree_type* tree, struct name_tree_node* node, 
+int name_tree_insert(rbtree_type* tree, struct name_tree_node* node,
 	uint8_t* name, size_t len, int labs, uint16_t dclass);
 
 /**
@@ -124,7 +124,7 @@ void name_tree_init_parents(rbtree_type* tree);
  * @param dclass: class of name
  * @return node or NULL if not found.
  */
-struct name_tree_node* name_tree_find(rbtree_type* tree, uint8_t* name, 
+struct name_tree_node* name_tree_find(rbtree_type* tree, uint8_t* name,
 	size_t len, int labs, uint16_t dclass);
 
 /**
@@ -136,7 +136,7 @@ struct name_tree_node* name_tree_find(rbtree_type* tree, uint8_t* name,
  * @param dclass: class of name
  * @return closest enclosing node (could be equal) or NULL if not found.
  */
-struct name_tree_node* name_tree_lookup(rbtree_type* tree, uint8_t* name, 
+struct name_tree_node* name_tree_lookup(rbtree_type* tree, uint8_t* name,
 	size_t len, int labs, uint16_t dclass);
 
 /**
@@ -160,10 +160,10 @@ void addr_tree_init(rbtree_type* tree);
  *	has allocated).
  * @param addr: to insert (copied).
  * @param addrlen: length of addr
- * @param net: size of subnet. 
+ * @param net: size of subnet.
  * @return false on error (duplicate element).
  */
-int addr_tree_insert(rbtree_type* tree, struct addr_tree_node* node, 
+int addr_tree_insert(rbtree_type* tree, struct addr_tree_node* node,
 	struct sockaddr_storage* addr, socklen_t addrlen, int net);
 
 /**
@@ -180,7 +180,7 @@ void addr_tree_init_parents(rbtree_type* tree);
  * @param addrlen: length of addr
  * @return closest enclosing node (could be equal) or NULL if not found.
  */
-struct addr_tree_node* addr_tree_lookup(rbtree_type* tree, 
+struct addr_tree_node* addr_tree_lookup(rbtree_type* tree,
 	struct sockaddr_storage* addr, socklen_t addrlen);
 
 /**
@@ -191,7 +191,7 @@ struct addr_tree_node* addr_tree_lookup(rbtree_type* tree,
  * @param net: size of subnet
  * @return addr tree element, or NULL if not found.
  */
-struct addr_tree_node* addr_tree_find(rbtree_type* tree, 
+struct addr_tree_node* addr_tree_find(rbtree_type* tree,
 	struct sockaddr_storage* addr, socklen_t addrlen, int net);
 
 /** compare name tree nodes */

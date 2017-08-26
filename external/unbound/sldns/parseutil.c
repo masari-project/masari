@@ -51,7 +51,7 @@ static const int mdays[] = {
 static int
 is_leap_year(int year)
 {
-	return LDNS_MOD(year,   4) == 0 && (LDNS_MOD(year, 100) != 0 
+	return LDNS_MOD(year,   4) == 0 && (LDNS_MOD(year, 100) != 0
 	    || LDNS_MOD(year, 400) == 0);
 }
 
@@ -60,7 +60,7 @@ leap_days(int y1, int y2)
 {
 	--y1;
 	--y2;
-	return (LDNS_DIV(y2,   4) - LDNS_DIV(y1,   4)) - 
+	return (LDNS_DIV(y2,   4) - LDNS_DIV(y1,   4)) -
 	       (LDNS_DIV(y2, 100) - LDNS_DIV(y1, 100)) +
 	       (LDNS_DIV(y2, 400) - LDNS_DIV(y1, 400));
 }
@@ -120,7 +120,7 @@ static void
 sldns_mon_and_mday_from_year_and_yday(struct tm *result)
 {
 	int idays = result->tm_yday;
-	const int *mon_lengths = is_leap_year(result->tm_year) ? 
+	const int *mon_lengths = is_leap_year(result->tm_year) ?
 					leap_year_mdays : mdays;
 
 	result->tm_mon = 0;
@@ -347,7 +347,7 @@ sldns_b32_ntop_base(const uint8_t* src, size_t src_sz, char* dst, size_t dst_sz,
 	const char* b32 = extended_hex ?  "0123456789abcdefghijklmnopqrstuv"
 					: "abcdefghijklmnopqrstuvwxyz234567";
 
-	size_t c = 0; /* c is used to carry partial base32 character over 
+	size_t c = 0; /* c is used to carry partial base32 character over
 		       * byte boundaries for sizes with a remainder.
 		       * (i.e. src_sz % 5 != 0)
 		       */
@@ -432,13 +432,13 @@ sldns_b32_ntop_base(const uint8_t* src, size_t src_sz, char* dst, size_t dst_sz,
 	return (int)ret_sz;
 }
 
-int 
+int
 sldns_b32_ntop(const uint8_t* src, size_t src_sz, char* dst, size_t dst_sz)
 {
 	return sldns_b32_ntop_base(src, src_sz, dst, dst_sz, 0, 1);
 }
 
-int 
+int
 sldns_b32_ntop_extended_hex(const uint8_t* src, size_t src_sz,
 		char* dst, size_t dst_sz)
 {
@@ -589,7 +589,7 @@ sldns_b32_pton(const char* src, size_t src_sz, uint8_t* dst, size_t dst_sz)
 }
 
 int
-sldns_b32_pton_extended_hex(const char* src, size_t src_sz, 
+sldns_b32_pton_extended_hex(const char* src, size_t src_sz,
 		uint8_t* dst, size_t dst_sz)
 {
 	return sldns_b32_pton_base(src, src_sz, dst, dst_sz, 1, 1);

@@ -3,22 +3,22 @@
  * Copyright (c) 2013, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -609,7 +609,7 @@ print_char(char** at, size_t* left, int* ret, int c,
 }
 
 
-/** 
+/**
  * Print to string.
  * str: string buffer for result. result will be null terminated.
  * size: size of the buffer. null is put inside buffer.
@@ -618,7 +618,7 @@ print_char(char** at, size_t* left, int* ret, int c,
  * returns number of characters. a null is printed after this.
  * return number of bytes that would have been written
  *	   if the buffer had been large enough.
- * 
+ *
  * supported format specifiers:
  * 	%s, %u, %d, %x, %i, %f, %g, %c, %p, %n.
  * 	length: l, ll (for d, u, x).
@@ -994,34 +994,34 @@ int main(void)
 	DOTEST(1024, "he", 2, "%.*s", 2, "hello");
 	DOTEST(1024, "  hello", 7, "%*s", 7, "hello");
 	DOTEST(1024, "hello  ", 7, "%*s", -7, "hello");
-	DOTEST(1024, "0", 1, "%c", '0'); 
-	DOTEST(1024, "A", 1, "%c", 'A'); 
-	DOTEST(1024, "", 1, "%c", 0); 
-	DOTEST(1024, "\010", 1, "%c", 8); 
-	DOTEST(1024, "%", 1, "%%"); 
-	DOTEST(1024, "0a", 2, "%02x", 0x0a); 
-	DOTEST(1024, "bd", 2, "%02x", 0xbd); 
-	DOTEST(1024, "12", 2, "%02ld", (long)12); 
-	DOTEST(1024, "02", 2, "%02ld", (long)2); 
-	DOTEST(1024, "02", 2, "%02u", (unsigned)2); 
-	DOTEST(1024, "765432", 6, "%05u", (unsigned)765432); 
-	DOTEST(1024, "10.234", 6, "%0.3f", 10.23421); 
-	DOTEST(1024, "123456.234", 10, "%0.3f", 123456.23421); 
-	DOTEST(1024, "123456789.234", 13, "%0.3f", 123456789.23421); 
-	DOTEST(1024, "123456.23", 9, "%.2f", 123456.23421); 
-	DOTEST(1024, "123456", 6, "%.0f", 123456.23421); 
-	DOTEST(1024, "0123", 4, "%.4x", 0x0123); 
-	DOTEST(1024, "00000123", 8, "%.8x", 0x0123); 
-	DOTEST(1024, "ffeb0cde", 8, "%.8x", 0xffeb0cde); 
-	DOTEST(1024, " 987654321", 10, "%10lu", (unsigned long)987654321); 
-	DOTEST(1024, "   987654321", 12, "%12lu", (unsigned long)987654321); 
-	DOTEST(1024, "987654321", 9, "%i", 987654321); 
-	DOTEST(1024, "-87654321", 9, "%i", -87654321); 
-	DOTEST(1024, "hello           ", 16, "%-16s", "hello"); 
-	DOTEST(1024, "                ", 16, "%-16s", ""); 
-	DOTEST(1024, "a               ", 16, "%-16s", "a"); 
-	DOTEST(1024, "foobarfoobar    ", 16, "%-16s", "foobarfoobar"); 
-	DOTEST(1024, "foobarfoobarfoobar", 18, "%-16s", "foobarfoobarfoobar"); 
+	DOTEST(1024, "0", 1, "%c", '0');
+	DOTEST(1024, "A", 1, "%c", 'A');
+	DOTEST(1024, "", 1, "%c", 0);
+	DOTEST(1024, "\010", 1, "%c", 8);
+	DOTEST(1024, "%", 1, "%%");
+	DOTEST(1024, "0a", 2, "%02x", 0x0a);
+	DOTEST(1024, "bd", 2, "%02x", 0xbd);
+	DOTEST(1024, "12", 2, "%02ld", (long)12);
+	DOTEST(1024, "02", 2, "%02ld", (long)2);
+	DOTEST(1024, "02", 2, "%02u", (unsigned)2);
+	DOTEST(1024, "765432", 6, "%05u", (unsigned)765432);
+	DOTEST(1024, "10.234", 6, "%0.3f", 10.23421);
+	DOTEST(1024, "123456.234", 10, "%0.3f", 123456.23421);
+	DOTEST(1024, "123456789.234", 13, "%0.3f", 123456789.23421);
+	DOTEST(1024, "123456.23", 9, "%.2f", 123456.23421);
+	DOTEST(1024, "123456", 6, "%.0f", 123456.23421);
+	DOTEST(1024, "0123", 4, "%.4x", 0x0123);
+	DOTEST(1024, "00000123", 8, "%.8x", 0x0123);
+	DOTEST(1024, "ffeb0cde", 8, "%.8x", 0xffeb0cde);
+	DOTEST(1024, " 987654321", 10, "%10lu", (unsigned long)987654321);
+	DOTEST(1024, "   987654321", 12, "%12lu", (unsigned long)987654321);
+	DOTEST(1024, "987654321", 9, "%i", 987654321);
+	DOTEST(1024, "-87654321", 9, "%i", -87654321);
+	DOTEST(1024, "hello           ", 16, "%-16s", "hello");
+	DOTEST(1024, "                ", 16, "%-16s", "");
+	DOTEST(1024, "a               ", 16, "%-16s", "a");
+	DOTEST(1024, "foobarfoobar    ", 16, "%-16s", "foobarfoobar");
+	DOTEST(1024, "foobarfoobarfoobar", 18, "%-16s", "foobarfoobarfoobar");
 
 	/* combined expressions */
 	DOTEST(1024, "foo 1.0 size 512 edns", 21,
@@ -1031,7 +1031,7 @@ int main(void)
 	DOTEST(1024, "packet 1203ceff id", 18,
 		"packet %2.2x%2.2x%2.2x%2.2x id", 0x12, 0x03, 0xce, 0xff);
 	DOTEST(1024, "/tmp/testbound_123abcd.tmp", 26, "/tmp/testbound_%u%s%s.tmp", 123, "ab", "cd");
- 
+
 	return 0;
 }
 #endif /* SNPRINTF_TEST */

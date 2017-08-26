@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -60,11 +60,11 @@ fwd_cmp(const void* k1, const void* k2)
 			return -1;
 		return 1;
 	}
-	return dname_lab_cmp(n1->name, n1->namelabs, n2->name, n2->namelabs, 
+	return dname_lab_cmp(n1->name, n1->namelabs, n2->name, n2->namelabs,
 		&m);
 }
 
-struct iter_forwards* 
+struct iter_forwards*
 forwards_create(void)
 {
 	struct iter_forwards* fwd = (struct iter_forwards*)calloc(1,
@@ -95,10 +95,10 @@ static void fwd_del_tree(struct iter_forwards* fwd)
 	free(fwd->tree);
 }
 
-void 
+void
 forwards_delete(struct iter_forwards* fwd)
 {
-	if(!fwd) 
+	if(!fwd)
 		return;
 	fwd_del_tree(fwd);
 	free(fwd);
@@ -106,7 +106,7 @@ forwards_delete(struct iter_forwards* fwd)
 
 /** insert info into forward structure */
 static int
-forwards_insert_data(struct iter_forwards* fwd, uint16_t c, uint8_t* nm, 
+forwards_insert_data(struct iter_forwards* fwd, uint16_t c, uint8_t* nm,
 	size_t nmlen, int nmlabs, struct delegpt* dp)
 {
 	struct iter_forward_zone* node = (struct iter_forward_zone*)malloc(
@@ -175,7 +175,7 @@ fwd_init_parents(struct iter_forwards* fwd)
 }
 
 /** set zone name */
-static struct delegpt* 
+static struct delegpt*
 read_fwds_name(struct config_stub* s)
 {
 	struct delegpt* dp;
@@ -200,7 +200,7 @@ read_fwds_name(struct config_stub* s)
 }
 
 /** set fwd host names */
-static int 
+static int
 read_fwds_host(struct config_stub* s, struct delegpt* dp)
 {
 	struct config_strlist* p;
@@ -210,7 +210,7 @@ read_fwds_host(struct config_stub* s, struct delegpt* dp)
 		log_assert(p->str);
 		dname = sldns_str2wire_dname(p->str, &dname_len);
 		if(!dname) {
-			log_err("cannot parse forward %s server name: '%s'", 
+			log_err("cannot parse forward %s server name: '%s'",
 				s->name, p->str);
 			return 0;
 		}
@@ -225,7 +225,7 @@ read_fwds_host(struct config_stub* s, struct delegpt* dp)
 }
 
 /** set fwd server addresses */
-static int 
+static int
 read_fwds_addr(struct config_stub* s, struct delegpt* dp)
 {
 	struct config_strlist* p;
@@ -234,7 +234,7 @@ read_fwds_addr(struct config_stub* s, struct delegpt* dp)
 	for(p = s->addrs; p; p = p->next) {
 		log_assert(p->str);
 		if(!extstrtoaddr(p->str, &addr, &addrlen)) {
-			log_err("cannot parse forward %s ip address: '%s'", 
+			log_err("cannot parse forward %s ip address: '%s'",
 				s->name, p->str);
 			return 0;
 		}
@@ -247,7 +247,7 @@ read_fwds_addr(struct config_stub* s, struct delegpt* dp)
 }
 
 /** read forwards config */
-static int 
+static int
 read_forwards(struct iter_forwards* fwd, struct config_file* cfg)
 {
 	struct config_stub* s;
@@ -312,7 +312,7 @@ make_stub_holes(struct iter_forwards* fwd, struct config_file* cfg)
 	return 1;
 }
 
-int 
+int
 forwards_apply_cfg(struct iter_forwards* fwd, struct config_file* cfg)
 {
 	fwd_del_tree(fwd);
@@ -329,7 +329,7 @@ forwards_apply_cfg(struct iter_forwards* fwd, struct config_file* cfg)
 	return 1;
 }
 
-struct delegpt* 
+struct delegpt*
 forwards_find(struct iter_forwards* fwd, uint8_t* qname, uint16_t qclass)
 {
 	rbnode_type* res = NULL;
@@ -343,7 +343,7 @@ forwards_find(struct iter_forwards* fwd, uint8_t* qname, uint16_t qclass)
 	return NULL;
 }
 
-struct delegpt* 
+struct delegpt*
 forwards_lookup(struct iter_forwards* fwd, uint8_t* qname, uint16_t qclass)
 {
 	/* lookup the forward zone in the tree */
@@ -377,7 +377,7 @@ forwards_lookup(struct iter_forwards* fwd, uint8_t* qname, uint16_t qclass)
 	return NULL;
 }
 
-struct delegpt* 
+struct delegpt*
 forwards_lookup_root(struct iter_forwards* fwd, uint16_t qclass)
 {
 	uint8_t root = 0;
@@ -434,7 +434,7 @@ forwards_next_root(struct iter_forwards* fwd, uint16_t* dclass)
 	}
 }
 
-size_t 
+size_t
 forwards_get_mem(struct iter_forwards* fwd)
 {
 	struct iter_forward_zone* p;
@@ -459,7 +459,7 @@ fwd_zone_find(struct iter_forwards* fwd, uint16_t c, uint8_t* nm)
 	return (struct iter_forward_zone*)rbtree_search(fwd->tree, &key);
 }
 
-int 
+int
 forwards_add_zone(struct iter_forwards* fwd, uint16_t c, struct delegpt* dp)
 {
 	struct iter_forward_zone *z;
@@ -473,7 +473,7 @@ forwards_add_zone(struct iter_forwards* fwd, uint16_t c, struct delegpt* dp)
 	return 1;
 }
 
-void 
+void
 forwards_delete_zone(struct iter_forwards* fwd, uint16_t c, uint8_t* nm)
 {
 	struct iter_forward_zone *z;

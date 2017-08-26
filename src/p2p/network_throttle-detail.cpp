@@ -3,23 +3,23 @@
 /// @brief implementaion for throttling of connection (count and rate-limit speed etc)
 
 // Copyright (c) 2014-2017, The Monero Project
-// 
+//
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -51,8 +51,8 @@
 
 #include "syncobj.h"
 
-#include "net/net_utils_base.h" 
-#include "misc_log_ex.h" 
+#include "net/net_utils_base.h"
+#include "misc_log_ex.h"
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/lambda.hpp>
 #include <boost/uuid/random_generator.hpp>
@@ -60,7 +60,7 @@
 #include <boost/utility/value_init.hpp>
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/thread/thread.hpp> 
+#include <boost/thread/thread.hpp>
 #include "misc_language.h"
 #include "pragma_comp_defs.h"
 #include <sstream>
@@ -81,7 +81,7 @@
 
 // ################################################################################################
 // ################################################################################################
-// the "header part". Not separeted out for .hpp because point of this modification is 
+// the "header part". Not separeted out for .hpp because point of this modification is
 // to rebuild just 1 translation unit while working on this code.
 // (But maybe common parts will be separated out later though - if needed)
 // ################################################################################################
@@ -133,9 +133,9 @@ namespace net_utils
 
 network_throttle::~network_throttle() { }
 
-network_throttle::packet_info::packet_info() 
+network_throttle::packet_info::packet_info()
 	: m_size(0)
-{ 
+{
 }
 
 network_throttle::network_throttle(const std::string &nameshort, const std::string &name, int window_size)
@@ -151,12 +151,12 @@ network_throttle::network_throttle(const std::string &nameshort, const std::stri
 	m_target_speed = 16 * 1024; // other defaults are probably defined in the command-line parsing code when this class is used e.g. as main global throttle
 }
 
-void network_throttle::set_name(const std::string &name) 
+void network_throttle::set_name(const std::string &name)
 {
 	m_name = name;
 }
 
-void network_throttle::set_target_speed( network_speed_kbps target ) 
+void network_throttle::set_target_speed( network_speed_kbps target )
 {
     m_target_speed = target * 1024;
 	MINFO("Setting LIMIT: " << target << " kbps");
@@ -187,10 +187,10 @@ void network_throttle::tick()
 	while ( (!m_any_packet_yet) || (last_sample_time_slot < current_sample_time_slot))
 	{
 		_dbg3("Moving counter buffer by 1 second " << last_sample_time_slot << " < " << current_sample_time_slot << " (last time " << m_last_sample_time<<")");
-		// rotate buffer 
+		// rotate buffer
 		for (size_t i=m_history.size()-1; i>=1; --i) m_history[i] = m_history[i-1];
 		m_history[0] = packet_info();
-		if (! m_any_packet_yet) 
+		if (! m_any_packet_yet)
 		{
 			m_last_sample_time = time_now;	
 		}
@@ -200,7 +200,7 @@ void network_throttle::tick()
 	m_last_sample_time = time_now; // the real exact last time
 }
 
-void network_throttle::handle_trafic_exact(size_t packet_size) 
+void network_throttle::handle_trafic_exact(size_t packet_size)
 {
 	_handle_trafic_exact(packet_size, packet_size);
 }
@@ -250,7 +250,7 @@ void network_throttle::logger_handle_net(const std::string &filename, double tim
 }
 
 // fine tune this to decide about sending speed:
-network_time_seconds network_throttle::get_sleep_time(size_t packet_size) const 
+network_time_seconds network_throttle::get_sleep_time(size_t packet_size) const
 {
 	double D2=0;
 	calculate_times_struct cts = { 0, 0, 0, 0};
@@ -259,14 +259,14 @@ network_time_seconds network_throttle::get_sleep_time(size_t packet_size) const
 }
 
 // MAIN LOGIC:
-void network_throttle::calculate_times(size_t packet_size, calculate_times_struct &cts, bool dbg, double force_window) const 
+void network_throttle::calculate_times(size_t packet_size, calculate_times_struct &cts, bool dbg, double force_window) const
 {
     const double the_window_size = std::max( (double)m_window_size ,
-		((force_window>0) ? force_window : m_window_size) 
+		((force_window>0) ? force_window : m_window_size)
 	);
 
 	if (!m_any_packet_yet) {
-		cts.window=0; cts.average=0; cts.delay=0; 
+		cts.window=0; cts.average=0; cts.delay=0;
 		cts.recomendetDataSize = m_network_minimal_segment; // should be overrided by caller anyway
 		return ; // no packet yet, I can not decide about sleep time
 	}
@@ -280,7 +280,7 @@ void network_throttle::calculate_times(size_t packet_size, calculate_times_struc
 	// window_len e.g. 5.7 because takes into account current slot time
 
 	size_t Epast = 0; // summ of traffic till now
-	for (auto sample : m_history) Epast += sample.m_size; 
+	for (auto sample : m_history) Epast += sample.m_size;
 
 	const size_t E = Epast;
 	const size_t Enow = Epast + packet_size ; // including the data we're about to send now
@@ -307,7 +307,7 @@ void network_throttle::calculate_times(size_t packet_size, calculate_times_struc
 		std::ostringstream oss; oss << "["; 	for (auto sample: m_history) oss << sample.m_size << " ";	 oss << "]" << std::ends;
 		std::string history_str = oss.str();
 		MTRACE((cts.delay > 0 ? "SLEEP" : "")
-			<< "dbg " << m_name << ": " 
+			<< "dbg " << m_name << ": "
 			<< "speed is A=" << std::setw(8) <<cts.average<<" vs "
 			<< "Max=" << std::setw(8) <<M<<" "
 			<< " so sleep: "

@@ -38,16 +38,16 @@
 #include <vector>
 
 namespace Monero {
-  
+
 AddressBook::~AddressBook() {}
-  
+
 AddressBookImpl::AddressBookImpl(WalletImpl *wallet)
     : m_wallet(wallet) {}
 
 bool AddressBookImpl::addRow(const std::string &dst_addr , const std::string &payment_id_str, const std::string &description)
 {
   clearStatus();
-  
+
   cryptonote::account_public_address addr;
   bool has_short_pid;
   crypto::hash8 payment_id_short;
@@ -58,15 +58,15 @@ bool AddressBookImpl::addRow(const std::string &dst_addr , const std::string &pa
   }
 
   crypto::hash payment_id = cryptonote::null_hash;
-  bool has_long_pid = (payment_id_str.empty())? false : tools::wallet2::parse_long_payment_id(payment_id_str, payment_id); 
-    
+  bool has_long_pid = (payment_id_str.empty())? false : tools::wallet2::parse_long_payment_id(payment_id_str, payment_id);
+
   // Short payment id provided
   if(payment_id_str.length() == 16) {
     m_errorString = tr("Invalid payment ID. Short payment ID should only be used in an integrated address");
     m_errorCode = Invalid_Payment_Id;
     return false;
   }
-  
+
   // long payment id provided but not valid
   if(!payment_id_str.empty() && !has_long_pid) {
     m_errorString = tr("Invalid payment ID");
@@ -86,7 +86,7 @@ bool AddressBookImpl::addRow(const std::string &dst_addr , const std::string &pa
   {
     memcpy(payment_id.data, payment_id_short.data, 8);
   }
-  
+
   bool r =  m_wallet->m_wallet->add_address_book_row(addr,payment_id,description);
   if (r)
     refresh();
@@ -95,17 +95,17 @@ bool AddressBookImpl::addRow(const std::string &dst_addr , const std::string &pa
   return r;
 }
 
-void AddressBookImpl::refresh() 
+void AddressBookImpl::refresh()
 {
   LOG_PRINT_L2("Refreshing addressbook");
-  
+
   clearRows();
-  
+
   // Fetch from Wallet2 and create vector of AddressBookRow objects
   std::vector<tools::wallet2::address_book_row> rows = m_wallet->m_wallet->get_address_book();
   for (size_t i = 0; i < rows.size(); ++i) {
     tools::wallet2::address_book_row * row = &rows.at(i);
-    
+
     std::string payment_id = (row->m_payment_id == cryptonote::null_hash)? "" : epee::string_tools::pod_to_hex(row->m_payment_id);
     std::string address = cryptonote::get_account_address_as_str(m_wallet->m_wallet->testnet(),row->m_address);
     // convert the zero padded short payment id to integrated address
@@ -121,7 +121,7 @@ void AddressBookImpl::refresh()
     AddressBookRow * abr = new AddressBookRow(i, address, payment_id, row->m_description);
     m_rows.push_back(abr);
   }
-  
+
 }
 
 bool AddressBookImpl::deleteRow(std::size_t rowId)
@@ -131,7 +131,7 @@ bool AddressBookImpl::deleteRow(std::size_t rowId)
   if (r)
     refresh();
   return r;
-} 
+}
 
 int AddressBookImpl::lookupPaymentID(const std::string &payment_id) const
 {

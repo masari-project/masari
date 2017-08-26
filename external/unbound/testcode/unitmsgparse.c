@@ -35,7 +35,7 @@
  */
 /**
  * \file
- * Calls msg parse unit tests. Exits with code 1 on a failure. 
+ * Calls msg parse unit tests. Exits with code 1 on a failure.
  */
 
 #include "config.h"
@@ -88,7 +88,7 @@ test_buffers(sldns_buffer* pkt, sldns_buffer* out)
 		for(count=0; count<lim; count+=sz) {
 			size_t rem = sz;
 			if(lim-count < sz) rem = lim-count;
-			if(memcmp(sldns_buffer_at(pkt, count), 
+			if(memcmp(sldns_buffer_at(pkt, count),
 				sldns_buffer_at(out, count), rem) == 0) {
 				log_info("same %d %d", (int)count, (int)rem);
 				log_hex("same: ", sldns_buffer_at(pkt, count),
@@ -108,14 +108,14 @@ test_buffers(sldns_buffer* pkt, sldns_buffer* out)
 		char* s1, *s2;
 		log_buf(0, "orig in hex", pkt);
 		log_buf(0, "unbound out in hex", out);
-		printf("\npacket from unbound (%d):\n", 
+		printf("\npacket from unbound (%d):\n",
 			(int)sldns_buffer_limit(out));
 		s1 = sldns_wire2str_pkt(sldns_buffer_begin(out),
 			sldns_buffer_limit(out));
 		printf("%s\n", s1?s1:"null");
 		free(s1);
 
-		printf("\npacket original (%d):\n", 
+		printf("\npacket original (%d):\n",
 			(int)sldns_buffer_limit(pkt));
 		s2 = sldns_wire2str_pkt(sldns_buffer_begin(pkt),
 			sldns_buffer_limit(pkt));
@@ -163,8 +163,8 @@ checkformerr(sldns_buffer* pkt)
 
 /** performance test message encoding */
 static void
-perf_encode(struct query_info* qi, struct reply_info* rep, uint16_t id, 
-	uint16_t flags, sldns_buffer* out, time_t timenow, 
+perf_encode(struct query_info* qi, struct reply_info* rep, uint16_t id,
+	uint16_t flags, sldns_buffer* out, time_t timenow,
 	struct edns_data* edns)
 {
 	static int num = 0;
@@ -187,17 +187,17 @@ perf_encode(struct query_info* qi, struct reply_info* rep, uint16_t id,
 	if(gettimeofday(&end, NULL) < 0)
 		fatal_exit("gettimeofday: %s", strerror(errno));
 	/* time in millisec */
-	dt = (double)(end.tv_sec - start.tv_sec)*1000. + 
+	dt = (double)(end.tv_sec - start.tv_sec)*1000. +
 		((double)end.tv_usec - (double)start.tv_usec)/1000.;
 	printf("[%d] did %u in %g msec for %f encode/sec size %d\n", num++,
-		(unsigned)max, dt, (double)max / (dt/1000.), 
+		(unsigned)max, dt, (double)max / (dt/1000.),
 		(int)sldns_buffer_limit(out));
 	regional_destroy(r2);
 }
 
 /** perf test a packet */
 static void
-perftestpkt(sldns_buffer* pkt, struct alloc_cache* alloc, sldns_buffer* out, 
+perftestpkt(sldns_buffer* pkt, struct alloc_cache* alloc, sldns_buffer* out,
 	const char* hex)
 {
 	struct query_info qi;
@@ -225,7 +225,7 @@ perftestpkt(sldns_buffer* pkt, struct alloc_cache* alloc, sldns_buffer* out,
 		unit_assert(ret != LDNS_RCODE_SERVFAIL);
 	} else {
 		perf_encode(&qi, rep, id, flags, out, timenow, &edns);
-	} 
+	}
 
 	query_info_clear(&qi);
 	reply_info_parsedelete(rep, alloc);
@@ -280,7 +280,7 @@ no_data_for_rrsig(struct reply_info* rep, struct ub_packed_rrset_key* rrsig)
 	for(i=0; i<rep->rrset_count; i++) {
 		if(ntohs(rep->rrsets[i]->rk.type) == LDNS_RR_TYPE_RRSIG)
 			continue;
-		if(query_dname_compare(rep->rrsets[i]->rk.dname, 
+		if(query_dname_compare(rep->rrsets[i]->rk.dname,
 			rrsig->rk.dname) == 0)
 			/* only name is compared right now */
 			return 0;
@@ -311,7 +311,7 @@ check_the_rrsigs(struct query_info* qinfo, struct reply_info* rep)
 
 /** test a packet */
 static void
-testpkt(sldns_buffer* pkt, struct alloc_cache* alloc, sldns_buffer* out, 
+testpkt(sldns_buffer* pkt, struct alloc_cache* alloc, sldns_buffer* out,
 	const char* hex)
 {
 	struct query_info qi;
@@ -345,7 +345,7 @@ testpkt(sldns_buffer* pkt, struct alloc_cache* alloc, sldns_buffer* out,
 			region, 65535, (int)(edns.bits & EDNS_DO) );
 		unit_assert(ret != 0); /* udp packets should fit */
 		attach_edns_record(out, &edns);
-		if(vbmp) printf("inlen %u outlen %u\n", 
+		if(vbmp) printf("inlen %u outlen %u\n",
 			(unsigned)sldns_buffer_limit(pkt),
 			(unsigned)sldns_buffer_limit(out));
 		if(!check_nosameness)
@@ -354,8 +354,8 @@ testpkt(sldns_buffer* pkt, struct alloc_cache* alloc, sldns_buffer* out,
 			check_the_rrsigs(&qi, rep);
 
 		if(sldns_buffer_limit(out) > lim) {
-			ret = reply_info_encode(&qi, rep, id, flags, out, 
-				timenow, region, 
+			ret = reply_info_encode(&qi, rep, id, flags, out,
+				timenow, region,
 				lim - calc_edns_field_size(&edns),
 				(int)(edns.bits & EDNS_DO));
 			unit_assert(ret != 0); /* should fit, but with TC */
@@ -371,7 +371,7 @@ testpkt(sldns_buffer* pkt, struct alloc_cache* alloc, sldns_buffer* out,
 				/* must set TC bit if shortened */
 			unit_assert(sldns_buffer_limit(out) <= lim);
 		}
-	} 
+	}
 
 	query_info_clear(&qi);
 	reply_info_parsedelete(rep, alloc);
@@ -383,11 +383,11 @@ static void
 simpletest(sldns_buffer* pkt, struct alloc_cache* alloc, sldns_buffer* out)
 {
 	/* a root query  drill -q - */
-	testpkt(pkt, alloc, out, 
+	testpkt(pkt, alloc, out,
 		" c5 40 01 00 00 01 00 00 00 00 00 00 00 00 02 00 01 ");
 
 	/* very small packet */
-	testpkt(pkt, alloc, out, 
+	testpkt(pkt, alloc, out,
 "; 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19\n"
 ";-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n"
 "74 0c 85 83 00 01 00 00 00 01 00 00 03 62 6c 61 09 6e 6c 6e    ;          1-  20\n"
@@ -399,7 +399,7 @@ simpletest(sldns_buffer* pkt, struct alloc_cache* alloc, sldns_buffer* out)
 "46 50\n");
 	
 	/* a root reply  drill -w - */
-	testpkt(pkt, alloc, out, 
+	testpkt(pkt, alloc, out,
 	" ; 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19\n"
 	" ;-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --\n"
 	" 97 3f 81 80 00 01 00 0d 00 00 00 02 00 00 02 00 01 00 00 02    ;          1-  20\n"
@@ -464,7 +464,7 @@ testfromfile(sldns_buffer* pkt, struct alloc_cache* alloc, sldns_buffer* out,
 
 /** simple test of parsing, drill file */
 static void
-testfromdrillfile(sldns_buffer* pkt, struct alloc_cache* alloc, 
+testfromdrillfile(sldns_buffer* pkt, struct alloc_cache* alloc,
 	sldns_buffer* out, const char* fname)
 {
 	/*  ;-- is used to indicate a new message */
@@ -521,7 +521,7 @@ void msgparse_test(void)
 	check_rrsigs = 1;
 	testfromdrillfile(pkt, &alloc, out, "testdata/test_packets.7");
 	check_rrsigs = 0;
-	matches_nolocation = 0; 
+	matches_nolocation = 0;
 
 	check_formerr_gone = 1;
 	testfromdrillfile(pkt, &alloc, out, "testdata/test_packets.8");

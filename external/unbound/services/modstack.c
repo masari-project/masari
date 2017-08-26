@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -79,14 +79,14 @@ count_modules(const char* s)
         return num;
 }
 
-void 
+void
 modstack_init(struct module_stack* stack)
 {
 	stack->num = 0;
 	stack->mod = NULL;
 }
 
-int 
+int
 modstack_config(struct module_stack* stack, const char* module_conf)
 {
         int i;
@@ -126,17 +126,17 @@ module_list_avail(void)
         static const char* names[] = {
 		"dns64",
 #ifdef WITH_PYTHONMODULE
-		"python", 
+		"python",
 #endif
 #ifdef USE_CACHEDB
 		"cachedb",
 #endif
 #ifdef CLIENT_SUBNET
-		"subnetcache", 
+		"subnetcache",
 #endif
 		"respip",
-		"validator", 
-		"iterator", 
+		"validator",
+		"iterator",
 		NULL};
 	return names;
 }
@@ -151,22 +151,22 @@ module_funcs_avail(void)
         static struct module_func_block* (*fb[])(void) = {
 		&dns64_get_funcblock,
 #ifdef WITH_PYTHONMODULE
-		&pythonmod_get_funcblock, 
+		&pythonmod_get_funcblock,
 #endif
 #ifdef USE_CACHEDB
 		&cachedb_get_funcblock,
 #endif
 #ifdef CLIENT_SUBNET
-		&subnetmod_get_funcblock, 
+		&subnetmod_get_funcblock,
 #endif
 		&respip_get_funcblock,
-		&val_get_funcblock, 
-		&iter_get_funcblock, 
+		&val_get_funcblock,
+		&iter_get_funcblock,
 		NULL};
 	return fb;
 }
 
-struct 
+struct
 module_func_block* module_factory(const char** str)
 {
         int i = 0;
@@ -186,7 +186,7 @@ module_func_block* module_factory(const char** str)
         return NULL;
 }
 
-int 
+int
 modstack_setup(struct module_stack* stack, const char* module_conf,
 	struct module_env* env)
 {
@@ -211,7 +211,7 @@ modstack_setup(struct module_stack* stack, const char* module_conf,
 	return 1;
 }
 
-void 
+void
 modstack_desetup(struct module_stack* stack, struct module_env* env)
 {
         int i;
@@ -224,7 +224,7 @@ modstack_desetup(struct module_stack* stack, struct module_env* env)
         stack->mod = NULL;
 }
 
-int 
+int
 modstack_find(struct module_stack* stack, const char* name)
 {
 	int i;

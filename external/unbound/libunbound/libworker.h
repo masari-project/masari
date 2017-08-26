@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -61,7 +61,7 @@ struct sldns_buffer;
 struct ub_event_base;
 struct query_info;
 
-/** 
+/**
  * The library-worker status structure
  * Internal to the worker.
  */
@@ -94,7 +94,7 @@ struct libworker {
  *	a new allocation cache is obtained from ctx. It contains the
  *	threadnumber and unique id for further (shared) cache insertions.
  * @return 0 if OK, else error.
- *	Further communication is done via the pipes in ctx. 
+ *	Further communication is done via the pipes in ctx.
  */
 int libworker_bg(struct ub_ctx* ctx);
 
@@ -128,7 +128,7 @@ struct libworker* libworker_create_event(struct ub_ctx* ctx,
 int libworker_attach_mesh(struct ub_ctx* ctx, struct ctx_query* q,
 	int* async_id);
 
-/** 
+/**
  * delete worker for event-based interface.  does not free the event_base.
  * @param w: event-based worker to delete.
  */
@@ -137,13 +137,13 @@ void libworker_delete_event(struct libworker* w);
 /** cleanup the cache to remove all rrset IDs from it, arg is libworker */
 void libworker_alloc_cleanup(void* arg);
 
-/** 
- * fill result from parsed message, on error fills servfail 
+/**
+ * fill result from parsed message, on error fills servfail
  * @param res: is clear at start, filled in at end.
  * @param buf: contains DNS message.
  * @param temp: temporary buffer for parse.
  * @param msg_security: security status of the DNS message.
- *   On error, the res may contain a different status 
+ *   On error, the res may contain a different status
  *   (out of memory is not secure, not bogus).
  */
 void libworker_enter_result(struct ub_result* res, struct sldns_buffer* buf,

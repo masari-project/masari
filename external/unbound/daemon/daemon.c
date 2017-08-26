@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -109,7 +109,7 @@ int ub_c_lex_destroy(void);
 #endif
 
 /** used when no other sighandling happens, so we don't die
-  * when multiple signals in quick succession are sent to us. 
+  * when multiple signals in quick succession are sent to us.
   * @param sig: signal number.
   * @return signal handler return type (void or int).
   */
@@ -117,10 +117,10 @@ static RETSIGTYPE record_sigh(int sig)
 {
 #ifdef LIBEVENT_SIGNAL_PROBLEM
 	/* cannot log, verbose here because locks may be held */
-	/* quit on signal, no cleanup and statistics, 
+	/* quit on signal, no cleanup and statistics,
 	   because installed libevent version is not threadsafe */
 	exit(0);
-#endif 
+#endif
 	switch(sig)
 	{
 		case SIGTERM:
@@ -148,7 +148,7 @@ static RETSIGTYPE record_sigh(int sig)
 	}
 }
 
-/** 
+/**
  * Signal handling during the time when netevent is disabled.
  * Stores signals to replay later.
  */
@@ -197,10 +197,10 @@ signal_handling_playback(struct worker* wrk)
 	sig_record_reload = 0;
 }
 
-struct daemon* 
+struct daemon*
 daemon_init(void)
 {
-	struct daemon* daemon = (struct daemon*)calloc(1, 
+	struct daemon* daemon = (struct daemon*)calloc(1,
 		sizeof(struct daemon));
 #ifdef USE_WINSOCK
 	int r;
@@ -257,7 +257,7 @@ daemon_init(void)
 	ub_systemseed((unsigned)time(NULL)^(unsigned)getpid()^0xe67);
 	daemon->need_to_exit = 0;
 	modstack_init(&daemon->mods);
-	if(!(daemon->env = (struct module_env*)calloc(1, 
+	if(!(daemon->env = (struct module_env*)calloc(1,
 		sizeof(*daemon->env)))) {
 		free(daemon);
 		return NULL;
@@ -282,7 +282,7 @@ daemon_init(void)
 	return daemon;	
 }
 
-int 
+int
 daemon_open_shared_ports(struct daemon* daemon)
 {
 	log_assert(daemon);
@@ -344,7 +344,7 @@ daemon_open_shared_ports(struct daemon* daemon)
 		daemon->rc_ports = NULL;
 		daemon->rc_port = 0;
 	}
-	if(daemon->cfg->remote_control_enable && 
+	if(daemon->cfg->remote_control_enable &&
 		daemon->cfg->control_port != daemon->rc_port) {
 		listening_ports_free(daemon->rc_ports);
 		if(!(daemon->rc_ports=daemon_remote_open_ports(daemon->cfg)))
@@ -364,7 +364,7 @@ static void daemon_setup_modules(struct daemon* daemon)
 	daemon->env->alloc = &daemon->superalloc;
 	daemon->env->worker = NULL;
 	daemon->env->need_to_validate = 0; /* set by module init below */
-	if(!modstack_setup(&daemon->mods, daemon->cfg->module_conf, 
+	if(!modstack_setup(&daemon->mods, daemon->cfg->module_conf,
 		daemon->env)) {
 		fatal_exit("failed to setup modules");
 	}
@@ -409,14 +409,14 @@ static int daemon_get_shufport(struct daemon* daemon, int* shufport)
  * The random generator stays existing between reloads with a unique state.
  * @param daemon: the daemon with (new) config settings.
  */
-static void 
+static void
 daemon_create_workers(struct daemon* daemon)
 {
 	int i, numport;
 	int* shufport;
 	log_assert(daemon && daemon->cfg);
 	if(!daemon->rand) {
-		unsigned int seed = (unsigned int)time(NULL) ^ 
+		unsigned int seed = (unsigned int)time(NULL) ^
 			(unsigned int)getpid() ^ 0x438;
 		daemon->rand = ub_initstate(seed, NULL);
 		if(!daemon->rand)
@@ -436,7 +436,7 @@ daemon_create_workers(struct daemon* daemon)
 			(int)daemon->num_ports);
 		daemon->num = (int)daemon->num_ports;
 	}
-	daemon->workers = (struct worker**)calloc((size_t)daemon->num, 
+	daemon->workers = (struct worker**)calloc((size_t)daemon->num,
 		sizeof(struct worker*));
 	if(!daemon->workers)
 		fatal_exit("out of memory during daemon init");
@@ -453,7 +453,7 @@ daemon_create_workers(struct daemon* daemon)
 	}
 	for(i=0; i<daemon->num; i++) {
 		if(!(daemon->workers[i] = worker_create(daemon, i,
-			shufport+numport*i/daemon->num, 
+			shufport+numport*i/daemon->num,
 			numport*(i+1)/daemon->num - numport*i/daemon->num)))
 			/* the above is not ports/numthr, due to rounding */
 			fatal_exit("could not create worker");
@@ -485,11 +485,11 @@ static void close_other_pipes(struct daemon* daemon, int thr)
 #endif /* THREADS_DISABLED */
 
 /**
- * Function to start one thread. 
+ * Function to start one thread.
  * @param arg: user argument.
  * @return: void* user return value could be used for thread_join results.
  */
-static void* 
+static void*
 thread_start(void* arg)
 {
 	struct worker* worker = (struct worker*)arg;
@@ -560,7 +560,7 @@ daemon_stop_others(struct daemon* daemon)
 	}
 }
 
-void 
+void
 daemon_fork(struct daemon* daemon)
 {
 	int have_view_respip_cfg = 0;
@@ -613,7 +613,7 @@ daemon_fork(struct daemon* daemon)
 		fatal_exit("response-ip options require respip module");
 
 	/* first create all the worker structures, so we can pass
-	 * them to the newly created threads. 
+	 * them to the newly created threads.
 	 */
 	daemon_create_workers(daemon);
 
@@ -661,7 +661,7 @@ daemon_fork(struct daemon* daemon)
 	daemon->need_to_exit = daemon->workers[0]->need_to_exit;
 }
 
-void 
+void
 daemon_cleanup(struct daemon* daemon)
 {
 	int i;
@@ -694,7 +694,7 @@ daemon_cleanup(struct daemon* daemon)
 	daemon->cfg = NULL;
 }
 
-void 
+void
 daemon_delete(struct daemon* daemon)
 {
 	size_t i;
@@ -764,7 +764,7 @@ daemon_delete(struct daemon* daemon)
 	checklock_stop();
 #ifdef USE_WINSOCK
 	if(WSACleanup() != 0) {
-		log_err("Could not WSACleanup: %s", 
+		log_err("Could not WSACleanup: %s",
 			wsa_strerror(WSAGetLastError()));
 	}
 #endif

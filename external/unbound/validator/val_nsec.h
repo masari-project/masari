@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -67,15 +67,15 @@ struct key_entry_key;
  * @return security status.
  *	SECURE: proved absence of DS.
  *	INSECURE: proved that this was not a delegation point.
- *	BOGUS: crypto bad, or no absence of DS proven. 
+ *	BOGUS: crypto bad, or no absence of DS proven.
  *	UNCHECKED: there was no way to prove anything (no NSECs, unknown algo).
  */
 enum sec_status val_nsec_prove_nodata_dsreply(struct module_env* env,
-	struct val_env* ve, struct query_info* qinfo, 
+	struct val_env* ve, struct query_info* qinfo,
 	struct reply_info* rep, struct key_entry_key* kkey,
 	time_t* proof_ttl, char** reason);
 
-/** 
+/**
  * nsec typemap check, takes an NSEC-type bitmap as argument, checks for type.
  * @param bitmap: pointer to the bitmap part of wireformat rdata.
  * @param len: length of the bitmap, in bytes.
@@ -110,7 +110,7 @@ int nsec_has_type(struct ub_packed_rrset_key* nsec, uint16_t type);
  * 	nextcloser of qname.
  * @return true if NSEC proves this.
  */
-int nsec_proves_nodata(struct ub_packed_rrset_key* nsec, 
+int nsec_proves_nodata(struct ub_packed_rrset_key* nsec,
 	struct query_info* qinfo, uint8_t** wc);
 
 /**
@@ -121,7 +121,7 @@ int nsec_proves_nodata(struct ub_packed_rrset_key* nsec,
  * @param qname: what was queried.
  * @return true if proven.
  */
-int val_nsec_proves_name_error(struct ub_packed_rrset_key* nsec, 
+int val_nsec_proves_name_error(struct ub_packed_rrset_key* nsec,
 	uint8_t* qname);
 
 /**
@@ -131,18 +131,18 @@ int val_nsec_proves_name_error(struct ub_packed_rrset_key* nsec,
  * @param wc: wildcard (without *. label)
  * @return true if proven.
  */
-int val_nsec_proves_positive_wildcard(struct ub_packed_rrset_key* nsec, 
+int val_nsec_proves_positive_wildcard(struct ub_packed_rrset_key* nsec,
 	struct query_info* qinf, uint8_t* wc);
 
 /**
  * Determine closest encloser of a query name and the NSEC that covers it
- * (and thus disproved it). 
+ * (and thus disproved it).
  * A name error must have been proven already, otherwise this will be invalid.
  * @param qname: the name queried for.
  * @param nsec: the nsec RRset.
  * @return closest encloser dname or NULL on error (bad nsec RRset).
  */
-uint8_t* nsec_closest_encloser(uint8_t* qname, 
+uint8_t* nsec_closest_encloser(uint8_t* qname,
 	struct ub_packed_rrset_key* nsec);
 
 /**
@@ -153,7 +153,7 @@ uint8_t* nsec_closest_encloser(uint8_t* qname,
  * @param qnamelen: length of qname.
  * @return true if proven.
  */
-int val_nsec_proves_no_wc(struct ub_packed_rrset_key* nsec, uint8_t* qname, 
+int val_nsec_proves_no_wc(struct ub_packed_rrset_key* nsec, uint8_t* qname,
 	size_t qnamelen);
 
 /**
@@ -163,7 +163,7 @@ int val_nsec_proves_no_wc(struct ub_packed_rrset_key* nsec, uint8_t* qname,
  * @param nm: dlv lookup name, to adjust for new lookup name (if needed).
  * @param nm_len: length of lookup name.
  * @return 0 on error, 1 if a higher point is found.
- * 	If the higher point is above the dlv repo anchor, the qname does 
+ * 	If the higher point is above the dlv repo anchor, the qname does
  * 	not exist.
  */
 int val_nsec_check_dlv(struct query_info* qinfo,

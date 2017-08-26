@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -66,7 +66,7 @@ struct delegpt {
 	struct delegpt_ns* nslist;
 	/** the target addresses for delegation */
 	struct delegpt_addr* target_list;
-	/** the list of usable targets; subset of target_list 
+	/** the list of usable targets; subset of target_list
 	 * the items in this list are not part of the result list.  */
 	struct delegpt_addr* usable_list;
 	/** the list of returned targets; subset of target_list */
@@ -95,7 +95,7 @@ struct delegpt_ns {
 	uint8_t* name;
 	/** length of name */
 	size_t namelen;
-	/** 
+	/**
 	 * If the name has been resolved. false if not queried for yet.
 	 * true if the A, AAAA queries have been generated.
 	 * marked true if those queries fail.
@@ -173,7 +173,7 @@ struct delegpt* delegpt_copy(struct delegpt* dp, struct regional* regional);
  * @param name: name to use.
  * @return false on error.
  */
-int delegpt_set_name(struct delegpt* dp, struct regional* regional, 
+int delegpt_set_name(struct delegpt* dp, struct regional* regional,
 	uint8_t* name);
 
 /**
@@ -184,7 +184,7 @@ int delegpt_set_name(struct delegpt* dp, struct regional* regional,
  * @param lame: name is lame, disprefer it.
  * @return false on error.
  */
-int delegpt_add_ns(struct delegpt* dp, struct regional* regional, 
+int delegpt_add_ns(struct delegpt* dp, struct regional* regional,
 	uint8_t* name, uint8_t lame);
 
 /**
@@ -211,8 +211,8 @@ int delegpt_rrset_add_ns(struct delegpt* dp, struct regional* regional,
  * @param lame: address is lame.
  * @return false on error.
  */
-int delegpt_add_target(struct delegpt* dp, struct regional* regional, 
-	uint8_t* name, size_t namelen, struct sockaddr_storage* addr, 
+int delegpt_add_target(struct delegpt* dp, struct regional* regional,
+	uint8_t* name, size_t namelen, struct sockaddr_storage* addr,
 	socklen_t addrlen, uint8_t bogus, uint8_t lame);
 
 /**
@@ -223,7 +223,7 @@ int delegpt_add_target(struct delegpt* dp, struct regional* regional,
  * @param lame: rrset is lame, disprefer it.
  * @return 0 on alloc error.
  */
-int delegpt_add_rrset_A(struct delegpt* dp, struct regional* regional, 
+int delegpt_add_rrset_A(struct delegpt* dp, struct regional* regional,
 	struct ub_packed_rrset_key* rrset, uint8_t lame);
 
 /**
@@ -234,7 +234,7 @@ int delegpt_add_rrset_A(struct delegpt* dp, struct regional* regional,
  * @param lame: rrset is lame, disprefer it.
  * @return 0 on alloc error.
  */
-int delegpt_add_rrset_AAAA(struct delegpt* dp, struct regional* regional, 
+int delegpt_add_rrset_AAAA(struct delegpt* dp, struct regional* regional,
 	struct ub_packed_rrset_key* rrset, uint8_t lame);
 
 /**
@@ -246,7 +246,7 @@ int delegpt_add_rrset_AAAA(struct delegpt* dp, struct regional* regional,
  * @param lame: rrset is lame, disprefer it.
  * @return 0 on alloc error.
  */
-int delegpt_add_rrset(struct delegpt* dp, struct regional* regional, 
+int delegpt_add_rrset(struct delegpt* dp, struct regional* regional,
 	struct ub_packed_rrset_key* rrset, uint8_t lame);
 
 /**
@@ -259,28 +259,28 @@ int delegpt_add_rrset(struct delegpt* dp, struct regional* regional,
  * @param lame: if address is lame.
  * @return false on error.
  */
-int delegpt_add_addr(struct delegpt* dp, struct regional* regional, 
+int delegpt_add_addr(struct delegpt* dp, struct regional* regional,
 	struct sockaddr_storage* addr, socklen_t addrlen,
 	uint8_t bogus, uint8_t lame);
 
-/** 
+/**
  * Find NS record in name list of delegation point.
  * @param dp: delegation point.
  * @param name: name of nameserver to look for, uncompressed wireformat.
  * @param namelen: length of name.
  * @return the ns structure or NULL if not found.
  */
-struct delegpt_ns* delegpt_find_ns(struct delegpt* dp, uint8_t* name, 
+struct delegpt_ns* delegpt_find_ns(struct delegpt* dp, uint8_t* name,
 	size_t namelen);
 
-/** 
+/**
  * Find address record in total list of delegation point.
  * @param dp: delegation point.
  * @param addr: address
  * @param addrlen: length of addr
  * @return the addr structure or NULL if not found.
  */
-struct delegpt_addr* delegpt_find_addr(struct delegpt* dp, 
+struct delegpt_addr* delegpt_find_addr(struct delegpt* dp,
 	struct sockaddr_storage* addr, socklen_t addrlen);
 
 /**
@@ -294,7 +294,7 @@ void delegpt_log(enum verbosity_value v, struct delegpt* dp);
 void delegpt_count_ns(struct delegpt* dp, size_t* numns, size_t* missing);
 
 /** count addresses, and number in result and available lists, for logging */
-void delegpt_count_addr(struct delegpt* dp, size_t* numaddr, size_t* numres, 
+void delegpt_count_addr(struct delegpt* dp, size_t* numaddr, size_t* numres,
 	size_t* numavail);
 
 /**
@@ -331,7 +331,7 @@ size_t delegpt_count_targets(struct delegpt* dp);
  * @return new delegation point or NULL on alloc error, or if the
  *         message was not appropriate.
  */
-struct delegpt* delegpt_from_message(struct dns_msg* msg, 
+struct delegpt* delegpt_from_message(struct dns_msg* msg,
 	struct regional* regional);
 
 /**
@@ -342,29 +342,29 @@ struct delegpt* delegpt_from_message(struct dns_msg* msg,
 void delegpt_add_neg_msg(struct delegpt* dp, struct msgreply_entry* msg);
 
 /**
- * Register the fact that there is no ipv6 and thus AAAAs are not going 
+ * Register the fact that there is no ipv6 and thus AAAAs are not going
  * to be queried for or be useful.
  * @param dp: the delegation point. Updated to reflect no ipv6.
  */
 void delegpt_no_ipv6(struct delegpt* dp);
 
 /**
- * Register the fact that there is no ipv4 and thus As are not going 
+ * Register the fact that there is no ipv4 and thus As are not going
  * to be queried for or be useful.
  * @param dp: the delegation point. Updated to reflect no ipv4.
  */
 void delegpt_no_ipv4(struct delegpt* dp);
 
-/** 
- * create malloced delegation point, with the given name 
+/**
+ * create malloced delegation point, with the given name
  * @param name: uncompressed wireformat of delegpt name.
  * @return NULL on alloc failure
  */
 struct delegpt* delegpt_create_mlc(uint8_t* name);
 
-/** 
+/**
  * free malloced delegation point.
- * @param dp: must have been created with delegpt_create_mlc, free'd. 
+ * @param dp: must have been created with delegpt_create_mlc, free'd.
  */
 void delegpt_free_mlc(struct delegpt* dp);
 
@@ -378,7 +378,7 @@ int delegpt_set_name_mlc(struct delegpt* dp, uint8_t* name);
 
 /**
  * add a name to malloced delegation point.
- * @param dp: must have been created with delegpt_create_mlc. 
+ * @param dp: must have been created with delegpt_create_mlc.
  * @param name: the name to add.
  * @param lame: the name is lame, disprefer.
  * @return false on error.
@@ -387,7 +387,7 @@ int delegpt_add_ns_mlc(struct delegpt* dp, uint8_t* name, uint8_t lame);
 
 /**
  * add an address to a malloced delegation point.
- * @param dp: must have been created with delegpt_create_mlc. 
+ * @param dp: must have been created with delegpt_create_mlc.
  * @param addr: the address.
  * @param addrlen: the length of addr.
  * @param bogus: if address is bogus.
@@ -399,7 +399,7 @@ int delegpt_add_addr_mlc(struct delegpt* dp, struct sockaddr_storage* addr,
 
 /**
  * Add target address to the delegation point.
- * @param dp: must have been created with delegpt_create_mlc. 
+ * @param dp: must have been created with delegpt_create_mlc.
  * @param name: name for which target was found (must be in nslist).
  *	This name is marked resolved.
  * @param namelen: length of name.

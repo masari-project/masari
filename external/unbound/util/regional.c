@@ -4,24 +4,24 @@
  * Copyright (c) 2001-2006, NLnet Labs. All rights reserved.
  *
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
- * 
+ *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -62,7 +62,7 @@
 #define REGIONAL_LARGE_OBJECT_SIZE  2048
 #endif
 
-struct regional* 
+struct regional*
 regional_create(void)
 {
 	return regional_create_custom(REGIONAL_CHUNK_SIZE);
@@ -80,7 +80,7 @@ regional_init(struct regional* r)
 	r->total_large = 0;
 }
 
-struct regional* 
+struct regional*
 regional_create_custom(size_t size)
 {
 	struct regional* r = (struct regional*)malloc(size);
@@ -91,7 +91,7 @@ regional_create_custom(size_t size)
 	return r;
 }
 
-void 
+void
 regional_free_all(struct regional *r)
 {
 	char* p = r->next, *np;
@@ -109,7 +109,7 @@ regional_free_all(struct regional *r)
 	regional_init(r);
 }
 
-void 
+void
 regional_destroy(struct regional *r)
 {
 	if(!r) return;
@@ -202,7 +202,7 @@ count_large(struct regional* r)
 	return c;
 }
 
-void 
+void
 regional_log_stats(struct regional *r)
 {
 	/* some basic assertions put here (non time critical code) */
@@ -215,9 +215,9 @@ regional_log_stats(struct regional *r)
 		(unsigned)count_chunks(r), (unsigned)count_large(r));
 }
 
-size_t 
+size_t
 regional_get_mem(struct regional* r)
 {
-	return r->first_size + (count_chunks(r)-1)*REGIONAL_CHUNK_SIZE 
+	return r->first_size + (count_chunks(r)-1)*REGIONAL_CHUNK_SIZE
 		+ r->total_large;
 }

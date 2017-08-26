@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -100,7 +100,7 @@ void key_entry_delkeyfunc(void* key, void* userarg);
 /** function for lruhash operation */
 void key_entry_deldatafunc(void* data, void* userarg);
 
-/** calculate hash for key entry 
+/** calculate hash for key entry
  * @param kk: key entry. The lruhash entry.hash value is filled in.
  */
 void key_entry_hash(struct key_entry_key* kk);
@@ -111,7 +111,7 @@ void key_entry_hash(struct key_entry_key* kk);
  * @param region: where to allocate it
  * @return newly region-allocated entry or NULL on a failure to allocate.
  */
-struct key_entry_key* key_entry_copy_toregion(struct key_entry_key* kkey, 
+struct key_entry_key* key_entry_copy_toregion(struct key_entry_key* kkey,
 	struct regional* region);
 
 /**
@@ -169,7 +169,7 @@ char* key_entry_get_reason(struct key_entry_key* kkey);
  * @return new key entry or NULL on alloc failure
  */
 struct key_entry_key* key_entry_create_null(struct regional* region,
-	uint8_t* name, size_t namelen, uint16_t dclass, time_t ttl, 
+	uint8_t* name, size_t namelen, uint16_t dclass, time_t ttl,
 	time_t now);
 
 /**
@@ -184,7 +184,7 @@ struct key_entry_key* key_entry_create_null(struct regional* region,
  * @return new key entry or NULL on alloc failure
  */
 struct key_entry_key* key_entry_create_rrset(struct regional* region,
-        uint8_t* name, size_t namelen, uint16_t dclass, 
+        uint8_t* name, size_t namelen, uint16_t dclass,
 	struct ub_packed_rrset_key* rrset, uint8_t* sigalg, time_t now);
 
 /**

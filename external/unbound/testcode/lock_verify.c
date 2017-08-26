@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -40,7 +40,7 @@
  * Checks if locks are consistently locked in the same order.
  * If not, this can lead to deadlock if threads execute the different
  * ordering at the same time.
- * 
+ *
  */
 
 #include "config.h"
@@ -55,8 +55,8 @@
 /* --- data structures --- */
 struct lock_ref;
 
-/** keep track of lock id in lock-verify application 
- * Also defined in smallapp/worker_cb.c for fptr_wlist encapsulation 
+/** keep track of lock id in lock-verify application
+ * Also defined in smallapp/worker_cb.c for fptr_wlist encapsulation
  * breakage (the security tests break encapsulation for this test app) */
 struct order_id {
         /** the thread id that created it */
@@ -77,11 +77,11 @@ struct order_lock {
 	int create_line;
 	/** set of all locks that are smaller than this one (locked earlier) */
 	rbtree_type* smaller;
-	/** during depthfirstsearch, this is a linked list of the stack 
+	/** during depthfirstsearch, this is a linked list of the stack
 	 * of locks. points to the next lock bigger than this one. */
 	struct lock_ref* dfs_next;
 	/** if lock has been visited (all smaller locks have been compared to
-	 * this lock), only need to compare this with all unvisited(bigger) 
+	 * this lock), only need to compare this with all unvisited(bigger)
 	 * locks */
 	int visited;
 };
@@ -110,10 +110,10 @@ usage(void)
 	printf("lock_verify <trace files>\n");
 }
 
-/** read header entry. 
+/** read header entry.
  * @param in: file to read header of.
  * @return: False if it does not belong to the rest. */
-static int 
+static int
 read_header(FILE* in)
 {
 	time_t t;
@@ -139,7 +139,7 @@ read_header(FILE* in)
 		}
 		threads[thrno] = 1;
 		have_values = 1;
-		printf(" trace %d from pid %u on %s", thrno, 
+		printf(" trace %d from pid %u on %s", thrno,
 			(unsigned)p, ctime(&t));
 	} else {
 		if(the_pid != p) {
@@ -194,7 +194,7 @@ static void read_create(rbtree_type* all, FILE* in)
 	o->node.key = &o->id;
 	if(!rbtree_insert(all, &o->node)) {
 		/* already inserted */
-		struct order_lock* a = (struct order_lock*)rbtree_search(all, 
+		struct order_lock* a = (struct order_lock*)rbtree_search(all,
 			&o->id);
 		log_assert(a);
 		a->create_file = o->create_file;
@@ -203,13 +203,13 @@ static void read_create(rbtree_type* all, FILE* in)
 		free(o);
 		o = a;
 	}
-	if(verb) printf("read create %u %u %s %d\n", 
+	if(verb) printf("read create %u %u %s %d\n",
 		(unsigned)o->id.thr, (unsigned)o->id.instance,
 		o->create_file, o->create_line);
 }
 
 /** insert lock entry (empty) into list */
-static struct order_lock* 
+static struct order_lock*
 insert_lock(rbtree_type* all, struct order_id* id)
 {
 	struct order_lock* o = calloc(1, sizeof(struct order_lock));
@@ -237,7 +237,7 @@ static void read_lock(rbtree_type* all, FILE* in, int val)
 	   !readup_str(&ref->file, in) ||
 	   fread(&ref->line, sizeof(int), 1, in) != 1)
 		fatal_exit("fread failed");
-	if(verb) printf("read lock %u %u %u %u %s %d\n", 
+	if(verb) printf("read lock %u %u %u %u %s %d\n",
 		(unsigned)prev_id.thr, (unsigned)prev_id.instance,
 		(unsigned)now_id.thr, (unsigned)now_id.instance,
 		ref->file, ref->line);
@@ -284,19 +284,19 @@ static void found_cycle(struct lock_ref* visit, int level)
 	int i = 0;
 	errors_detected++;
 	printf("Found inconsistent locking order of length %d\n", level);
-	printf("for lock %d %d created %s %d\n", 
+	printf("for lock %d %d created %s %d\n",
 		visit->lock->id.thr, visit->lock->id.instance,
 		visit->lock->create_file, visit->lock->create_line);
 	printf("sequence is:\n");
 	p = visit;
 	while(p) {
-		struct order_lock* next = 
+		struct order_lock* next =
 			p->lock->dfs_next?p->lock->dfs_next->lock:visit->lock;
 		printf("[%d] is locked at line %s %d before lock %d %d\n",
 			i, p->file, p->line, next->id.thr, next->id.instance);
 		printf("[%d] lock %d %d is created at %s %d\n",
 			i, next->id.thr, next->id.instance,
-			next->create_file, next->create_line); 
+			next->create_file, next->create_line);
 		i++;
 		p = p->lock->dfs_next;
 		if(p && p->lock == visit->lock)
@@ -323,7 +323,7 @@ static int detect_cycle(struct lock_ref* visit, struct lock_ref* from)
  * @param level: depth of recursion. 0 is start.
  * @param from: search for matches from unvisited node upwards.
  */
-static void search_cycle(struct lock_ref* visit, int level, 
+static void search_cycle(struct lock_ref* visit, int level,
 	struct lock_ref* from)
 {
 	struct lock_ref* ref;
@@ -336,7 +336,7 @@ static void search_cycle(struct lock_ref* visit, int level,
 	if(!visit->lock->visited)
 		from = visit;
 	if(verb > 1) fprintf(stderr, "[%d] visit lock %u %u %s %d\n", level,
-			(unsigned)visit->lock->id.thr, 
+			(unsigned)visit->lock->id.thr,
 			(unsigned)visit->lock->id.instance,
 			visit->lock->create_file, visit->lock->create_line);
 	RBTREE_FOR(ref, struct lock_ref*, visit->lock->smaller) {
@@ -376,10 +376,10 @@ static void check_order(rbtree_type* all_locks)
 		if(verb)
 		    printf("[%d/%d] Checking lock %d %d %s %d\n",
 			i, (int)all_locks->count,
-			lock->id.thr, lock->id.instance, 
+			lock->id.thr, lock->id.instance,
 			lock->create_file, lock->create_line);
-		else if (i % ((all_locks->count/75)<1?1:all_locks->count/75) 
-			== 0) 
+		else if (i % ((all_locks->count/75)<1?1:all_locks->count/75)
+			== 0)
 		    fprintf(stderr, ".");
 		i++;
 		check_order_lock(lock);
@@ -418,7 +418,7 @@ main(int argc, char* argv[])
 	check_order(all_locks);
 
 	/* do not free a thing, OS will do it */
-	printf("checked %d locks in %d seconds with %d errors.\n", 
+	printf("checked %d locks in %d seconds with %d errors.\n",
 		(int)all_locks->count, (int)(time(NULL)-starttime),
 		errors_detected);
 	if(errors_detected) return 1;

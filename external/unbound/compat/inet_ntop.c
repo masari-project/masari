@@ -34,7 +34,7 @@
 #include <stdio.h>
 
 #ifndef IN6ADDRSZ
-#define IN6ADDRSZ   16   /* IPv6 T_AAAA */                 
+#define IN6ADDRSZ   16   /* IPv6 T_AAAA */
 #endif
 
 #ifndef INT16SZ

@@ -71,7 +71,7 @@ static testkey_type* newkey(int id) {
 }
 /** new data el */
 static testdata_type* newdata(int val) {
-	testdata_type* d = (testdata_type*)calloc(1, 
+	testdata_type* d = (testdata_type*)calloc(1,
 		sizeof(testdata_type));
 	if(!d) fatal_exit("out of memory");
 	d->data = val;
@@ -80,7 +80,7 @@ static testdata_type* newdata(int val) {
 
 /** test hashtable using short sequence */
 static void
-test_short_table(struct slabhash* table) 
+test_short_table(struct slabhash* table)
 {
 	testkey_type* k = newkey(12);
 	testkey_type* k2 = newkey(14);
@@ -177,7 +177,7 @@ check_lru_table(struct lruhash* table)
 	unit_assert(c == table->num);
 
 	/* this assertion is specific to the unit test */
-	unit_assert( table->space_used == 
+	unit_assert( table->space_used ==
 		table->num * test_slabhash_sizefunc(NULL, NULL) );
 	lock_quick_unlock(&table->lock);
 }
@@ -228,7 +228,7 @@ testlookup_unlim(struct slabhash* table, testdata_type** ref)
 		unit_assert(en->key);
 		unit_assert(en->data);
 	}
-	if(0 && ref) log_info("lookup unlim %d got %d, expect %d", num, en ? 
+	if(0 && ref) log_info("lookup unlim %d got %d, expect %d", num, en ?
 		data->data :-1, ref[num] ? ref[num]->data : -1);
 	if(data && ref) {
 		/* its okay for !data, it fell off the lru */
@@ -240,7 +240,7 @@ testlookup_unlim(struct slabhash* table, testdata_type** ref)
 
 /** test with long sequence of adds, removes and updates, and lookups */
 static void
-test_long_table(struct slabhash* table) 
+test_long_table(struct slabhash* table)
 {
 	/* assuming it all fits in the hashtable, this check will work */
 	testdata_type* ref[HASHTESTMAX * 100];
@@ -308,7 +308,7 @@ struct slab_test_thr {
 
 /** main routine for threaded hash table test */
 static void*
-test_thr_main(void* arg) 
+test_thr_main(void* arg)
 {
 	struct slab_test_thr* t = (struct slab_test_thr*)arg;
 	int i;
@@ -362,14 +362,14 @@ void slabhash_test(void)
 	/* also small in size so that reclaim has to be done quickly. */
 	struct slabhash* table;
 	unit_show_feature("slabhash");
-	table = slabhash_create(4, 2, 10400, 
-		test_slabhash_sizefunc, test_slabhash_compfunc, 
+	table = slabhash_create(4, 2, 10400,
+		test_slabhash_sizefunc, test_slabhash_compfunc,
 		test_slabhash_delkey, test_slabhash_deldata, NULL);
 	test_short_table(table);
 	test_long_table(table);
 	slabhash_delete(table);
-	table = slabhash_create(4, 2, 10400, 
-		test_slabhash_sizefunc, test_slabhash_compfunc, 
+	table = slabhash_create(4, 2, 10400,
+		test_slabhash_sizefunc, test_slabhash_compfunc,
 		test_slabhash_delkey, test_slabhash_deldata, NULL);
 	test_threaded_table(table);
 	slabhash_delete(table);

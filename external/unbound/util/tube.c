@@ -4,22 +4,22 @@
  * Copyright (c) 2008, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -51,7 +51,7 @@
 
 #ifndef HAVE_SOCKETPAIR
 /** no socketpair() available, like on Minix 3.1.7, use pipe */
-#define socketpair(f, t, p, sv) pipe(sv) 
+#define socketpair(f, t, p, sv) pipe(sv)
 #endif /* HAVE_SOCKETPAIR */
 
 struct tube* tube_create(void)
@@ -162,7 +162,7 @@ tube_handle_listen(struct comm_point* c, void* arg, int error,
 			/* error has happened or */
 			/* parent closed pipe, must have exited somehow */
 			fptr_ok(fptr_whitelist_tube_listen(tube->listen_cb));
-			(*tube->listen_cb)(tube, NULL, 0, NETEVENT_CLOSED, 
+			(*tube->listen_cb)(tube, NULL, 0, NETEVENT_CLOSED,
 				tube->listen_arg);
 			return 0;
 		}
@@ -192,7 +192,7 @@ tube_handle_listen(struct comm_point* c, void* arg, int error,
 		/* error has happened or */
 		/* parent closed pipe, must have exited somehow */
 		fptr_ok(fptr_whitelist_tube_listen(tube->listen_cb));
-		(*tube->listen_cb)(tube, NULL, 0, NETEVENT_CLOSED, 
+		(*tube->listen_cb)(tube, NULL, 0, NETEVENT_CLOSED,
 			tube->listen_arg);
 		return 0;
 	}
@@ -211,7 +211,7 @@ tube_handle_listen(struct comm_point* c, void* arg, int error,
 	tube->cmd_read = 0;
 
 	fptr_ok(fptr_whitelist_tube_listen(tube->listen_cb));
-	(*tube->listen_cb)(tube, tube->cmd_msg, tube->cmd_len, 
+	(*tube->listen_cb)(tube, tube->cmd_msg, tube->cmd_len,
 		NETEVENT_NOERROR, tube->listen_arg);
 		/* also frees the buf */
 	tube->cmd_msg = NULL;
@@ -282,7 +282,7 @@ tube_handle_write(struct comm_point* c, void* arg, int error,
 	return 0;
 }
 
-int tube_write_msg(struct tube* tube, uint8_t* buf, uint32_t len, 
+int tube_write_msg(struct tube* tube, uint8_t* buf, uint32_t len,
         int nonblock)
 {
 	ssize_t r, d;
@@ -328,7 +328,7 @@ int tube_write_msg(struct tube* tube, uint8_t* buf, uint32_t len,
 	return 1;
 }
 
-int tube_read_msg(struct tube* tube, uint8_t** buf, uint32_t* len, 
+int tube_read_msg(struct tube* tube, uint8_t** buf, uint32_t* len,
         int nonblock)
 {
 	ssize_t r, d;
@@ -430,7 +430,7 @@ int tube_setup_bg_listen(struct tube* tube, struct comm_base* base,
 {
 	tube->listen_cb = cb;
 	tube->listen_arg = arg;
-	if(!(tube->listen_com = comm_point_create_raw(base, tube->sr, 
+	if(!(tube->listen_com = comm_point_create_raw(base, tube->sr,
 		0, tube_handle_listen, tube))) {
 		int err = errno;
 		log_err("tube_setup_bg_l: commpoint creation failed");
@@ -442,7 +442,7 @@ int tube_setup_bg_listen(struct tube* tube, struct comm_base* base,
 
 int tube_setup_bg_write(struct tube* tube, struct comm_base* base)
 {
-	if(!(tube->res_com = comm_point_create_raw(base, tube->sw, 
+	if(!(tube->res_com = comm_point_create_raw(base, tube->sw,
 		1, tube_handle_write, tube))) {
 		int err = errno;
 		log_err("tube_setup_bg_w: commpoint creation failed");
@@ -454,7 +454,7 @@ int tube_setup_bg_write(struct tube* tube, struct comm_base* base)
 
 int tube_queue_item(struct tube* tube, uint8_t* msg, size_t len)
 {
-	struct tube_res_list* item = 
+	struct tube_res_list* item =
 		(struct tube_res_list*)malloc(sizeof(*item));
 	if(!item) {
 		free(msg);
@@ -476,7 +476,7 @@ int tube_queue_item(struct tube* tube, uint8_t* msg, size_t len)
 	return 1;
 }
 
-void tube_handle_signal(int ATTR_UNUSED(fd), short ATTR_UNUSED(events), 
+void tube_handle_signal(int ATTR_UNUSED(fd), short ATTR_UNUSED(events),
 	void* ATTR_UNUSED(arg))
 {
 	log_assert(0);
@@ -561,7 +561,7 @@ void tube_remove_bg_write(struct tube* tube)
 	}
 }
 
-int tube_write_msg(struct tube* tube, uint8_t* buf, uint32_t len, 
+int tube_write_msg(struct tube* tube, uint8_t* buf, uint32_t len,
         int ATTR_UNUSED(nonblock))
 {
 	uint8_t* a;
@@ -575,7 +575,7 @@ int tube_write_msg(struct tube* tube, uint8_t* buf, uint32_t len,
 	return tube_queue_item(tube, a, len);
 }
 
-int tube_read_msg(struct tube* tube, uint8_t** buf, uint32_t* len, 
+int tube_read_msg(struct tube* tube, uint8_t** buf, uint32_t* len,
         int nonblock)
 {
 	struct tube_res_list* item = NULL;
@@ -598,7 +598,7 @@ int tube_read_msg(struct tube* tube, uint8_t** buf, uint32_t* len,
 			tube->res_last = NULL;
 			verbose(VERB_ALGO, "tube read_msg lastdata");
 			if(!WSAResetEvent(tube->event)) {
-				log_err("WSAResetEvent: %s", 
+				log_err("WSAResetEvent: %s",
 					wsa_strerror(WSAGetLastError()));
 			}
 		}
@@ -628,9 +628,9 @@ int tube_wait(struct tube* tube)
 {
 	/* block on eventhandle */
 	DWORD res = WSAWaitForMultipleEvents(
-		1 /* one event in array */, 
-		&tube->event /* the event to wait for, our pipe signal */, 
-		0 /* wait for all events is false */, 
+		1 /* one event in array */,
+		&tube->event /* the event to wait for, our pipe signal */,
+		0 /* wait for all events is false */,
 		WSA_INFINITE /* wait, no timeout */,
 		0 /* we are not alertable for IO completion routines */
 		);
@@ -651,7 +651,7 @@ int tube_read_fd(struct tube* ATTR_UNUSED(tube))
 }
 
 int
-tube_handle_listen(struct comm_point* ATTR_UNUSED(c), void* ATTR_UNUSED(arg), 
+tube_handle_listen(struct comm_point* ATTR_UNUSED(c), void* ATTR_UNUSED(arg),
 	int ATTR_UNUSED(error), struct comm_reply* ATTR_UNUSED(reply_info))
 {
 	log_assert(0);
@@ -659,7 +659,7 @@ tube_handle_listen(struct comm_point* ATTR_UNUSED(c), void* ATTR_UNUSED(arg),
 }
 
 int
-tube_handle_write(struct comm_point* ATTR_UNUSED(c), void* ATTR_UNUSED(arg), 
+tube_handle_write(struct comm_point* ATTR_UNUSED(c), void* ATTR_UNUSED(arg),
 	int ATTR_UNUSED(error), struct comm_reply* ATTR_UNUSED(reply_info))
 {
 	log_assert(0);
@@ -678,7 +678,7 @@ int tube_setup_bg_listen(struct tube* tube, struct comm_base* base,
 	return tube->ev_listen ? 1 : 0;
 }
 
-int tube_setup_bg_write(struct tube* ATTR_UNUSED(tube), 
+int tube_setup_bg_write(struct tube* ATTR_UNUSED(tube),
 	struct comm_base* ATTR_UNUSED(base))
 {
 	/* the queue item routine performs the signaling */
@@ -687,7 +687,7 @@ int tube_setup_bg_write(struct tube* ATTR_UNUSED(tube),
 
 int tube_queue_item(struct tube* tube, uint8_t* msg, size_t len)
 {
-	struct tube_res_list* item = 
+	struct tube_res_list* item =
 		(struct tube_res_list*)malloc(sizeof(*item));
 	verbose(VERB_ALGO, "tube queue_item len %d", (int)len);
 	if(!item) {
@@ -712,7 +712,7 @@ int tube_queue_item(struct tube* tube, uint8_t* msg, size_t len)
 	return 1;
 }
 
-void tube_handle_signal(int ATTR_UNUSED(fd), short ATTR_UNUSED(events), 
+void tube_handle_signal(int ATTR_UNUSED(fd), short ATTR_UNUSED(events),
 	void* arg)
 {
 	struct tube* tube = (struct tube*)arg;
@@ -722,7 +722,7 @@ void tube_handle_signal(int ATTR_UNUSED(fd), short ATTR_UNUSED(events),
 	while(tube_poll(tube)) {
 		if(tube_read_msg(tube, &buf, &len, 1)) {
 			fptr_ok(fptr_whitelist_tube_listen(tube->listen_cb));
-			(*tube->listen_cb)(tube, buf, len, NETEVENT_NOERROR, 
+			(*tube->listen_cb)(tube, buf, len, NETEVENT_NOERROR,
 				tube->listen_arg);
 		}
 	}

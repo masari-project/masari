@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -249,7 +249,7 @@ struct inplace_cb {
  */
 typedef int inplace_cb_reply_func_type(struct query_info* qinfo,
 	struct module_qstate* qstate, struct reply_info* rep, int rcode,
-	struct edns_data* edns, struct edns_option** opt_list_out, 
+	struct edns_data* edns, struct edns_option** opt_list_out,
 	struct regional* region, int id, void* callback);
 
 /**
@@ -282,7 +282,7 @@ typedef int inplace_cb_query_func_type(struct query_info* qinfo, uint16_t flags,
  *	id: module id
  *	cb_args: argument passed when registering callback.
  */
-typedef int inplace_cb_edns_back_parsed_func_type(struct module_qstate* qstate, 
+typedef int inplace_cb_edns_back_parsed_func_type(struct module_qstate* qstate,
 	int id, void* cb_args);
 
 /**
@@ -315,9 +315,9 @@ struct module_env {
 	struct key_cache* key_cache;
 
 	/* --- services --- */
-	/** 
+	/**
 	 * Send serviced DNS query to server. UDP/TCP and EDNS is handled.
-	 * operate() should return with wait_reply. Later on a callback 
+	 * operate() should return with wait_reply. Later on a callback
 	 * will cause operate() to be called with event timeout or reply.
 	 * The time until a timeout is calculated from roundtrip timing,
 	 * several UDP retries are attempted.
@@ -367,23 +367,23 @@ struct module_env {
 	 * o need to initialise the new state (module init; it is a new state).
 	 *   so that the next run of the query with this module is successful.
 	 * o no init needed, attachment successful.
-	 * 
-	 * @param qstate: the state to find mesh state, and that wants to 
+	 *
+	 * @param qstate: the state to find mesh state, and that wants to
 	 * 	receive the results from the new subquery.
 	 * @param qinfo: what to query for (copied).
 	 * @param qflags: what flags to use (RD, CD flag or not).
 	 * @param prime: if it is a (stub) priming query.
 	 * @param valrec: validation lookup recursion, does not need validation
-	 * @param newq: If the new subquery needs initialisation, it is 
+	 * @param newq: If the new subquery needs initialisation, it is
 	 * 	returned, otherwise NULL is returned.
 	 * @return: false on error, true if success (and init may be needed).
-	 */ 
-	int (*attach_sub)(struct module_qstate* qstate, 
-		struct query_info* qinfo, uint16_t qflags, int prime, 
+	 */
+	int (*attach_sub)(struct module_qstate* qstate,
+		struct query_info* qinfo, uint16_t qflags, int prime,
 		int valrec, struct module_qstate** newq);
 
 	/**
-	 * Kill newly attached sub. If attach_sub returns newq for 
+	 * Kill newly attached sub. If attach_sub returns newq for
 	 * initialisation, but that fails, then this routine will cleanup and
 	 * delete the fresly created sub.
 	 * @param newq: the new subquery that is no longer needed.
@@ -395,16 +395,16 @@ struct module_env {
 	 * Detect if adding a dependency for qstate on name,type,class will
 	 * create a dependency cycle.
 	 * @param qstate: given mesh querystate.
-	 * @param qinfo: query info for dependency. 
+	 * @param qinfo: query info for dependency.
 	 * @param flags: query flags of dependency, RD/CD flags.
 	 * @param prime: if dependency is a priming query or not.
 	 * @param valrec: validation lookup recursion, does not need validation
-	 * @return true if the name,type,class exists and the given 
-	 * 	qstate mesh exists as a dependency of that name. Thus 
-	 * 	if qstate becomes dependent on name,type,class then a 
+	 * @return true if the name,type,class exists and the given
+	 * 	qstate mesh exists as a dependency of that name. Thus
+	 * 	if qstate becomes dependent on name,type,class then a
 	 * 	cycle is created.
 	 */
-	int (*detect_cycle)(struct module_qstate* qstate, 
+	int (*detect_cycle)(struct module_qstate* qstate,
 		struct query_info* qinfo, uint16_t flags, int prime,
 		int valrec);
 
@@ -440,12 +440,12 @@ struct module_env {
 	/** Mapping of forwarding zones to targets.
 	 * iterator forwarder information. per-thread, created by worker */
 	struct iter_forwards* fwds;
-	/** 
+	/**
 	 * iterator forwarder information. per-thread, created by worker.
-	 * The hints -- these aren't stored in the cache because they don't 
-	 * expire. The hints are always used to "prime" the cache. Note 
-	 * that both root hints and stub zone "hints" are stored in this 
-	 * data structure. 
+	 * The hints -- these aren't stored in the cache because they don't
+	 * expire. The hints are always used to "prime" the cache. Note
+	 * that both root hints and stub zone "hints" are stored in this
+	 * data structure.
 	 */
 	struct iter_hints* hints;
 	/** module specific data. indexed by module id. */
@@ -467,7 +467,7 @@ struct module_env {
 };
 
 /**
- * External visible states of the module state machine 
+ * External visible states of the module state machine
  * Modules may also have an internal state.
  * Modules are supposed to run to completion or until blocked.
  */
@@ -508,8 +508,8 @@ enum module_ev {
 	module_event_error
 };
 
-/** 
- * Linked list of sockaddrs 
+/**
+ * Linked list of sockaddrs
  * May be allocated such that only 'len' bytes of addr exist for the structure.
  */
 struct sock_list {
@@ -592,14 +592,14 @@ struct module_qstate {
 	int is_drop;
 };
 
-/** 
+/**
  * Module functionality block
  */
 struct module_func_block {
 	/** text string name of module */
 	const char* name;
 
-	/** 
+	/**
 	 * init the module. Called once for the global state.
 	 * This is the place to apply settings from the config file.
 	 * @param env: module environment.
@@ -618,14 +618,14 @@ struct module_func_block {
 	/**
 	 * accept a new query, or work further on existing query.
 	 * Changes the qstate->ext_state to be correct on exit.
-	 * @param ev: event that causes the module state machine to 
+	 * @param ev: event that causes the module state machine to
 	 *	(re-)activate.
-	 * @param qstate: the query state. 
+	 * @param qstate: the query state.
 	 *	Note that this method is not allowed to change the
 	 *	query state 'identity', that is query info, qflags,
 	 *	and priming status.
 	 *	Attach a subquery to get results to a different query.
-	 * @param id: module id number that operate() is called on. 
+	 * @param id: module id number that operate() is called on.
 	 * @param outbound: if not NULL this event is due to the reply/timeout
 	 *	or error on this outbound query.
 	 * @return: if at exit the ext_state is:
@@ -635,7 +635,7 @@ struct module_func_block {
 	 *	  the service routine to make subrequest or send message
 	 *	  have been called.
 	 */
-	void (*operate)(struct module_qstate* qstate, enum module_ev event, 
+	void (*operate)(struct module_qstate* qstate, enum module_ev event,
 		int id, struct outbound_entry* outbound);
 
 	/**
@@ -657,7 +657,7 @@ struct module_func_block {
 	void (*clear)(struct module_qstate* qstate, int id);
 
 	/**
-	 * How much memory is the module specific data using. 
+	 * How much memory is the module specific data using.
 	 * @param env: module environment.
 	 * @param id: the module id.
 	 * @return the number of bytes that are alloced.
@@ -665,15 +665,15 @@ struct module_func_block {
 	size_t (*get_mem)(struct module_env* env, int id);
 };
 
-/** 
- * Debug utility: module external qstate to string 
+/**
+ * Debug utility: module external qstate to string
  * @param s: the state value.
  * @return descriptive string.
  */
 const char* strextstate(enum module_ext_state s);
 
-/** 
- * Debug utility: module event to string 
+/**
+ * Debug utility: module event to string
  * @param e: the module event value.
  * @return descriptive string.
  */

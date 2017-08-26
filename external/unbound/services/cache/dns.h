@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -84,7 +84,7 @@ struct dns_msg {
  */
 int dns_cache_store(struct module_env* env, struct query_info* qinf,
         struct reply_info* rep, int is_referral, time_t leeway, int pside,
-	struct regional* region, uint16_t flags); 
+	struct regional* region, uint16_t flags);
 
 /**
  * Store message in the cache. Stores in message cache and rrset cache.
@@ -122,8 +122,8 @@ void dns_cache_store_msg(struct module_env* env, struct query_info* qinfo,
  * @param timenow: the time now, for checking if TTL on cache entries is OK.
  * @return new delegation or NULL on error or if not found in cache.
  */
-struct delegpt* dns_cache_find_delegation(struct module_env* env, 
-	uint8_t* qname, size_t qnamelen, uint16_t qtype, uint16_t qclass, 
+struct delegpt* dns_cache_find_delegation(struct module_env* env,
+	uint8_t* qname, size_t qnamelen, uint16_t qtype, uint16_t qclass,
 	struct regional* region, struct dns_msg** msg, time_t timenow);
 
 /**
@@ -140,8 +140,8 @@ struct dns_msg* tomsg(struct module_env* env, struct query_info* q,
 	struct reply_info* r, struct regional* region, time_t now,
 	struct regional* scratch);
 
-/** 
- * Find cached message 
+/**
+ * Find cached message
  * @param env: module environment with the DNS cache.
  * @param qname: query name.
  * @param qnamelen: length of qname.
@@ -158,15 +158,15 @@ struct dns_msg* dns_cache_lookup(struct module_env* env,
 	uint8_t* qname, size_t qnamelen, uint16_t qtype, uint16_t qclass,
 	uint16_t flags, struct regional* region, struct regional* scratch);
 
-/** 
- * find and add A and AAAA records for missing nameservers in delegpt 
+/**
+ * find and add A and AAAA records for missing nameservers in delegpt
  * @param env: module environment with rrset cache
  * @param qclass: which class to look in.
  * @param region: where to store new dp info.
  * @param dp: delegation point to fill missing entries.
  * @return false on alloc failure.
  */
-int cache_fill_missing(struct module_env* env, uint16_t qclass, 
+int cache_fill_missing(struct module_env* env, uint16_t qclass,
 	struct regional* region, struct delegpt* dp);
 
 /**
@@ -180,7 +180,7 @@ int cache_fill_missing(struct module_env* env, uint16_t qclass,
  * @param capacity: number of rrsets space to create in the array.
  * @return new dns_msg struct or NULL on mem fail.
  */
-struct dns_msg* dns_msg_create(uint8_t* qname, size_t qnamelen, uint16_t qtype, 
+struct dns_msg* dns_msg_create(uint8_t* qname, size_t qnamelen, uint16_t qtype,
 	uint16_t qclass, struct regional* region, size_t capacity);
 
 /**
@@ -192,7 +192,7 @@ struct dns_msg* dns_msg_create(uint8_t* qname, size_t qnamelen, uint16_t qtype,
  * @param now: now.
  * @return true if worked, false on fail
  */
-int dns_msg_authadd(struct dns_msg* msg, struct regional* region, 
+int dns_msg_authadd(struct dns_msg* msg, struct regional* region,
 	struct ub_packed_rrset_key* rrset, time_t now);
 
 /**

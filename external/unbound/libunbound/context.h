@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -72,8 +72,8 @@ struct ub_ctx {
 	/* --- shared data --- */
 	/** mutex for access to env.cfg, finalized and dothread */
 	lock_basic_type cfglock;
-	/** 
-	 * The context has been finalized 
+	/**
+	 * The context has been finalized
 	 * This is after config when the first resolve is done.
 	 * The modules are inited (module-init()) and shared caches created.
 	 */
@@ -94,7 +94,7 @@ struct ub_ctx {
 	int logfile_override;
 	/** what logfile to use instead */
 	FILE* log_out;
-	/** 
+	/**
 	 * List of alloc-cache-id points per threadnum for notinuse threads.
 	 * Simply the entire struct alloc_cache with the 'super' member used
 	 * to link a simply linked list. Reset super member to the superalloc
@@ -122,13 +122,13 @@ struct ub_ctx {
 	int next_querynum;
 	/** number of async queries outstanding */
 	size_t num_async;
-	/** 
-	 * Tree of outstanding queries. Indexed by querynum 
+	/**
+	 * Tree of outstanding queries. Indexed by querynum
 	 * Used when results come in for async to lookup.
 	 * Used when cancel is done for lookup (and delete).
 	 * Used to see if querynum is free for use.
 	 * Content of type ctx_query.
-	 */ 
+	 */
 	rbtree_type queries;
 };
 
@@ -215,7 +215,7 @@ enum ub_ctx_cmd {
 	UB_LIBCMD_ANSWER
 };
 
-/** 
+/**
  * finalize a context.
  * @param ctx: context to finalize. creates shared data.
  * @return 0 if OK, or errcode.
@@ -225,7 +225,7 @@ int context_finalize(struct ub_ctx* ctx);
 /** compare two ctx_query elements */
 int context_query_cmp(const void* a, const void* b);
 
-/** 
+/**
  * delete context query
  * @param q: query to delete, including message packet and prealloc result
  */
@@ -281,7 +281,7 @@ uint8_t* context_serialize_new_query(struct ctx_query* q, uint32_t* len);
  * @param len: the length of the allocation is returned.
  * @return: an alloc, or NULL on mem error.
  */
-uint8_t* context_serialize_answer(struct ctx_query* q, int err, 
+uint8_t* context_serialize_answer(struct ctx_query* q, int err,
 	struct sldns_buffer* pkt, uint32_t* len);
 
 /**
@@ -315,7 +315,7 @@ enum ub_ctx_cmd context_serial_getcmd(uint8_t* p, uint32_t len);
  * @param len: length of buffer.
  * @return looked up ctx_query or NULL for malloc failure.
  */
-struct ctx_query* context_lookup_new_query(struct ub_ctx* ctx, 
+struct ctx_query* context_lookup_new_query(struct ub_ctx* ctx,
 	uint8_t* p, uint32_t len);
 
 /**
@@ -325,7 +325,7 @@ struct ctx_query* context_lookup_new_query(struct ub_ctx* ctx,
  * @param len: length of buffer.
  * @return new ctx_query or NULL for malloc failure.
  */
-struct ctx_query* context_deserialize_new_query(struct ub_ctx* ctx, 
+struct ctx_query* context_deserialize_new_query(struct ub_ctx* ctx,
 	uint8_t* p, uint32_t len);
 
 /**
@@ -336,7 +336,7 @@ struct ctx_query* context_deserialize_new_query(struct ub_ctx* ctx,
  * @param err: error code to be returned to client is passed.
  * @return ctx_query with answer added or NULL for malloc failure.
  */
-struct ctx_query* context_deserialize_answer(struct ub_ctx* ctx, 
+struct ctx_query* context_deserialize_answer(struct ub_ctx* ctx,
 	uint8_t* p, uint32_t len, int* err);
 
 /**
@@ -346,7 +346,7 @@ struct ctx_query* context_deserialize_answer(struct ub_ctx* ctx,
  * @param len: length of buffer.
  * @return ctx_query to cancel or NULL for failure.
  */
-struct ctx_query* context_deserialize_cancel(struct ub_ctx* ctx, 
+struct ctx_query* context_deserialize_cancel(struct ub_ctx* ctx,
 	uint8_t* p, uint32_t len);
 
 #endif /* LIBUNBOUND_CONTEXT_H */

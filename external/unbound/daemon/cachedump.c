@@ -4,22 +4,22 @@
  * Copyright (c) 2008, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -73,7 +73,7 @@ dump_rrset_line(SSL* ssl, struct ub_packed_rrset_key* k, time_t now, size_t i)
 
 /** dump rrset key and data info */
 static int
-dump_rrset(SSL* ssl, struct ub_packed_rrset_key* k, 
+dump_rrset(SSL* ssl, struct ub_packed_rrset_key* k,
 	struct packed_rrset_data* d, time_t now)
 {
 	size_t i;
@@ -87,7 +87,7 @@ dump_rrset(SSL* ssl, struct ub_packed_rrset_key* k,
 		(long long)(d->ttl - now),
 		(unsigned)d->count, (unsigned)d->rrsig_count,
 		(int)d->trust, (int)d->security
-		)) 
+		))
 		return 0;
 	for(i=0; i<d->count + d->rrsig_count; i++) {
 		if(!dump_rrset_line(ssl, k, now, i))
@@ -163,7 +163,7 @@ dump_msg_ref(SSL* ssl, struct ub_packed_rrset_key* k)
 
 /** dump message entry */
 static int
-dump_msg(SSL* ssl, struct query_info* k, struct reply_info* d, 
+dump_msg(SSL* ssl, struct query_info* k, struct reply_info* d,
 	time_t now)
 {
 	size_t i;
@@ -191,9 +191,9 @@ dump_msg(SSL* ssl, struct query_info* k, struct reply_info* d,
 	/* meta line */
 	if(!ssl_printf(ssl, "msg %s %s %s %d %d " ARG_LL "d %d %u %u %u\n",
 			nm, cl, tp,
-			(int)d->flags, (int)d->qdcount, 
+			(int)d->flags, (int)d->qdcount,
 			(long long)(d->ttl-now), (int)d->security,
-			(unsigned)d->an_numrrsets, 
+			(unsigned)d->an_numrrsets,
 			(unsigned)d->ns_numrrsets,
 			(unsigned)d->ar_numrrsets)) {
 		free(nm);
@@ -219,26 +219,26 @@ dump_msg(SSL* ssl, struct query_info* k, struct reply_info* d,
 
 /** copy msg to worker pad */
 static int
-copy_msg(struct regional* region, struct lruhash_entry* e, 
+copy_msg(struct regional* region, struct lruhash_entry* e,
 	struct query_info** k, struct reply_info** d)
 {
 	struct reply_info* rep = (struct reply_info*)e->data;
 	if(rep->rrset_count > RR_COUNT_MAX)
 		return 0; /* to protect against integer overflow */
 	*d = (struct reply_info*)regional_alloc_init(region, e->data,
-		sizeof(struct reply_info) + 
+		sizeof(struct reply_info) +
 		sizeof(struct rrset_ref) * (rep->rrset_count-1) +
 		sizeof(struct ub_packed_rrset_key*) * rep->rrset_count);
 	if(!*d)
 		return 0;
 	(*d)->rrsets = (struct ub_packed_rrset_key**)(void *)(
-		(uint8_t*)(&((*d)->ref[0])) + 
+		(uint8_t*)(&((*d)->ref[0])) +
 		sizeof(struct rrset_ref) * rep->rrset_count);
-	*k = (struct query_info*)regional_alloc_init(region, 
+	*k = (struct query_info*)regional_alloc_init(region,
 		e->key, sizeof(struct query_info));
 	if(!*k)
 		return 0;
-	(*k)->qname = regional_alloc_init(region, 
+	(*k)->qname = regional_alloc_init(region,
 		(*k)->qname, (*k)->qname_len);
 	return (*k)->qname != NULL;
 }
@@ -262,7 +262,7 @@ dump_msg_lruhash(SSL* ssl, struct worker* worker, struct lruhash* h)
 			return 0;
 		}
 		lock_rw_unlock(&e->lock);
-		/* release lock so we can lookup the rrset references 
+		/* release lock so we can lookup the rrset references
 		 * in the rrset cache */
 		if(!dump_msg(ssl, k, d, *worker->env.now)) {
 			return 0;
@@ -303,7 +303,7 @@ dump_cache(SSL* ssl, struct worker* worker)
 static int
 ssl_read_buf(SSL* ssl, sldns_buffer* buf)
 {
-	return ssl_read_line(ssl, (char*)sldns_buffer_begin(buf), 
+	return ssl_read_line(ssl, (char*)sldns_buffer_begin(buf),
 		sldns_buffer_capacity(buf));
 }
 
@@ -351,7 +351,7 @@ load_rr(SSL* ssl, sldns_buffer* buf, struct regional* region,
 	d->rr_ttl[i] = (time_t)sldns_wirerr_get_ttl(rr, rr_len, dname_len) + now;
 	sldns_buffer_clear(buf);
 	d->rr_len[i] = sldns_wirerr_get_rdatalen(rr, rr_len, dname_len)+2;
-	d->rr_data[i] = (uint8_t*)regional_alloc_init(region, 
+	d->rr_data[i] = (uint8_t*)regional_alloc_init(region,
 		sldns_wirerr_get_rdatawl(rr, rr_len, dname_len), d->rr_len[i]);
 	if(!d->rr_data[i]) {
 		log_warn("error out of memory");
@@ -375,7 +375,7 @@ load_rr(SSL* ssl, sldns_buffer* buf, struct regional* region,
 
 /** move entry into cache */
 static int
-move_into_cache(struct ub_packed_rrset_key* k, 
+move_into_cache(struct ub_packed_rrset_key* k,
 	struct packed_rrset_data* d, struct worker* worker)
 {
 	struct ub_packed_rrset_key* ak;
@@ -398,7 +398,7 @@ move_into_cache(struct ub_packed_rrset_key* k,
 		ub_packed_rrset_parsedelete(ak, &worker->alloc);
 		return 0;
 	}
-	s = sizeof(*ad) + (sizeof(size_t) + sizeof(uint8_t*) + 
+	s = sizeof(*ad) + (sizeof(size_t) + sizeof(uint8_t*) +
 		sizeof(time_t))* num;
 	for(i=0; i<num; i++)
 		s += d->rr_len[i];
@@ -446,7 +446,7 @@ load_rrset(SSL* ssl, sldns_buffer* buf, struct worker* worker)
 	int go_on = 1;
 	regional_free_all(region);
 
-	rk = (struct ub_packed_rrset_key*)regional_alloc_zero(region, 
+	rk = (struct ub_packed_rrset_key*)regional_alloc_zero(region,
 		sizeof(*rk));
 	d = (struct packed_rrset_data*)regional_alloc_zero(region, sizeof(*d));
 	if(!rk || !d) {
@@ -482,11 +482,11 @@ load_rrset(SSL* ssl, sldns_buffer* buf, struct worker* worker)
 	d->trust = (enum rrset_trust)trust;
 	d->ttl = (time_t)ttl + *worker->env.now;
 
-	d->rr_len = regional_alloc_zero(region, 
+	d->rr_len = regional_alloc_zero(region,
 		sizeof(size_t)*(d->count+d->rrsig_count));
-	d->rr_ttl = regional_alloc_zero(region, 
+	d->rr_ttl = regional_alloc_zero(region,
 		sizeof(time_t)*(d->count+d->rrsig_count));
-	d->rr_data = regional_alloc_zero(region, 
+	d->rr_data = regional_alloc_zero(region,
 		sizeof(uint8_t*)*(d->count+d->rrsig_count));
 	if(!d->rr_len || !d->rr_ttl || !d->rr_data) {
 		log_warn("error out of memory");
@@ -495,14 +495,14 @@ load_rrset(SSL* ssl, sldns_buffer* buf, struct worker* worker)
 	
 	/* read the rr's themselves */
 	for(i=0; i<rr_count; i++) {
-		if(!load_rr(ssl, buf, region, rk, d, i, 0, 
+		if(!load_rr(ssl, buf, region, rk, d, i, 0,
 			&go_on, *worker->env.now)) {
 			log_warn("could not read rr %u", i);
 			return 0;
 		}
 	}
 	for(i=0; i<rrsig_count; i++) {
-		if(!load_rr(ssl, buf, region, rk, d, i+rr_count, 1, 
+		if(!load_rr(ssl, buf, region, rk, d, i+rr_count, 1,
 			&go_on, *worker->env.now)) {
 			log_warn("could not read rrsig %u", i);
 			return 0;
@@ -522,7 +522,7 @@ load_rrset_cache(SSL* ssl, struct worker* worker)
 {
 	sldns_buffer* buf = worker->env.scratch_buffer;
 	if(!read_fixed(ssl, buf, "START_RRSET_CACHE")) return 0;
-	while(ssl_read_buf(ssl, buf) && 
+	while(ssl_read_buf(ssl, buf) &&
 		strcmp((char*)sldns_buffer_begin(buf), "END_RRSET_CACHE")!=0) {
 		if(!load_rrset(ssl, buf, worker))
 			return 0;
@@ -574,8 +574,8 @@ load_qinfo(char* str, struct query_info* qinfo, struct regional* region)
 
 /** load a msg rrset reference */
 static int
-load_ref(SSL* ssl, sldns_buffer* buf, struct worker* worker, 
-	struct regional *region, struct ub_packed_rrset_key** rrset, 
+load_ref(SSL* ssl, sldns_buffer* buf, struct worker* worker,
+	struct regional *region, struct ub_packed_rrset_key** rrset,
 	int* go_on)
 {
 	char* s = (char*)sldns_buffer_begin(buf);
@@ -643,7 +643,7 @@ load_msg(SSL* ssl, sldns_buffer* buf, struct worker* worker)
 	}
 
 	/* read remainder of line */
-	if(sscanf(s, " %u %u " ARG_LL "d %u %u %u %u", &flags, &qdcount, &ttl, 
+	if(sscanf(s, " %u %u " ARG_LL "d %u %u %u %u", &flags, &qdcount, &ttl,
 		&security, &an, &ns, &ar) != 7) {
 		log_warn("error cannot parse numbers: %s", s);
 		return 0;
@@ -666,13 +666,13 @@ load_msg(SSL* ssl, sldns_buffer* buf, struct worker* worker)
 
 	/* fill repinfo with references */
 	for(i=0; i<rep.rrset_count; i++) {
-		if(!load_ref(ssl, buf, worker, region, &rep.rrsets[i], 
+		if(!load_ref(ssl, buf, worker, region, &rep.rrsets[i],
 			&go_on)) {
 			return 0;
 		}
 	}
 
-	if(!go_on) 
+	if(!go_on)
 		return 1; /* skip this one, not all references satisfied */
 
 	if(!dns_cache_store(&worker->env, &qinf, &rep, 0, 0, 0, NULL, flags)) {
@@ -688,7 +688,7 @@ load_msg_cache(SSL* ssl, struct worker* worker)
 {
 	sldns_buffer* buf = worker->env.scratch_buffer;
 	if(!read_fixed(ssl, buf, "START_MSG_CACHE")) return 0;
-	while(ssl_read_buf(ssl, buf) && 
+	while(ssl_read_buf(ssl, buf) &&
 		strcmp((char*)sldns_buffer_begin(buf), "END_MSG_CACHE")!=0) {
 		if(!load_msg(ssl, buf, worker))
 			return 0;
@@ -722,7 +722,7 @@ print_dp_details(SSL* ssl, struct worker* worker, struct delegpt* dp)
 		if(!ssl_printf(ssl, "%-16s\t", buf))
 			return;
 		if(a->bogus) {
-			if(!ssl_printf(ssl, "Address is BOGUS. ")) 
+			if(!ssl_printf(ssl, "Address is BOGUS. "))
 				return;
 		}
 		/* lookup in infra cache */
@@ -745,7 +745,7 @@ print_dp_details(SSL* ssl, struct worker* worker, struct delegpt* dp)
 
 		/* uses type_A because most often looked up, but other
 		 * lameness won't be reported then */
-		if(!infra_get_lame_rtt(worker->env.infra_cache, 
+		if(!infra_get_lame_rtt(worker->env.infra_cache,
 			&a->addr, a->addrlen, dp->name, dp->namelen,
 			LDNS_RR_TYPE_A, &lame, &dlame, &rlame, &rto,
 			*worker->env.now)) {
@@ -792,7 +792,7 @@ print_dp_main(SSL* ssl, struct delegpt* dp, struct dns_msg* msg)
 	if(msg)
 	    for(i=0; i<msg->rep->rrset_count; i++) {
 		struct ub_packed_rrset_key* k = msg->rep->rrsets[i];
-		struct packed_rrset_data* d = 
+		struct packed_rrset_data* d =
 			(struct packed_rrset_data*)k->entry.data;
 		if(d->security == sec_status_bogus) {
 			if(!ssl_printf(ssl, "Address is BOGUS:\n"))
@@ -806,7 +806,7 @@ print_dp_main(SSL* ssl, struct delegpt* dp, struct dns_msg* msg)
 	/* since dp has not been used by iterator, all are available*/
 	if(!ssl_printf(ssl, "Delegation with %d names, of which %d "
 		"can be examined to query further addresses.\n"
-		"%sIt provides %d IP addresses.\n", 
+		"%sIt provides %d IP addresses.\n",
 		(int)n_ns, (int)n_miss, (dp->bogus?"It is BOGUS. ":""),
 		(int)n_addr))
 		return;
@@ -831,7 +831,7 @@ int print_deleg_lookup(SSL* ssl, struct worker* worker, uint8_t* nm,
 
 	dname_str(nm, b);
 	if(!ssl_printf(ssl, "The following name servers are used for lookup "
-		"of %s\n", b)) 
+		"of %s\n", b))
 		return 0;
 	
 	dp = forwards_lookup(worker->env.fwds, nm, qinfo.qclass);
@@ -844,8 +844,8 @@ int print_deleg_lookup(SSL* ssl, struct worker* worker, uint8_t* nm,
 	}
 	
 	while(1) {
-		dp = dns_cache_find_delegation(&worker->env, nm, nmlen, 
-			qinfo.qtype, qinfo.qclass, region, &msg, 
+		dp = dns_cache_find_delegation(&worker->env, nm, nmlen,
+			qinfo.qtype, qinfo.qclass, region, &msg,
 			*worker->env.now);
 		if(!dp) {
 			return ssl_printf(ssl, "no delegation from "
@@ -872,7 +872,7 @@ int print_deleg_lookup(SSL* ssl, struct worker* worker, uint8_t* nm,
 					return 0;
 				continue;
 			}
-		} 
+		}
 		stub = hints_lookup_stub(worker->env.hints, nm, qinfo.qclass,
 			dp);
 		if(stub) {

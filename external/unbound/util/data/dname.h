@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -50,11 +50,11 @@ struct sldns_buffer;
 /** max number of compression ptrs to follow */
 #define MAX_COMPRESS_PTRS 256
 
-/** 
- * Determine length of dname in buffer, no compression ptrs allowed, 
+/**
+ * Determine length of dname in buffer, no compression ptrs allowed,
  * @param query: the ldns buffer, current position at start of dname.
  *	at end, position is at end of the dname.
- * @return: 0 on parse failure, or length including ending 0 of dname. 
+ * @return: 0 on parse failure, or length including ending 0 of dname.
  */
 size_t query_dname_len(struct sldns_buffer* query);
 
@@ -69,9 +69,9 @@ size_t dname_valid(uint8_t* dname, size_t len);
 /** lowercase query dname */
 void query_dname_tolower(uint8_t* dname);
 
-/** 
+/**
  * lowercase pkt dname (follows compression pointers)
- * @param pkt: the packet, used to follow compression pointers. Position 
+ * @param pkt: the packet, used to follow compression pointers. Position
  *	is unchanged.
  * @param dname: start of dname in packet.
  */
@@ -87,7 +87,7 @@ void pkt_dname_tolower(struct sldns_buffer* pkt, uint8_t* dname);
  * that is smaller (possibly after lowercasing) makes an RR smaller, or the
  * shortest name makes an RR smaller.
  *
- * This routine does not compute the canonical order needed for NSEC 
+ * This routine does not compute the canonical order needed for NSEC
  * processing.
  *
  * Dnames have to be valid format.
@@ -187,7 +187,7 @@ int dname_lab_cmp(uint8_t* d1, int labs1, uint8_t* d2, int labs2, int* mlabs);
 
 /**
  * See if domain name d1 is a strict subdomain of d2.
- * That is a subdomain, but not equal. 
+ * That is a subdomain, but not equal.
  * @param d1: domain name, uncompressed wireformat
  * @param labs1: number of labels in d1, including root label.
  * @param d2: domain name, uncompressed wireformat
@@ -197,7 +197,7 @@ int dname_lab_cmp(uint8_t* d1, int labs1, uint8_t* d2, int labs2, int* mlabs);
 int dname_strict_subdomain(uint8_t* d1, int labs1, uint8_t* d2, int labs2);
 
 /**
- * Like dname_strict_subdomain but counts labels 
+ * Like dname_strict_subdomain but counts labels
  * @param d1: domain name, uncompressed wireformat
  * @param d2: domain name, uncompressed wireformat
  * @return true if d1 is a subdomain of d2, but not equal to d2.
@@ -212,15 +212,15 @@ int dname_strict_subdomain_c(uint8_t* d1, uint8_t* d2);
  */
 int dname_subdomain_c(uint8_t* d1, uint8_t* d2);
 
-/** 
- * Debug helper. Print wireformat dname to output. 
+/**
+ * Debug helper. Print wireformat dname to output.
  * @param out: like stdout or a file.
  * @param pkt: if not NULL, the packet for resolving compression ptrs.
  * @param dname: pointer to (start of) dname.
  */
 void dname_print(FILE* out, struct sldns_buffer* pkt, uint8_t* dname);
 
-/** 
+/**
  * Debug helper. Print dname to given string buffer (string buffer must
  * be at least 255 chars + 1 for the 0, in printable form.
  * This may lose information (? for nonprintable characters, or & if
@@ -281,7 +281,7 @@ int dname_is_wild(uint8_t* dname);
  * @param mlabs: number of labels that matched exactly (the shared topdomain).
  * @return: 0 for equal, -1 smaller, or +1 d1 larger than d2.
  */
-int dname_canon_lab_cmp(uint8_t* d1, int labs1, uint8_t* d2, int labs2, 
+int dname_canon_lab_cmp(uint8_t* d1, int labs1, uint8_t* d2, int labs2,
 	int* mlabs);
 
 /**

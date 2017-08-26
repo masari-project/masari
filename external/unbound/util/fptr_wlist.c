@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -38,7 +38,7 @@
  *
  * This file contains functions that check function pointers.
  * The functions contain a whitelist of known good callback values.
- * Any other values lead to an error. 
+ * Any other values lead to an error.
  *
  * Due to the listing nature, this file violates all the modularization
  * boundaries in the program.
@@ -87,7 +87,7 @@
 #include "edns-subnet/subnetmod.h"
 #endif
 
-int 
+int
 fptr_whitelist_comm_point(comm_point_callback_type *fptr)
 {
 	if(fptr == &worker_handle_request) return 1;
@@ -97,7 +97,7 @@ fptr_whitelist_comm_point(comm_point_callback_type *fptr)
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_comm_point_raw(comm_point_callback_type *fptr)
 {
 	if(fptr == &tube_handle_listen) return 1;
@@ -107,7 +107,7 @@ fptr_whitelist_comm_point_raw(comm_point_callback_type *fptr)
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_comm_timer(void (*fptr)(void*))
 {
 	if(fptr == &pending_udp_timer_cb) return 1;
@@ -121,7 +121,7 @@ fptr_whitelist_comm_timer(void (*fptr)(void*))
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_comm_signal(void (*fptr)(int, void*))
 {
 	if(fptr == &worker_sighandler) return 1;
@@ -140,7 +140,7 @@ int fptr_whitelist_stop_accept(void (*fptr)(void*))
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_event(void (*fptr)(int, short, void *))
 {
 	if(fptr == &comm_point_udp_callback) return 1;
@@ -159,7 +159,7 @@ fptr_whitelist_event(void (*fptr)(int, short, void *))
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_pending_udp(comm_point_callback_type *fptr)
 {
 	if(fptr == &serviced_udp_callback) return 1;
@@ -168,7 +168,7 @@ fptr_whitelist_pending_udp(comm_point_callback_type *fptr)
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_pending_tcp(comm_point_callback_type *fptr)
 {
 	if(fptr == &serviced_tcp_callback) return 1;
@@ -177,7 +177,7 @@ fptr_whitelist_pending_tcp(comm_point_callback_type *fptr)
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_serviced_query(comm_point_callback_type *fptr)
 {
 	if(fptr == &worker_handle_service_reply) return 1;
@@ -185,7 +185,7 @@ fptr_whitelist_serviced_query(comm_point_callback_type *fptr)
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_rbtree_cmp(int (*fptr) (const void *, const void *))
 {
 	if(fptr == &mesh_state_compare) return 1;
@@ -212,7 +212,7 @@ fptr_whitelist_rbtree_cmp(int (*fptr) (const void *, const void *))
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_hash_sizefunc(lruhash_sizefunc_type fptr)
 {
 	if(fptr == &msgreply_sizefunc) return 1;
@@ -228,7 +228,7 @@ fptr_whitelist_hash_sizefunc(lruhash_sizefunc_type fptr)
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_hash_compfunc(lruhash_compfunc_type fptr)
 {
 	if(fptr == &query_info_compare) return 1;
@@ -241,7 +241,7 @@ fptr_whitelist_hash_compfunc(lruhash_compfunc_type fptr)
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_hash_delkeyfunc(lruhash_delkeyfunc_type fptr)
 {
 	if(fptr == &query_entry_delete) return 1;
@@ -254,7 +254,7 @@ fptr_whitelist_hash_delkeyfunc(lruhash_delkeyfunc_type fptr)
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_hash_deldatafunc(lruhash_deldatafunc_type fptr)
 {
 	if(fptr == &reply_info_delete) return 1;
@@ -269,7 +269,7 @@ fptr_whitelist_hash_deldatafunc(lruhash_deldatafunc_type fptr)
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_hash_markdelfunc(lruhash_markdelfunc_type fptr)
 {
 	if(fptr == NULL) return 1;
@@ -278,7 +278,7 @@ fptr_whitelist_hash_markdelfunc(lruhash_markdelfunc_type fptr)
 }
 
 /** whitelist env->send_query callbacks */
-int 
+int
 fptr_whitelist_modenv_send_query(struct outbound_entry* (*fptr)(
 	struct query_info* qinfo, uint16_t flags, int dnssec, int want_dnssec,
 	int nocaps, struct sockaddr_storage* addr, socklen_t addrlen,
@@ -289,7 +289,7 @@ fptr_whitelist_modenv_send_query(struct outbound_entry* (*fptr)(
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_modenv_detach_subs(void (*fptr)(
         struct module_qstate* qstate))
 {
@@ -297,7 +297,7 @@ fptr_whitelist_modenv_detach_subs(void (*fptr)(
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_modenv_attach_sub(int (*fptr)(
         struct module_qstate* qstate, struct query_info* qinfo,
         uint16_t qflags, int prime, int valrec, struct module_qstate** newq))
@@ -306,23 +306,23 @@ fptr_whitelist_modenv_attach_sub(int (*fptr)(
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_modenv_kill_sub(void (*fptr)(struct module_qstate* newq))
 {
 	if(fptr == &mesh_state_delete) return 1;
 	return 0;
 }
 
-int 
-fptr_whitelist_modenv_detect_cycle(int (*fptr)(        
-	struct module_qstate* qstate, struct query_info* qinfo,         
+int
+fptr_whitelist_modenv_detect_cycle(int (*fptr)(
+	struct module_qstate* qstate, struct query_info* qinfo,
 	uint16_t flags, int prime, int valrec))
 {
 	if(fptr == &mesh_detect_cycle) return 1;
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_mod_init(int (*fptr)(struct module_env* env, int id))
 {
 	if(fptr == &iter_init) return 1;
@@ -341,7 +341,7 @@ fptr_whitelist_mod_init(int (*fptr)(struct module_env* env, int id))
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_mod_deinit(void (*fptr)(struct module_env* env, int id))
 {
 	if(fptr == &iter_deinit) return 1;
@@ -360,7 +360,7 @@ fptr_whitelist_mod_deinit(void (*fptr)(struct module_env* env, int id))
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_mod_operate(void (*fptr)(struct module_qstate* qstate,
         enum module_ev event, int id, struct outbound_entry* outbound))
 {
@@ -380,7 +380,7 @@ fptr_whitelist_mod_operate(void (*fptr)(struct module_qstate* qstate,
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_mod_inform_super(void (*fptr)(
         struct module_qstate* qstate, int id, struct module_qstate* super))
 {
@@ -400,7 +400,7 @@ fptr_whitelist_mod_inform_super(void (*fptr)(
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_mod_clear(void (*fptr)(struct module_qstate* qstate,
         int id))
 {
@@ -420,7 +420,7 @@ fptr_whitelist_mod_clear(void (*fptr)(struct module_qstate* qstate,
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_mod_get_mem(size_t (*fptr)(struct module_env* env, int id))
 {
 	if(fptr == &iter_get_mem) return 1;
@@ -439,7 +439,7 @@ fptr_whitelist_mod_get_mem(size_t (*fptr)(struct module_env* env, int id))
 	return 0;
 }
 
-int 
+int
 fptr_whitelist_alloc_cleanup(void (*fptr)(void*))
 {
 	if(fptr == &worker_alloc_cleanup) return 1;

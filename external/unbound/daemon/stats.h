@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -72,7 +72,7 @@ struct server_stats {
 	size_t num_queries_prefetch;
 
 	/**
-	 * Sum of the querylistsize of the worker for 
+	 * Sum of the querylistsize of the worker for
 	 * every query that missed cache. To calculate average.
 	 */
 	size_t sum_query_list_size;
@@ -136,7 +136,7 @@ struct server_stats {
 	size_t tcp_accept_usage;
 	/** answers served from expired cache */
 	size_t zero_ttl_responses;
-	/** histogram data exported to array 
+	/** histogram data exported to array
 	 * if the array is the same size, no data is lost, and
 	 * if all histograms are same size (is so by default) then
 	 * adding up works well. */
@@ -162,7 +162,7 @@ struct server_stats {
 #endif
 };
 
-/** 
+/**
  * Statistics to send over the control pipe when asked
  * This struct is made to be memcpied, sent in binary.
  */
@@ -186,7 +186,7 @@ struct stats_info {
 	double mesh_time_median;
 };
 
-/** 
+/**
  * Initialize server stats to 0.
  * @param stats: what to init (this is alloced by the caller).
  * @param cfg: with extended statistics option.
@@ -221,7 +221,7 @@ void server_stats_obtain(struct worker* worker, struct worker* who,
  * @param reset: if true, depending on config stats are reset.
  * 	if false, statistics are not reset.
  */
-void server_stats_compile(struct worker* worker, struct stats_info* s, 
+void server_stats_compile(struct worker* worker, struct stats_info* s,
 	int reset);
 
 /**
@@ -249,7 +249,7 @@ void server_stats_add(struct stats_info* total, struct stats_info* a);
  * @param repinfo: reply info with remote address
  */
 void server_stats_insquery(struct server_stats* stats, struct comm_point* c,
-	uint16_t qtype, uint16_t qclass, struct edns_data* edns, 
+	uint16_t qtype, uint16_t qclass, struct edns_data* edns,
 	struct comm_reply* repinfo);
 
 /**

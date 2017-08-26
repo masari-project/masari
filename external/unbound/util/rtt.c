@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -57,7 +57,7 @@ calc_rto(const struct rtt_info* rtt)
 	return rto;
 }
 
-void 
+void
 rtt_init(struct rtt_info* rtt)
 {
 	rtt->srtt = 0;
@@ -67,13 +67,13 @@ rtt_init(struct rtt_info* rtt)
 	/* first RTO is 0 + 4*0.094 = 0.376 seconds */
 }
 
-int 
+int
 rtt_timeout(const struct rtt_info* rtt)
 {
 	return rtt->rto;
 }
 
-int 
+int
 rtt_unclamped(const struct rtt_info* rtt)
 {
 	if(calc_rto(rtt) != rtt->rto) {
@@ -84,7 +84,7 @@ rtt_unclamped(const struct rtt_info* rtt)
 	return rtt->srtt + 4*rtt->rttvar;
 }
 
-void 
+void
 rtt_update(struct rtt_info* rtt, int ms)
 {
 	int delta = ms - rtt->srtt;
@@ -95,7 +95,7 @@ rtt_update(struct rtt_info* rtt, int ms)
 	rtt->rto = calc_rto(rtt);
 }
 
-void 
+void
 rtt_lost(struct rtt_info* rtt, int orig)
 {
 	/* exponential backoff */

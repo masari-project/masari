@@ -1,22 +1,22 @@
 /*
  * pythonmod_utils.h: utils header file
- * 
+ *
  * Copyright (c) 2009, Zdenek Vasicek (vasicek AT fit.vutbr.cz)
  *                     Marek Vavrusa  (xvavru00 AT stud.fit.vutbr.cz)
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  *    * Redistributions of source code must retain the above copyright notice,
  *      this list of conditions and the following disclaimer.
- * 
+ *
  *    * Redistributions in binary form must reproduce the above copyright notice,
  *      this list of conditions and the following disclaimer in the documentation
  *      and/or other materials provided with the distribution.
- * 
+ *
  *    * Neither the name of the organization nor the names of its
  *      contributors may be used to endorse or promote products derived from this
  *      software without specific prior written permission.
@@ -72,7 +72,7 @@ void invalidateQueryInCache(struct module_qstate* qstate, struct query_info* qin
  *  Create response according to the ldns packet content
  *
  *  This function fills qstate.return_msg up with data of a given packet
- * 
+ *
  * @param qstate: module environment
  * @param pkt: a sldns_buffer which contains sldns_packet data
  * @return 0 on failure, out of memory or parse error.

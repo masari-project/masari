@@ -31,9 +31,9 @@
 #include <sys/sysctl.h>
 #endif
 #ifdef __ANDROID__
-#include <sys/vfs.h> 
-#define statvfs statfs 
-#define fstatvfs fstatfs 
+#include <sys/vfs.h>
+#define statvfs statfs
+#define fstatvfs fstatfs
 #else
 #include <sys/statvfs.h>
 #endif

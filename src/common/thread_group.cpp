@@ -39,7 +39,7 @@ namespace tools
 {
 std::size_t thread_group::optimal() {
   static_assert(
-    std::numeric_limits<unsigned>::max() <= std::numeric_limits<std::size_t>::max(), 
+    std::numeric_limits<unsigned>::max() <= std::numeric_limits<std::size_t>::max(),
     "unexpected truncation"
   );
   const std::size_t hardware = get_max_concurrency();
@@ -148,6 +148,6 @@ void thread_group::data::dispatch(std::function<void()> f) {
     last->ptr = std::move(latest);
     last = latest_node;
   }
-  has_work.notify_one(); 
+  has_work.notify_one();
 }
 }

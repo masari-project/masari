@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -55,7 +55,7 @@ rrset_markdel(void* key)
 	r->id = 0;
 }
 
-struct rrset_cache* rrset_cache_create(struct config_file* cfg, 
+struct rrset_cache* rrset_cache_create(struct config_file* cfg,
 	struct alloc_cache* alloc)
 {
 	size_t slabs = (cfg?cfg->rrset_cache_slabs:HASH_DEFAULT_SLABS);
@@ -71,13 +71,13 @@ struct rrset_cache* rrset_cache_create(struct config_file* cfg,
 
 void rrset_cache_delete(struct rrset_cache* r)
 {
-	if(!r) 
+	if(!r)
 		return;
 	slabhash_delete(&r->table);
 	/* slabhash delete also does free(r), since table is first in struct*/
 }
 
-struct rrset_cache* rrset_cache_adjust(struct rrset_cache *r, 
+struct rrset_cache* rrset_cache_adjust(struct rrset_cache *r,
 	struct config_file* cfg, struct alloc_cache* alloc)
 {
 	if(!r || !cfg || cfg->rrset_cache_slabs != r->table.size ||
@@ -89,13 +89,13 @@ struct rrset_cache* rrset_cache_adjust(struct rrset_cache *r,
 	return r;
 }
 
-void 
+void
 rrset_cache_touch(struct rrset_cache* r, struct ub_packed_rrset_key* key,
         hashvalue_type hash, rrset_id_type id)
 {
 	struct lruhash* table = slabhash_gettable(&r->table, hash);
-	/* 
-	 * This leads to locking problems, deadlocks, if the caller is 
+	/*
+	 * This leads to locking problems, deadlocks, if the caller is
 	 * holding any other rrset lock.
 	 * Because a lookup through the hashtable does:
 	 *	tablelock -> entrylock  (for that entry caller holds)
@@ -125,20 +125,20 @@ need_to_update_rrset(void* nd, void* cd, time_t timenow, int equal, int ns)
 {
 	struct packed_rrset_data* newd = (struct packed_rrset_data*)nd;
 	struct packed_rrset_data* cached = (struct packed_rrset_data*)cd;
-	/* 	o store if rrset has been validated 
-	 *  		everything better than bogus data 
+	/* 	o store if rrset has been validated
+	 *  		everything better than bogus data
 	 *  		secure is preferred */
 	if( newd->security == sec_status_secure &&
 		cached->security != sec_status_secure)
 		return 1;
-	if( cached->security == sec_status_bogus && 
+	if( cached->security == sec_status_bogus &&
 		newd->security != sec_status_bogus && !equal)
 		return 1;
         /*      o if current RRset is more trustworthy - insert it */
         if( newd->trust > cached->trust ) {
 		/* if the cached rrset is bogus, and this one equal,
 		 * do not update the TTL - let it expire. */
-		if(equal && cached->ttl >= timenow && 
+		if(equal && cached->ttl >= timenow &&
 			cached->security == sec_status_bogus)
 			return 0;
                 return 1;
@@ -180,7 +180,7 @@ rrset_update_id(struct rrset_ref* ref, struct alloc_cache* alloc)
 	lock_rw_unlock(&ref->key->entry.lock);
 }
 
-int 
+int
 rrset_cache_update(struct rrset_cache* r, struct rrset_ref* ref,
 	struct alloc_cache* alloc, time_t timenow)
 {
@@ -198,7 +198,7 @@ rrset_cache_update(struct rrset_cache* r, struct rrset_ref* ref,
 		 * the passed key in favor of the already stored key.
 		 * because of the small gap (see below) this key ptr and id
 		 * may prove later to be already deleted, which is no problem
-		 * as it only makes a cache miss. 
+		 * as it only makes a cache miss.
 		 */
 		ref->key = (struct ub_packed_rrset_key*)e->key;
 		ref->id = ref->key->id;
@@ -224,10 +224,10 @@ rrset_cache_update(struct rrset_cache* r, struct rrset_ref* ref,
 	log_assert(ref->key->id != 0);
 	slabhash_insert(&r->table, h, &k->entry, k->entry.data, alloc);
 	if(e) {
-		/* For NSEC, NSEC3, DNAME, when rdata is updated, update 
-		 * the ID number so that proofs in message cache are 
+		/* For NSEC, NSEC3, DNAME, when rdata is updated, update
+		 * the ID number so that proofs in message cache are
 		 * invalidated */
-		if((rrset_type == LDNS_RR_TYPE_NSEC 
+		if((rrset_type == LDNS_RR_TYPE_NSEC
 			|| rrset_type == LDNS_RR_TYPE_NSEC3
 			|| rrset_type == LDNS_RR_TYPE_DNAME) && !equal) {
 			rrset_update_id(ref, alloc);
@@ -237,8 +237,8 @@ rrset_cache_update(struct rrset_cache* r, struct rrset_ref* ref,
 	return 0;
 }
 
-struct ub_packed_rrset_key* 
-rrset_cache_lookup(struct rrset_cache* r, uint8_t* qname, size_t qnamelen, 
+struct ub_packed_rrset_key*
+rrset_cache_lookup(struct rrset_cache* r, uint8_t* qname, size_t qnamelen,
 	uint16_t qtype, uint16_t qclass, uint32_t flags, time_t timenow,
 	int wr)
 {
@@ -257,7 +257,7 @@ rrset_cache_lookup(struct rrset_cache* r, uint8_t* qname, size_t qnamelen,
 
 	if((e = slabhash_lookup(&r->table, key.entry.hash, &key, wr))) {
 		/* check TTL */
-		struct packed_rrset_data* data = 
+		struct packed_rrset_data* data =
 			(struct packed_rrset_data*)e->data;
 		if(timenow > data->ttl) {
 			lock_rw_unlock(&e->lock);
@@ -269,7 +269,7 @@ rrset_cache_lookup(struct rrset_cache* r, uint8_t* qname, size_t qnamelen,
 	return NULL;
 }
 
-int 
+int
 rrset_array_lock(struct rrset_ref* ref, size_t count, time_t timenow)
 {
 	size_t i;
@@ -288,7 +288,7 @@ rrset_array_lock(struct rrset_ref* ref, size_t count, time_t timenow)
 	return 1;
 }
 
-void 
+void
 rrset_array_unlock(struct rrset_ref* ref, size_t count)
 {
 	size_t i;
@@ -299,7 +299,7 @@ rrset_array_unlock(struct rrset_ref* ref, size_t count)
 	}
 }
 
-void 
+void
 rrset_array_unlock_touch(struct rrset_cache* r, struct regional* scratch,
 	struct rrset_ref* ref, size_t count)
 {
@@ -328,11 +328,11 @@ rrset_array_unlock_touch(struct rrset_cache* r, struct regional* scratch,
 	}
 }
 
-void 
-rrset_update_sec_status(struct rrset_cache* r, 
+void
+rrset_update_sec_status(struct rrset_cache* r,
 	struct ub_packed_rrset_key* rrset, time_t now)
 {
-	struct packed_rrset_data* updata = 
+	struct packed_rrset_data* updata =
 		(struct packed_rrset_data*)rrset->entry.data;
 	struct lruhash_entry* e;
 	struct packed_rrset_data* cachedata;
@@ -367,11 +367,11 @@ rrset_update_sec_status(struct rrset_cache* r,
 	lock_rw_unlock(&e->lock);
 }
 
-void 
-rrset_check_sec_status(struct rrset_cache* r, 
+void
+rrset_check_sec_status(struct rrset_cache* r,
 	struct ub_packed_rrset_key* rrset, time_t now)
 {
-	struct packed_rrset_data* updata = 
+	struct packed_rrset_data* updata =
 		(struct packed_rrset_data*)rrset->entry.data;
 	struct lruhash_entry* e;
 	struct packed_rrset_data* cachedata;
@@ -395,7 +395,7 @@ rrset_check_sec_status(struct rrset_cache* r,
 			for(i=0; i<cachedata->count+cachedata->rrsig_count; i++)
 				if(cachedata->rr_ttl[i] < now)
 					updata->rr_ttl[i] = 0;
-				else updata->rr_ttl[i] = 
+				else updata->rr_ttl[i] =
 					cachedata->rr_ttl[i]-now;
 		}
 		if(cachedata->trust > updata->trust)

@@ -14,7 +14,7 @@ struct sldns_file_parse_state;
 
 /**
  * \file
- * 
+ *
  * This is a debugging aid. It is not efficient, especially
  * with a long config file, but it can give any reply to any query.
  * This can help the developer pre-script replies for queries.
@@ -45,7 +45,7 @@ struct sldns_file_parse_state;
 	; 'qtype' makes the query match the qtype from the reply
 	; 'qname' makes the query match the qname from the reply
 	; 'subdomain' makes the query match subdomains of qname from the reply
-	; 'serial=1023' makes the query match if ixfr serial is 1023. 
+	; 'serial=1023' makes the query match if ixfr serial is 1023.
 	; 'all' has to match header byte for byte and all rrs in packet.
 	; 'ttl' used with all, rrs in packet must also have matching TTLs.
 	; 'DO' will match only queries with DO bit set.
@@ -89,8 +89,8 @@ struct sldns_file_parse_state;
 				; are ignored. Only copy_id is done.
 	HEX_ANSWER_END
 	HEX_EDNS_BEGIN		; follow with hex data.
-				; Raw EDNS data to match against. It must be an 
-				; exact match (all options are matched) and will be 
+				; Raw EDNS data to match against. It must be an
+				; exact match (all options are matched) and will be
 				; evaluated only when 'MATCH ednsdata' given.
 	HEX_EDNS_END
 	ENTRY_END
@@ -158,7 +158,7 @@ struct reply_packet {
 	/** or reply pkt in hex if not parsable */
 	struct sldns_buffer* reply_from_hex;
 	/** seconds to sleep before giving packet */
-	unsigned int packet_sleep; 
+	unsigned int packet_sleep;
 };
 
 /** data structure to keep the canned queries in.
@@ -167,11 +167,11 @@ struct entry {
 	/* match */
 	/* How to match an incoming query with this canned reply */
 	/** match query opcode with answer opcode */
-	uint8_t match_opcode; 
+	uint8_t match_opcode;
 	/** match qtype with answer qtype */
-	uint8_t match_qtype;  
+	uint8_t match_qtype;
 	/** match qname with answer qname */
-	uint8_t match_qname;  
+	uint8_t match_qname;
 	/** match rcode with answer rcode */
 	uint8_t match_rcode;
 	/** match question section */
@@ -179,9 +179,9 @@ struct entry {
 	/** match answer section */
 	uint8_t match_answer;
 	/** match qname as subdomain of answer qname */
-	uint8_t match_subdomain;  
+	uint8_t match_subdomain;
 	/** match SOA serial number, from auth section */
-	uint8_t match_serial; 
+	uint8_t match_serial;
 	/** match all of the packet */
 	uint8_t match_all;
 	/** match ttls in the packet */
@@ -193,23 +193,23 @@ struct entry {
 	/** match edns data field given in hex */
 	uint8_t match_ednsdata_raw;
 	/** match query serial with this value. */
-	uint32_t ixfr_soa_serial; 
+	uint32_t ixfr_soa_serial;
 	/** match on UDP/TCP */
-	enum transport_type match_transport; 
+	enum transport_type match_transport;
 
 	/** pre canned reply */
 	struct reply_packet *reply_list;
 
 	/** how to adjust the reply packet */
 	/** copy over the ID from the query into the answer */
-	uint8_t copy_id; 
+	uint8_t copy_id;
 	/** copy the query nametypeclass from query into the answer */
 	uint8_t copy_query;
 	/** copy ednsdata to reply, assume it is clientsubnet and
 	 * adjust scopemask to match sourcemask */
 	uint8_t copy_ednsdata_assume_clientsubnet;
 	/** in seconds */
-	unsigned int sleeptime; 
+	unsigned int sleeptime;
 
 	/** some number that names this entry, line number in file or so */
 	int lineno;
@@ -219,7 +219,7 @@ struct entry {
 };
 
 /**
- * reads the canned reply file and returns a list of structs 
+ * reads the canned reply file and returns a list of structs
  * does an exit on error.
  * @param name: name of the file to read.
  * @param skip_whitespace: skip leftside whitespace.
@@ -240,7 +240,7 @@ void delete_entry(struct entry* list);
  * @param skip_whitespace: skip leftside whitespace.
  * @return: The entry read (malloced) or NULL if no entry could be read.
  */
-struct entry* read_entry(FILE* in, const char* name, 
+struct entry* read_entry(FILE* in, const char* name,
 	struct sldns_file_parse_state* pstate, int skip_whitespace);
 
 /**
@@ -270,7 +270,7 @@ void adjust_packet(struct entry* match, uint8_t** answer_pkt,
 	size_t* answer_pkt_len, uint8_t* query_pkt, size_t query_pkt_len);
 
 /**
- * Parses data buffer to a query, finds the correct answer 
+ * Parses data buffer to a query, finds the correct answer
  * and calls the given function for every packet to send.
  * if verbose_out filename is given, packets are dumped there.
  * @param inbuf: the packet that came in
@@ -282,8 +282,8 @@ void adjust_packet(struct entry* match, uint8_t** answer_pkt,
  * @param userdata: userarg to give to sendfunc.
  * @param verbose_out: if not NULL, verbose messages are printed there.
  */
-void handle_query(uint8_t* inbuf, ssize_t inlen, struct entry* entries, 
-	int* count, enum transport_type transport, 
+void handle_query(uint8_t* inbuf, ssize_t inlen, struct entry* entries,
+	int* count, enum transport_type transport,
 	void (*sendfunc)(uint8_t*, size_t, void*), void* userdata,
 	FILE* verbose_out);
 

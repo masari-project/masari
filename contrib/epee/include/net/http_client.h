@@ -1,6 +1,6 @@
 // Copyright (c) 2006-2013, Andrey N. Sabelnikov, www.sabelnikov.net
 // All rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // * Redistributions of source code must retain the above copyright
@@ -11,7 +11,7 @@
 // * Neither the name of the Andrey N. Sabelnikov nor the
 // names of its contributors may be used to endorse or promote products
 // derived from this software without specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -22,7 +22,7 @@
 // ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-// 
+//
 
 
 
@@ -42,11 +42,11 @@
 
 #ifdef HTTP_ENABLE_GZIP
 #include "gzip_encoding.h"
-#endif 
+#endif
 
 #include "string_tools.h"
 #include "reg_exp_definer.h"
-#include "http_base.h" 
+#include "http_base.h"
 #include "http_auth.h"
 #include "to_nonconst_iterator.h"
 #include "net_parse_helpers.h"
@@ -66,9 +66,9 @@ namespace epee
 namespace net_utils
 {
 
-using namespace std; 
+using namespace std;
 
-	/*struct url 
+	/*struct url
 	{
 	public:
 		void parse(const std::string& url_s)
@@ -132,7 +132,7 @@ using namespace std;
 		return false;
 	}
 	
-	static inline 
+	static inline
 		std::string dec_to_hex(char num, int radix)
 	{
 		int temp=0;
@@ -163,7 +163,7 @@ using namespace std;
 		return csTmp;
 	}
 	static inline int get_index(const char *s, char c) { const char *ptr = (const char*)memchr(s, c, 16); return ptr ? ptr-s : -1; }
-	static inline 
+	static inline
 		std::string hex_to_dec_2bytes(const char *s)
 	{
 		const char *hex = get_hex_vals();
@@ -345,7 +345,7 @@ using namespace std;
         return true;
       }
 			//---------------------------------------------------------------------------
-			inline 
+			inline
 				bool invoke_get(const boost::string_ref uri, std::chrono::milliseconds timeout, const std::string& body = std::string(), const http_response_info** ppresponse_info = NULL, const fields_list& additional_params = fields_list())
 			{
 					CRITICAL_REGION_LOCAL(m_lock);
@@ -427,7 +427,7 @@ using namespace std;
 				CRITICAL_REGION_LOCAL(m_lock);
 				return invoke(uri, "POST", body, timeout, ppresponse_info, additional_params);
 			}
-		private: 
+		private:
 			//---------------------------------------------------------------------------
 			inline bool handle_reciev(std::chrono::milliseconds timeout)
 			{
@@ -495,7 +495,7 @@ using namespace std;
 			inline
 				bool handle_header(std::string& recv_buff, bool& need_more_data)
 			{
- 
+
 				CRITICAL_REGION_LOCAL(m_lock);
         if(!recv_buff.size())
         {
@@ -743,10 +743,10 @@ using namespace std;
 			//---------------------------------------------------------------------------
 			inline
 				bool parse_header(http_header_info& body_info, const std::string& m_cache_to_process)
-			{ 
+			{
 				MTRACE("http_stream_filter::parse_cached_header(*)");
 				
-				STATIC_REGEXP_EXPR_1(rexp_mach_field, 
+				STATIC_REGEXP_EXPR_1(rexp_mach_field,
 					"\n?((Connection)|(Referer)|(Content-Length)|(Content-Type)|(Transfer-Encoding)|(Content-Encoding)|(Host)|(Cookie)|(User-Agent)"
 					//  12            3         4                5              6                   7                  8      9        10
 					"|([\\w-]+?)) ?: ?((.*?)(\r?\n))[^\t ]",	
@@ -760,7 +760,7 @@ using namespace std;
 
 
 				//lookup all fields and fill well-known fields
-				while( boost::regex_search( it_current_bound, it_end_bound, result, rexp_mach_field, boost::match_default) && result[0].matched) 
+				while( boost::regex_search( it_current_bound, it_end_bound, result, rexp_mach_field, boost::match_default) && result[0].matched)
 				{
 					const size_t field_val = 13;
 					//const size_t field_etc_name = 11;
@@ -802,7 +802,7 @@ using namespace std;
 
 				//First line response, look like this:  "HTTP/1.1 200 OK"
 				STATIC_REGEXP_EXPR_1(rexp_match_first_response_line, "^HTTP/(\\d+).(\\d+) ((\\d)\\d{2})( [^\n]*)?\r?\n", boost::regex::icase | boost::regex::normal);
-				//															1      2      34           5        
+				//															1      2      34           5
 				//size_t match_len = 0;
 				boost::smatch result;
 				if(boost::regex_search( m_header_cache, result, rexp_match_first_response_line, boost::match_default) && result[0].matched)
@@ -836,7 +836,7 @@ using namespace std;
           return false;
 #endif
 				}
-				else 
+				else
 				{
 					m_pcontent_encoding_handler.reset(new do_nothing_sub_handler(this));
 				}
@@ -862,8 +862,8 @@ using namespace std;
 
 
 
-				if(!m_len_in_summary && ((m_response_info.m_response_code>=100&&m_response_info.m_response_code<200) 
-					|| 204 == m_response_info.m_response_code 
+				if(!m_len_in_summary && ((m_response_info.m_response_code>=100&&m_response_info.m_response_code<200)
+					|| 204 == m_response_info.m_response_code
 					|| 304 == m_response_info.m_response_code) )
 				{//There will be no response body, server will display the local page with error
 					m_state = reciev_machine_state_done;
@@ -882,7 +882,7 @@ using namespace std;
 					return true;
 				}
 				else if(!m_response_info.m_header_info.m_content_length.empty())
-				{ 
+				{
 					//In the response header the length was specified
 					if(!content_len_valid)
 					{
@@ -914,10 +914,10 @@ using namespace std;
 					m_state = reciev_machine_state_error;
 					MERROR("Undefinded transfer type, consider http_body_transfer_connection_close method. header: " << m_header_cache);
 					return false;
-				} 
+				}
 				return false;
 			}
-			inline 
+			inline
 				bool is_connection_close_field(const std::string& str)
 			{
 				STATIC_REGEXP_EXPR_1(rexp_match_close, "^\\s*close", boost::regex::icase | boost::regex::normal);
@@ -941,7 +941,7 @@ using namespace std;
 						boundary = result[6];
 					else if(result[7].matched)
 						boundary = result[7];
-					else 
+					else
 					{
 						LOG_ERROR("Failed to match boundary in content-type=" << head_info.m_content_type);
 						return false;

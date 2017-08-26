@@ -2,24 +2,24 @@
  * testcode/checklocks.c - wrapper on locks that checks access.
  *
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
- * 
+ *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -43,10 +43,10 @@
  * Locks that are checked.
  *
  * Ugly hack: uses the fact that workers start with an int thread_num, and
- * are passed to thread_create to make the thread numbers here the same as 
+ * are passed to thread_create to make the thread numbers here the same as
  * those used for logging which is nice.
  *
- * Todo: 
+ * Todo:
  *	 - debug status print, of thread lock stacks, and current waiting.
  */
 #ifdef USE_THREAD_DEBUG
@@ -73,14 +73,14 @@ static pid_t check_lock_pid;
 static void total_debug_info(void);
 
 /** print pretty lock error and exit */
-static void lock_error(struct checked_lock* lock, 
+static void lock_error(struct checked_lock* lock,
 	const char* func, const char* file, int line, const char* err)
 {
 	log_err("lock error (description follows)");
-	log_err("Created at %s %s:%d", lock->create_func, 
+	log_err("Created at %s %s:%d", lock->create_func,
 		lock->create_file, lock->create_line);
 	if(lock->holder_func && lock->holder_file)
-		log_err("Previously %s %s:%d", lock->holder_func, 
+		log_err("Previously %s %s:%d", lock->holder_func,
 			lock->holder_file, lock->holder_line);
 	log_err("At %s %s:%d", func, file, line);
 	log_err("Error for %s lock: %s",
@@ -92,16 +92,16 @@ static void lock_error(struct checked_lock* lock,
 	fatal_exit("bailing out");
 }
 
-/** 
+/**
  * Obtain lock on debug lock structure. This could be a deadlock by the caller.
- * The debug code itself does not deadlock. Anyway, check with timeouts. 
+ * The debug code itself does not deadlock. Anyway, check with timeouts.
  * @param lock: on what to acquire lock.
  * @param func: user level caller identification.
  * @param file: user level caller identification.
  * @param line: user level caller identification.
  */
 static void
-acquire_locklock(struct checked_lock* lock, 
+acquire_locklock(struct checked_lock* lock,
 	const char* func, const char* file, int line)
 {
 	struct timespec to;
@@ -127,7 +127,7 @@ acquire_locklock(struct checked_lock* lock,
 }
 
 /** add protected region */
-void 
+void
 lock_protect(void *p, void* area, size_t size)
 {
 	struct checked_lock* lock = *(struct checked_lock**)p;
@@ -154,7 +154,7 @@ lock_unprotect(void* mangled, void* area)
 {
 	struct checked_lock* lock = *(struct checked_lock**)mangled;
 	struct protected_area* p, **prevp;
-	if(!lock) 
+	if(!lock)
 		return;
 	acquire_locklock(lock, __func__, __FILE__, __LINE__);
 	p = lock->prot;
@@ -173,14 +173,14 @@ lock_unprotect(void* mangled, void* area)
 	LOCKRET(pthread_mutex_unlock(&lock->lock));
 }
 
-/** 
- * Check protected memory region. Memory compare. Exit on error. 
+/**
+ * Check protected memory region. Memory compare. Exit on error.
  * @param lock: which lock to check.
  * @param func: location we are now (when failure is detected).
  * @param file: location we are now (when failure is detected).
  * @param line: location we are now (when failure is detected).
  */
-static void 
+static void
 prot_check(struct checked_lock* lock,
 	const char* func, const char* file, int line)
 {
@@ -189,7 +189,7 @@ prot_check(struct checked_lock* lock,
 		if(memcmp(p->hold, p->region, p->size) != 0) {
 			log_hex("memory prev", p->hold, p->size);
 			log_hex("memory here", p->region, p->size);
-			lock_error(lock, func, file, line, 
+			lock_error(lock, func, file, line,
 				"protected area modified");
 		}
 		p = p->next;
@@ -197,7 +197,7 @@ prot_check(struct checked_lock* lock,
 }
 
 /** Copy protected memory region */
-static void 
+static void
 prot_store(struct checked_lock* lock)
 {
 	struct protected_area* p = lock->prot;
@@ -208,7 +208,7 @@ prot_store(struct checked_lock* lock)
 }
 
 /** get memory held by lock */
-size_t 
+size_t
 lock_get_mem(void* pp)
 {
 	size_t s;
@@ -237,15 +237,15 @@ ordercheck_locklock(struct thr_check* thr, struct checked_lock* lock)
 	info[2] = lock->create_thread;
 	info[3] = lock->create_instance;
 	if(fwrite(info, 4*sizeof(int), 1, thr->order_info) != 1 ||
-		fwrite(lock->holder_file, strlen(lock->holder_file)+1, 1, 
+		fwrite(lock->holder_file, strlen(lock->holder_file)+1, 1,
 		thr->order_info) != 1 ||
-		fwrite(&lock->holder_line, sizeof(int), 1, 
+		fwrite(&lock->holder_line, sizeof(int), 1,
 		thr->order_info) != 1)
 		log_err("fwrite: %s", strerror(errno));
 }
 
 /** write ordercheck lock creation details to file */
-static void 
+static void
 ordercheck_lockcreate(struct thr_check* thr, struct checked_lock* lock)
 {
 	/* write: <ffff = create> <lock id> <file> <line> */
@@ -253,23 +253,23 @@ ordercheck_lockcreate(struct thr_check* thr, struct checked_lock* lock)
 	if(!check_locking_order) return;
 
 	if( fwrite(&cmd, sizeof(int), 1, thr->order_info) != 1 ||
-		fwrite(&lock->create_thread, sizeof(int), 1, 
+		fwrite(&lock->create_thread, sizeof(int), 1,
 			thr->order_info) != 1 ||
-		fwrite(&lock->create_instance, sizeof(int), 1, 
+		fwrite(&lock->create_instance, sizeof(int), 1,
 			thr->order_info) != 1 ||
-		fwrite(lock->create_file, strlen(lock->create_file)+1, 1, 
+		fwrite(lock->create_file, strlen(lock->create_file)+1, 1,
 			thr->order_info) != 1 ||
-		fwrite(&lock->create_line, sizeof(int), 1, 
+		fwrite(&lock->create_line, sizeof(int), 1,
 		thr->order_info) != 1)
 		log_err("fwrite: %s", strerror(errno));
 }
 
 /** alloc struct, init lock empty */
-void 
+void
 checklock_init(enum check_lock_type type, struct checked_lock** lock,
         const char* func, const char* file, int line)
 {
-	struct checked_lock* e = (struct checked_lock*)calloc(1, 
+	struct checked_lock* e = (struct checked_lock*)calloc(1,
 		sizeof(struct checked_lock));
 	struct thr_check *thr = (struct thr_check*)pthread_getspecific(
 		thr_debug_key);
@@ -312,7 +312,7 @@ checklock_init(enum check_lock_type type, struct checked_lock** lock,
 }
 
 /** delete prot items */
-static void 
+static void
 prot_clear(struct checked_lock* lock)
 {
 	struct protected_area* p=lock->prot, *np;
@@ -325,12 +325,12 @@ prot_clear(struct checked_lock* lock)
 }
 
 /** check if type is OK for the lock given */
-static void 
+static void
 checktype(enum check_lock_type type, struct checked_lock* lock,
         const char* func, const char* file, int line)
 {
-	if(!lock) 
-		fatal_exit("use of null/deleted lock at %s %s:%d", 
+	if(!lock)
+		fatal_exit("use of null/deleted lock at %s %s:%d",
 			func, file, line);
 	if(type != lock->type) {
 		lock_error(lock, func, file, line, "wrong lock type");
@@ -338,13 +338,13 @@ checktype(enum check_lock_type type, struct checked_lock* lock,
 }
 
 /** check if OK, free struct */
-void 
+void
 checklock_destroy(enum check_lock_type type, struct checked_lock** lock,
         const char* func, const char* file, int line)
 {
 	const size_t contention_interest = 1; /* promille contented locks */
 	struct checked_lock* e;
-	if(!lock) 
+	if(!lock)
 		return;
 	e = *lock;
 	if(!e)
@@ -366,7 +366,7 @@ checklock_destroy(enum check_lock_type type, struct checked_lock** lock,
 	   1000*e->contention_count/e->history_count > contention_interest) {
 		log_info("lock created %s %s %d has contention %u of %u (%d%%)",
 			e->create_func, e->create_file, e->create_line,
-			(unsigned int)e->contention_count, 
+			(unsigned int)e->contention_count,
 			(unsigned int)e->history_count,
 			(int)(100*e->contention_count/e->history_count));
 	}
@@ -374,7 +374,7 @@ checklock_destroy(enum check_lock_type type, struct checked_lock** lock,
 	/* delete it */
 	LOCKRET(pthread_mutex_destroy(&e->lock));
 	prot_clear(e);
-	/* since nobody holds the lock - see check above, no need to unlink 
+	/* since nobody holds the lock - see check above, no need to unlink
 	 * from the thread-held locks list. */
 	switch(e->type) {
 		case check_lock_mutex:
@@ -394,7 +394,7 @@ checklock_destroy(enum check_lock_type type, struct checked_lock** lock,
 }
 
 /** finish acquiring lock, shared between _(rd|wr||)lock() routines */
-static void 
+static void
 finish_acquire_lock(struct thr_check* thr, struct checked_lock* lock,
         const char* func, const char* file, int line)
 {
@@ -433,7 +433,7 @@ finish_acquire_lock(struct thr_check* thr, struct checked_lock* lock,
  * @param exclusive: if lock must be exclusive (only one allowed).
  * @param getwr: if attempts to get writelock (or readlock) for rwlocks.
  */
-static void 
+static void
 checklock_lockit(enum check_lock_type type, struct checked_lock* lock,
         const char* func, const char* file, int line,
 	int (*tryfunc)(void*), int (*timedfunc)(void*, struct timespec*),
@@ -449,7 +449,7 @@ checklock_lockit(enum check_lock_type type, struct checked_lock* lock,
 	acquire_locklock(lock, func, file, line);
 	lock->wait_count ++;
 	thr->waiting = lock;
-	if(exclusive && lock->hold_count > 0 && lock->holder == thr) 
+	if(exclusive && lock->hold_count > 0 && lock->holder == thr)
 		lock_error(lock, func, file, line, "thread already owns lock");
 	if(type==check_lock_rwlock && getwr && lock->writeholder == thr)
 		lock_error(lock, func, file, line, "thread already has wrlock");
@@ -463,7 +463,7 @@ checklock_lockit(enum check_lock_type type, struct checked_lock* lock,
 		to.tv_nsec = 0;
 		if((err=timedfunc(arg, &to))) {
 			if(err == ETIMEDOUT)
-				lock_error(lock, func, file, line, 
+				lock_error(lock, func, file, line,
 					"timeout possible deadlock");
 			log_err("timedlock: %s", strerror(err));
 		}
@@ -498,7 +498,7 @@ static int timed_rd(void* arg, struct timespec* to)
 { return pthread_rwlock_timedrdlock((pthread_rwlock_t*)arg, to); }
 
 /** check if OK, lock */
-void 
+void
 checklock_rdlock(enum check_lock_type type, struct checked_lock* lock,
         const char* func, const char* file, int line)
 {
@@ -518,7 +518,7 @@ static int timed_wr(void* arg, struct timespec* to)
 { return pthread_rwlock_timedwrlock((pthread_rwlock_t*)arg, to); }
 
 /** check if OK, lock */
-void 
+void
 checklock_wrlock(enum check_lock_type type, struct checked_lock* lock,
         const char* func, const char* file, int line)
 {
@@ -555,7 +555,7 @@ static int timed_spinlock(void* arg, struct timespec* to)
 }
 
 /** check if OK, lock */
-void 
+void
 checklock_lock(enum check_lock_type type, struct checked_lock* lock,
         const char* func, const char* file, int line)
 {
@@ -570,7 +570,7 @@ checklock_lock(enum check_lock_type type, struct checked_lock* lock,
 		case check_lock_spinlock:
 			/* void* cast needed because 'volatile' on some OS */
 			checklock_lockit(type, lock, func, file, line,
-				try_spinlock, timed_spinlock, 
+				try_spinlock, timed_spinlock,
 				(void*)&lock->u.spinlock, 1, 0);
 			break;
 		default:
@@ -579,7 +579,7 @@ checklock_lock(enum check_lock_type type, struct checked_lock* lock,
 }
 
 /** check if OK, unlock */
-void 
+void
 checklock_unlock(enum check_lock_type type, struct checked_lock* lock,
         const char* func, const char* file, int line)
 {
@@ -649,7 +649,7 @@ checklock_unlock(enum check_lock_type type, struct checked_lock* lock,
 }
 
 /** open order info debug file, thr->num must be valid */
-static void 
+static void
 open_lockorder(struct thr_check* thr)
 {
 	char buf[24];
@@ -662,8 +662,8 @@ open_lockorder(struct thr_check* thr)
 	t = time(NULL);
 	/* write: <time_stamp> <runpid> <thread_num> */
 	if(fwrite(&t, sizeof(t), 1, thr->order_info) != 1 ||
-		fwrite(&thr->num, sizeof(thr->num), 1, thr->order_info) != 1 || 
-		fwrite(&check_lock_pid, sizeof(check_lock_pid), 1, 
+		fwrite(&thr->num, sizeof(thr->num), 1, thr->order_info) != 1 ||
+		fwrite(&check_lock_pid, sizeof(check_lock_pid), 1,
 		thr->order_info) != 1)
 		log_err("fwrite: %s", strerror(errno));
 }
@@ -671,7 +671,7 @@ open_lockorder(struct thr_check* thr)
 /** checklock thread main, Inits thread structure */
 static void* checklock_main(void* arg)
 {
-	struct thr_check* thr = (struct thr_check*)arg; 
+	struct thr_check* thr = (struct thr_check*)arg;
 	void* ret;
 	thr->id = pthread_self();
 	/* Hack to get same numbers as in log file */
@@ -698,7 +698,7 @@ void checklock_start(void)
 	if(key_deleted)
 		return;
 	if(!key_created) {
-		struct thr_check* thisthr = (struct thr_check*)calloc(1, 
+		struct thr_check* thisthr = (struct thr_check*)calloc(1,
 			sizeof(struct thr_check));
 		if(!thisthr)
 			fatal_exit("thrcreate: out of memory");
@@ -731,10 +731,10 @@ void checklock_stop(void)
 }
 
 /** allocate debug info and create thread */
-void 
+void
 checklock_thrcreate(pthread_t* id, void* (*func)(void*), void* arg)
 {
-	struct thr_check* thr = (struct thr_check*)calloc(1, 
+	struct thr_check* thr = (struct thr_check*)calloc(1,
 		sizeof(struct thr_check));
 	if(!thr)
 		fatal_exit("thrcreate: out of memory");
@@ -764,14 +764,14 @@ lock_debug_info(struct checked_lock* lock)
 {
 	if(!lock) return;
 	log_info("+++ Lock %llx, %d %d create %s %s %d",
-		(unsigned long long)(size_t)lock, 
-		lock->create_thread, lock->create_instance, 
+		(unsigned long long)(size_t)lock,
+		lock->create_thread, lock->create_instance,
 		lock->create_func, lock->create_file, lock->create_line);
 	log_info("lock type: %s",
 		(lock->type==check_lock_mutex)?"mutex": (
 		(lock->type==check_lock_spinlock)?"spinlock": (
 		(lock->type==check_lock_rwlock)?"rwlock": "badtype")));
-	log_info("lock contention %u, history:%u, hold:%d, wait:%d", 
+	log_info("lock contention %u, history:%u, hold:%d, wait:%d",
 		(unsigned)lock->contention_count, (unsigned)lock->history_count,
 		lock->hold_count, lock->wait_count);
 	log_info("last touch %s %s %d", lock->holder_func, lock->holder_file,
@@ -801,11 +801,11 @@ thread_debug_info(struct thr_check* thr)
 	log_info("pthread id is %x", (int)thr->id);
 	log_info("thread func is %llx", (unsigned long long)(size_t)thr->func);
 	log_info("thread arg is %llx (%d)",
-		(unsigned long long)(size_t)thr->arg, 
+		(unsigned long long)(size_t)thr->arg,
 		(thr->arg?*(int*)thr->arg:0));
 	log_info("thread num is %d", thr->num);
 	log_info("locks created %d", thr->locks_created);
-	log_info("open file for lockinfo: %s", 
+	log_info("open file for lockinfo: %s",
 		thr->order_info?"yes, flushing":"no");
 	fflush(thr->order_info);
 	w = thr->waiting;
@@ -814,7 +814,7 @@ thread_debug_info(struct thr_check* thr)
 	log_info("thread waiting for a lock: %s %llx", w?"yes":"no",
 		(unsigned long long)(size_t)w);
 	lock_debug_info(w);
-	log_info("thread holding first: %s, last: %s", f?"yes":"no", 
+	log_info("thread holding first: %s, last: %s", f?"yes":"no",
 		l?"yes":"no");
 	held_debug_info(thr, f);
 }
@@ -845,7 +845,7 @@ static RETSIGTYPE joinalarm(int ATTR_UNUSED(sig))
 }
 
 /** wait for thread with a timeout */
-void 
+void
 checklock_thrjoin(pthread_t thread)
 {
 	/* wait with a timeout */

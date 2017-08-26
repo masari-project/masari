@@ -14,7 +14,7 @@
  * Contains functions that translate dns data from the wire format (as sent
  * by servers and clients) to the internal structures for the packet header.
  */
- 
+
 #ifndef LDNS_PKTHDR_H
 #define LDNS_PKTHDR_H
 

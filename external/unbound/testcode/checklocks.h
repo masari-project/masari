@@ -2,24 +2,24 @@
  * testcode/checklocks.h - wrapper on locks that checks access.
  *
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
- * 
+ *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -93,7 +93,7 @@ struct protected_area {
 };
 
 /**
- * Per thread information for locking debug wrappers. 
+ * Per thread information for locking debug wrappers.
  */
 struct thr_check {
 	/** thread id */
@@ -108,7 +108,7 @@ struct thr_check {
 	int locks_created;
 	/** file to write locking order information to */
 	FILE* order_info;
-	/** 
+	/**
 	 * List of locks that this thread is holding, double
 	 * linked list. The first element is the most recent lock acquired.
 	 * So it represents the stack of locks acquired. (of all types).
@@ -183,7 +183,7 @@ struct checked_lock {
  * @param size: length of area.
  * You can call it multiple times with the same lock to give several areas.
  * Call it when you are done initialising the area, since it will be copied
- * at this time and protected right away against unauthorised changes until 
+ * at this time and protected right away against unauthorised changes until
  * the next lock() call is done.
  */
 void lock_protect(void* lock, void* area, size_t size);
@@ -294,7 +294,7 @@ void checklock_thrcreate(pthread_t* thr, void* (*func)(void*), void* arg);
  */
 void checklock_thrjoin(pthread_t thread);
 
-/** structures to enable compiler type checking on the locks. 
+/** structures to enable compiler type checking on the locks.
  * Also the pointer makes it so that the lock can be part of the protected
  * region without any possible problem (since the ptr will stay the same.)
  * i.e. there can be contention and readlocks stored in checked_lock, while

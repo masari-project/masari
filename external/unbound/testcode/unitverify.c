@@ -35,7 +35,7 @@
  */
 /**
  * \file
- * Calls verification unit tests. Exits with code 1 on a failure. 
+ * Calls verification unit tests. Exits with code 1 on a failure.
  */
 
 #include "config.h"
@@ -81,14 +81,14 @@ entry_to_buf(struct entry* e, sldns_buffer* pkt)
 
 /** entry to reply info conversion */
 static void
-entry_to_repinfo(struct entry* e, struct alloc_cache* alloc, 
-	struct regional* region, sldns_buffer* pkt, struct query_info* qi, 
+entry_to_repinfo(struct entry* e, struct alloc_cache* alloc,
+	struct regional* region, sldns_buffer* pkt, struct query_info* qi,
 	struct reply_info** rep)
 {
 	int ret;
 	struct edns_data edns;
 	entry_to_buf(e, pkt);
-	/* lock alloc lock to please lock checking software. 
+	/* lock alloc lock to please lock checking software.
 	 * alloc_special_obtain assumes it is talking to a ub-alloc,
 	 * and does not need to perform locking. Here the alloc is
 	 * the only one, so we lock it here */
@@ -104,8 +104,8 @@ entry_to_repinfo(struct entry* e, struct alloc_cache* alloc,
 }
 
 /** extract DNSKEY rrset from answer and convert it */
-static struct ub_packed_rrset_key* 
-extract_keys(struct entry* e, struct alloc_cache* alloc, 
+static struct ub_packed_rrset_key*
+extract_keys(struct entry* e, struct alloc_cache* alloc,
 	struct regional* region, sldns_buffer* pkt)
 {
 	struct ub_packed_rrset_key* dnskey = NULL;
@@ -173,7 +173,7 @@ setup_sigalg(struct ub_packed_rrset_key* dnskey, uint8_t* sigalg)
 
 /** verify and test one rrset against the key rrset */
 static void
-verifytest_rrset(struct module_env* env, struct val_env* ve, 
+verifytest_rrset(struct module_env* env, struct val_env* ve,
 	struct ub_packed_rrset_key* rrset, struct ub_packed_rrset_key* dnskey,
 	struct query_info* qinfo)
 {
@@ -200,9 +200,9 @@ verifytest_rrset(struct module_env* env, struct val_env* ve,
 
 /** verify and test an entry - every rr in the message */
 static void
-verifytest_entry(struct entry* e, struct alloc_cache* alloc, 
-	struct regional* region, sldns_buffer* pkt, 
-	struct ub_packed_rrset_key* dnskey, struct module_env* env, 
+verifytest_entry(struct entry* e, struct alloc_cache* alloc,
+	struct regional* region, sldns_buffer* pkt,
+	struct ub_packed_rrset_key* dnskey, struct module_env* env,
 	struct val_env* ve)
 {
 	struct query_info qinfo;
@@ -240,7 +240,7 @@ find_rrset_type(struct reply_info* rep, uint16_t type)
 
 /** DS sig test an entry - get DNSKEY and DS in entry and verify */
 static void
-dstest_entry(struct entry* e, struct alloc_cache* alloc, 
+dstest_entry(struct entry* e, struct alloc_cache* alloc,
 	struct regional* region, sldns_buffer* pkt, struct module_env* env)
 {
 	struct query_info qinfo;
@@ -285,7 +285,7 @@ dstest_entry(struct entry* e, struct alloc_cache* alloc,
 static void
 verifytest_file(const char* fname, const char* at_date)
 {
-	/* 
+	/*
 	 * The file contains a list of ldns-testpkts entries.
 	 * The first entry must be a query for DNSKEY.
 	 * The answer rrset is the keyset that will be used for verification
@@ -312,7 +312,7 @@ verifytest_file(const char* fname, const char* at_date)
 	unit_assert(region && buf);
 	dnskey = extract_keys(list, &alloc, region, buf);
 	if(vsig) log_nametypeclass(VERB_QUERY, "test dnskey",
-			dnskey->rk.dname, ntohs(dnskey->rk.type), 
+			dnskey->rk.dname, ntohs(dnskey->rk.type),
 			ntohs(dnskey->rk.rrset_class));
 	/* ready to go! */
 	for(e = list->next; e; e = e->next) {
@@ -330,7 +330,7 @@ verifytest_file(const char* fname, const char* at_date)
 static void
 dstest_file(const char* fname)
 {
-	/* 
+	/*
 	 * The file contains a list of ldns-testpkts entries.
 	 * The first entry must be a query for DNSKEY.
 	 * The answer rrset is the keyset that will be used for verification
@@ -413,7 +413,7 @@ nsectest(void)
 /** Test hash algo - NSEC3 hash it and compare result */
 static void
 nsec3_hash_test_entry(struct entry* e, rbtree_type* ct,
-	struct alloc_cache* alloc, struct regional* region, 
+	struct alloc_cache* alloc, struct regional* region,
 	sldns_buffer* buf)
 {
 	struct query_info qinfo;
@@ -446,7 +446,7 @@ nsec3_hash_test_entry(struct entry* e, rbtree_type* ct,
 		hash->b32 && hash->b32_len);
 	unit_assert(hash->b32_len == (size_t)answer->rk.dname[0]);
 	/* does not do lowercasing. */
-	unit_assert(memcmp(hash->b32, answer->rk.dname+1, hash->b32_len) 
+	unit_assert(memcmp(hash->b32, answer->rk.dname+1, hash->b32_len)
 		== 0);
 
 	reply_info_parsedelete(rep, alloc);
@@ -458,7 +458,7 @@ nsec3_hash_test_entry(struct entry* e, rbtree_type* ct,
 static void
 nsec3_hash_test(const char* fname)
 {
-	/* 
+	/*
 	 * The list contains a list of ldns-testpkts entries.
 	 * Every entry is a test.
 	 * 	The qname is hashed.
@@ -492,7 +492,7 @@ nsec3_hash_test(const char* fname)
 	sldns_buffer_free(buf);
 }
 
-void 
+void
 verify_test(void)
 {
 	unit_show_feature("signature verify");

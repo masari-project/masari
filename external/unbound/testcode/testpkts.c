@@ -63,13 +63,13 @@ static void error(const char* msg, ...)
 /** return if string is empty or comment */
 static int isendline(char c)
 {
-	if(c == ';' || c == '#' 
+	if(c == ';' || c == '#'
 		|| c == '\n' || c == 0)
 		return 1;
 	return 0;
 }
 
-/** true if the string starts with the keyword given. Moves the str ahead. 
+/** true if the string starts with the keyword given. Moves the str ahead.
  * @param str: before keyword, afterwards after keyword and spaces.
  * @param keyword: the keyword to match
  * @return: true if keyword present. False otherwise, and str unchanged.
@@ -88,7 +88,7 @@ static int str_keyword(char** str, const char* keyword)
 
 /** Add reply packet to entry */
 static struct reply_packet*
-entry_add_reply(struct entry* entry) 
+entry_add_reply(struct entry* entry)
 {
 	struct reply_packet* pkt = (struct reply_packet*)malloc(
 		sizeof(struct reply_packet));
@@ -111,7 +111,7 @@ static void matchline(char* line, struct entry* e)
 {
 	char* parse = line;
 	while(*parse) {
-		if(isendline(*parse)) 
+		if(isendline(*parse))
 			return;
 		if(str_keyword(&parse, "opcode")) {
 			e->match_opcode = 1;
@@ -147,7 +147,7 @@ static void matchline(char* line, struct entry* e)
 				error("expected = or : in MATCH: %s", line);
 			parse++;
 			e->ixfr_soa_serial = (uint32_t)strtol(parse, (char**)&parse, 10);
-			while(isspace((unsigned char)*parse)) 
+			while(isspace((unsigned char)*parse))
 				parse++;
 		} else {
 			error("could not parse MATCH: '%s'", parse);
@@ -162,7 +162,7 @@ static void replyline(char* line, uint8_t* reply, size_t reply_len,
 	char* parse = line;
 	if(reply_len < LDNS_HEADER_SIZE) error("packet too short for header");
 	while(*parse) {
-		if(isendline(*parse)) 
+		if(isendline(*parse))
 			return;
 			/* opcodes */
 		if(str_keyword(&parse, "QUERY")) {
@@ -222,12 +222,12 @@ static void replyline(char* line, uint8_t* reply, size_t reply_len,
 }
 
 /** parse ADJUST line */
-static void adjustline(char* line, struct entry* e, 
+static void adjustline(char* line, struct entry* e,
 	struct reply_packet* pkt)
 {
 	char* parse = line;
 	while(*parse) {
-		if(isendline(*parse)) 
+		if(isendline(*parse))
 			return;
 		if(str_keyword(&parse, "copy_id")) {
 			e->copy_id = 1;
@@ -237,11 +237,11 @@ static void adjustline(char* line, struct entry* e,
 			e->copy_ednsdata_assume_clientsubnet = 1;
 		} else if(str_keyword(&parse, "sleep=")) {
 			e->sleeptime = (unsigned int) strtol(parse, (char**)&parse, 10);
-			while(isspace((unsigned char)*parse)) 
+			while(isspace((unsigned char)*parse))
 				parse++;
 		} else if(str_keyword(&parse, "packet_sleep=")) {
 			pkt->packet_sleep = (unsigned int) strtol(parse, (char**)&parse, 10);
-			while(isspace((unsigned char)*parse)) 
+			while(isspace((unsigned char)*parse))
 				parse++;
 		} else {
 			error("could not parse ADJUST: '%s'", parse);
@@ -291,7 +291,7 @@ static size_t
 hexstr2bin(char *hexstr, int len, uint8_t *buf, size_t offset, size_t buf_len)
 {
 	char c;
-	int i; 
+	int i;
 	uint8_t int8 = 0;
 	int sec = 0;
 	size_t bufpos = 0;
@@ -306,15 +306,15 @@ hexstr2bin(char *hexstr, int len, uint8_t *buf, size_t offset, size_t buf_len)
 		/* case insensitive, skip spaces */
 		if (c != ' ') {
 			if (c >= '0' && c <= '9') {
-				int8 += c & 0x0f;  
+				int8 += c & 0x0f;
 			} else if (c >= 'a' && c <= 'z') {
-				int8 += (c & 0x0f) + 9;   
+				int8 += (c & 0x0f) + 9;
 			} else if (c >= 'A' && c <= 'Z') {
-				int8 += (c & 0x0f) + 9;   
+				int8 += (c & 0x0f) + 9;
 			} else {
 				return 0;
 			}
-			 
+			
 			if (sec == 0) {
 				int8 = int8 << 4;
 				sec = 1;
@@ -322,7 +322,7 @@ hexstr2bin(char *hexstr, int len, uint8_t *buf, size_t offset, size_t buf_len)
 				if (bufpos + offset + 1 <= buf_len) {
 					buf[bufpos+offset] = int8;
 					int8 = 0;
-					sec = 0; 
+					sec = 0;
 					bufpos++;
 				} else {
 					fprintf(stderr, "Buffer too small in hexstr2bin");
@@ -381,7 +381,7 @@ hex_buffer2wire(sldns_buffer *data_buffer)
 					state = 1;
 				} else if (c == ' ' || c == '\t' || c == '\n') {
 					/* skip whitespace */
-				} 
+				}
 				break;
 			case 1:
 				if (c == '\n' || c == EOF) {
@@ -428,7 +428,7 @@ hex_buffer2wire(sldns_buffer *data_buffer)
 }	
 
 /** parse ORIGIN */
-static void 
+static void
 get_origin(const char* name, struct sldns_file_parse_state* pstate, char* parse)
 {
 	/* snip off rest of the text so as to make the parse work in ldns */
@@ -545,7 +545,7 @@ read_entry(FILE* in, const char* name, struct sldns_file_parse_state* pstate,
 			continue; /* skip comment and empty lines */
 		if(str_keyword(&parse, "ENTRY_BEGIN")) {
 			if(current) {
-				error("%s line %d: previous entry does not ENTRY_END", 
+				error("%s line %d: previous entry does not ENTRY_END",
 					name, pstate->lineno);
 			}
 			current = new_entry();
@@ -562,7 +562,7 @@ read_entry(FILE* in, const char* name, struct sldns_file_parse_state* pstate,
 
 		/* working inside an entry */
 		if(!current) {
-			error("%s line %d: expected ENTRY_BEGIN but got %s", 
+			error("%s line %d: expected ENTRY_BEGIN but got %s",
 				name, pstate->lineno, line);
 		}
 		if(str_keyword(&parse, "MATCH")) {
@@ -656,7 +656,7 @@ read_entry(FILE* in, const char* name, struct sldns_file_parse_state* pstate,
 }
 
 /* reads the canned reply file and returns a list of structs */
-struct entry* 
+struct entry*
 read_datafile(const char* name, int skip_whitespace)
 {
 	struct entry* list = NULL;
@@ -1403,7 +1403,7 @@ match_ednsdata(uint8_t* q, size_t qlen, uint8_t* p, size_t plen)
 }
 
 /* finds entry in list, or returns NULL */
-struct entry* 
+struct entry*
 find_match(struct entry* entries, uint8_t* query_pkt, size_t len,
 	enum transport_type transport)
 {
@@ -1414,7 +1414,7 @@ find_match(struct entry* entries, uint8_t* query_pkt, size_t len,
 		verbose(3, "comparepkt: ");
 		reply = p->reply_list->reply_pkt;
 		rlen = p->reply_list->reply_len;
-		if(p->match_opcode && get_opcode(query_pkt, len) != 
+		if(p->match_opcode && get_opcode(query_pkt, len) !=
 			get_opcode(reply, rlen)) {
 			verbose(3, "bad opcode\n");
 			continue;
@@ -1473,7 +1473,7 @@ find_match(struct entry* entries, uint8_t* query_pkt, size_t len,
 			verbose(3, "bad; EDNS OPT present\n");
 			continue;
 		}
-		if(p->match_ednsdata_raw && 
+		if(p->match_ednsdata_raw &&
 				!match_ednsdata(query_pkt, len, reply, rlen)) {
 			verbose(3, "bad EDNS data match.\n");
 			continue;
@@ -1599,7 +1599,7 @@ adjust_packet(struct entry* match, uint8_t** answer_pkt, size_t *answer_len,
 }
 
 /*
- * Parses data buffer to a query, finds the correct answer 
+ * Parses data buffer to a query, finds the correct answer
  * and calls the given function for every packet to send.
  */
 void
@@ -1613,7 +1613,7 @@ handle_query(uint8_t* inbuf, ssize_t inlen, struct entry* entries, int* count,
 	struct entry* entry = NULL;
 
 	verbose(1, "query %d: id %d: %s %d bytes: ", ++(*count),
-		(int)(inlen>=2?LDNS_ID_WIRE(inbuf):0), 
+		(int)(inlen>=2?LDNS_ID_WIRE(inbuf):0),
 		(transport==transport_tcp)?"TCP":"UDP", (int)inlen);
 	if(verbose_out) {
 		char* out = sldns_wire2str_pkt(inbuf, (size_t)inlen);
@@ -1654,7 +1654,7 @@ handle_query(uint8_t* inbuf, ssize_t inlen, struct entry* entries, int* count,
 			free(out);
 		}
 		if(p->packet_sleep) {
-			verbose(3, "sleeping for next packet %d secs\n", 
+			verbose(3, "sleeping for next packet %d secs\n",
 				p->packet_sleep);
 #ifdef HAVE_SLEEP
 			sleep(p->packet_sleep);

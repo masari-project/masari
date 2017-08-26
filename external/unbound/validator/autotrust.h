@@ -4,22 +4,22 @@
  * Copyright (c) 2009, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -60,7 +60,7 @@ typedef enum {
 	AUTR_STATE_REMOVED = 5
 } autr_state_type;
 
-/** 
+/**
  * Autotrust metadata for one trust anchor key.
  */
 struct autr_ta {
@@ -82,7 +82,7 @@ struct autr_ta {
 	uint8_t revoked;
 };
 
-/** 
+/**
  * Autotrust metadata for a trust point.
  * This is part of the struct trust_anchor data.
  */
@@ -95,7 +95,7 @@ struct autr_point_data {
 	/** the keys */
 	struct autr_ta* keys;
 
-	/** last queried DNSKEY set 
+	/** last queried DNSKEY set
 	 * Not all failures are captured in this entry.
 	 * If the validator did not even start (e.g. timeout or localservfail),
 	 * then the last_queried and query_failed values are not updated.
@@ -111,7 +111,7 @@ struct autr_point_data {
 	/** when to retry if failed */
 	time_t retry_time;
 
-	/** 
+	/**
 	 * How many times did it fail. diagnostic only (has no effect).
 	 * Only updated if there was a dnskey rrset that failed to verify.
 	 */
@@ -120,7 +120,7 @@ struct autr_point_data {
 	uint8_t revoked;
 };
 
-/** 
+/**
  * Autotrust global metadata.
  */
 struct autr_global_data {
@@ -202,7 +202,7 @@ int autr_process_prime(struct module_env* env, struct val_env* ve,
 void autr_debug_print(struct val_anchors* anchors);
 
 /** callback for query answer to 5011 probe */
-void probe_answer_cb(void* arg, int rcode, struct sldns_buffer* buf, 
+void probe_answer_cb(void* arg, int rcode, struct sldns_buffer* buf,
 	enum sec_status sec, char* errinf);
 
 #endif /* VALIDATOR_AUTOTRUST_H */

@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -68,7 +68,7 @@ struct config_strlist;
 #define VAL_MAX_RESTART_COUNT 5
 
 /**
- * Global state for the validator. 
+ * Global state for the validator.
  */
 struct val_env {
 	/** key cache; these are validated keys. trusted keys only
@@ -89,7 +89,7 @@ struct val_env {
 	int32_t skew_max;
 
 	/** TTL for bogus data; used instead of untrusted TTL from data.
-	 * Bogus data will not be verified more often than this interval. 
+	 * Bogus data will not be verified more often than this interval.
 	 * seconds. */
 	uint32_t bogus_ttl;
 
@@ -151,7 +151,7 @@ enum val_state {
  * Per query state for the validator module.
  */
 struct val_qstate {
-	/** 
+	/**
 	 * State of the validator module.
 	 */
 	enum val_state state;
@@ -177,14 +177,14 @@ struct val_qstate {
 	 * The chased reply, extract from original message. Can be:
 	 * 	o CNAME
 	 * 	o DNAME + CNAME
-	 * 	o answer 
+	 * 	o answer
 	 * 	plus authority, additional (nsecs) that have same signature.
 	 */
 	struct reply_info* chase_reply;
 
 	/**
 	 * The cname skip value; the number of rrsets that have been skipped
-	 * due to chasing cnames. This is the offset into the 
+	 * due to chasing cnames. This is the offset into the
 	 * orig_msg->rep->rrsets array, into the answer section.
 	 * starts at 0 - for the full original message.
 	 * if it is >0 - qchase followed the cname, chase_reply setup to be
@@ -269,9 +269,9 @@ void val_deinit(struct module_env* env, int id);
 void val_operate(struct module_qstate* qstate, enum module_ev event, int id,
         struct outbound_entry* outbound);
 
-/** 
+/**
  * inform validator super.
- * 
+ *
  * @param qstate: query state that finished.
  * @param id: module id.
  * @param super: the qstate to inform.
@@ -283,9 +283,9 @@ void val_inform_super(struct module_qstate* qstate, int id,
 void val_clear(struct module_qstate* qstate, int id);
 
 /**
- * Debug helper routine that assists worker in determining memory in 
+ * Debug helper routine that assists worker in determining memory in
  * use.
- * @param env: module environment 
+ * @param env: module environment
  * @param id: module id.
  * @return memory in use in bytes.
  */

@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -70,7 +70,7 @@ query_dname_len(sldns_buffer* query)
 	}
 }
 
-size_t 
+size_t
 dname_valid(uint8_t* dname, size_t maxlen)
 {
 	size_t len = 0;
@@ -94,7 +94,7 @@ dname_valid(uint8_t* dname, size_t maxlen)
 }
 
 /** compare uncompressed, noncanonical, registers are hints for speed */
-int 
+int
 query_dname_compare(register uint8_t* d1, register uint8_t* d2)
 {
 	register uint8_t lab1, lab2;
@@ -113,7 +113,7 @@ query_dname_compare(register uint8_t* d1, register uint8_t* d2)
 		/* compare lowercased labels. */
 		while(lab1--) {
 			/* compare bytes first for speed */
-			if(*d1 != *d2 && 
+			if(*d1 != *d2 &&
 				tolower((unsigned char)*d1) != tolower((unsigned char)*d2)) {
 				if(tolower((unsigned char)*d1) < tolower((unsigned char)*d2))
 					return -1;
@@ -129,7 +129,7 @@ query_dname_compare(register uint8_t* d1, register uint8_t* d2)
 	return 0;
 }
 
-void 
+void
 query_dname_tolower(uint8_t* dname)
 {
 	/* the dname is stored uncompressed */
@@ -145,7 +145,7 @@ query_dname_tolower(uint8_t* dname)
 	}
 }
 
-void 
+void
 pkt_dname_tolower(sldns_buffer* pkt, uint8_t* dname)
 {
 	uint8_t lablen;
@@ -155,7 +155,7 @@ pkt_dname_tolower(sldns_buffer* pkt, uint8_t* dname)
 	lablen = *dname++;
 	while(lablen) {
 		if(LABEL_IS_PTR(lablen)) {
-			if((size_t)PTR_OFFSET(lablen, *dname) 
+			if((size_t)PTR_OFFSET(lablen, *dname)
 				>= sldns_buffer_limit(pkt))
 				return;
 			dname = sldns_buffer_at(pkt, PTR_OFFSET(lablen, *dname));
@@ -227,7 +227,7 @@ pkt_dname_len(sldns_buffer* pkt)
 	return len;
 }
 
-int 
+int
 dname_pkt_compare(sldns_buffer* pkt, uint8_t* d1, uint8_t* d2)
 {
 	uint8_t len1, len2;
@@ -361,7 +361,7 @@ void dname_print(FILE* out, struct sldns_buffer* pkt, uint8_t* dname)
 	if(!dname) return;
 
 	lablen = *dname++;
-	if(!lablen) 
+	if(!lablen)
 		fputc('.', out);
 	while(lablen) {
 		if(LABEL_IS_PTR(lablen)) {
@@ -385,7 +385,7 @@ void dname_print(FILE* out, struct sldns_buffer* pkt, uint8_t* dname)
 	}
 }
 
-int 
+int
 dname_count_labels(uint8_t* dname)
 {
 	uint8_t lablen;
@@ -400,7 +400,7 @@ dname_count_labels(uint8_t* dname)
 	return labs;
 }
 
-int 
+int
 dname_count_size_labels(uint8_t* dname, size_t* size)
 {	
 	uint8_t lablen;
@@ -440,7 +440,7 @@ memlowercmp(uint8_t* p1, uint8_t* p2, uint8_t len)
 	return 0;
 }
 
-int 
+int
 dname_lab_cmp(uint8_t* d1, int labs1, uint8_t* d2, int labs2, int* mlabs)
 {
 	uint8_t len1, len2;
@@ -482,13 +482,13 @@ dname_lab_cmp(uint8_t* d1, int labs1, uint8_t* d2, int labs2, int* mlabs)
 			d2 += len2;
 		} else {
 			/* memlowercmp is inlined here; or just like
-			 * if((c=memlowercmp(d1, d2, len1)) != 0) { 
+			 * if((c=memlowercmp(d1, d2, len1)) != 0) {
 			 *	lastdiff = c;
 			 *	lastmlabs = atlabel; } apart from d1++,d2++ */
 			while(len1) {
-				if(*d1 != *d2 && tolower((unsigned char)*d1) 
+				if(*d1 != *d2 && tolower((unsigned char)*d1)
 					!= tolower((unsigned char)*d2)) {
-					if(tolower((unsigned char)*d1) < 
+					if(tolower((unsigned char)*d1) <
 						tolower((unsigned char)*d2)) {
 						lastdiff = -1;
 						lastmlabs = atlabel;
@@ -523,7 +523,7 @@ dname_lab_cmp(uint8_t* d1, int labs1, uint8_t* d2, int labs2, int* mlabs)
 	return lastdiff;
 }
 
-int 
+int
 dname_buffer_write(sldns_buffer* pkt, uint8_t* dname)
 {
 	uint8_t lablen;
@@ -567,8 +567,8 @@ void dname_str(uint8_t* dname, char* str)
 			return;
 		}
 		while(lablen--) {
-			if(isalnum((unsigned char)*dname) 
-				|| *dname == '-' || *dname == '_' 
+			if(isalnum((unsigned char)*dname)
+				|| *dname == '-' || *dname == '_'
 				|| *dname == '*')
 				*s++ = *(char*)dname++;
 			else	{
@@ -582,12 +582,12 @@ void dname_str(uint8_t* dname, char* str)
 	*s = 0;
 }
 
-int 
+int
 dname_strict_subdomain(uint8_t* d1, int labs1, uint8_t* d2, int labs2)
 {
 	int m;
 	/* check subdomain: d1: www.example.com. and d2: example.com. */
-	if(labs2 >= labs1) 
+	if(labs2 >= labs1)
 		return 0;
 	if(dname_lab_cmp(d1, labs1, d2, labs2, &m) > 0) {
 		/* subdomain if all labels match */
@@ -596,14 +596,14 @@ dname_strict_subdomain(uint8_t* d1, int labs1, uint8_t* d2, int labs2)
 	return 0;
 }
 
-int 
+int
 dname_strict_subdomain_c(uint8_t* d1, uint8_t* d2)
 {
 	return dname_strict_subdomain(d1, dname_count_labels(d1), d2,
 		dname_count_labels(d2));
 }
 
-int 
+int
 dname_subdomain_c(uint8_t* d1, uint8_t* d2)
 {
 	int m;
@@ -611,7 +611,7 @@ dname_subdomain_c(uint8_t* d1, uint8_t* d2)
 	/*  	or 	    d1: example.com. and d2: example.com. */
 	int labs1 = dname_count_labels(d1);
 	int labs2 = dname_count_labels(d2);
-	if(labs2 > labs1) 
+	if(labs2 > labs1)
 		return 0;
 	if(dname_lab_cmp(d1, labs1, d2, labs2, &m) < 0) {
 		/* must have been example.com , www.example.com - wrong */
@@ -621,7 +621,7 @@ dname_subdomain_c(uint8_t* d1, uint8_t* d2)
 	return (m == labs2);
 }
 
-int 
+int
 dname_is_root(uint8_t* dname)
 {
 	uint8_t len;
@@ -631,7 +631,7 @@ dname_is_root(uint8_t* dname)
 	return (len == 0);
 }
 
-void 
+void
 dname_remove_label(uint8_t** dname, size_t* len)
 {
 	size_t lablen;
@@ -645,7 +645,7 @@ dname_remove_label(uint8_t** dname, size_t* len)
 	*dname += lablen+1;
 }
 
-void 
+void
 dname_remove_labels(uint8_t** dname, size_t* len, int n)
 {
 	int i;
@@ -653,7 +653,7 @@ dname_remove_labels(uint8_t** dname, size_t* len, int n)
 		dname_remove_label(dname, len);
 }
 
-int 
+int
 dname_signame_label_count(uint8_t* dname)
 {
 	uint8_t lablen;
@@ -672,7 +672,7 @@ dname_signame_label_count(uint8_t* dname)
 	return count;
 }
 
-int 
+int
 dname_is_wild(uint8_t* dname)
 {
 	return (dname[0] == 1 && dname[1] == '*');
@@ -705,7 +705,7 @@ memcanoncmp(uint8_t* p1, uint8_t len1, uint8_t* p2, uint8_t len2)
 }
 
 
-int 
+int
 dname_canon_lab_cmp(uint8_t* d1, int labs1, uint8_t* d2, int labs2, int* mlabs)
 {
 	/* like dname_lab_cmp, but with different label comparison,

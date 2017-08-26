@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -126,10 +126,10 @@ struct ub_event_vmt {
 	/** Add event bits for this event to fire on.
 	 * The event will be deactivated before this function is called. */
 	void (*add_bits)(struct ub_event*, short);
-	/** Configure the event so it will not longer fire on given bits 
+	/** Configure the event so it will not longer fire on given bits
 	 * The event will be deactivated before this function is called. */
 	void (*del_bits)(struct ub_event*, short);
-	/** Change or set the file descriptor on the event 
+	/** Change or set the file descriptor on the event
 	 * The event will be deactivated before this function is called. */
 	void (*set_fd)(struct ub_event*, int);
 	/** Destructor for the ub_event object */
@@ -213,7 +213,7 @@ struct ub_ctx* ub_ctx_create_event(struct event_base* base);
  * @param base the new event_base to attach to the ctx
  * @return 0 if OK, else error
  */
-int ub_ctx_set_event(struct ub_ctx* ctx, struct event_base* base); 
+int ub_ctx_set_event(struct ub_ctx* ctx, struct event_base* base);
 
 /**
  * Perform resolution and validation of the target name.
@@ -249,11 +249,11 @@ int ub_ctx_set_event(struct ub_ctx* ctx, struct event_base* base);
  * 	For localdata (etc/hosts) the callback is called immediately, before
  * 	resolve_event returns, async_id=0 is returned.
  * @param async_id: if you pass a non-NULL value, an identifier number is
- *	returned for the query as it is in progress. It can be used to 
+ *	returned for the query as it is in progress. It can be used to
  *	cancel the query.
  * @return 0 if OK, else error.
  */
-int ub_resolve_event(struct ub_ctx* ctx, const char* name, int rrtype, 
+int ub_resolve_event(struct ub_ctx* ctx, const char* name, int rrtype,
 	int rrclass, void* mydata, ub_event_callback_type callback,
 	int* async_id);
 

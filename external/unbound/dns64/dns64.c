@@ -4,22 +4,22 @@
  * Copyright (c) 2009, Viagénie. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of Viagénie nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
  * TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
@@ -553,10 +553,10 @@ dns64_operate(struct module_qstate* qstate, enum module_ev event, int id,
 }
 
 static void
-dns64_synth_aaaa_data(const struct ub_packed_rrset_key* fk, 
-		      const struct packed_rrset_data* fd, 
-		      struct ub_packed_rrset_key *dk, 
-		      struct packed_rrset_data **dd_out, struct regional *region, 
+dns64_synth_aaaa_data(const struct ub_packed_rrset_key* fk,
+		      const struct packed_rrset_data* fd,
+		      struct ub_packed_rrset_key *dk,
+		      struct packed_rrset_data **dd_out, struct regional *region,
 		      struct dns64_env* dns64_env )
 {
 	struct packed_rrset_data *dd;
@@ -701,8 +701,8 @@ dns64_adjust_a(int id, struct module_qstate* super, struct module_qstate* qstate
 				return;
 			/* Delete negative AAAA record from cache stored by
 			 * the iterator module */
-			rrset_cache_remove(super->env->rrset_cache, dk->rk.dname, 
-					   dk->rk.dname_len, LDNS_RR_TYPE_AAAA, 
+			rrset_cache_remove(super->env->rrset_cache, dk->rk.dname,
+					   dk->rk.dname_len, LDNS_RR_TYPE_AAAA,
 					   LDNS_RR_CLASS_IN, 0);
 		} else {
 			dk->entry.hash = fk->entry.hash;

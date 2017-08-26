@@ -1,4 +1,4 @@
-/** 
+/**
  * strsep implementation for compatibility.
  *
   * LICENSE

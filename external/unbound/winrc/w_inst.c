@@ -4,22 +4,22 @@
  * Copyright (c) 2009, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -46,8 +46,8 @@
 void wsvc_err2str(char* str, size_t len, const char* fixed, DWORD err)
 {
 	LPTSTR buf;
-	if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | 
-		FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ALLOCATE_BUFFER, 
+	if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ALLOCATE_BUFFER,
 		NULL, err, 0, (LPTSTR)&buf, 0, NULL) == 0) {
 		/* could not format error message */
 		snprintf(str, len, "%s GetLastError=%d", fixed, (int)err);
@@ -89,7 +89,7 @@ event_reg_install(FILE* out, const char* pathname)
 		fatal_win(out, "could not create registry key");
 	
 	/* message file */
-	if(RegSetValueEx(hk, (LPCTSTR)"EventMessageFile", 
+	if(RegSetValueEx(hk, (LPCTSTR)"EventMessageFile",
 		0, /* reserved, mustbezero */
 		REG_EXPAND_SZ, /* value type (string w env subst) */
 		(BYTE*)pathname, /* data */
@@ -102,20 +102,20 @@ event_reg_install(FILE* out, const char* pathname)
 	/* event types */
 	t = EVENTLOG_SUCCESS | EVENTLOG_ERROR_TYPE | EVENTLOG_WARNING_TYPE
 		| EVENTLOG_INFORMATION_TYPE;
-	if(RegSetValueEx(hk, (LPCTSTR)"TypesSupported", 0, REG_DWORD, 
+	if(RegSetValueEx(hk, (LPCTSTR)"TypesSupported", 0, REG_DWORD,
 		(LPBYTE)&t, sizeof(t))) {
 		RegCloseKey(hk);
 		fatal_win(out, "could not registry set TypesSupported");
 	}
 
 	/* category message file */
-	if(RegSetValueEx(hk, (LPCTSTR)"CategoryMessageFile", 0, REG_EXPAND_SZ, 
+	if(RegSetValueEx(hk, (LPCTSTR)"CategoryMessageFile", 0, REG_EXPAND_SZ,
 		(BYTE*)pathname, (DWORD)strlen(pathname)+1)) {
 		RegCloseKey(hk);
 		fatal_win(out, "could not registry set CategoryMessageFile");
 	}
 	t = 1;
-	if(RegSetValueEx(hk, (LPCTSTR)"CategoryCount", 0, REG_DWORD, 
+	if(RegSetValueEx(hk, (LPCTSTR)"CategoryCount", 0, REG_DWORD,
 		(LPBYTE)&t, sizeof(t))) {
 		RegCloseKey(hk);
 		fatal_win(out, "could not registry set CategoryCount");
@@ -152,8 +152,8 @@ event_reg_remove(FILE* out)
 	if(out) fprintf(out, "removed reg entries\n");
 }
 
-/** 
- * put quotes around string. Needs one space in front 
+/**
+ * put quotes around string. Needs one space in front
  * @param out: debugfile
  * @param str: to be quoted.
  * @param maxlen: max length of the string buffer.

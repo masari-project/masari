@@ -4,22 +4,22 @@
  * Copyright (c) 2010, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -72,7 +72,7 @@
  * RFC5011-tracking with its builtin DS anchors; if that fails it
  * bootstraps the RFC5011-tracking using the certificate.  (again to avoid
  * https, and it is also faster).
- * 
+ *
  * It uses the XML file by converting it to DS records and writing that to the
  * key file.  Unbound can detect that the 'special comments' are gone, and
  * the file contains a list of normal DNSKEY/DS records, and uses that to
@@ -272,7 +272,7 @@ ub_ctx_error_exit(struct ub_ctx* ctx, const char* str, const char* str2)
 /**
  * Create a new unbound context with the commandline settings applied
  */
-static struct ub_ctx* 
+static struct ub_ctx*
 create_unbound_context(const char* res_conf, const char* root_hints,
 	const char* debugconf, int ip4only, int ip6only)
 {
@@ -858,7 +858,7 @@ process_one_header(char* buf, size_t* clen, int* chunked)
 	return 1;
 }
 
-/** 
+/**
  * Read one line from SSL
  * zero terminates.
  * skips "\r\n" (but not copied to buf).
@@ -1399,7 +1399,7 @@ xml_is_zone_name(BIO* zone, const char* name)
 	return (strncasecmp(buf, name, strlen(name)) == 0);
 }
 
-/** 
+/**
  * XML start of element. This callback is called whenever an XML tag starts.
  * XML_Char is UTF8.
  * @param userData: the xml_data structure.
@@ -2033,7 +2033,7 @@ write_builtin_anchor(const char* file)
 	fclose(out);
 }
 
-/** 
+/**
  * Check the root anchor file.
  * If does not exist, provide builtin and write file.
  * If empty, provide builtin and write file.

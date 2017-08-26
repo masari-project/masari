@@ -16,7 +16,7 @@
 #include "services/localzone.h"
 
 /**
- * Set of response IP addresses with associated actions and tags. 
+ * Set of response IP addresses with associated actions and tags.
  * Forward declaration only here.  Actual definition is hidden within the
  * module.
  */
@@ -115,7 +115,7 @@ int respip_views_apply_cfg(struct views* vs, struct config_file* cfg,
  * reply is assumed to be faked due to a response-ip action and can't be
  * considered secure in terms of DNSSEC.
  * The caller must ensure that neither 'base_rep' nor 'tgt_rep' can be modified
- * until this function returns. 
+ * until this function returns.
  * @param base_rep: the reply info containing an incomplete CNAME.
  * @param qinfo: query info corresponding to 'base_rep'.
  * @param tgt_rep: the reply info that completes the CNAME chain.

@@ -52,7 +52,7 @@
 
 /** signal that this is a testbound compile */
 #define unbound_testbound 1
-/** 
+/**
  * include the main program from the unbound daemon.
  * rename main to daemon_main to call it
  */
@@ -88,7 +88,7 @@ testbound_usage(void)
 /** Max number of arguments to pass to unbound. */
 #define MAXARG 100
 
-/** 
+/**
  * Add options from string to passed argc. splits on whitespace.
  * @param args: the option argument, "-v -p 12345" or so.
  * @param pass_argc: ptr to the argc for unbound. Modified.
@@ -99,7 +99,7 @@ add_opts(const char* args, int* pass_argc, char* pass_argv[])
 {
 	const char *p = args, *np;
 	size_t len;
-	while(p && isspace((unsigned char)*p)) 
+	while(p && isspace((unsigned char)*p))
 		p++;
 	while(p && *p) {
 		/* find location of next string and length of this one */
@@ -117,7 +117,7 @@ add_opts(const char* args, int* pass_argc, char* pass_argv[])
 		(*pass_argc)++;
 		/* go to next option */
 	        p = np;
-		while(p && isspace((unsigned char)*p)) 
+		while(p && isspace((unsigned char)*p))
 			p++;
 	}
 }
@@ -144,7 +144,7 @@ spool_auto_file(FILE* in, int* lineno, FILE* cfg, char* id)
 	/* find filename for new file */
 	while(isspace((unsigned char)*id))
 		id++;
-	if(*id == '\0') 
+	if(*id == '\0')
 		fatal_exit("AUTROTRUST_FILE must have id, line %d", *lineno);
 	id[strlen(id)-1]=0; /* remove newline */
 	fake_temp_file("_auto_", id, line, sizeof(line));
@@ -154,7 +154,7 @@ spool_auto_file(FILE* in, int* lineno, FILE* cfg, char* id)
 	spool = fopen(line, "w");
 	if(!spool) fatal_exit("could not open %s: %s", line, strerror(errno));
 	fprintf(stderr, "testbound is spooling key file: %s\n", line);
-	if(!cfg_strlist_insert(&cfgfiles, strdup(line))) 
+	if(!cfg_strlist_insert(&cfgfiles, strdup(line)))
 		fatal_exit("out of memory");
 	line[sizeof(line)-1] = 0;
 	while(fgets(line, MAX_LINE_LEN-1, in)) {
@@ -183,9 +183,9 @@ setup_config(FILE* in, int* lineno, int* pass_argc, char* pass_argv[])
 	add_opts("-c", pass_argc, pass_argv);
 	add_opts(configfile, pass_argc, pass_argv);
 	cfg = fopen(configfile, "w");
-	if(!cfg) fatal_exit("could not open %s: %s", 
+	if(!cfg) fatal_exit("could not open %s: %s",
 			configfile, strerror(errno));
-	if(!cfg_strlist_insert(&cfgfiles, strdup(configfile))) 
+	if(!cfg_strlist_insert(&cfgfiles, strdup(configfile)))
 		fatal_exit("out of memory");
 	line[sizeof(line)-1] = 0;
 	/* some basic settings to not pollute the host system */
@@ -223,7 +223,7 @@ setup_config(FILE* in, int* lineno, int* pass_argc, char* pass_argv[])
 }
 
 /** read playback file */
-static struct replay_scenario* 
+static struct replay_scenario*
 setup_playback(const char* filename, int* pass_argc, char* pass_argv[])
 {
 	struct replay_scenario* scen = NULL;
@@ -262,7 +262,7 @@ void remove_configfile(void)
  * @param argv: array of commandline arguments.
  * @return program failure if test fails.
  */
-int 
+int
 main(int argc, char* argv[])
 {
 	int c, res;
@@ -389,7 +389,7 @@ main(int argc, char* argv[])
 }
 
 /* fake remote control */
-struct listen_port* daemon_remote_open_ports(struct config_file* 
+struct listen_port* daemon_remote_open_ports(struct config_file*
 	ATTR_UNUSED(cfg))
 {
 	return NULL;
@@ -411,13 +411,13 @@ void daemon_remote_clear(struct daemon_remote* ATTR_UNUSED(rc))
 }
 
 int daemon_remote_open_accept(struct daemon_remote* ATTR_UNUSED(rc),
-        struct listen_port* ATTR_UNUSED(ports), 
+        struct listen_port* ATTR_UNUSED(ports),
 	struct worker* ATTR_UNUSED(worker))
 {
 	return 1;
 }
 
-int remote_accept_callback(struct comm_point* ATTR_UNUSED(c), 
+int remote_accept_callback(struct comm_point* ATTR_UNUSED(c),
 	void* ATTR_UNUSED(arg), int ATTR_UNUSED(error),
         struct comm_reply* ATTR_UNUSED(repinfo))
 {
@@ -425,7 +425,7 @@ int remote_accept_callback(struct comm_point* ATTR_UNUSED(c),
 	return 0;
 }
 
-int remote_control_callback(struct comm_point* ATTR_UNUSED(c), 
+int remote_control_callback(struct comm_point* ATTR_UNUSED(c),
 	void* ATTR_UNUSED(arg), int ATTR_UNUSED(error),
         struct comm_reply* ATTR_UNUSED(repinfo))
 {
@@ -438,8 +438,8 @@ void remote_get_opt_ssl(char* ATTR_UNUSED(str), void* ATTR_UNUSED(arg))
         log_assert(0);
 }
 
-void wsvc_command_option(const char* ATTR_UNUSED(wopt), 
-	const char* ATTR_UNUSED(cfgfile), int ATTR_UNUSED(v), 
+void wsvc_command_option(const char* ATTR_UNUSED(wopt),
+	const char* ATTR_UNUSED(cfgfile), int ATTR_UNUSED(v),
 	int ATTR_UNUSED(c))
 {
 	log_assert(0);

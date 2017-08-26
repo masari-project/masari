@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -64,7 +64,7 @@ struct rrset_cache {
  * @param alloc: initial default rrset key allocation.
  * @return: NULL on error.
  */
-struct rrset_cache* rrset_cache_create(struct config_file* cfg, 
+struct rrset_cache* rrset_cache_create(struct config_file* cfg,
 	struct alloc_cache* alloc);
 
 /**
@@ -82,7 +82,7 @@ void rrset_cache_delete(struct rrset_cache* r);
  * @param alloc: initial default rrset key allocation.
  * @return 0 on error, or new rrset cache pointer on success.
  */
-struct rrset_cache* rrset_cache_adjust(struct rrset_cache* r, 
+struct rrset_cache* rrset_cache_adjust(struct rrset_cache* r,
 	struct config_file* cfg, struct alloc_cache* alloc);
 
 /**
@@ -91,7 +91,7 @@ struct rrset_cache* rrset_cache_adjust(struct rrset_cache* r,
  *
  * This routine is faster than a hashtable lookup:
  *	o no bin_lock is acquired.
- *	o no walk through the bin-overflow-list. 
+ *	o no walk through the bin-overflow-list.
  *	o no comparison of the entry key to find it.
  *
  * @param r: rrset cache.
@@ -130,7 +130,7 @@ void rrset_cache_touch(struct rrset_cache* r, struct ub_packed_rrset_key* key,
  * 	2: reference updated, item in cache is considered superior.
  *	   also the rdata is equal (but other parameters in cache are superior).
  */
-int rrset_cache_update(struct rrset_cache* r, struct rrset_ref* ref, 
+int rrset_cache_update(struct rrset_cache* r, struct rrset_ref* ref,
 	struct alloc_cache* alloc, time_t timenow);
 
 /**
@@ -161,7 +161,7 @@ struct ub_packed_rrset_key* rrset_cache_lookup(struct rrset_cache* r,
  * @return true on success, false on a failure, which can be that some
  * 	RRsets have timed out, or that they do not exist any more, the
  *	RRsets have been purged from the cache.
- *	If true, you hold readlocks on all the ref items. 
+ *	If true, you hold readlocks on all the ref items.
  */
 int rrset_array_lock(struct rrset_ref* ref, size_t count, time_t timenow);
 
@@ -193,24 +193,24 @@ void rrset_array_unlock_touch(struct rrset_cache* r, struct regional* scratch,
  * If found, checks if rdata is equal.
  * If so, it will update the security, trust and rrset-ttl values.
  * The values are only updated if security is increased (towards secure).
- * @param r: the rrset cache. 
- * @param rrset: which rrset to attempt to update. This rrset is left 
+ * @param r: the rrset cache.
+ * @param rrset: which rrset to attempt to update. This rrset is left
  * 	untouched. The rrset in the cache is updated in-place.
  * @param now: current time.
  */
-void rrset_update_sec_status(struct rrset_cache* r, 
+void rrset_update_sec_status(struct rrset_cache* r,
 	struct ub_packed_rrset_key* rrset, time_t now);
 
 /**
  * Looks up security status of an rrset. Looks up the rrset.
  * If found, checks if rdata is equal, and entry did not expire.
  * If so, it will update the security, trust and rrset-ttl values.
- * @param r: the rrset cache. 
+ * @param r: the rrset cache.
  * @param rrset: This rrset may change security status due to the cache.
  * 	But its status will only improve, towards secure.
  * @param now: current time.
  */
-void rrset_check_sec_status(struct rrset_cache* r, 
+void rrset_check_sec_status(struct rrset_cache* r,
 	struct ub_packed_rrset_key* rrset, time_t now);
 
 /**

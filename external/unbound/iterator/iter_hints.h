@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -51,7 +51,7 @@ struct delegpt;
  * Iterator hints structure
  */
 struct iter_hints {
-	/** 
+	/**
 	 * Hints are stored in this tree. Sort order is specially chosen.
 	 * first sorted on qclass. Then on dname in nsec-like order, so that
 	 * a lookup on class, name will return an exact match or the closest
@@ -75,7 +75,7 @@ struct iter_hints_stub {
 };
 
 /**
- * Create hints 
+ * Create hints
  * @return new hints or NULL on error.
  */
 struct iter_hints* hints_create(void);
@@ -126,7 +126,7 @@ int hints_next_root(struct iter_hints* hints, uint16_t* qclass);
  * @return: A priming delegation point if there is a stub hint that must
  *         be primed, otherwise null.
  */
-struct iter_hints_stub* hints_lookup_stub(struct iter_hints* hints, 
+struct iter_hints_stub* hints_lookup_stub(struct iter_hints* hints,
 	uint8_t* qname, uint16_t qclass, struct delegpt* dp);
 
 /**
@@ -137,7 +137,7 @@ struct iter_hints_stub* hints_lookup_stub(struct iter_hints* hints,
 size_t hints_get_mem(struct iter_hints* hints);
 
 /**
- * Add stub to hints structure. For external use since it recalcs 
+ * Add stub to hints structure. For external use since it recalcs
  * the tree parents.
  * @param hints: the hints data structure
  * @param c: class of zone
@@ -150,7 +150,7 @@ int hints_add_stub(struct iter_hints* hints, uint16_t c, struct delegpt* dp,
 	int noprime);
 
 /**
- * Remove stub from hints structure. For external use since it 
+ * Remove stub from hints structure. For external use since it
  * recalcs the tree parents.
  * @param hints: the hints data structure
  * @param c: class of stub zone

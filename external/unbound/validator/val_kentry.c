@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -48,7 +48,7 @@
 #include "sldns/rrdef.h"
 #include "sldns/keyraw.h"
 
-size_t 
+size_t
 key_entry_sizefunc(void* key, void* data)
 {
 	struct key_entry_key* kk = (struct key_entry_key*)key;
@@ -64,7 +64,7 @@ key_entry_sizefunc(void* key, void* data)
 	return s;
 }
 
-int 
+int
 key_entry_compfunc(void* k1, void* k2)
 {
 	struct key_entry_key* n1 = (struct key_entry_key*)k1;
@@ -77,7 +77,7 @@ key_entry_compfunc(void* k1, void* k2)
 	return query_dname_compare(n1->name, n2->name);
 }
 
-void 
+void
 key_entry_delkeyfunc(void* key, void* ATTR_UNUSED(userarg))
 {
 	struct key_entry_key* kk = (struct key_entry_key*)key;
@@ -88,7 +88,7 @@ key_entry_delkeyfunc(void* key, void* ATTR_UNUSED(userarg))
 	free(kk);
 }
 
-void 
+void
 key_entry_deldatafunc(void* data, void* ATTR_UNUSED(userarg))
 {
 	struct key_entry_data* kd = (struct key_entry_data*)data;
@@ -98,16 +98,16 @@ key_entry_deldatafunc(void* data, void* ATTR_UNUSED(userarg))
 	free(kd);
 }
 
-void 
+void
 key_entry_hash(struct key_entry_key* kk)
 {
 	kk->entry.hash = 0x654;
-	kk->entry.hash = hashlittle(&kk->key_class, sizeof(kk->key_class), 
+	kk->entry.hash = hashlittle(&kk->key_class, sizeof(kk->key_class),
 		kk->entry.hash);
 	kk->entry.hash = dname_query_hash(kk->name, kk->entry.hash);
 }
 
-struct key_entry_key* 
+struct key_entry_key*
 key_entry_copy_toregion(struct key_entry_key* kkey, struct regional* region)
 {
 	struct key_entry_key* newk;
@@ -129,7 +129,7 @@ key_entry_copy_toregion(struct key_entry_key* kkey, struct regional* region)
 		/* copy rrset */
 		if(d->rrset_data) {
 			newd->rrset_data = regional_alloc_init(region,
-				d->rrset_data, 
+				d->rrset_data,
 				packed_rrset_sizeof(d->rrset_data));
 			if(!newd->rrset_data)
 				return NULL;
@@ -151,7 +151,7 @@ key_entry_copy_toregion(struct key_entry_key* kkey, struct regional* region)
 	return newk;
 }
 
-struct key_entry_key* 
+struct key_entry_key*
 key_entry_copy(struct key_entry_key* kkey)
 {
 	struct key_entry_key* newk;
@@ -180,7 +180,7 @@ key_entry_copy(struct key_entry_key* kkey)
 		}
 		/* copy rrset */
 		if(d->rrset_data) {
-			newd->rrset_data = memdup(d->rrset_data, 
+			newd->rrset_data = memdup(d->rrset_data,
 				packed_rrset_sizeof(d->rrset_data));
 			if(!newd->rrset_data) {
 				free(newd);
@@ -216,21 +216,21 @@ key_entry_copy(struct key_entry_key* kkey)
 	return newk;
 }
 
-int 
+int
 key_entry_isnull(struct key_entry_key* kkey)
 {
 	struct key_entry_data* d = (struct key_entry_data*)kkey->entry.data;
 	return (!d->isbad && d->rrset_data == NULL);
 }
 
-int 
+int
 key_entry_isgood(struct key_entry_key* kkey)
 {
 	struct key_entry_data* d = (struct key_entry_data*)kkey->entry.data;
 	return (!d->isbad && d->rrset_data != NULL);
 }
 
-int 
+int
 key_entry_isbad(struct key_entry_key* kkey)
 {
 	struct key_entry_data* d = (struct key_entry_data*)kkey->entry.data;
@@ -254,7 +254,7 @@ key_entry_get_reason(struct key_entry_key* kkey)
 /** setup key entry in region */
 static int
 key_entry_setup(struct regional* region,
-	uint8_t* name, size_t namelen, uint16_t dclass, 
+	uint8_t* name, size_t namelen, uint16_t dclass,
 	struct key_entry_key** k, struct key_entry_data** d)
 {
 	*k = regional_alloc(region, sizeof(**k));
@@ -274,7 +274,7 @@ key_entry_setup(struct regional* region,
 	return 1;
 }
 
-struct key_entry_key* 
+struct key_entry_key*
 key_entry_create_null(struct regional* region,
 	uint8_t* name, size_t namelen, uint16_t dclass, time_t ttl,
 	time_t now)
@@ -292,7 +292,7 @@ key_entry_create_null(struct regional* region,
 	return k;
 }
 
-struct key_entry_key* 
+struct key_entry_key*
 key_entry_create_rrset(struct regional* region,
 	uint8_t* name, size_t namelen, uint16_t dclass,
 	struct ub_packed_rrset_key* rrset, uint8_t* sigalg, time_t now)
@@ -320,9 +320,9 @@ key_entry_create_rrset(struct regional* region,
 	return k;
 }
 
-struct key_entry_key* 
+struct key_entry_key*
 key_entry_create_bad(struct regional* region,
-	uint8_t* name, size_t namelen, uint16_t dclass, time_t ttl, 
+	uint8_t* name, size_t namelen, uint16_t dclass, time_t ttl,
 	time_t now)
 {
 	struct key_entry_key* k;
@@ -338,7 +338,7 @@ key_entry_create_bad(struct regional* region,
 	return k;
 }
 
-struct ub_packed_rrset_key* 
+struct ub_packed_rrset_key*
 key_entry_get_rrset(struct key_entry_key* kkey, struct regional* region)
 {
 	struct key_entry_data* d = (struct key_entry_data*)kkey->entry.data;
@@ -357,7 +357,7 @@ key_entry_get_rrset(struct key_entry_key* kkey, struct regional* region)
 	rrk->rk.type = htons(d->rrset_type);
 	rrk->rk.rrset_class = htons(kkey->key_class);
 	rrk->entry.key = rrk;
-	rrd = regional_alloc_init(region, d->rrset_data, 
+	rrd = regional_alloc_init(region, d->rrset_data,
 		packed_rrset_sizeof(d->rrset_data));
 	if(!rrd)
 		return NULL;
@@ -393,7 +393,7 @@ kd_get_flags(struct packed_rrset_data* data, size_t idx)
 	return f;
 }
 
-size_t 
+size_t
 key_entry_keysize(struct key_entry_key* kkey)
 {
 	struct packed_rrset_data* d;

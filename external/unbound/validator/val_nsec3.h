@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -109,30 +109,30 @@ struct sldns_buffer;
  * @param qinfo: query that is verified for.
  * @param kkey: key entry that signed the NSEC3s.
  * @return:
- * 	sec_status SECURE of the Name Error is proven by the NSEC3 RRs, 
+ * 	sec_status SECURE of the Name Error is proven by the NSEC3 RRs,
  * 	BOGUS if not, INSECURE if all of the NSEC3s could be validly ignored.
  */
 enum sec_status
 nsec3_prove_nameerror(struct module_env* env, struct val_env* ve,
-	struct ub_packed_rrset_key** list, size_t num, 
+	struct ub_packed_rrset_key** list, size_t num,
 	struct query_info* qinfo, struct key_entry_key* kkey);
 
 /**
  * Determine if the NSEC3s provided in a response prove the NOERROR/NODATA
  * status. There are a number of different variants to this:
- * 
+ *
  * 1) Normal NODATA -- qname is matched to an NSEC3 record, type is not
  * present.
- * 
+ *
  * 2) ENT NODATA -- because there must be NSEC3 record for
  * empty-non-terminals, this is the same as #1.
- * 
+ *
  * 3) NSEC3 ownername NODATA -- qname matched an existing, lone NSEC3
  * ownername, but qtype was not NSEC3. NOTE: as of nsec-05, this case no
  * longer exists.
- * 
+ *
  * 4) Wildcard NODATA -- A wildcard matched the name, but not the type.
- * 
+ *
  * 5) Opt-In DS NODATA -- the qname is covered by an opt-in span and qtype ==
  * DS. (or maybe some future record with the same parent-side-only property)
  *
@@ -143,12 +143,12 @@ nsec3_prove_nameerror(struct module_env* env, struct val_env* ve,
  * @param qinfo: query that is verified for.
  * @param kkey: key entry that signed the NSEC3s.
  * @return:
- * 	sec_status SECURE of the proposition is proven by the NSEC3 RRs, 
+ * 	sec_status SECURE of the proposition is proven by the NSEC3 RRs,
  * 	BOGUS if not, INSECURE if all of the NSEC3s could be validly ignored.
  */
 enum sec_status
 nsec3_prove_nodata(struct module_env* env, struct val_env* ve,
-	struct ub_packed_rrset_key** list, size_t num, 
+	struct ub_packed_rrset_key** list, size_t num,
 	struct query_info* qinfo, struct key_entry_key* kkey);
 
 
@@ -165,12 +165,12 @@ nsec3_prove_nodata(struct module_env* env, struct val_env* ve,
  * @param wc: The purported wildcard that matched. This is the wildcard name
  * 	as *.wildcard.name., with the *. label already removed.
  * @return:
- * 	sec_status SECURE of the proposition is proven by the NSEC3 RRs, 
+ * 	sec_status SECURE of the proposition is proven by the NSEC3 RRs,
  * 	BOGUS if not, INSECURE if all of the NSEC3s could be validly ignored.
  */
 enum sec_status
 nsec3_prove_wildcard(struct module_env* env, struct val_env* ve,
-	struct ub_packed_rrset_key** list, size_t num, 
+	struct ub_packed_rrset_key** list, size_t num,
 	struct query_info* qinfo, struct key_entry_key* kkey, uint8_t* wc);
 
 /**
@@ -186,14 +186,14 @@ nsec3_prove_wildcard(struct module_env* env, struct val_env* ve,
  * @param kkey: key entry that signed the NSEC3s.
  * @param reason: string for bogus result.
  * @return:
- * 	sec_status SECURE of the proposition is proven by the NSEC3 RRs, 
+ * 	sec_status SECURE of the proposition is proven by the NSEC3 RRs,
  * 	BOGUS if not, INSECURE if all of the NSEC3s could be validly ignored.
  * 	or if there was no DS in an insecure (i.e., opt-in) way,
  * 	INDETERMINATE if it was clear that this wasn't a delegation point.
  */
 enum sec_status
 nsec3_prove_nods(struct module_env* env, struct val_env* ve,
-	struct ub_packed_rrset_key** list, size_t num, 
+	struct ub_packed_rrset_key** list, size_t num,
 	struct query_info* qinfo, struct key_entry_key* kkey, char** reason);
 
 /**
@@ -208,12 +208,12 @@ nsec3_prove_nods(struct module_env* env, struct val_env* ve,
  * @param nodata: if return value is secure, this indicates if nodata or
  * 	nxdomain was proven.
  * @return:
- * 	sec_status SECURE of the proposition is proven by the NSEC3 RRs, 
+ * 	sec_status SECURE of the proposition is proven by the NSEC3 RRs,
  * 	BOGUS if not, INSECURE if all of the NSEC3s could be validly ignored.
  */
 enum sec_status
 nsec3_prove_nxornodata(struct module_env* env, struct val_env* ve,
-	struct ub_packed_rrset_key** list, size_t num, 
+	struct ub_packed_rrset_key** list, size_t num,
 	struct query_info* qinfo, struct key_entry_key* kkey, int* nodata);
 
 /**
@@ -303,7 +303,7 @@ size_t nsec3_get_nextowner_b32(struct ub_packed_rrset_key* rrset, int r,
 size_t nsec3_hash_to_b32(uint8_t* hash, size_t hashlen, uint8_t* zone,
 	size_t zonelen, uint8_t* buf, size_t max);
 
-/** 
+/**
  * Get NSEC3 parameters out of rr.
  * @param rrset: the NSEC3 rrset.
  * @param r: the rr num of the nsec3 in the rrset.
@@ -333,7 +333,7 @@ size_t nsec3_get_hashed(struct sldns_buffer* buf, uint8_t* nm, size_t nmlen,
 	int algo, size_t iter, uint8_t* salt, size_t saltlen, uint8_t* res,
 	size_t max);
 
-/** 
+/**
  * see if NSEC3 RR contains given type
  * @param rrset: NSEC3 rrset
  * @param r: RR in rrset
@@ -342,16 +342,16 @@ size_t nsec3_get_hashed(struct sldns_buffer* buf, uint8_t* nm, size_t nmlen,
  */
 int nsec3_has_type(struct ub_packed_rrset_key* rrset, int r, uint16_t type);
 
-/** 
- * return if nsec3 RR has the optout flag 
+/**
+ * return if nsec3 RR has the optout flag
  * @param rrset: NSEC3 rrset
  * @param r: RR in rrset
  * @return true if optout, false on error or not optout
  */
 int nsec3_has_optout(struct ub_packed_rrset_key* rrset, int r);
 
-/** 
- * Return nsec3 RR next hashed owner name 
+/**
+ * Return nsec3 RR next hashed owner name
  * @param rrset: NSEC3 rrset
  * @param r: RR in rrset
  * @param next: ptr into rdata to next owner hash

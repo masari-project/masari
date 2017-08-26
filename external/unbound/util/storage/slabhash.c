@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -45,13 +45,13 @@
 #include "config.h"
 #include "util/storage/slabhash.h"
 
-struct slabhash* slabhash_create(size_t numtables, size_t start_size, 
-	size_t maxmem, lruhash_sizefunc_type sizefunc, 
-	lruhash_compfunc_type compfunc, lruhash_delkeyfunc_type delkeyfunc, 
+struct slabhash* slabhash_create(size_t numtables, size_t start_size,
+	size_t maxmem, lruhash_sizefunc_type sizefunc,
+	lruhash_compfunc_type compfunc, lruhash_delkeyfunc_type delkeyfunc,
 	lruhash_deldatafunc_type deldatafunc, void* arg)
 {
 	size_t i;
-	struct slabhash* sl = (struct slabhash*)calloc(1, 
+	struct slabhash* sl = (struct slabhash*)calloc(1,
 		sizeof(struct slabhash));
 	if(!sl) return NULL;
 	sl->size = numtables;
@@ -65,7 +65,7 @@ struct slabhash* slabhash_create(size_t numtables, size_t start_size,
 	if(sl->mask == 0) {
 		sl->shift = 0;
 	} else {
-		log_assert( (sl->size & sl->mask) == 0 
+		log_assert( (sl->size & sl->mask) == 0
 			/* size must be power of 2 */ );
 		sl->shift = 0;
 		while(!(sl->mask & 0x80000000)) {
@@ -113,13 +113,13 @@ slab_idx(struct slabhash* sl, hashvalue_type hash)
 	return ((hash & sl->mask) >> sl->shift);
 }
 
-void slabhash_insert(struct slabhash* sl, hashvalue_type hash, 
+void slabhash_insert(struct slabhash* sl, hashvalue_type hash,
 	struct lruhash_entry* entry, void* data, void* arg)
 {
 	lruhash_insert(sl->array[slab_idx(sl, hash)], hash, entry, data, arg);
 }
 
-struct lruhash_entry* slabhash_lookup(struct slabhash* sl, 
+struct lruhash_entry* slabhash_lookup(struct slabhash* sl,
 	hashvalue_type hash, void* key, int wr)
 {
 	return lruhash_lookup(sl->array[slab_idx(sl, hash)], hash, key, wr);
@@ -134,7 +134,7 @@ void slabhash_status(struct slabhash* sl, const char* id, int extended)
 {
 	size_t i;
 	char num[17];
-	log_info("Slabhash %s: %u tables mask=%x shift=%d", 
+	log_info("Slabhash %s: %u tables mask=%x shift=%d",
 		id, (unsigned)sl->size, (unsigned)sl->mask, sl->shift);
 	for(i=0; i<sl->size; i++) {
 		snprintf(num, sizeof(num), "table %u", (unsigned)i);
@@ -177,7 +177,7 @@ static void deldata(struct slabhash_testdata* d) {free(d);}
 
 size_t test_slabhash_sizefunc(void* ATTR_UNUSED(key), void* ATTR_UNUSED(data))
 {
-	return sizeof(struct slabhash_testkey) + 
+	return sizeof(struct slabhash_testkey) +
 		sizeof(struct slabhash_testdata);
 }
 

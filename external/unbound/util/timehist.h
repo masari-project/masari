@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -67,7 +67,7 @@ struct timehist {
 	struct th_buck* buckets;
 };
 
-/** 
+/**
  * Setup a histogram, default
  * @return histogram or NULL on malloc failure.
  */
@@ -94,7 +94,7 @@ void timehist_insert(struct timehist* hist, struct timeval* tv);
 
 /**
  * Find time value for given quartile, such as 0.25, 0.50, 0.75.
- * The looks up the value for the i-th element in the sorted list of time 
+ * The looks up the value for the i-th element in the sorted list of time
  * values, as approximated using the histogram.
  * @param hist: histogram. Interpolated information is used from it.
  * @param q: quartile, 0.50 results in the median. Must be >0 and <1.

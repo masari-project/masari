@@ -75,7 +75,7 @@ namespace wallet_args
     const boost::program_options::positional_options_description& positional_options,
     const char *default_log_name,
     bool log_to_console)
-  
+
   {
     namespace bf = boost::filesystem;
     namespace po = boost::program_options;

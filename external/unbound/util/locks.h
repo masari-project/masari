@@ -2,24 +2,24 @@
  * util/locks.h - unbound locking primitives
  *
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
- * 
+ *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -51,7 +51,7 @@
  *     This lock is meant for non performance sensitive uses.
  *   o lock_quick: speed lock. For performance sensitive locking of critical
  *     sections. Could be implemented by a mutex or a spinlock.
- * 
+ *
  * Also thread creation and deletion functions are defined here.
  */
 
@@ -133,12 +133,12 @@ typedef pthread_mutex_t lock_quick_type;
 #else /* HAVE_PTHREAD_SPINLOCK_T */
 /** use pthread spinlock for the quick lock */
 typedef pthread_spinlock_t lock_quick_type;
-/** 
+/**
  * allocate process private since this is available whether
  * Thread Process-Shared Synchronization is supported or not.
  * This means only threads inside this process may access the lock.
  * (not threads from another process that shares memory).
- * spinlocks are not supported on all pthread platforms. 
+ * spinlocks are not supported on all pthread platforms.
  */
 #define lock_quick_init(lock) LOCKRET(pthread_spin_init(lock, PTHREAD_PROCESS_PRIVATE))
 #define lock_quick_destroy(lock) LOCKRET(pthread_spin_destroy(lock))

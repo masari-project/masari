@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -50,7 +50,7 @@ struct delegpt;
  * Iterator forward zones structure
  */
 struct iter_forwards {
-	/** 
+	/**
 	 * Zones are stored in this tree. Sort order is specially chosen.
 	 * first sorted on qclass. Then on dname in nsec-like order, so that
 	 * a lookup on class, name will return an exact match or the closest
@@ -72,9 +72,9 @@ struct iter_forward_zone {
 	size_t namelen;
 	/** number of labels in name */
 	int namelabs;
-	/** delegation point with forward server information for this zone. 
+	/** delegation point with forward server information for this zone.
 	 * If NULL then this forward entry is used to indicate that a
-	 * stub-zone with the same name exists, and should be used. 
+	 * stub-zone with the same name exists, and should be used.
 	 * This delegation point is malloced.
 	 */
 	struct delegpt* dp;
@@ -85,7 +85,7 @@ struct iter_forward_zone {
 };
 
 /**
- * Create forwards 
+ * Create forwards
  * @return new forwards or NULL on error.
  */
 struct iter_forwards* forwards_create(void);
@@ -125,7 +125,7 @@ struct delegpt* forwards_find(struct iter_forwards* fwd, uint8_t* qname,
  * @return: A delegation point if the query has to be forwarded to that list,
  *         otherwise null.
  */
-struct delegpt* forwards_lookup(struct iter_forwards* fwd, 
+struct delegpt* forwards_lookup(struct iter_forwards* fwd,
 	uint8_t* qname, uint16_t qclass);
 
 /**
@@ -134,7 +134,7 @@ struct delegpt* forwards_lookup(struct iter_forwards* fwd,
  * @param qclass: The qclass of the query.
  * @return: A delegation point if root forward exists, otherwise null.
  */
-struct delegpt* forwards_lookup_root(struct iter_forwards* fwd, 
+struct delegpt* forwards_lookup_root(struct iter_forwards* fwd,
 	uint16_t qclass);
 
 /**
@@ -156,7 +156,7 @@ size_t forwards_get_mem(struct iter_forwards* fwd);
 int fwd_cmp(const void* k1, const void* k2);
 
 /**
- * Add zone to forward structure. For external use since it recalcs 
+ * Add zone to forward structure. For external use since it recalcs
  * the tree parents.
  * @param fwd: the forward data structure
  * @param c: class of zone
@@ -164,11 +164,11 @@ int fwd_cmp(const void* k1, const void* k2);
  *	forward zone. malloced.
  * @return false on failure (out of memory);
  */
-int forwards_add_zone(struct iter_forwards* fwd, uint16_t c, 
+int forwards_add_zone(struct iter_forwards* fwd, uint16_t c,
 	struct delegpt* dp);
 
 /**
- * Remove zone from forward structure. For external use since it 
+ * Remove zone from forward structure. For external use since it
  * recalcs the tree parents.
  * @param fwd: the forward data structure
  * @param c: class of zone

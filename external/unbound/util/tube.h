@@ -4,22 +4,22 @@
  * Copyright (c) 2008, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -150,7 +150,7 @@ void tube_delete(struct tube* tube);
  *              unknown.
  *      return 1 if all OK.
  */
-int tube_write_msg(struct tube* tube, uint8_t* buf, uint32_t len, 
+int tube_write_msg(struct tube* tube, uint8_t* buf, uint32_t len,
 	int nonblock);
 
 /**
@@ -166,11 +166,11 @@ int tube_write_msg(struct tube* tube, uint8_t* buf, uint32_t len,
  *      If the first read fails the function returns -1.
  *      If set false, the first read is blocking.
  * @return: all remainder reads are nonblocking.
- *      return 0 on error, in that case blocking/nonblocking of socket is 
+ *      return 0 on error, in that case blocking/nonblocking of socket is
  *              unknown. On EOF 0 is returned.
  *      return 1 if all OK.
  */
-int tube_read_msg(struct tube* tube, uint8_t** buf, uint32_t* len, 
+int tube_read_msg(struct tube* tube, uint8_t** buf, uint32_t* len,
 	int nonblock);
 
 /**
@@ -259,11 +259,11 @@ void tube_remove_bg_write(struct tube* tube);
 int tube_queue_item(struct tube* tube, uint8_t* msg, size_t len);
 
 /** for fptr wlist, callback function */
-int tube_handle_listen(struct comm_point* c, void* arg, int error, 
+int tube_handle_listen(struct comm_point* c, void* arg, int error,
 	struct comm_reply* reply_info);
 
 /** for fptr wlist, callback function */
-int tube_handle_write(struct comm_point* c, void* arg, int error, 
+int tube_handle_write(struct comm_point* c, void* arg, int error,
 	struct comm_reply* reply_info);
 
 /** for fptr wlist, winsock signal event callback function */

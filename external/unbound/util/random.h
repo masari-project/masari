@@ -1,25 +1,25 @@
 /*
  * util/random.h - thread safe random generator, which is reasonably secure.
- * 
+ *
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
- * 
+ *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -49,14 +49,14 @@ struct ub_randstate;
 
 /**
  * Initialize the system randomness.  Obtains entropy from the system
- * before a chroot or privilege makes it unavailable. 
+ * before a chroot or privilege makes it unavailable.
  * You do not have to call this, otherwise ub_initstate does so.
  * @param seed: seed value to create state (if no good entropy is found).
  */
 void ub_systemseed(unsigned int seed);
 
 /**
- * Initialize a random generator state for use 
+ * Initialize a random generator state for use
  * @param seed: seed value to create state contents.
  *	(ignored for arc4random).
  * @param from: if not NULL, the seed is taken from this random structure.
@@ -64,7 +64,7 @@ void ub_systemseed(unsigned int seed);
  * 	is itself seeded with entropy.
  * @return new state or NULL alloc failure.
  */
-struct ub_randstate* ub_initstate(unsigned int seed, 
+struct ub_randstate* ub_initstate(unsigned int seed,
 	struct ub_randstate* from);
 
 /**

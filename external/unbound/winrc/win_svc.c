@@ -4,22 +4,22 @@
  * Copyright (c) 2009, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -100,7 +100,7 @@ static void report_status(DWORD state, DWORD exitcode, DWORD wait)
  * code is sent to the service (with ControlService).
  * @param ctrl: control code
  */
-static void 
+static void
 hdlr(DWORD ctrl)
 {
 	if(ctrl == SERVICE_CONTROL_STOP) {
@@ -227,7 +227,7 @@ lookup_reg_int(const char* key, const char* name)
 		DWORD r;
 		memmove(&r, buf, sizeof(r));
 		result = r;
-	} 
+	}
 	return result;
 }
 
@@ -279,7 +279,7 @@ call_root_update(void)
 		sinfo.cb = sizeof(sinfo);
 		verbose(VERB_ALGO, "rootanchor: %s", rootanchor);
 		report_status(SERVICE_START_PENDING, NO_ERROR, 8000);
-		if(!CreateProcess(NULL, rootanchor, NULL, NULL, 0, 
+		if(!CreateProcess(NULL, rootanchor, NULL, NULL, 0,
 			CREATE_NO_WINDOW, NULL, NULL, &sinfo, &pinfo))
 			log_err("CreateProcess error for unbound-anchor.exe");
 		else {
@@ -337,7 +337,7 @@ service_init(int r, struct daemon** d, struct config_file** c)
 	if(cfg->directory && cfg->directory[0]) {
 		char* dir = cfg->directory;
 		if(chdir(dir)) {
-			log_err("could not chdir to %s: %s", 
+			log_err("could not chdir to %s: %s",
 				dir, strerror(errno));
 			if(errno != ENOENT)
 				return 0;
@@ -392,13 +392,13 @@ service_deinit(struct daemon* daemon, struct config_file* cfg)
  * @param argc: nr args
  * @param argv: arg text.
  */
-static void 
+static void
 service_main(DWORD ATTR_UNUSED(argc), LPTSTR* ATTR_UNUSED(argv))
 {
 	struct config_file* cfg = NULL;
 	struct daemon* daemon = NULL;
 
-	service_status_handle = RegisterServiceCtrlHandler(SERVICE_NAME, 
+	service_status_handle = RegisterServiceCtrlHandler(SERVICE_NAME,
 		(LPHANDLER_FUNCTION)hdlr);
 	if(!service_status_handle) {
 		reportev("Could not RegisterServiceCtrlHandler");
@@ -461,7 +461,7 @@ service_main(DWORD ATTR_UNUSED(argc), LPTSTR* ATTR_UNUSED(argv))
 }
 
 /** start the service */
-static void 
+static void
 service_start(const char* cfgfile, int v, int c)
 {
 	SERVICE_TABLE_ENTRY myservices[2] = {
@@ -547,7 +547,7 @@ win_do_cron(void* ATTR_UNUSED(arg))
 		memset(&sinfo, 0, sizeof(sinfo));
 		sinfo.cb = sizeof(sinfo);
 		verbose(VERB_ALGO, "cronaction: %s", cronaction);
-		if(!CreateProcess(NULL, cronaction, NULL, NULL, 0, 
+		if(!CreateProcess(NULL, cronaction, NULL, NULL, 0,
 			CREATE_NO_WINDOW, NULL, NULL, &sinfo, &pinfo))
 			log_err("CreateProcess error");
 		else {
@@ -607,7 +607,7 @@ void wsvc_setup_worker(struct worker* worker)
 		return;
 	}
 	if(!service_cron) {
-		service_cron = comm_timer_create(worker->base, 
+		service_cron = comm_timer_create(worker->base,
 			wsvc_cron_cb, worker);
 		if(!service_cron)
 			fatal_exit("could not create cron timer");

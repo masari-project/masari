@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -104,7 +104,7 @@ rrset_get_sigcount(struct ub_packed_rrset_key* k)
  * @param sig_idx: signature index.
  * @return keytag or 0 if malformed rrsig.
  */
-static uint16_t 
+static uint16_t
 rrset_get_sig_keytag(struct ub_packed_rrset_key* k, size_t sig_idx)
 {
 	uint16_t t;
@@ -122,7 +122,7 @@ rrset_get_sig_keytag(struct ub_packed_rrset_key* k, size_t sig_idx)
  * @param sig_idx: signature index.
  * @return algo or 0 if malformed rrsig.
  */
-static int 
+static int
 rrset_get_sig_algo(struct ub_packed_rrset_key* k, size_t sig_idx)
 {
 	struct packed_rrset_data* d = (struct packed_rrset_data*)k->entry.data;
@@ -224,7 +224,7 @@ ds_get_digest_algo(struct ub_packed_rrset_key* k, size_t idx)
 	return (int)rdata[2+3];
 }
 
-uint16_t 
+uint16_t
 ds_get_keytag(struct ub_packed_rrset_key* ds_rrset, size_t ds_idx)
 {
 	uint16_t t;
@@ -266,7 +266,7 @@ ds_get_sigdata(struct ub_packed_rrset_key* k, size_t idx, uint8_t** digest,
  * Return size of DS digest according to its hash algorithm.
  * @param k: DS rrset.
  * @param idx: which DS.
- * @return size in bytes of digest, or 0 if not supported. 
+ * @return size in bytes of digest, or 0 if not supported.
  */
 static size_t
 ds_digest_size_algo(struct ub_packed_rrset_key* k, size_t idx)
@@ -286,7 +286,7 @@ ds_digest_size_algo(struct ub_packed_rrset_key* k, size_t idx)
  * @return false on error.
  */
 static int
-ds_create_dnskey_digest(struct module_env* env, 
+ds_create_dnskey_digest(struct module_env* env,
 	struct ub_packed_rrset_key* dnskey_rrset, size_t dnskey_idx,
 	struct ub_packed_rrset_key* ds_rrset, size_t ds_idx,
 	uint8_t* digest)
@@ -296,11 +296,11 @@ ds_create_dnskey_digest(struct module_env* env,
 	size_t dnskey_len;
 	rrset_get_rdata(dnskey_rrset, dnskey_idx, &dnskey_rdata, &dnskey_len);
 
-	/* create digest source material in buffer 
+	/* create digest source material in buffer
 	 * digest = digest_algorithm( DNSKEY owner name | DNSKEY RDATA);
 	 *	DNSKEY RDATA = Flags | Protocol | Algorithm | Public Key. */
 	sldns_buffer_clear(b);
-	sldns_buffer_write(b, dnskey_rrset->rk.dname, 
+	sldns_buffer_write(b, dnskey_rrset->rk.dname,
 		dnskey_rrset->rk.dname_len);
 	query_dname_tolower(sldns_buffer_begin(b));
 	sldns_buffer_write(b, dnskey_rdata+2, dnskey_len-2); /* skip rdatalen*/
@@ -343,7 +343,7 @@ int ds_digest_match_dnskey(struct module_env* env,
 		verbose(VERB_QUERY, "DS fail: out of memory");
 		return 0; /* mem error */
 	}
-	if(!ds_create_dnskey_digest(env, dnskey_rrset, dnskey_idx, ds_rrset, 
+	if(!ds_create_dnskey_digest(env, dnskey_rrset, dnskey_idx, ds_rrset,
 		ds_idx, digest)) {
 		verbose(VERB_QUERY, "DS fail: could not calc key digest");
 		return 0; /* digest algo failed */
@@ -355,21 +355,21 @@ int ds_digest_match_dnskey(struct module_env* env,
 	return 1;
 }
 
-int 
-ds_digest_algo_is_supported(struct ub_packed_rrset_key* ds_rrset, 
+int
+ds_digest_algo_is_supported(struct ub_packed_rrset_key* ds_rrset,
 	size_t ds_idx)
 {
 	return (ds_digest_size_algo(ds_rrset, ds_idx) != 0);
 }
 
-int 
-ds_key_algo_is_supported(struct ub_packed_rrset_key* ds_rrset, 
+int
+ds_key_algo_is_supported(struct ub_packed_rrset_key* ds_rrset,
 	size_t ds_idx)
 {
 	return dnskey_algo_id_is_supported(ds_get_key_algo(ds_rrset, ds_idx));
 }
 
-uint16_t 
+uint16_t
 dnskey_calc_keytag(struct ub_packed_rrset_key* dnskey_rrset, size_t dnskey_idx)
 {
 	uint8_t* data;
@@ -382,7 +382,7 @@ dnskey_calc_keytag(struct ub_packed_rrset_key* dnskey_rrset, size_t dnskey_idx)
 int dnskey_algo_is_supported(struct ub_packed_rrset_key* dnskey_rrset,
         size_t dnskey_idx)
 {
-	return dnskey_algo_id_is_supported(dnskey_get_algo(dnskey_rrset, 
+	return dnskey_algo_id_is_supported(dnskey_get_algo(dnskey_rrset,
 		dnskey_idx));
 }
 
@@ -482,7 +482,7 @@ int algo_needs_missing(struct algo_needs* n)
 	return 0;
 }
 
-enum sec_status 
+enum sec_status
 dnskeyset_verify_rrset(struct module_env* env, struct val_env* ve,
 	struct ub_packed_rrset_key* rrset, struct ub_packed_rrset_key* dnskey,
 	uint8_t* sigalg, char** reason)
@@ -511,7 +511,7 @@ dnskeyset_verify_rrset(struct module_env* env, struct val_env* ve,
 		}
 	}
 	for(i=0; i<num; i++) {
-		sec = dnskeyset_verify_rrset_sig(env, ve, *env->now, rrset, 
+		sec = dnskeyset_verify_rrset_sig(env, ve, *env->now, rrset,
 			dnskey, i, &sortree, reason);
 		/* see which algorithm has been fixed up */
 		if(sec == sec_status_secure) {
@@ -550,7 +550,7 @@ void algo_needs_reason(struct module_env* env, int alg, char** reason, char* s)
 		*reason = s;
 }
 
-enum sec_status 
+enum sec_status
 dnskey_verify_rrset(struct module_env* env, struct val_env* ve,
         struct ub_packed_rrset_key* rrset, struct ub_packed_rrset_key* dnskey,
 	size_t dnskey_idx, char** reason)
@@ -575,8 +575,8 @@ dnskey_verify_rrset(struct module_env* env, struct val_env* ve,
 			tag != rrset_get_sig_keytag(rrset, i))
 			continue;
 		buf_canon = 0;
-		sec = dnskey_verify_rrset_sig(env->scratch, 
-			env->scratch_buffer, ve, *env->now, rrset, 
+		sec = dnskey_verify_rrset_sig(env->scratch,
+			env->scratch_buffer, ve, *env->now, rrset,
 			dnskey, dnskey_idx, i, &sortree, &buf_canon, reason);
 		if(sec == sec_status_secure)
 			return sec;
@@ -587,10 +587,10 @@ dnskey_verify_rrset(struct module_env* env, struct val_env* ve,
 	return sec_status_bogus;
 }
 
-enum sec_status 
-dnskeyset_verify_rrset_sig(struct module_env* env, struct val_env* ve, 
-	time_t now, struct ub_packed_rrset_key* rrset, 
-	struct ub_packed_rrset_key* dnskey, size_t sig_idx, 
+enum sec_status
+dnskeyset_verify_rrset_sig(struct module_env* env, struct val_env* ve,
+	time_t now, struct ub_packed_rrset_key* rrset,
+	struct ub_packed_rrset_key* dnskey, size_t sig_idx,
 	struct rbtree_type** sortree, char** reason)
 {
 	/* find matching keys and check them */
@@ -614,8 +614,8 @@ dnskeyset_verify_rrset_sig(struct module_env* env, struct val_env* ve,
 		numchecked ++;
 
 		/* see if key verifies */
-		sec = dnskey_verify_rrset_sig(env->scratch, 
-			env->scratch_buffer, ve, now, rrset, dnskey, i, 
+		sec = dnskey_verify_rrset_sig(env->scratch,
+			env->scratch_buffer, ve, now, rrset, dnskey, i,
 			sig_idx, sortree, &buf_canon, reason);
 		if(sec == sec_status_secure)
 			return sec;
@@ -649,7 +649,7 @@ struct canon_rr {
  * @return comparison code.
  */
 static int
-canonical_compare_byfield(struct packed_rrset_data* d, 
+canonical_compare_byfield(struct packed_rrset_data* d,
 	const sldns_rr_descriptor* desc, size_t i, size_t j)
 {
 	/* sweep across rdata, keep track of some state:
@@ -695,7 +695,7 @@ canonical_compare_byfield(struct packed_rrset_data* d,
 		 * The reason to first read the byte, then setup the rdf,
 		 * is that we are then sure the byte is available and short
 		 * rdata is handled gracefully (even if it is a formerr). */
-		if(lablen_i == 0) { 
+		if(lablen_i == 0) {
 			if(dname_i) {
 				/* scan this dname label */
 				/* capture length to lowercase */
@@ -712,9 +712,9 @@ canonical_compare_byfield(struct packed_rrset_data* d,
 			} else {
 				/* scan this rdata field */
 				wfi++;
-				if(desc->_wireformat[wfi] 
+				if(desc->_wireformat[wfi]
 					== LDNS_RDF_TYPE_DNAME) {
-					dname_i = 1; 
+					dname_i = 1;
 					lablen_i = (size_t)*di;
 					if(lablen_i == 0) {
 						dname_i = 0;
@@ -722,7 +722,7 @@ canonical_compare_byfield(struct packed_rrset_data* d,
 						if(dname_num_i == 0)
 							lablen_i = ilen;
 					}
-				} else if(desc->_wireformat[wfi] 
+				} else if(desc->_wireformat[wfi]
 					== LDNS_RDF_TYPE_STR)
 					lablen_i = (size_t)*di;
 				else	lablen_i = get_rdf_size(
@@ -731,7 +731,7 @@ canonical_compare_byfield(struct packed_rrset_data* d,
 		} else	lablen_i--;
 
 		/* advance field j; same as for i */
-		if(lablen_j == 0) { 
+		if(lablen_j == 0) {
 			if(dname_j) {
 				lablen_j = (size_t)*dj;
 				if(lablen_j == 0) {
@@ -742,9 +742,9 @@ canonical_compare_byfield(struct packed_rrset_data* d,
 				}
 			} else {
 				wfj++;
-				if(desc->_wireformat[wfj] 
+				if(desc->_wireformat[wfj]
 					== LDNS_RDF_TYPE_DNAME) {
-					dname_j = 1; 
+					dname_j = 1;
 					lablen_j = (size_t)*dj;
 					if(lablen_j == 0) {
 						dname_j = 0;
@@ -752,7 +752,7 @@ canonical_compare_byfield(struct packed_rrset_data* d,
 						if(dname_num_j == 0)
 							lablen_j = jlen;
 					}
-				} else if(desc->_wireformat[wfj] 
+				} else if(desc->_wireformat[wfj]
 					== LDNS_RDF_TYPE_STR)
 					lablen_j = (size_t)*dj;
 				else	lablen_j = get_rdf_size(
@@ -803,7 +803,7 @@ canonical_compare(struct ub_packed_rrset_key* rrset, size_t i, size_t j)
 		return 0;
 
 	switch(type) {
-		/* These RR types have only a name as RDATA. 
+		/* These RR types have only a name as RDATA.
 		 * This name has to be canonicalized.*/
 		case LDNS_RR_TYPE_NS:
 		case LDNS_RR_TYPE_MD:
@@ -827,7 +827,7 @@ canonical_compare(struct ub_packed_rrset_key* rrset, size_t i, size_t j)
 		 * and after that a byte-for byte remainder can be compared.
 		 */
 		/* type starts with the name; remainder is binary compared */
-		case LDNS_RR_TYPE_NXT: 
+		case LDNS_RR_TYPE_NXT:
 		/* use rdata field formats */
 		case LDNS_RR_TYPE_MINFO:
 		case LDNS_RR_TYPE_RP:
@@ -849,7 +849,7 @@ canonical_compare(struct ub_packed_rrset_key* rrset, size_t i, size_t j)
 			return canonical_compare_byfield(d, desc, i, j);
 
 		case LDNS_RR_TYPE_HINFO: /* no longer downcased */
-		case LDNS_RR_TYPE_NSEC: 
+		case LDNS_RR_TYPE_NSEC:
 	default:
 		/* For unknown RR types, or types not listed above,
 		 * no canonicalization is needed, do binary compare */
@@ -957,7 +957,7 @@ canonicalize_rdata(sldns_buffer* buf, struct ub_packed_rrset_key* rrset,
 {
 	uint8_t* datstart = sldns_buffer_current(buf)-len+2;
 	switch(ntohs(rrset->rk.type)) {
-		case LDNS_RR_TYPE_NXT: 
+		case LDNS_RR_TYPE_NXT:
 		case LDNS_RR_TYPE_NS:
 		case LDNS_RR_TYPE_MD:
 		case LDNS_RR_TYPE_MF:
@@ -975,7 +975,7 @@ canonicalize_rdata(sldns_buffer* buf, struct ub_packed_rrset_key* rrset,
 		case LDNS_RR_TYPE_SOA:
 			/* two names after another */
 			query_dname_tolower(datstart);
-			query_dname_tolower(datstart + 
+			query_dname_tolower(datstart +
 				dname_valid(datstart, len-2));
 			return;
 		case LDNS_RR_TYPE_RT:
@@ -999,11 +999,11 @@ canonicalize_rdata(sldns_buffer* buf, struct ub_packed_rrset_key* rrset,
 			return;
 		case LDNS_RR_TYPE_PX:
 			/* skip, then two names after another */
-			if(len < 2+2+1) 
+			if(len < 2+2+1)
 				return;
 			datstart += 2;
 			query_dname_tolower(datstart);
-			query_dname_tolower(datstart + 
+			query_dname_tolower(datstart +
 				dname_valid(datstart, len-2-2));
 			return;
 		case LDNS_RR_TYPE_NAPTR:
@@ -1035,7 +1035,7 @@ canonicalize_rdata(sldns_buffer* buf, struct ub_packed_rrset_key* rrset,
 			query_dname_tolower(datstart);
 			return;
 
-		/* do not canonicalize NSEC rdata name, compat with 
+		/* do not canonicalize NSEC rdata name, compat with
 		 * from bind 9.4 signer, where it does not do so */
 		case LDNS_RR_TYPE_NSEC: /* type starts with the name */
 		case LDNS_RR_TYPE_HINFO: /* not downcased */
@@ -1124,7 +1124,7 @@ int rrset_canonical_equal(struct regional* region,
  * @return false on alloc error.
  */
 static int
-rrset_canonical(struct regional* region, sldns_buffer* buf, 
+rrset_canonical(struct regional* region, sldns_buffer* buf,
 	struct ub_packed_rrset_key* k, uint8_t* sig, size_t siglen,
 	struct rbtree_type** sortree)
 {
@@ -1135,7 +1135,7 @@ rrset_canonical(struct regional* region, sldns_buffer* buf,
 	struct canon_rr* rrs;
 
 	if(!*sortree) {
-		*sortree = (struct rbtree_type*)regional_alloc(region, 
+		*sortree = (struct rbtree_type*)regional_alloc(region,
 			sizeof(rbtree_type));
 		if(!*sortree)
 			return 0;
@@ -1153,7 +1153,7 @@ rrset_canonical(struct regional* region, sldns_buffer* buf,
 	sldns_buffer_clear(buf);
 	sldns_buffer_write(buf, sig, siglen);
 	/* canonicalize signer name */
-	query_dname_tolower(sldns_buffer_begin(buf)+18); 
+	query_dname_tolower(sldns_buffer_begin(buf)+18);
 	RBTREE_FOR(walk, struct canon_rr*, (*sortree)) {
 		/* see if there is enough space left in the buffer */
 		if(sldns_buffer_remaining(buf) < can_owner_len + 2 + 2 + 4
@@ -1165,12 +1165,12 @@ rrset_canonical(struct regional* region, sldns_buffer* buf,
 		/* determine canonical owner name */
 		if(can_owner)
 			sldns_buffer_write(buf, can_owner, can_owner_len);
-		else	insert_can_owner(buf, k, sig, &can_owner, 
+		else	insert_can_owner(buf, k, sig, &can_owner,
 				&can_owner_len);
 		sldns_buffer_write(buf, &k->rk.type, 2);
 		sldns_buffer_write(buf, &k->rk.rrset_class, 2);
 		sldns_buffer_write(buf, sig+4, 4);
-		sldns_buffer_write(buf, d->rr_data[walk->rr_idx], 
+		sldns_buffer_write(buf, d->rr_data[walk->rr_idx],
 			d->rr_len[walk->rr_idx]);
 		canonicalize_rdata(buf, k, d->rr_len[walk->rr_idx]);
 	}
@@ -1197,10 +1197,10 @@ sigdate_error(const char* str, int32_t expi, int32_t incep, int32_t now)
 	if(gmtime_r(&te, &tm) && strftime(expi_buf, 15, "%Y%m%d%H%M%S", &tm)
 	 &&gmtime_r(&ti, &tm) && strftime(incep_buf, 15, "%Y%m%d%H%M%S", &tm)
 	 &&gmtime_r(&tn, &tm) && strftime(now_buf, 15, "%Y%m%d%H%M%S", &tm)) {
-		log_info("%s expi=%s incep=%s now=%s", str, expi_buf, 
+		log_info("%s expi=%s incep=%s now=%s", str, expi_buf,
 			incep_buf, now_buf);
 	} else
-		log_info("%s expi=%u incep=%u now=%u", str, (unsigned)expi, 
+		log_info("%s expi=%u incep=%u now=%u", str, (unsigned)expi,
 			(unsigned)incep, (unsigned)now);
 }
 
@@ -1219,11 +1219,11 @@ check_dates(struct val_env* ve, uint32_t unow,
 	/* get current date */
 	if(ve->date_override) {
 		if(ve->date_override == -1) {
-			verbose(VERB_ALGO, "date override: ignore date"); 
+			verbose(VERB_ALGO, "date override: ignore date");
 			return 1;
 		}
 		now = ve->date_override;
-		verbose(VERB_ALGO, "date override option %d", (int)now); 
+		verbose(VERB_ALGO, "date override option %d", (int)now);
 	} else	now = (int32_t)unow;
 
 	/* check them */
@@ -1252,7 +1252,7 @@ check_dates(struct val_env* ve, uint32_t unow,
 		if(skew < ve->skew_min) skew = ve->skew_min;
 		if(skew > ve->skew_max) skew = ve->skew_max;
 		if(now - expi > skew) {
-			sigdate_error("verify: signature expired", expi, 
+			sigdate_error("verify: signature expired", expi,
 				incep, now);
 			*reason = "signature expired";
 			return 0;
@@ -1265,11 +1265,11 @@ check_dates(struct val_env* ve, uint32_t unow,
 
 /** adjust rrset TTL for verified rrset, compare to original TTL and expi */
 static void
-adjust_ttl(struct val_env* ve, uint32_t unow, 
-	struct ub_packed_rrset_key* rrset, uint8_t* orig_p, 
+adjust_ttl(struct val_env* ve, uint32_t unow,
+	struct ub_packed_rrset_key* rrset, uint8_t* orig_p,
 	uint8_t* expi_p, uint8_t* incep_p)
 {
-	struct packed_rrset_data* d = 
+	struct packed_rrset_data* d =
 		(struct packed_rrset_data*)rrset->entry.data;
 	/* read out the dates */
 	int32_t origttl, expittl, expi, incep, now;
@@ -1313,8 +1313,8 @@ adjust_ttl(struct val_env* ve, uint32_t unow,
 	}
 }
 
-enum sec_status 
-dnskey_verify_rrset_sig(struct regional* region, sldns_buffer* buf, 
+enum sec_status
+dnskey_verify_rrset_sig(struct regional* region, sldns_buffer* buf,
 	struct val_env* ve, time_t now,
         struct ub_packed_rrset_key* rrset, struct ub_packed_rrset_key* dnskey,
         size_t dnskey_idx, size_t sig_idx,
@@ -1342,10 +1342,10 @@ dnskey_verify_rrset_sig(struct regional* region, sldns_buffer* buf,
 	if(!(dnskey_get_flags(dnskey, dnskey_idx) & DNSKEY_BIT_ZSK)) {
 		verbose(VERB_QUERY, "verify: dnskey without ZSK flag");
 		*reason = "dnskey without ZSK flag";
-		return sec_status_bogus; 
+		return sec_status_bogus;
 	}
 
-	if(dnskey_get_protocol(dnskey, dnskey_idx) != LDNS_DNSSEC_KEYPROTO) { 
+	if(dnskey_get_protocol(dnskey, dnskey_idx) != LDNS_DNSSEC_KEYPROTO) {
 		/* RFC 4034 says DNSKEY PROTOCOL MUST be 3 */
 		verbose(VERB_QUERY, "verify: dnskey has wrong key protocol");
 		*reason = "dnskey has wrong protocolnumber";
@@ -1376,9 +1376,9 @@ dnskey_verify_rrset_sig(struct regional* region, sldns_buffer* buf,
 	/* verify key dname == sig signer name */
 	if(query_dname_compare(signer, dnskey->rk.dname) != 0) {
 		verbose(VERB_QUERY, "verify: wrong key for rrsig");
-		log_nametypeclass(VERB_QUERY, "RRSIG signername is", 
+		log_nametypeclass(VERB_QUERY, "RRSIG signername is",
 			signer, 0, 0);
-		log_nametypeclass(VERB_QUERY, "the key name is", 
+		log_nametypeclass(VERB_QUERY, "the key name is",
 			dnskey->rk.dname, 0, 0);
 		*reason = "signer name mismatches key name";
 		return sec_status_bogus;
@@ -1414,9 +1414,9 @@ dnskey_verify_rrset_sig(struct regional* region, sldns_buffer* buf,
 	/* original ttl, always ok */
 
 	if(!*buf_canon) {
-		/* create rrset canonical format in buffer, ready for 
+		/* create rrset canonical format in buffer, ready for
 		 * signature */
-		if(!rrset_canonical(region, buf, rrset, sig+2, 
+		if(!rrset_canonical(region, buf, rrset, sig+2,
 			18 + signer_len, sortree)) {
 			log_err("verify: failed due to alloc error");
 			return sec_status_unchecked;
@@ -1439,7 +1439,7 @@ dnskey_verify_rrset_sig(struct regional* region, sldns_buffer* buf,
 		/* check if TTL is too high - reduce if so */
 		adjust_ttl(ve, now, rrset, sig+2+4, sig+2+8, sig+2+12);
 
-		/* verify inception, expiration dates 
+		/* verify inception, expiration dates
 		 * Do this last so that if you ignore expired-sigs the
 		 * rest is sure to be OK. */
 		if(!check_dates(ve, now, sig+2+8, sig+2+12, reason)) {

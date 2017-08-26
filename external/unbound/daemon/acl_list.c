@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -48,7 +48,7 @@
 #include "services/localzone.h"
 #include "sldns/str2wire.h"
 
-struct acl_list* 
+struct acl_list*
 acl_list_create(void)
 {
 	struct acl_list* acl = (struct acl_list*)calloc(1,
@@ -63,10 +63,10 @@ acl_list_create(void)
 	return acl;
 }
 
-void 
+void
 acl_list_delete(struct acl_list* acl)
 {
-	if(!acl) 
+	if(!acl)
 		return;
 	regional_destroy(acl->region);
 	free(acl);
@@ -74,8 +74,8 @@ acl_list_delete(struct acl_list* acl)
 
 /** insert new address into acl_list structure */
 static struct acl_addr*
-acl_list_insert(struct acl_list* acl, struct sockaddr_storage* addr, 
-	socklen_t addrlen, int net, enum acl_access control, 
+acl_list_insert(struct acl_list* acl, struct sockaddr_storage* addr,
+	socklen_t addrlen, int net, enum acl_access control,
 	int complain_duplicates)
 {
 	struct acl_addr* node = regional_alloc_zero(acl->region,
@@ -119,7 +119,7 @@ acl_list_str_cfg(struct acl_list* acl, const char* str, const char* s2,
 		log_err("cannot parse access control: %s %s", str, s2);
 		return 0;
 	}
-	if(!acl_list_insert(acl, &addr, addrlen, net, control, 
+	if(!acl_list_insert(acl, &addr, addrlen, net, control,
 		complain_duplicates)) {
 		log_err("out of memory");
 		return 0;
@@ -327,7 +327,7 @@ acl_list_tag_data_cfg(struct acl_list* acl, struct config_file* cfg,
 }
 
 /** read acl_list config */
-static int 
+static int
 read_acl_list(struct acl_list* acl, struct config_file* cfg)
 {
 	struct config_str2list* p;
@@ -340,7 +340,7 @@ read_acl_list(struct acl_list* acl, struct config_file* cfg)
 }
 
 /** read acl tags config */
-static int 
+static int
 read_acl_tags(struct acl_list* acl, struct config_file* cfg)
 {
 	struct config_strbytelist* np, *p = cfg->acl_tags;
@@ -362,7 +362,7 @@ read_acl_tags(struct acl_list* acl, struct config_file* cfg)
 }
 
 /** read acl view config */
-static int 
+static int
 read_acl_view(struct acl_list* acl, struct config_file* cfg, struct views* v)
 {
 	struct config_str2list* np, *p = cfg->acl_view;
@@ -383,7 +383,7 @@ read_acl_view(struct acl_list* acl, struct config_file* cfg, struct views* v)
 }
 
 /** read acl tag actions config */
-static int 
+static int
 read_acl_tag_actions(struct acl_list* acl, struct config_file* cfg)
 {
 	struct config_str3list* p, *np;
@@ -408,7 +408,7 @@ read_acl_tag_actions(struct acl_list* acl, struct config_file* cfg)
 }
 
 /** read acl tag datas config */
-static int 
+static int
 read_acl_tag_datas(struct acl_list* acl, struct config_file* cfg)
 {
 	struct config_str3list* p, *np;
@@ -431,7 +431,7 @@ read_acl_tag_datas(struct acl_list* acl, struct config_file* cfg)
 	return 1;
 }
 
-int 
+int
 acl_list_apply_cfg(struct acl_list* acl, struct config_file* cfg,
 	struct views* v)
 {
@@ -464,7 +464,7 @@ acl_list_apply_cfg(struct acl_list* acl, struct config_file* cfg,
 	return 1;
 }
 
-enum acl_access 
+enum acl_access
 acl_get_control(struct acl_addr* acl)
 {
 	if(acl) return acl->control;
@@ -479,7 +479,7 @@ acl_addr_lookup(struct acl_list* acl, struct sockaddr_storage* addr,
 		addr, addrlen);
 }
 
-size_t 
+size_t
 acl_list_get_mem(struct acl_list* acl)
 {
 	if(!acl) return 0;

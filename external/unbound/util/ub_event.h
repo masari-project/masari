@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -60,14 +60,14 @@ struct event_base;
 #define UB_EV_PERSIST      0x10
 
 /** Returns event-base type. Could be "mini-event", "winsock-event" for the
- * daemon compile, and will be "pluggable-event<PACKAGE_VERSION>" for 
+ * daemon compile, and will be "pluggable-event<PACKAGE_VERSION>" for
  * libunbound.
  */
 const char* ub_event_get_version(void);
 /** Return the name, system and method for the pluggable event base */
 void ub_get_event_sys(struct ub_event_base*, const char** n, const char** s,
 	const char** m);
-/** Return a default event base. In the deamon thess will be the only event 
+/** Return a default event base. In the deamon thess will be the only event
  * bases used.
  */
 struct ub_event_base* ub_default_event_base(int, time_t*, struct timeval*);

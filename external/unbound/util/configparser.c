@@ -2278,8 +2278,8 @@ yyreduce:
     {
         case 12:
 #line 159 "util/configparser.y" /* yacc.c:1646  */
-    { 
-		OUTYY(("\nP(server:)\n")); 
+    {
+		OUTYY(("\nP(server:)\n"));
 	}
 #line 2285 "util/configparser.c" /* yacc.c:1646  */
     break;
@@ -2288,12 +2288,12 @@ yyreduce:
 #line 234 "util/configparser.y" /* yacc.c:1646  */
     {
 		struct config_stub* s;
-		OUTYY(("\nP(stub_zone:)\n")); 
+		OUTYY(("\nP(stub_zone:)\n"));
 		s = (struct config_stub*)calloc(1, sizeof(struct config_stub));
 		if(s) {
 			s->next = cfg_parser->cfg->stubs;
 			cfg_parser->cfg->stubs = s;
-		} else 
+		} else
 			yyerror("out of memory");
 	}
 #line 2300 "util/configparser.c" /* yacc.c:1646  */
@@ -2303,12 +2303,12 @@ yyreduce:
 #line 251 "util/configparser.y" /* yacc.c:1646  */
     {
 		struct config_stub* s;
-		OUTYY(("\nP(forward_zone:)\n")); 
+		OUTYY(("\nP(forward_zone:)\n"));
 		s = (struct config_stub*)calloc(1, sizeof(struct config_stub));
 		if(s) {
 			s->next = cfg_parser->cfg->forwards;
 			cfg_parser->cfg->forwards = s;
-		} else 
+		} else
 			yyerror("out of memory");
 	}
 #line 2315 "util/configparser.c" /* yacc.c:1646  */
@@ -2318,14 +2318,14 @@ yyreduce:
 #line 268 "util/configparser.y" /* yacc.c:1646  */
     {
 		struct config_view* s;
-		OUTYY(("\nP(view:)\n")); 
+		OUTYY(("\nP(view:)\n"));
 		s = (struct config_view*)calloc(1, sizeof(struct config_view));
 		if(s) {
 			s->next = cfg_parser->cfg->views;
 			if(s->next && !s->next->name)
 				yyerror("view without name");
 			cfg_parser->cfg->views = s;
-		} else 
+		} else
 			yyerror("out of memory");
 	}
 #line 2332 "util/configparser.c" /* yacc.c:1646  */
@@ -2333,8 +2333,8 @@ yyreduce:
 
   case 194:
 #line 287 "util/configparser.y" /* yacc.c:1646  */
-    { 
-		OUTYY(("P(server_num_threads:%s)\n", (yyvsp[0].str))); 
+    {
+		OUTYY(("P(server_num_threads:%s)\n", (yyvsp[0].str)));
 		if(atoi((yyvsp[0].str)) == 0 && strcmp((yyvsp[0].str), "0") != 0)
 			yyerror("number expected");
 		else cfg_parser->cfg->num_threads = atoi((yyvsp[0].str));
@@ -2345,8 +2345,8 @@ yyreduce:
 
   case 195:
 #line 296 "util/configparser.y" /* yacc.c:1646  */
-    { 
-		OUTYY(("P(server_verbosity:%s)\n", (yyvsp[0].str))); 
+    {
+		OUTYY(("P(server_verbosity:%s)\n", (yyvsp[0].str)));
 		if(atoi((yyvsp[0].str)) == 0 && strcmp((yyvsp[0].str), "0") != 0)
 			yyerror("number expected");
 		else cfg_parser->cfg->verbosity = atoi((yyvsp[0].str));
@@ -2357,8 +2357,8 @@ yyreduce:
 
   case 196:
 #line 305 "util/configparser.y" /* yacc.c:1646  */
-    { 
-		OUTYY(("P(server_statistics_interval:%s)\n", (yyvsp[0].str))); 
+    {
+		OUTYY(("P(server_statistics_interval:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "") == 0 || strcmp((yyvsp[0].str), "0") == 0)
 			cfg_parser->cfg->stat_interval = 0;
 		else if(atoi((yyvsp[0].str)) == 0)
@@ -2407,8 +2407,8 @@ yyreduce:
 
   case 200:
 #line 343 "util/configparser.y" /* yacc.c:1646  */
-    { 
-		OUTYY(("P(server_shm_key:%s)\n", (yyvsp[0].str))); 
+    {
+		OUTYY(("P(server_shm_key:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "") == 0 || strcmp((yyvsp[0].str), "0") == 0)
 			cfg_parser->cfg->shm_key = 0;
 		else if(atoi((yyvsp[0].str)) == 0)
@@ -2540,7 +2540,7 @@ yyreduce:
 		if(cfg_parser->cfg->num_out_ifs == 0)
 			cfg_parser->cfg->out_ifs = calloc(1, sizeof(char*));
 		else 	cfg_parser->cfg->out_ifs = realloc(
-			cfg_parser->cfg->out_ifs, 
+			cfg_parser->cfg->out_ifs,
 			(cfg_parser->cfg->num_out_ifs+1)*sizeof(char*));
 		if(!cfg_parser->cfg->out_ifs)
 			yyerror("out of memory");
@@ -2567,7 +2567,7 @@ yyreduce:
 #line 472 "util/configparser.y" /* yacc.c:1646  */
     {
 		OUTYY(("P(server_outgoing_port_permit:%s)\n", (yyvsp[0].str)));
-		if(!cfg_mark_ports((yyvsp[0].str), 1, 
+		if(!cfg_mark_ports((yyvsp[0].str), 1,
 			cfg_parser->cfg->outgoing_avail_ports, 65536))
 			yyerror("port number or range (\"low-high\") expected");
 		free((yyvsp[0].str));
@@ -2579,7 +2579,7 @@ yyreduce:
 #line 481 "util/configparser.y" /* yacc.c:1646  */
     {
 		OUTYY(("P(server_outgoing_port_avoid:%s)\n", (yyvsp[0].str)));
-		if(!cfg_mark_ports((yyvsp[0].str), 0, 
+		if(!cfg_mark_ports((yyvsp[0].str), 0,
 			cfg_parser->cfg->outgoing_avail_ports, 65536))
 			yyerror("port number or range (\"low-high\") expected");
 		free((yyvsp[0].str));
@@ -3209,7 +3209,7 @@ yyreduce:
 		OUTYY(("P(server_unblock_lan_zones:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->unblock_lan_zones = 
+		else cfg_parser->cfg->unblock_lan_zones =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -3222,7 +3222,7 @@ yyreduce:
 		OUTYY(("P(server_insecure_lan_zones:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->insecure_lan_zones = 
+		else cfg_parser->cfg->insecure_lan_zones =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -3346,7 +3346,7 @@ yyreduce:
 		OUTYY(("P(server_harden_short_bufsize:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->harden_short_bufsize = 
+		else cfg_parser->cfg->harden_short_bufsize =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -3359,7 +3359,7 @@ yyreduce:
 		OUTYY(("P(server_harden_large_queries:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->harden_large_queries = 
+		else cfg_parser->cfg->harden_large_queries =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -3372,7 +3372,7 @@ yyreduce:
 		OUTYY(("P(server_harden_glue:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->harden_glue = 
+		else cfg_parser->cfg->harden_glue =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -3385,7 +3385,7 @@ yyreduce:
 		OUTYY(("P(server_harden_dnssec_stripped:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->harden_dnssec_stripped = 
+		else cfg_parser->cfg->harden_dnssec_stripped =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -3398,7 +3398,7 @@ yyreduce:
 		OUTYY(("P(server_harden_below_nxdomain:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->harden_below_nxdomain = 
+		else cfg_parser->cfg->harden_below_nxdomain =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -3411,7 +3411,7 @@ yyreduce:
 		OUTYY(("P(server_harden_referral_path:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->harden_referral_path = 
+		else cfg_parser->cfg->harden_referral_path =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -3424,7 +3424,7 @@ yyreduce:
 		OUTYY(("P(server_harden_algo_downgrade:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->harden_algo_downgrade = 
+		else cfg_parser->cfg->harden_algo_downgrade =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -3437,7 +3437,7 @@ yyreduce:
 		OUTYY(("P(server_use_caps_for_id:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->use_caps_bits_for_id = 
+		else cfg_parser->cfg->use_caps_bits_for_id =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -3526,7 +3526,7 @@ yyreduce:
 		OUTYY(("P(server_do_not_query_localhost:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->donotquery_localhost = 
+		else cfg_parser->cfg->donotquery_localhost =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -3540,7 +3540,7 @@ yyreduce:
 		if(strcmp((yyvsp[0].str), "deny")!=0 && strcmp((yyvsp[0].str), "refuse")!=0 &&
 			strcmp((yyvsp[0].str), "deny_non_local")!=0 &&
 			strcmp((yyvsp[0].str), "refuse_non_local")!=0 &&
-			strcmp((yyvsp[0].str), "allow")!=0 && 
+			strcmp((yyvsp[0].str), "allow")!=0 &&
 			strcmp((yyvsp[0].str), "allow_snoop")!=0) {
 			yyerror("expected deny, refuse, deny_non_local, "
 				"refuse_non_local, allow or allow_snoop "
@@ -3570,7 +3570,7 @@ yyreduce:
 		if(*(yyvsp[0].str) == '\0' || strcmp((yyvsp[0].str), "0") == 0) {
 			cfg_parser->cfg->val_date_override = 0;
 		} else if(strlen((yyvsp[0].str)) == 14) {
-			cfg_parser->cfg->val_date_override = 
+			cfg_parser->cfg->val_date_override =
 				cfg_convert_timeval((yyvsp[0].str));
 			if(!cfg_parser->cfg->val_date_override)
 				yyerror("bad date/time specification");
@@ -3670,7 +3670,7 @@ yyreduce:
 		OUTYY(("P(server_val_clean_additional:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->val_clean_additional = 
+		else cfg_parser->cfg->val_clean_additional =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -3683,7 +3683,7 @@ yyreduce:
 		OUTYY(("P(server_val_permissive_mode:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->val_permissive_mode = 
+		else cfg_parser->cfg->val_permissive_mode =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -3878,7 +3878,7 @@ yyreduce:
 				fatal_exit("out of memory adding local-zone");
 			free((yyvsp[0].str));
 		} else {
-			if(!cfg_str2list_insert(&cfg_parser->cfg->local_zones, 
+			if(!cfg_str2list_insert(&cfg_parser->cfg->local_zones,
 				(yyvsp[-1].str), (yyvsp[0].str)))
 				fatal_exit("out of memory adding local-zone");
 		}
@@ -4116,8 +4116,8 @@ yyreduce:
 
   case 330:
 #line 1662 "util/configparser.y" /* yacc.c:1646  */
-    { 
-		OUTYY(("P(server_ip_ratelimit:%s)\n", (yyvsp[0].str))); 
+    {
+		OUTYY(("P(server_ip_ratelimit:%s)\n", (yyvsp[0].str)));
 		if(atoi((yyvsp[0].str)) == 0 && strcmp((yyvsp[0].str), "0") != 0)
 			yyerror("number expected");
 		else cfg_parser->cfg->ip_ratelimit = atoi((yyvsp[0].str));
@@ -4128,8 +4128,8 @@ yyreduce:
 
   case 331:
 #line 1672 "util/configparser.y" /* yacc.c:1646  */
-    { 
-		OUTYY(("P(server_ratelimit:%s)\n", (yyvsp[0].str))); 
+    {
+		OUTYY(("P(server_ratelimit:%s)\n", (yyvsp[0].str)));
 		if(atoi((yyvsp[0].str)) == 0 && strcmp((yyvsp[0].str), "0") != 0)
 			yyerror("number expected");
 		else cfg_parser->cfg->ratelimit = atoi((yyvsp[0].str));
@@ -4226,8 +4226,8 @@ yyreduce:
 
   case 338:
 #line 1749 "util/configparser.y" /* yacc.c:1646  */
-    { 
-  	OUTYY(("P(server_ip_ratelimit_factor:%s)\n", (yyvsp[0].str))); 
+    {
+  	OUTYY(("P(server_ip_ratelimit_factor:%s)\n", (yyvsp[0].str)));
   	if(atoi((yyvsp[0].str)) == 0 && strcmp((yyvsp[0].str), "0") != 0)
   		yyerror("number expected");
   	else cfg_parser->cfg->ip_ratelimit_factor = atoi((yyvsp[0].str));
@@ -4238,8 +4238,8 @@ yyreduce:
 
   case 339:
 #line 1758 "util/configparser.y" /* yacc.c:1646  */
-    { 
-		OUTYY(("P(server_ratelimit_factor:%s)\n", (yyvsp[0].str))); 
+    {
+		OUTYY(("P(server_ratelimit_factor:%s)\n", (yyvsp[0].str)));
 		if(atoi((yyvsp[0].str)) == 0 && strcmp((yyvsp[0].str), "0") != 0)
 			yyerror("number expected");
 		else cfg_parser->cfg->ratelimit_factor = atoi((yyvsp[0].str));
@@ -4254,7 +4254,7 @@ yyreduce:
 		OUTYY(("P(server_qname_minimisation:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->qname_minimisation = 
+		else cfg_parser->cfg->qname_minimisation =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -4267,7 +4267,7 @@ yyreduce:
 		OUTYY(("P(server_qname_minimisation_strict:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->qname_minimisation_strict = 
+		else cfg_parser->cfg->qname_minimisation_strict =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -4325,7 +4325,7 @@ yyreduce:
 		OUTYY(("P(stub-ssl-upstream:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->stubs->ssl_upstream = 
+		else cfg_parser->cfg->stubs->ssl_upstream =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -4338,7 +4338,7 @@ yyreduce:
 		OUTYY(("P(stub-prime:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->stubs->isprime = 
+		else cfg_parser->cfg->stubs->isprime =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -4396,7 +4396,7 @@ yyreduce:
 		OUTYY(("P(forward-ssl-upstream:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->forwards->ssl_upstream = 
+		else cfg_parser->cfg->forwards->ssl_upstream =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -4440,7 +4440,7 @@ yyreduce:
 			free((yyvsp[0].str));
 		} else {
 			if(!cfg_str2list_insert(
-				&cfg_parser->cfg->views->local_zones, 
+				&cfg_parser->cfg->views->local_zones,
 				(yyvsp[-1].str), (yyvsp[0].str)))
 				fatal_exit("out of memory adding local-zone");
 		}
@@ -4516,8 +4516,8 @@ yyreduce:
 
   case 360:
 #line 1973 "util/configparser.y" /* yacc.c:1646  */
-    { 
-		OUTYY(("\nP(remote-control:)\n")); 
+    {
+		OUTYY(("\nP(remote-control:)\n"));
 	}
 #line 4523 "util/configparser.c" /* yacc.c:1646  */
     break;
@@ -4528,7 +4528,7 @@ yyreduce:
 		OUTYY(("P(control_enable:%s)\n", (yyvsp[0].str)));
 		if(strcmp((yyvsp[0].str), "yes") != 0 && strcmp((yyvsp[0].str), "no") != 0)
 			yyerror("expected yes or no.");
-		else cfg_parser->cfg->remote_control_enable = 
+		else cfg_parser->cfg->remote_control_enable =
 			(strcmp((yyvsp[0].str), "yes")==0);
 		free((yyvsp[0].str));
 	}
@@ -4755,8 +4755,8 @@ yyreduce:
 
   case 406:
 #line 2164 "util/configparser.y" /* yacc.c:1646  */
-    { 
-		OUTYY(("\nP(python:)\n")); 
+    {
+		OUTYY(("\nP(python:)\n"));
 	}
 #line 4762 "util/configparser.c" /* yacc.c:1646  */
     break;

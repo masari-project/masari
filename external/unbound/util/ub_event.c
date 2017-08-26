@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -68,8 +68,8 @@
 
 #if UB_EV_TIMEOUT != EV_TIMEOUT || UB_EV_READ != EV_READ || \
     UB_EV_WRITE != EV_WRITE || UB_EV_SIGNAL != EV_SIGNAL || \
-    UB_EV_PERSIST != EV_PERSIST 
-/* Only necessary for libev */ 
+    UB_EV_PERSIST != EV_PERSIST
+/* Only necessary for libev */
 #  define NATIVE_BITS(b) ( \
 	  (((b) & UB_EV_TIMEOUT) ? EV_TIMEOUT : 0) \
 	| (((b) & UB_EV_READ   ) ? EV_READ    : 0) \
@@ -123,7 +123,7 @@ static void (*NATIVE_BITS_CB(void (*cb)(int, short, void*)))(int, short, void*)
 	else
 		return NULL;
 }
-#else 
+#else
 #  define NATIVE_BITS(b) (b)
 #  define NATIVE_BITS_CB(c) (c)
 #endif
@@ -259,7 +259,7 @@ ub_event_base_free(struct ub_event_base* base)
 #ifdef USE_MINI_EVENT
 	event_base_free(AS_EVENT_BASE(base));
 #elif defined(HAVE_EVENT_BASE_FREE) && defined(HAVE_EVENT_BASE_ONCE)
-	/* only libevent 1.2+ has it, but in 1.2 it is broken - 
+	/* only libevent 1.2+ has it, but in 1.2 it is broken -
 	   assertion fails on signal handling ev that is not deleted
  	   in libevent 1.3c (event_base_once appears) this is fixed. */
 	event_base_free(AS_EVENT_BASE(base));

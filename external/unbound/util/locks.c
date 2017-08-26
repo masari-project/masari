@@ -2,24 +2,24 @@
  * util/locks.c - unbound locking primitives
  *
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
- * 
+ *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -47,7 +47,7 @@
 #endif
 
 /** block all signals, masks them away. */
-void 
+void
 ub_thread_blocksigs(void)
 {
 #if defined(HAVE_PTHREAD) || defined(HAVE_SOLARIS_THREADS) || defined(HAVE_SIGPROCMASK)
@@ -63,7 +63,7 @@ ub_thread_blocksigs(void)
 #  ifdef HAVE_SOLARIS_THREADS
 	if((err=thr_sigsetmask(SIG_SETMASK, &sigset, NULL)))
 		fatal_exit("thr_sigsetmask: %s", strerror(err));
-#  else 
+#  else
 	/* have nothing, do single process signal mask */
 	if(sigprocmask(SIG_SETMASK, &sigset, NULL))
 		fatal_exit("sigprocmask: %s", strerror(errno));
@@ -89,7 +89,7 @@ void ub_thread_sig_unblock(int sig)
 #  ifdef HAVE_SOLARIS_THREADS
 	if((err=thr_sigsetmask(SIG_UNBLOCK, &sigset, NULL)))
 		fatal_exit("thr_sigsetmask: %s", strerror(err));
-#  else 
+#  else
 	/* have nothing, do single thread case */
 	if(sigprocmask(SIG_UNBLOCK, &sigset, NULL))
 		fatal_exit("sigprocmask: %s", strerror(errno));
@@ -109,7 +109,7 @@ void ub_thread_sig_unblock(int sig)
  * @param func: function body of the thread. Return value of func is lost.
  * @param arg: user argument to func.
  */
-void 
+void
 ub_thr_fork_create(ub_thread_type* thr, void* (*func)(void*), void* arg)
 {
 	pid_t pid = fork();
@@ -156,8 +156,8 @@ void* ub_thread_key_get(ub_thread_key_type key)
 static void log_win_err(const char* str, DWORD err)
 {
 	LPTSTR buf;
-	if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | 
-		FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ALLOCATE_BUFFER, 
+	if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM |
+		FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_ALLOCATE_BUFFER,
 		NULL, err, 0, (LPTSTR)&buf, 0, NULL) == 0) {
 		/* could not format error message */
 		log_err("%s, GetLastError=%d", str, (int)err);
@@ -250,10 +250,10 @@ void ub_thread_join(ub_thread_type thr)
 {
 	DWORD ret = WaitForSingleObject(thr, INFINITE);
 	if(ret == WAIT_FAILED) {
-		log_win_err("WaitForSingleObject(Thread):WAIT_FAILED", 
+		log_win_err("WaitForSingleObject(Thread):WAIT_FAILED",
 			GetLastError());
 	} else if(ret == WAIT_TIMEOUT) {
-		log_win_err("WaitForSingleObject(Thread):WAIT_TIMEOUT", 
+		log_win_err("WaitForSingleObject(Thread):WAIT_TIMEOUT",
 			GetLastError());
 	}
 	/* and close the handle to the thread */

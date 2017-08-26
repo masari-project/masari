@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -74,7 +74,7 @@ struct respip_client_info;
  */
 #define MESH_MAX_SUBSUB 1024
 
-/** 
+/**
  * Mesh of query states
  */
 struct mesh_area {
@@ -90,7 +90,7 @@ struct mesh_area {
 
 	/** count of the total number of mesh_reply entries */
 	size_t num_reply_addrs;
-	/** count of the number of mesh_states that have mesh_replies 
+	/** count of the number of mesh_states that have mesh_replies
 	 * Because a state can send results to multiple reply addresses,
 	 * this number must be equal or lower than num_reply_addrs. */
 	size_t num_reply_states;
@@ -158,14 +158,14 @@ struct mesh_state {
 	rbnode_type node;
 	/** node in mesh_area runnable tree, key is this struct */
 	rbnode_type run_node;
-	/** the query state. Note that the qinfo and query_flags 
+	/** the query state. Note that the qinfo and query_flags
 	 * may not change. */
 	struct module_qstate s;
 	/** the list of replies to clients for the results */
 	struct mesh_reply* reply_list;
 	/** the list of callbacks for the results */
 	struct mesh_cb* cb_list;
-	/** set of superstates (that want this state's result) 
+	/** set of superstates (that want this state's result)
 	 * contains struct mesh_state_ref* */
 	rbtree_type super_set;
 	/** set of substates (that this state needs to continue)
@@ -179,7 +179,7 @@ struct mesh_state {
 	/** next in linked list for reply states */
 	struct mesh_state* next;
 	/** if this state is in the forever list, jostle list, or neither */
-	enum mesh_list_select { mesh_no_list, mesh_forever_list, 
+	enum mesh_list_select { mesh_no_list, mesh_forever_list,
 		mesh_jostle_list } list_select;
 	/** pointer to this state for uniqueness or NULL */
 	struct mesh_state* unique;
@@ -190,7 +190,7 @@ struct mesh_state {
 
 /**
  * Rbtree reference to a mesh_state.
- * Used in super_set and sub_set. 
+ * Used in super_set and sub_set.
  */
 struct mesh_state_ref {
 	/** node in rbtree for set, key is this structure */
@@ -221,11 +221,11 @@ struct mesh_reply {
 	struct local_rrset* local_alias;
 };
 
-/** 
+/**
  * Mesh result callback func.
  * called as func(cb_arg, rcode, buffer_with_reply, security, why_bogus);
  */
-typedef void (*mesh_cb_func_type)(void*, int, struct sldns_buffer*, enum sec_status, 
+typedef void (*mesh_cb_func_type)(void*, int, struct sldns_buffer*, enum sec_status,
 	char*);
 
 /**
@@ -259,7 +259,7 @@ struct mesh_cb {
  * @param env: environment for new queries.
  * @return mesh: the new mesh or NULL on error.
  */
-struct mesh_area* mesh_create(struct module_stack* stack, 
+struct mesh_area* mesh_create(struct module_stack* stack,
 	struct module_env* env);
 
 /**
@@ -290,7 +290,7 @@ void mesh_new_client(struct mesh_area* mesh, struct query_info* qinfo,
 
 /**
  * New query with callback. Create new query state if needed, and
- * add mesh_cb to it. 
+ * add mesh_cb to it.
  * Will run the mesh area queries to process if a new query state is created.
  *
  * @param mesh: the mesh.
@@ -304,7 +304,7 @@ void mesh_new_client(struct mesh_area* mesh, struct query_info* qinfo,
  * @return 0 on error.
  */
 int mesh_new_callback(struct mesh_area* mesh, struct query_info* qinfo,
-	uint16_t qflags, struct edns_data* edns, struct sldns_buffer* buf, 
+	uint16_t qflags, struct edns_data* edns, struct sldns_buffer* buf,
 	uint16_t qid, mesh_cb_func_type cb, void* cb_arg);
 
 /**
@@ -381,15 +381,15 @@ int mesh_attach_sub(struct module_qstate* qstate, struct query_info* qinfo,
  *
  * @param mstate: mesh state that is done. return_rcode and return_msg
  * 	are used for replies.
- * 	return_rcode: if not 0 (NOERROR) an error is sent back (and 
+ * 	return_rcode: if not 0 (NOERROR) an error is sent back (and
  * 		return_msg is ignored).
  * 	return_msg: reply to encode and send back to clients.
  */
 void mesh_query_done(struct mesh_state* mstate);
 
 /**
- * Call inform_super for the super query states that are interested in the 
- * results from this query state. These can then be changed for error 
+ * Call inform_super for the super query states that are interested in the
+ * results from this query state. These can then be changed for error
  * or results.
  * Called when a module is module_finished or returns module_error.
  * The super query states become runnable with event module_event_pass,
@@ -441,7 +441,7 @@ int mesh_state_is_unique(struct mesh_state* mstate);
 void mesh_state_make_unique(struct mesh_state* mstate);
 
 /**
- * Cleanup a mesh state and its query state. Does not do rbtree or 
+ * Cleanup a mesh state and its query state. Does not do rbtree or
  * reference cleanup.
  * @param mstate: mesh state to cleanup. Its pointer may no longer be used
  * 	afterwards. Cleanup rbtrees before calling this function.
@@ -520,7 +520,7 @@ int mesh_state_add_cb(struct mesh_state* s, struct edns_data* edns,
  * @param ev: event the mstate. Others get event_pass.
  * @param e: if a reply, its outbound entry.
  */
-void mesh_run(struct mesh_area* mesh, struct mesh_state* mstate, 
+void mesh_run(struct mesh_area* mesh, struct mesh_state* mstate,
 	enum module_ev ev, struct outbound_entry* e);
 
 /**

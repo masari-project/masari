@@ -35,7 +35,7 @@
  */
 /**
  * \file
- * Calls trust anchor unit tests. Exits with code 1 on a failure. 
+ * Calls trust anchor unit tests. Exits with code 1 on a failure.
  */
 
 #include "config.h"
@@ -53,12 +53,12 @@ test_anchor_empty(struct val_anchors* a)
 	uint16_t c = LDNS_RR_CLASS_IN;
 	unit_assert(anchors_lookup(a, (uint8_t*)"\000", 1, c) == NULL);
 	unit_assert(anchors_lookup(a, (uint8_t*)"\003com\000", 5, c) == NULL);
-	unit_assert(anchors_lookup(a, 
+	unit_assert(anchors_lookup(a,
 		(uint8_t*)"\007example\003com\000", 11, c) == NULL);
 	unit_assert(anchors_lookup(a, (uint8_t*)"\002nl\000", 4, c) == NULL);
-	unit_assert(anchors_lookup(a, 
+	unit_assert(anchors_lookup(a,
 		(uint8_t*)"\004labs\002nl\000", 9, c) == NULL);
-	unit_assert(anchors_lookup(a, 
+	unit_assert(anchors_lookup(a,
 		(uint8_t*)"\004fabs\002nl\000", 9, c) == NULL);
 }
 
@@ -68,22 +68,22 @@ test_anchor_one(sldns_buffer* buff, struct val_anchors* a)
 {
 	struct trust_anchor* ta;
 	uint16_t c = LDNS_RR_CLASS_IN;
-	unit_assert(anchor_store_str(a, buff, 
+	unit_assert(anchor_store_str(a, buff,
 		"nl. DS 42860 5 1 14D739EB566D2B1A5E216A0BA4D17FA9B038BE4A"));
 	unit_assert(anchors_lookup(a, (uint8_t*)"\000", 1, c) == NULL);
 	unit_assert(anchors_lookup(a, (uint8_t*)"\003com\000", 5, c) == NULL);
-	unit_assert(anchors_lookup(a, 
+	unit_assert(anchors_lookup(a,
 		(uint8_t*)"\007example\003com\000", 11, c) == NULL);
 
 	unit_assert((ta=anchors_lookup(a,
 		(uint8_t*)"\002nl\000", 4, c)) != NULL);
 	lock_basic_unlock(&ta->lock);
 
-	unit_assert((ta=anchors_lookup(a, 
+	unit_assert((ta=anchors_lookup(a,
 		(uint8_t*)"\004labs\002nl\000", 9, c)) != NULL);
 	lock_basic_unlock(&ta->lock);
 
-	unit_assert((ta=anchors_lookup(a, 
+	unit_assert((ta=anchors_lookup(a,
 		(uint8_t*)"\004fabs\002nl\000", 9, c)) != NULL);
 	lock_basic_unlock(&ta->lock);
 
@@ -96,26 +96,26 @@ test_anchors(sldns_buffer* buff, struct val_anchors* a)
 {
 	struct trust_anchor* ta;
 	uint16_t c = LDNS_RR_CLASS_IN;
-	unit_assert(anchor_store_str(a, buff, 
+	unit_assert(anchor_store_str(a, buff,
 	"labs.nl. DS 42860 5 1 14D739EB566D2B1A5E216A0BA4D17FA9B038BE4A"));
 	unit_assert(anchors_lookup(a, (uint8_t*)"\000", 1, c) == NULL);
 	unit_assert(anchors_lookup(a, (uint8_t*)"\003com\000", 5, c) == NULL);
-	unit_assert(anchors_lookup(a, 
+	unit_assert(anchors_lookup(a,
 		(uint8_t*)"\007example\003com\000", 11, c) == NULL);
 
 	unit_assert(ta = anchors_lookup(a, (uint8_t*)"\002nl\000", 4, c));
 	unit_assert(query_dname_compare(ta->name, (uint8_t*)"\002nl\000")==0);
 	lock_basic_unlock(&ta->lock);
 
-	unit_assert(ta = anchors_lookup(a, 
+	unit_assert(ta = anchors_lookup(a,
 		(uint8_t*)"\004labs\002nl\000", 9, c));
-	unit_assert(query_dname_compare(ta->name, 
+	unit_assert(query_dname_compare(ta->name,
 		(uint8_t*)"\004labs\002nl\000") == 0);
 	lock_basic_unlock(&ta->lock);
 
-	unit_assert(ta = anchors_lookup(a, 
+	unit_assert(ta = anchors_lookup(a,
 		(uint8_t*)"\004fabs\002nl\000", 9, c));
-	unit_assert(query_dname_compare(ta->name, 
+	unit_assert(query_dname_compare(ta->name,
 		(uint8_t*)"\002nl\000") == 0);
 	lock_basic_unlock(&ta->lock);
 

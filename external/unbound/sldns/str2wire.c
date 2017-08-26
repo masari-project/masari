@@ -342,7 +342,7 @@ rrinternal_get_delims(sldns_rdf_type rdftype, size_t r_cnt, size_t r_max)
 					break;
 	default                       :	break;
 	}
-	return "\n\t "; 
+	return "\n\t ";
 }
 
 /* Syntactic sugar for sldns_rr_new_frm_str_internal */
@@ -432,7 +432,7 @@ rrinternal_parse_unknown(sldns_buffer* strbuf, char* token, size_t token_len,
 			sldns_buffer_position(strbuf));
 	}
 	hex_data_size = (size_t)atoi(token);
-	if(hex_data_size > LDNS_MAX_RDFLEN || 
+	if(hex_data_size > LDNS_MAX_RDFLEN ||
 		*rr_cur_len + hex_data_size > *rr_len) {
 		return RET_ERR(LDNS_WIREPARSE_ERR_BUFFER_TOO_SMALL,
 			sldns_buffer_position(strbuf));
@@ -550,7 +550,7 @@ sldns_parse_rdf_token(sldns_buffer* strbuf, char* token, size_t token_len,
 	/* check if not quoted yet, and we have encountered quotes */
 	if(!*quoted && sldns_rdf_type_maybe_quoted(rdftype) &&
 		slen >= 2 &&
-		(token[0] == '"' || token[0] == '\'') && 
+		(token[0] == '"' || token[0] == '\'') &&
 		(token[slen-1] == '"' || token[slen-1] == '\'')) {
 		/* move token two smaller (quotes) with endnull */
 		memmove(token, token+1, slen-2);
@@ -648,7 +648,7 @@ rrinternal_parse_rdata(sldns_buffer* strbuf, char* token, size_t token_len,
 			!quoted && (token_strlen == 2 || token[2]==' ')) {
 			was_unknown_rr_format = 1;
 			if((status=rrinternal_parse_unknown(strbuf, token,
-				token_len, rr, rr_len, &rr_cur_len, 
+				token_len, rr, rr_len, &rr_cur_len,
 				pre_data_pos)) != 0)
 				return status;
 		} else if(token_strlen > 0 || quoted) {

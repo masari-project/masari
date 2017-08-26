@@ -4,22 +4,22 @@
  * Copyright (c) 2008, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -57,15 +57,15 @@ struct dns_msg;
 struct ub_packed_rrset_key;
 
 /**
- * The negative cache.  It is shared between the threads, so locked. 
+ * The negative cache.  It is shared between the threads, so locked.
  * Kept as validator-environ-state.  It refers back to the rrset cache for
- * data elements.  It can be out of date and contain conflicting data 
- * from zone content changes.  
+ * data elements.  It can be out of date and contain conflicting data
+ * from zone content changes.
  * It contains a tree of zones, every zone has a tree of data elements.
  * The data elements are part of one big LRU list, with one memory counter.
  */
 struct val_neg_cache {
-	/** the big lock on the negative cache.  Because we use a rbtree 
+	/** the big lock on the negative cache.  Because we use a rbtree
 	 * for the data (quick lookup), we need a big lock */
 	lock_basic_type lock;
 	/** The zone rbtree. contents sorted canonical, type val_neg_zone */
@@ -99,7 +99,7 @@ struct val_neg_zone {
 	struct val_neg_zone* parent;
 
 	/** the number of elements, including this one and the ones whose
-	 * parents (-parents) include this one, that are in_use 
+	 * parents (-parents) include this one, that are in_use
 	 * No elements have a count of zero, those are removed. */
 	int count;
 
@@ -112,7 +112,7 @@ struct val_neg_zone {
 	/** length of salt in bytes */
 	size_t nsec3_saltlen;
 
-	/** tree of NSEC data for this zone, sorted canonical 
+	/** tree of NSEC data for this zone, sorted canonical
 	 * by NSEC owner name */
 	rbtree_type tree;
 
@@ -147,7 +147,7 @@ struct val_neg_data {
 	struct val_neg_data* parent;
 
 	/** the number of elements, including this one and the ones whose
-	 * parents (-parents) include this one, that are in use 
+	 * parents (-parents) include this one, that are in use
 	 * No elements have a count of zero, those are removed. */
 	int count;
 
@@ -184,12 +184,12 @@ size_t val_neg_get_mem(struct val_neg_cache* neg);
  */
 void neg_cache_delete(struct val_neg_cache* neg);
 
-/** 
+/**
  * Comparison function for rbtree val neg data elements
  */
 int val_neg_data_compare(const void* a, const void* b);
 
-/** 
+/**
  * Comparison function for rbtree val neg zone elements
  */
 int val_neg_zone_compare(const void* a, const void* b);
@@ -223,7 +223,7 @@ void val_neg_addreferral(struct val_neg_cache* neg, struct reply_info* rep,
  * @param qclass: class to look in.
  * @param rrset_cache: the rrset cache, for NSEC lookups.
  * @param now: current time for ttl checks.
- * @return 
+ * @return
  *	0 on error
  *	0 if no proof of negative
  *	1 if indeed negative was proven
@@ -243,19 +243,19 @@ int val_neg_dlvlookup(struct val_neg_cache* neg, uint8_t* qname, size_t len,
  * @param now: to check TTLs against.
  * @param addsoa: if true, produce result for external consumption.
  *	if false, do not add SOA - for unbound-internal consumption.
- * @param topname: do not look higher than this name, 
+ * @param topname: do not look higher than this name,
  * 	so that the result cannot be taken from a zone above the current
  * 	trust anchor.  Which could happen with multiple islands of trust.
  * 	if NULL, then no trust anchor is used, but also the algorithm becomes
  * 	more conservative, especially for opt-out zones, since the receiver
  * 	may have a trust-anchor below the optout and thus the optout cannot
  * 	be used to create a proof from the negative cache.
- * @return a reply message if something was found. 
+ * @return a reply message if something was found.
  * 	This reply may still need validation.
  * 	NULL if nothing found (or out of memory).
  */
-struct dns_msg* val_neg_getmsg(struct val_neg_cache* neg, 
-	struct query_info* qinfo, struct regional* region, 
+struct dns_msg* val_neg_getmsg(struct val_neg_cache* neg,
+	struct query_info* qinfo, struct regional* region,
 	struct rrset_cache* rrset_cache, struct sldns_buffer* buf, time_t now,
 	int addsoa, uint8_t* topname);
 

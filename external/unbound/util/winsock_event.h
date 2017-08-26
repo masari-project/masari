@@ -4,22 +4,22 @@
  * Copyright (c) 2008, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -41,17 +41,17 @@
  * sockets.
  *
  * Note that windows can only wait for max 64 events at one time.
- * 
+ *
  * Also, file descriptors cannot be waited for.
  *
  * Named pipes are not easily available (and are not usable in select() ).
  * For interprocess communication, it is possible to wait for a hEvent to
  * be signaled by another thread.
  *
- * When a socket becomes readable, then it will not be flagged as 
+ * When a socket becomes readable, then it will not be flagged as
  * readable again until you have gotten WOULDBLOCK from a recv routine.
  * That means the event handler must store the readability (edge notify)
- * and process the incoming data until it blocks. 
+ * and process the incoming data until it blocks.
  * The function performing recv then has to inform the event handler that
  * the socket has blocked, and the event handler can mark it as such.
  * Thus, this file transforms the edge notify from windows to a level notify
@@ -147,7 +147,7 @@ struct event_base
 	time_t* time_secs;
 	/** where to store time in microseconds */
 	struct timeval* time_tv;
-	/** 
+	/**
 	 * TCP streams have sticky events to them, these are not
 	 * reported by the windows event system anymore, we have to
 	 * keep reporting those events as present until wouldblock() is
@@ -196,11 +196,11 @@ struct event {
 	int is_tcp;
 	/** remembered EV_ values */
 	short old_events;
-	/** should remembered EV_ values be used for TCP streams. 
+	/** should remembered EV_ values be used for TCP streams.
 	 * Reset after WOULDBLOCK is signaled using the function. */
 	int stick_events;
 
-	/** true if this event is a signaling WSAEvent by the user. 
+	/** true if this event is a signaling WSAEvent by the user.
 	 * User created and user closed WSAEvent. Only signaled/unsignaled,
 	 * no read/write/distinctions needed. */
 	int is_signal;
@@ -257,7 +257,7 @@ void winsock_tcp_wouldblock(struct event* ev, int eventbit);
 /**
  * Routine for windows only. where you pass a signal WSAEvent that
  * you wait for. When the event is signaled, the callback gets called.
- * The callback has to WSAResetEvent to disable the signal. 
+ * The callback has to WSAResetEvent to disable the signal.
  * @param base: the event base.
  * @param ev: the event structure for data storage
  * 	can be passed uninitialised.

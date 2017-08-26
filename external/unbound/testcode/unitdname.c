@@ -35,7 +35,7 @@
  */
 /**
  * \file
- * Calls dname unit tests. Exits with code 1 on a failure. 
+ * Calls dname unit tests. Exits with code 1 on a failure.
  */
 
 #include "config.h"
@@ -54,7 +54,7 @@ dname_to_buf(sldns_buffer* b, const char* str)
 	sldns_buffer_clear(b);
 	e = sldns_str2wire_dname_buf(str, sldns_buffer_begin(b), &len);
 	if(e != 0)
-		fatal_exit("%s ldns: %s", __func__, 
+		fatal_exit("%s ldns: %s", __func__,
 			sldns_get_errorstr_parse(e));
 	sldns_buffer_set_position(b, len);
 	sldns_buffer_flip(b);
@@ -62,7 +62,7 @@ dname_to_buf(sldns_buffer* b, const char* str)
 }
 
 /** test query_dname_len function */
-static void 
+static void
 dname_test_qdl(sldns_buffer* buff)
 {
 	unit_show_func("util/data/dname.c", "query_dname_len");
@@ -80,12 +80,12 @@ dname_test_qdtl(sldns_buffer* buff)
 	unit_show_func("util/data/dname.c", "query_dname_tolower");
 	sldns_buffer_write_at(buff, 0, "\012abCDeaBCde\003cOm\000", 16);
 	query_dname_tolower(sldns_buffer_begin(buff));
-	unit_assert( memcmp(sldns_buffer_begin(buff), 
+	unit_assert( memcmp(sldns_buffer_begin(buff),
 		"\012abcdeabcde\003com\000", 16) == 0);
 
 	sldns_buffer_write_at(buff, 0, "\001+\012abC{e-ZYXe\003NET\000", 18);
 	query_dname_tolower(sldns_buffer_begin(buff));
-	unit_assert( memcmp(sldns_buffer_begin(buff), 
+	unit_assert( memcmp(sldns_buffer_begin(buff),
 		"\001+\012abc{e-zyxe\003net\000", 18) == 0);
 
 	sldns_buffer_write_at(buff, 0, "\000", 1);
@@ -103,27 +103,27 @@ dname_test_query_dname_compare(void)
 {
 	unit_show_func("util/data/dname.c", "query_dname_compare");
 	unit_assert(query_dname_compare((uint8_t*)"", (uint8_t*)"") == 0);
-	unit_assert(query_dname_compare((uint8_t*)"\001a", 
+	unit_assert(query_dname_compare((uint8_t*)"\001a",
 					(uint8_t*)"\001a") == 0);
-	unit_assert(query_dname_compare((uint8_t*)"\003abc\001a", 
+	unit_assert(query_dname_compare((uint8_t*)"\003abc\001a",
 					(uint8_t*)"\003abc\001a") == 0);
-	unit_assert(query_dname_compare((uint8_t*)"\003aBc\001a", 
+	unit_assert(query_dname_compare((uint8_t*)"\003aBc\001a",
 					(uint8_t*)"\003AbC\001A") == 0);
-	unit_assert(query_dname_compare((uint8_t*)"\003abc", 
+	unit_assert(query_dname_compare((uint8_t*)"\003abc",
 					(uint8_t*)"\003abc\001a") == -1);
-	unit_assert(query_dname_compare((uint8_t*)"\003abc\001a", 
+	unit_assert(query_dname_compare((uint8_t*)"\003abc\001a",
 					(uint8_t*)"\003abc") == +1);
-	unit_assert(query_dname_compare((uint8_t*)"\003abc\001a", 
+	unit_assert(query_dname_compare((uint8_t*)"\003abc\001a",
 					(uint8_t*)"") == +1);
-	unit_assert(query_dname_compare((uint8_t*)"", 
+	unit_assert(query_dname_compare((uint8_t*)"",
 					(uint8_t*)"\003abc\001a") == -1);
-	unit_assert(query_dname_compare((uint8_t*)"\003abc\001a", 
+	unit_assert(query_dname_compare((uint8_t*)"\003abc\001a",
 					(uint8_t*)"\003xxx\001a") == -1);
-	unit_assert(query_dname_compare((uint8_t*)"\003axx\001a", 
+	unit_assert(query_dname_compare((uint8_t*)"\003axx\001a",
 					(uint8_t*)"\003abc\001a") == 1);
-	unit_assert(query_dname_compare((uint8_t*)"\003abc\001a", 
+	unit_assert(query_dname_compare((uint8_t*)"\003abc\001a",
 					(uint8_t*)"\003abc\001Z") == -1);
-	unit_assert(query_dname_compare((uint8_t*)"\003abc\001Z", 
+	unit_assert(query_dname_compare((uint8_t*)"\003abc\001Z",
 					(uint8_t*)"\003abc\001a") == 1);
 }
 
@@ -136,7 +136,7 @@ dname_test_count_labels(void)
 	unit_assert(dname_count_labels((uint8_t*)"\003com") == 2);
 	unit_assert(dname_count_labels((uint8_t*)"\003org") == 2);
 	unit_assert(dname_count_labels((uint8_t*)"\007example\003com") == 3);
-	unit_assert(dname_count_labels((uint8_t*)"\003bla\007example\003com") 
+	unit_assert(dname_count_labels((uint8_t*)"\003bla\007example\003com")
 		== 4);
 }
 
@@ -152,7 +152,7 @@ dname_test_count_size_labels(void)
 	unit_assert(sz == 5);
 	unit_assert(dname_count_size_labels((uint8_t*)"\003org", &sz) == 2);
 	unit_assert(sz == 5);
-	unit_assert(dname_count_size_labels((uint8_t*)"\007example\003com", 
+	unit_assert(dname_count_size_labels((uint8_t*)"\007example\003com",
 		&sz) == 3);
 	unit_assert(sz == 13);
 	unit_assert(dname_count_size_labels((uint8_t*)"\003bla\007example"
@@ -218,7 +218,7 @@ dname_test_pkt_dname_len(sldns_buffer* buff)
 
 	/* name very long */
 	sldns_buffer_clear(buff);
-	sldns_buffer_write(buff, 
+	sldns_buffer_write(buff,
 		"\020a1cdef5555544444"
 		"\020a2cdef5555544444"
 		"\020a3cdef5555544444"
@@ -242,7 +242,7 @@ dname_test_pkt_dname_len(sldns_buffer* buff)
 
 	/* name too long */
 	sldns_buffer_clear(buff);
-	sldns_buffer_write(buff, 
+	sldns_buffer_write(buff,
 		"\020a1cdef5555544444"
 		"\020a2cdef5555544444"
 		"\020a3cdef5555544444"
@@ -278,93 +278,93 @@ dname_test_dname_lab_cmp(void)
 	unit_assert(dname_lab_cmp((uint8_t*)"", 1, (uint8_t*)"", 1, &ml) == 0);
 	unit_assert(ml == 1);
 	unit_assert(dname_lab_cmp(
-		(uint8_t*)"\003net", 2, 
-		(uint8_t*)"\003net", 2, 
+		(uint8_t*)"\003net", 2,
+		(uint8_t*)"\003net", 2,
 		&ml) == 0);
 	unit_assert(ml == 2);
 	unit_assert(dname_lab_cmp(
-		(uint8_t*)"\007example\003net", 3, 
-		(uint8_t*)"\007example\003net", 3, 
+		(uint8_t*)"\007example\003net", 3,
+		(uint8_t*)"\007example\003net", 3,
 		&ml) == 0);
 	unit_assert(ml == 3);
 	unit_assert(dname_lab_cmp(
-		(uint8_t*)"\004test\007example\003net", 4, 
-		(uint8_t*)"\004test\007example\003net", 4, 
+		(uint8_t*)"\004test\007example\003net", 4,
+		(uint8_t*)"\004test\007example\003net", 4,
 		&ml) == 0);
 	unit_assert(ml == 4);
 
 	/* root is smaller than anything else */
 	unit_assert(dname_lab_cmp(
-		(uint8_t*)"", 1, 
-		(uint8_t*)"\003net", 2, 
+		(uint8_t*)"", 1,
+		(uint8_t*)"\003net", 2,
 		&ml) == -1);
 	unit_assert(ml == 1);
 	unit_assert(dname_lab_cmp(
-		(uint8_t*)"\003net", 2, 
-		(uint8_t*)"", 1, 
+		(uint8_t*)"\003net", 2,
+		(uint8_t*)"", 1,
 		&ml) == 1);
 	unit_assert(ml == 1);
 	unit_assert(dname_lab_cmp(
-		(uint8_t*)"", 1, 
-		(uint8_t*)"\007example\003net", 3, 
+		(uint8_t*)"", 1,
+		(uint8_t*)"\007example\003net", 3,
 		&ml) == -1);
 	unit_assert(ml == 1);
 	unit_assert(dname_lab_cmp(
-		(uint8_t*)"\007example\003net", 3, 
-		(uint8_t*)"", 1, 
+		(uint8_t*)"\007example\003net", 3,
+		(uint8_t*)"", 1,
 		&ml) == 1);
 	unit_assert(ml == 1);
 
 	/* label length makes a difference */
 	unit_assert(dname_lab_cmp(
-		(uint8_t*)"\004neta", 2, 
-		(uint8_t*)"\003net", 2, 
+		(uint8_t*)"\004neta", 2,
+		(uint8_t*)"\003net", 2,
 		&ml) != 0);
 	unit_assert(ml == 1);
 	unit_assert(dname_lab_cmp(
-		(uint8_t*)"\002ne", 2, 
-		(uint8_t*)"\004neta", 2, 
+		(uint8_t*)"\002ne", 2,
+		(uint8_t*)"\004neta", 2,
 		&ml) != 0);
 	unit_assert(ml == 1);
 
 	/* contents follow the zone apex */
 	unit_assert(dname_lab_cmp(
-		(uint8_t*)"\003bla\007example\003net", 4, 
-		(uint8_t*)"\007example\003net", 3, 
+		(uint8_t*)"\003bla\007example\003net", 4,
+		(uint8_t*)"\007example\003net", 3,
 		&ml) == 1);
 	unit_assert(ml == 3);
 	unit_assert(dname_lab_cmp(
-		(uint8_t*)"\007example\003net", 3, 
-		(uint8_t*)"\003bla\007example\003net", 4, 
+		(uint8_t*)"\007example\003net", 3,
+		(uint8_t*)"\003bla\007example\003net", 4,
 		&ml) == -1);
 	unit_assert(ml == 3);
 
 	/* label content makes a difference */
 	unit_assert(dname_lab_cmp(
-		(uint8_t*)"\003aag\007example\003net", 4, 
-		(uint8_t*)"\003bla\007example\003net", 4, 
+		(uint8_t*)"\003aag\007example\003net", 4,
+		(uint8_t*)"\003bla\007example\003net", 4,
 		&ml) == -1);
 	unit_assert(ml == 3);
 	unit_assert(dname_lab_cmp(
-		(uint8_t*)"\003aag\007example\003net", 4, 
-		(uint8_t*)"\003bla\007example\003net", 4, 
+		(uint8_t*)"\003aag\007example\003net", 4,
+		(uint8_t*)"\003bla\007example\003net", 4,
 		&ml) == -1);
 	unit_assert(ml == 3);
 	unit_assert(dname_lab_cmp(
-		(uint8_t*)"\003bla\003aag\007example\003net", 5, 
-		(uint8_t*)"\003aag\003bla\007example\003net", 5, 
+		(uint8_t*)"\003bla\003aag\007example\003net", 5,
+		(uint8_t*)"\003aag\003bla\007example\003net", 5,
 		&ml) == -1);
 	unit_assert(ml == 3);
 	unit_assert(dname_lab_cmp(
-		(uint8_t*)"\02sn\003opt\003aag\007example\003net", 6, 
-		(uint8_t*)"\02sn\003opt\003bla\007example\003net", 6, 
+		(uint8_t*)"\02sn\003opt\003aag\007example\003net", 6,
+		(uint8_t*)"\02sn\003opt\003bla\007example\003net", 6,
 		&ml) == -1);
 	unit_assert(ml == 3);
 
 	/* but lowercase/uppercase does not make a difference. */
 	unit_assert(dname_lab_cmp(
-		(uint8_t*)"\003bLa\007examPLe\003net", 4, 
-		(uint8_t*)"\003bla\007eXAmple\003nET", 4, 
+		(uint8_t*)"\003bLa\007examPLe\003net", 4,
+		(uint8_t*)"\003bla\007eXAmple\003nET", 4,
 		&ml) == 0);
 	unit_assert(ml == 4);
 }
@@ -734,17 +734,17 @@ dname_test_topdomain(void)
 	unit_assert( query_dname_compare(
 		dname_get_shared_topdomain(
 			(uint8_t*)"",
-			(uint8_t*)""), 
+			(uint8_t*)""),
 		(uint8_t*)"") == 0);
 	unit_assert( query_dname_compare(
 		dname_get_shared_topdomain(
 			(uint8_t*)"\003www\007example\003com",
-			(uint8_t*)"\003www\007example\003com"), 
+			(uint8_t*)"\003www\007example\003com"),
 		(uint8_t*)"\003www\007example\003com") == 0);
 	unit_assert( query_dname_compare(
 		dname_get_shared_topdomain(
 			(uint8_t*)"\003www\007example\003com",
-			(uint8_t*)"\003bla\007example\003com"), 
+			(uint8_t*)"\003bla\007example\003com"),
 		(uint8_t*)"\007example\003com") == 0);
 }
 
@@ -753,7 +753,7 @@ static void
 dname_test_valid(void)
 {
 	unit_show_func("util/data/dname.c", "dname_valid");
-	unit_assert( dname_valid( 
+	unit_assert( dname_valid(
 			(uint8_t*)"\003www\007example\003com", 255) == 17);
 	unit_assert( dname_valid((uint8_t*)"", 255) == 1);
 	unit_assert( dname_valid( (uint8_t*)

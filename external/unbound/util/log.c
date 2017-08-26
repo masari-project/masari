@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -93,13 +93,13 @@ log_init(const char* filename, int use_syslog, const char* chrootdir)
 		lock_quick_init(&log_lock);
 	}
 	lock_quick_lock(&log_lock);
-	if(logfile 
+	if(logfile
 #if defined(HAVE_SYSLOG_H) || defined(UB_ON_WINDOWS)
 	|| logging_to_syslog
 #endif
 	) {
 		lock_quick_unlock(&log_lock); /* verbose() needs the lock */
-		verbose(VERB_QUERY, "switching log to %s", 
+		verbose(VERB_QUERY, "switching log to %s",
 			use_syslog?"syslog":(filename&&filename[0]?filename:"stderr"));
 		lock_quick_lock(&log_lock);
 	}
@@ -135,12 +135,12 @@ log_init(const char* filename, int use_syslog, const char* chrootdir)
 	}
 	/* open the file for logging */
 	if(chrootdir && chrootdir[0] && strncmp(filename, chrootdir,
-		strlen(chrootdir)) == 0) 
+		strlen(chrootdir)) == 0)
 		filename += strlen(chrootdir);
 	f = fopen(filename, "a");
 	if(!f) {
 		lock_quick_unlock(&log_lock);
-		log_err("Could not open logfile %s: %s", filename, 
+		log_err("Could not open logfile %s: %s", filename,
 			strerror(errno));
 		return;
 	}
@@ -194,7 +194,7 @@ log_vmsg(int pri, const char* type,
 	char message[MAXSYSLOGMSGLEN];
 	unsigned int* tid = (unsigned int*)ub_thread_key_get(logkey);
 	time_t now;
-#if defined(HAVE_STRFTIME) && defined(HAVE_LOCALTIME_R) 
+#if defined(HAVE_STRFTIME) && defined(HAVE_LOCALTIME_R)
 	char tmbuf[32];
 	struct tm tm;
 #elif defined(UB_ON_WINDOWS)
@@ -204,7 +204,7 @@ log_vmsg(int pri, const char* type,
 	vsnprintf(message, sizeof(message), format, args);
 #ifdef HAVE_SYSLOG_H
 	if(logging_to_syslog) {
-		syslog(pri, "[%d:%x] %s: %s", 
+		syslog(pri, "[%d:%x] %s: %s",
 			(int)getpid(), tid?*tid:0, type, message);
 		return;
 	}
@@ -221,12 +221,12 @@ log_vmsg(int pri, const char* type,
 		} else if(strcmp(type, "warning") == 0) {
 			tp=MSG_GENERIC_WARN;
 			wt=EVENTLOG_WARNING_TYPE;
-		} else if(strcmp(type, "notice") == 0 
+		} else if(strcmp(type, "notice") == 0
 			|| strcmp(type, "debug") == 0) {
 			tp=MSG_GENERIC_SUCCESS;
 			wt=EVENTLOG_SUCCESS;
 		}
-		snprintf(m, sizeof(m), "[%s:%x] %s: %s", 
+		snprintf(m, sizeof(m), "[%s:%x] %s: %s",
 			ident, tid?*tid:0, type, message);
 		s = RegisterEventSource(NULL, SERVICE_NAME);
 		if(!s) return;
@@ -243,22 +243,22 @@ log_vmsg(int pri, const char* type,
 	if(log_now)
 		now = (time_t)*log_now;
 	else	now = (time_t)time(NULL);
-#if defined(HAVE_STRFTIME) && defined(HAVE_LOCALTIME_R) 
+#if defined(HAVE_STRFTIME) && defined(HAVE_LOCALTIME_R)
 	if(log_time_asc && strftime(tmbuf, sizeof(tmbuf), "%b %d %H:%M:%S",
 		localtime_r(&now, &tm))%(sizeof(tmbuf)) != 0) {
 		/* %sizeof buf!=0 because old strftime returned max on error */
-		fprintf(logfile, "%s %s[%d:%x] %s: %s\n", tmbuf, 
+		fprintf(logfile, "%s %s[%d:%x] %s: %s\n", tmbuf,
 			ident, (int)getpid(), tid?*tid:0, type, message);
 	} else
 #elif defined(UB_ON_WINDOWS)
 	if(log_time_asc && GetTimeFormat(LOCALE_USER_DEFAULT, 0, NULL, NULL,
 		tmbuf, sizeof(tmbuf)) && GetDateFormat(LOCALE_USER_DEFAULT, 0,
 		NULL, NULL, dtbuf, sizeof(dtbuf))) {
-		fprintf(logfile, "%s %s %s[%d:%x] %s: %s\n", dtbuf, tmbuf, 
+		fprintf(logfile, "%s %s %s[%d:%x] %s: %s\n", dtbuf, tmbuf,
 			ident, (int)getpid(), tid?*tid:0, type, message);
 	} else
 #endif
-	fprintf(logfile, "[" ARG_LL "d] %s[%d:%x] %s: %s\n", (long long)now, 
+	fprintf(logfile, "[" ARG_LL "d] %s[%d:%x] %s: %s\n", (long long)now,
 		ident, (int)getpid(), tid?*tid:0, type, message);
 #ifdef UB_ON_WINDOWS
 	/* line buffering does not work on windows */
@@ -341,7 +341,7 @@ verbose(enum verbosity_value level, const char* format, ...)
 }
 
 /** log hex data */
-static void 
+static void
 log_hex_f(enum verbosity_value v, const char* msg, void* data, size_t length)
 {
 	size_t i, j;
@@ -365,12 +365,12 @@ log_hex_f(enum verbosity_value v, const char* msg, void* data, size_t length)
 			buf[j*2 + 1] = hexchar[ data8[i+j] & 0xF ];
 		}
 		buf[len*2] = 0;
-		verbose(v, "%s[%u:%u] %.*s", msg, (unsigned)length, 
+		verbose(v, "%s[%u:%u] %.*s", msg, (unsigned)length,
 			(unsigned)i, (int)len*2, buf);
 	}
 }
 
-void 
+void
 log_hex(const char* msg, void* data, size_t length)
 {
 	log_hex_f(verbosity, msg, data, length);

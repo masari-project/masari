@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -78,8 +78,8 @@ struct packed_rrset_key {
 	 * This dname is not canonicalized.
 	 */
 	uint8_t* dname;
-	/** 
-	 * Length of the domain name, including last 0 root octet. 
+	/**
+	 * Length of the domain name, including last 0 root octet.
 	 */
 	size_t dname_len;
 	/**
@@ -105,14 +105,14 @@ struct packed_rrset_key {
  * structure can be recycled with a new id.
  */
 struct ub_packed_rrset_key {
-	/** 
+	/**
 	 * entry into hashtable. Note the lock is never destroyed,
-	 *  even when this key is retired to the cache. 
+	 *  even when this key is retired to the cache.
 	 * the data pointer (if not null) points to a struct packed_rrset.
 	 */
 	struct lruhash_entry entry;
-	/** 
-	 * the ID of this rrset. unique, based on threadid + sequenceno. 
+	/**
+	 * the ID of this rrset. unique, based on threadid + sequenceno.
 	 * ids are not reused, except after flushing the cache.
 	 * zero is an unused entry, and never a valid id.
 	 * Check this value after getting entry.lock.
@@ -164,7 +164,7 @@ enum rrset_trust {
 	rrset_trust_prim_noglue,
 	/** DNSSEC(rfc4034) validated with trusted keys */
 	rrset_trust_validated,
-	/** ultimately trusted, no more trust is possible; 
+	/** ultimately trusted, no more trust is possible;
 	 * trusted keys from the unbound configuration setup. */
 	rrset_trust_ultimate
 };
@@ -179,15 +179,15 @@ enum sec_status {
 	/** BOGUS means that the object (RRset or message) failed to validate
 	 *  (according to local policy), but should have validated. */
 	sec_status_bogus,
-	/** INDETERMINATE means that the object is insecure, but not 
-	 * authoritatively so. Generally this means that the RRset is not 
+	/** INDETERMINATE means that the object is insecure, but not
+	 * authoritatively so. Generally this means that the RRset is not
 	 * below a configured trust anchor. */
 	sec_status_indeterminate,
-	/** INSECURE means that the object is authoritatively known to be 
-	 * insecure. Generally this means that this RRset is below a trust 
+	/** INSECURE means that the object is authoritatively known to be
+	 * insecure. Generally this means that this RRset is below a trust
 	 * anchor, but also below a verified, insecure delegation. */
 	sec_status_insecure,
-	/** SECURE means that the object (RRset or message) validated 
+	/** SECURE means that the object (RRset or message) validated
 	 * according to local policy. */
 	sec_status_secure
 };
@@ -237,16 +237,16 @@ struct packed_rrset_data {
 	/** number of rrsigs, if 0 no rrsigs */
 	size_t rrsig_count;
 	/** the trustworthiness of the rrset data */
-	enum rrset_trust trust; 
+	enum rrset_trust trust;
 	/** security status of the rrset data */
 	enum sec_status security;
 	/** length of every rr's rdata, rr_len[i] is size of rr_data[i]. */
 	size_t* rr_len;
 	/** ttl of every rr. rr_ttl[i] ttl of rr i. */
 	time_t *rr_ttl;
-	/** 
-	 * Array of pointers to every rr's rdata. 
-	 * The rr_data[i] rdata is stored in uncompressed wireformat. 
+	/**
+	 * Array of pointers to every rr's rdata.
+	 * The rr_data[i] rdata is stored in uncompressed wireformat.
 	 * The first uint16_t of rr_data[i] is network format rdlength.
 	 *
 	 * rr_data[count] to rr_data[count+rrsig_count] contain the rrsig data.
@@ -364,7 +364,7 @@ void packed_rrset_ttl_add(struct packed_rrset_data* data, time_t add);
 /**
  * Utility procedure to extract CNAME target name from its rdata.
  * Failsafes; it will change passed dname to a valid dname or do nothing.
- * @param rrset: the rrset structure. Must be a CNAME. 
+ * @param rrset: the rrset structure. Must be a CNAME.
  *	Only first RR is used (multiple RRs are technically illegal anyway).
  * 	Also works on type DNAME. Returns target name.
  * @param dname: this pointer is updated to point into the cname rdata.
@@ -372,18 +372,18 @@ void packed_rrset_ttl_add(struct packed_rrset_data* data, time_t add);
  *	rdata was not a valid dname, not a CNAME, ...).
  * @param dname_len: length of dname is returned.
  */
-void get_cname_target(struct ub_packed_rrset_key* rrset, uint8_t** dname, 
+void get_cname_target(struct ub_packed_rrset_key* rrset, uint8_t** dname,
 	size_t* dname_len);
 
 /**
- * Get a printable string for a rrset trust value 
+ * Get a printable string for a rrset trust value
  * @param s: rrset trust value
  * @return printable string.
  */
 const char* rrset_trust_to_string(enum rrset_trust s);
 
 /**
- * Get a printable string for a security status value 
+ * Get a printable string for a security status value
  * @param s: security status
  * @return printable string.
  */
@@ -395,7 +395,7 @@ const char* sec_status_to_string(enum sec_status s);
  * @param str: string of message.
  * @param rrset: structure with name, type and class.
  */
-void log_rrset_key(enum verbosity_value v, const char* str, 
+void log_rrset_key(enum verbosity_value v, const char* str,
 	struct ub_packed_rrset_key* rrset);
 
 /**
@@ -419,8 +419,8 @@ int packed_rr_to_string(struct ub_packed_rrset_key* rrset, size_t i,
 void log_packed_rrset(enum verbosity_value v, const char* str,
 	struct ub_packed_rrset_key* rrset);
 
-/** 
- * Allocate rrset in region - no more locks needed 
+/**
+ * Allocate rrset in region - no more locks needed
  * @param key: a (just from rrset cache looked up) rrset key + valid,
  * 	packed data record.
  * @param region: where to alloc the copy
@@ -428,10 +428,10 @@ void log_packed_rrset(enum verbosity_value v, const char* str,
  * @return new region-alloced rrset key or NULL on alloc failure.
  */
 struct ub_packed_rrset_key* packed_rrset_copy_region(
-	struct ub_packed_rrset_key* key, struct regional* region, 
+	struct ub_packed_rrset_key* key, struct regional* region,
 	time_t now);
 
-/** 
+/**
  * Allocate rrset with malloc (from region or you are holding the lock).
  * @param key: key with data entry.
  * @param alloc: alloc_cache to create rrset_keys
@@ -439,7 +439,7 @@ struct ub_packed_rrset_key* packed_rrset_copy_region(
  * @return new region-alloced rrset key or NULL on alloc failure.
  */
 struct ub_packed_rrset_key* packed_rrset_copy_alloc(
-	struct ub_packed_rrset_key* key, struct alloc_cache* alloc, 
+	struct ub_packed_rrset_key* key, struct alloc_cache* alloc,
 	time_t now);
 
 #endif /* UTIL_DATA_PACKED_RRSET_H */

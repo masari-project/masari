@@ -4,22 +4,22 @@
  * Copyright (c) 2016, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -44,7 +44,7 @@
 #include "services/localzone.h"
 #include "util/config_file.h"
 
-int 
+int
 view_cmp(const void* v1, const void* v2)
 {
 	struct view* a = (struct view*)v1;
@@ -53,10 +53,10 @@ view_cmp(const void* v1, const void* v2)
 	return strcmp(a->name, b->name);
 }
 
-struct views* 
+struct views*
 views_create(void)
 {
-	struct views* v = (struct views*)calloc(1, 
+	struct views* v = (struct views*)calloc(1,
 		sizeof(*v));
 	if(!v)
 		return NULL;
@@ -70,7 +70,7 @@ views_create(void)
   * unnecessary dependencies */
 void respip_set_delete(struct respip_set *set);
 
-void 
+void
 view_delete(struct view* v)
 {
 	if(!v)
@@ -89,7 +89,7 @@ delviewnode(rbnode_type* n, void* ATTR_UNUSED(arg))
 	view_delete(v);
 }
 
-void 
+void
 views_delete(struct views* v)
 {
 	if(!v)
@@ -140,7 +140,7 @@ views_enter_view_name(struct views* vs, char* name)
 	return v;
 }
 
-int 
+int
 views_apply_cfg(struct views* vs, struct config_file* cfg)
 {
 	struct config_view* cv;
@@ -171,7 +171,7 @@ views_apply_cfg(struct views* vs, struct config_file* cfg)
 				lock_rw_unlock(&v->lock);
 				return 0;
 			}
-			/* local_zones, local_zones_nodefault and local_data 
+			/* local_zones, local_zones_nodefault and local_data
 			 * are free'd from config_view by local_zones_apply_cfg.
 			 * Set pointers to NULL. */
 			cv->local_zones = NULL;

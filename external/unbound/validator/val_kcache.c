@@ -4,22 +4,22 @@
  * Copyright (c) 2007, NLnet Labs. All rights reserved.
  *
  * This software is open source.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
- * 
+ *
  * Redistributions of source code must retain the above copyright notice,
  * this list of conditions and the following disclaimer.
- * 
+ *
  * Redistributions in binary form must reproduce the above copyright notice,
  * this list of conditions and the following disclaimer in the documentation
  * and/or other materials provided with the distribution.
- * 
+ *
  * Neither the name of the NLNET LABS nor the names of its contributors may
  * be used to endorse or promote products derived from this software without
  * specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
  * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -46,10 +46,10 @@
 #include "util/data/dname.h"
 #include "util/module.h"
 
-struct key_cache* 
+struct key_cache*
 key_cache_create(struct config_file* cfg)
 {
-	struct key_cache* kcache = (struct key_cache*)calloc(1, 
+	struct key_cache* kcache = (struct key_cache*)calloc(1,
 		sizeof(*kcache));
 	size_t numtables, start_size, maxmem;
 	if(!kcache) {
@@ -70,7 +70,7 @@ key_cache_create(struct config_file* cfg)
 	return kcache;
 }
 
-void 
+void
 key_cache_delete(struct key_cache* kcache)
 {
 	if(!kcache)
@@ -79,7 +79,7 @@ key_cache_delete(struct key_cache* kcache)
 	free(kcache);
 }
 
-void 
+void
 key_cache_insert(struct key_cache* kcache, struct key_entry_key* kkey,
 	struct module_qstate* qstate)
 {
@@ -92,7 +92,7 @@ key_cache_insert(struct key_cache* kcache, struct key_entry_key* kkey,
 		key_entry_set_reason(k, errinf_to_str(qstate));
 	}
 	key_entry_hash(k);
-	slabhash_insert(kcache->slab, k->entry.hash, &k->entry, 
+	slabhash_insert(kcache->slab, k->entry.hash, &k->entry,
 		k->entry.data, NULL);
 }
 
@@ -108,7 +108,7 @@ key_cache_insert(struct key_cache* kcache, struct key_entry_key* kkey,
  * 	performed.
  */
 static struct key_entry_key*
-key_cache_search(struct key_cache* kcache, uint8_t* name, size_t namelen, 
+key_cache_search(struct key_cache* kcache, uint8_t* name, size_t namelen,
 	uint16_t key_class, int wr)
 {
 	struct lruhash_entry* e;
@@ -119,18 +119,18 @@ key_cache_search(struct key_cache* kcache, uint8_t* name, size_t namelen,
 	lookfor.key_class = key_class;
 	key_entry_hash(&lookfor);
 	e = slabhash_lookup(kcache->slab, lookfor.entry.hash, &lookfor, wr);
-	if(!e) 
+	if(!e)
 		return NULL;
 	return (struct key_entry_key*)e->key;
 }
 
-struct key_entry_key* 
-key_cache_obtain(struct key_cache* kcache, uint8_t* name, size_t namelen, 
+struct key_entry_key*
+key_cache_obtain(struct key_cache* kcache, uint8_t* name, size_t namelen,
 	uint16_t key_class, struct regional* region, time_t now)
 {
 	/* keep looking until we find a nonexpired entry */
 	while(1) {
-		struct key_entry_key* k = key_cache_search(kcache, name, 
+		struct key_entry_key* k = key_cache_search(kcache, name,
 			namelen, key_class, 0);
 		if(k) {
 			/* see if TTL is OK */
@@ -153,7 +153,7 @@ key_cache_obtain(struct key_cache* kcache, uint8_t* name, size_t namelen,
 	return NULL;
 }
 
-size_t 
+size_t
 key_cache_get_mem(struct key_cache* kcache)
 {
 	return sizeof(*kcache) + slabhash_get_mem(kcache->slab);
