@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017, The Monero Project
+// Copyright (c) 2014-2017, The Masari Project
 //
 // All rights reserved.
 //
@@ -35,7 +35,7 @@
 
 using namespace std;
 
-namespace Monero {
+namespace Masari {
 namespace Utils {
 
 bool isAddressLocal(const std::string &address)
@@ -52,5 +52,3 @@ bool isAddressLocal(const std::string &address)
 
 
 } // namespace
-
-namespace Bitmonero = Monero;

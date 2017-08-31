@@ -26,8 +26,8 @@
 
 #pragma once
 
-#undef MONERO_DEFAULT_LOG_CATEGORY
-#define MONERO_DEFAULT_LOG_CATEGORY "net.http"
+#undef MASARI_DEFAULT_LOG_CATEGORY
+#define MASARI_DEFAULT_LOG_CATEGORY "net.http"
 
 namespace epee
 {

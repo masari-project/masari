@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2017, The Monero Project
+# Copyright (c) 2014-2017, The Masari Project
 #
 # All rights reserved.
 #
@@ -38,9 +38,9 @@ set(rpc_private_headers
   core_rpc_server_commands_defs.h
   core_rpc_server_error_codes.h)
 
-monero_private_headers(rpc
+masari_private_headers(rpc
   ${rpc_private_headers})
-monero_add_library(rpc
+masari_add_library(rpc
   ${rpc_sources}
   ${rpc_headers}
   ${rpc_private_headers})

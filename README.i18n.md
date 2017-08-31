@@ -1,9 +1,9 @@
-Monero daemon internationalization
+Masari daemon internationalization
 ==================================
 
-The Monero command line tools can be translated in various languages.
+The Masari command line tools can be translated in various languages.
 
-In order to use the same translation workflow as the [Monero Core GUI](https://github.com/monero-project/monero-core), they use Qt Linguist translation files.  However, to avoid the dependencies on Qt this normally implies, they use a custom loader to read those files at runtime.
+In order to use the same translation workflow as the [Masari Core GUI](https://github.com/masari-project/masari-core), they use Qt Linguist translation files.  However, to avoid the dependencies on Qt this normally implies, they use a custom loader to read those files at runtime.
 
 ### Tools for translators
 
@@ -19,11 +19,11 @@ To update ts files after changing source code:
 
 To add a new language, eg Spanish (ISO code es):
 
-    cp translations/monero.ts translations/monero_es.ts
+    cp translations/masari.ts translations/masari_es.ts
 
 To edit translations for Spanish:
 
-    linguist translations/monero_es.ts
+    linguist translations/masari_es.ts
 
 To build translations after modifying them:
 
@@ -31,7 +31,7 @@ To build translations after modifying them:
 
 To test a translation:
 
-    LANG=es ./build/release/bin/monero-wallet-cli
+    LANG=es ./build/release/bin/masari-wallet-cli
 
 To add new translatable strings in the source code:
 

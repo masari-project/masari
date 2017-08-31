@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017, The Monero Project
+// Copyright (c) 2014-2017, The Masari Project
 //
 // All rights reserved.
 //
@@ -34,7 +34,7 @@
 
 namespace daemon_args
 {
-  std::string const WINDOWS_SERVICE_NAME = "Monero Daemon";
+  std::string const WINDOWS_SERVICE_NAME = "Masari Daemon";
 
   const command_line::arg_descriptor<std::string> arg_config_file = {
     "config-file"

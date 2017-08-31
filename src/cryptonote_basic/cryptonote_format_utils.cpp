@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017, The Monero Project
+// Copyright (c) 2014-2017, The Masari Project
 //
 // All rights reserved.
 //
@@ -38,8 +38,8 @@ using namespace epee;
 #include "crypto/hash.h"
 #include "ringct/rctSigs.h"
 
-#undef MONERO_DEFAULT_LOG_CATEGORY
-#define MONERO_DEFAULT_LOG_CATEGORY "cn"
+#undef MASARI_DEFAULT_LOG_CATEGORY
+#define MASARI_DEFAULT_LOG_CATEGORY "cn"
 
 #define ENCRYPTED_PAYMENT_ID_TAIL 0x8d
 
@@ -485,15 +485,15 @@ namespace cryptonote
     switch (std::atomic_load(&default_decimal_point))
     {
       case 12:
-        return "monero";
+        return "masari";
       case 9:
-        return "millinero";
+        return "millisari";
       case 6:
-        return "micronero";
+        return "microsari";
       case 3:
-        return "nanonero";
+        return "nanosari";
       case 0:
-        return "piconero";
+        return "picosari";
       default:
         ASSERT_MES_AND_THROW("Invalid decimal point specification: " << default_decimal_point);
     }

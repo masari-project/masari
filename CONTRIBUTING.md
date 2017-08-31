@@ -1,4 +1,4 @@
-# Contributing to Monero
+# Contributing to Masari
 
 A good way to help is to test, and report bugs. See
 [How to Report Bugs Effectively (by Simon Tatham)](http://www.chiark.greenend.org.uk/~sgtatham/bugs.html)
@@ -15,7 +15,7 @@ of software solid and usable.
 Patches are preferably to be sent via a github pull request. If that
 can't be done, patches in "git format-patch" format can be sent
 (eg, posted to fpaste.org with a long enough timeout and a link
-posted to #monero-dev on irc.freenode.net).
+posted to #masari-dev on irc.freenode.net).
 
 Patches should be self contained. A good rule of thumb is to have
 one patch per separate issue, feature, or logical change. Also, no

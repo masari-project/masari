@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2017, The Monero Project
+# Copyright (c) 2014-2017, The Masari Project
 #
 # All rights reserved.
 #
@@ -68,9 +68,9 @@ set(crypto_private_headers
   skein.h
   skein_port.h)
 
-monero_private_headers(cncrypto
+masari_private_headers(cncrypto
   ${crypto_private_headers})
-monero_add_library(cncrypto
+masari_add_library(cncrypto
   ${crypto_sources}
   ${crypto_headers}
   ${crypto_private_headers})

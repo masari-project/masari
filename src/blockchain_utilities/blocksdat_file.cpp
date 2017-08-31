@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017, The Monero Project
+// Copyright (c) 2014-2017, The Masari Project
 //
 // All rights reserved.
 //
@@ -28,8 +28,8 @@
 
 #include "blocksdat_file.h"
 
-#undef MONERO_DEFAULT_LOG_CATEGORY
-#define MONERO_DEFAULT_LOG_CATEGORY "bcutil"
+#undef MASARI_DEFAULT_LOG_CATEGORY
+#define MASARI_DEFAULT_LOG_CATEGORY "bcutil"
 
 namespace po = boost::program_options;
 

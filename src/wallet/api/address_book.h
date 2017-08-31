@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017, The Monero Project
+// Copyright (c) 2014-2017, The Masari Project
 //
 // All rights reserved.
 //
@@ -31,7 +31,7 @@
 #include "wallet/wallet2_api.h"
 #include "wallet/wallet2.h"
 
-namespace Monero {
+namespace Masari {
 
 class WalletImpl;
 
@@ -65,6 +65,4 @@ private:
 };
 
 }
-
-namespace Bitmonero = Monero;
 

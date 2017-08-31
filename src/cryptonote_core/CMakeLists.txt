@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2017, The Monero Project
+# Copyright (c) 2014-2017, The Masari Project
 #
 # All rights reserved.
 #
@@ -47,9 +47,9 @@ else()
   set(Blocks "")
 endif()
 
-monero_private_headers(cryptonote_core
+masari_private_headers(cryptonote_core
   ${crypto_private_headers})
-monero_add_library(cryptonote_core
+masari_add_library(cryptonote_core
   ${cryptonote_core_sources}
   ${cryptonote_core_headers}
   ${cryptonote_core_private_headers})

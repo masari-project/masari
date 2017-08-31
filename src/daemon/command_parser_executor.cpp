@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017, The Monero Project
+// Copyright (c) 2014-2017, The Masari Project
 //
 // All rights reserved.
 //
@@ -29,8 +29,8 @@
 #include "common/dns_utils.h"
 #include "daemon/command_parser_executor.h"
 
-#undef MONERO_DEFAULT_LOG_CATEGORY
-#define MONERO_DEFAULT_LOG_CATEGORY "daemon"
+#undef MASARI_DEFAULT_LOG_CATEGORY
+#define MASARI_DEFAULT_LOG_CATEGORY "daemon"
 
 namespace daemonize {
 

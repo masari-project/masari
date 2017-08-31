@@ -1,4 +1,4 @@
-// Copyright (c) 2016, The Monero Project
+// Copyright (c) 2016, The Masari Project
 //
 // All rights reserved.
 //
@@ -26,8 +26,8 @@
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef MONERO_EXCEPTION_H
-#define MONERO_EXCEPTION_H
+#ifndef MASARI_EXCEPTION_H
+#define MASARI_EXCEPTION_H
 
 #include <string>
 

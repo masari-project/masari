@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2017, The Monero Project
+// Copyright (c) 2014-2017, The Masari Project
 //
 // All rights reserved.
 //
@@ -49,8 +49,8 @@ using namespace epee;
 #include "rpc/rpc_args.h"
 #include "rpc/core_rpc_server_commands_defs.h"
 
-#undef MONERO_DEFAULT_LOG_CATEGORY
-#define MONERO_DEFAULT_LOG_CATEGORY "wallet.rpc"
+#undef MASARI_DEFAULT_LOG_CATEGORY
+#define MASARI_DEFAULT_LOG_CATEGORY "wallet.rpc"
 
 namespace
 {
@@ -59,7 +59,7 @@ namespace
   const command_line::arg_descriptor<bool> arg_trusted_daemon = {"trusted-daemon", "Enable commands which rely on a trusted daemon", false};
   const command_line::arg_descriptor<std::string> arg_wallet_dir = {"wallet-dir", "Directory for newly created wallets"};
 
-  constexpr const char default_rpc_username[] = "monero";
+  constexpr const char default_rpc_username[] = "masari";
 }
 
 namespace tools
@@ -191,7 +191,7 @@ namespace tools
       }
       assert(bool(http_login));
 
-      std::string temp = "monero-wallet-rpc." + bind_port + ".login";
+      std::string temp = "masari-wallet-rpc." + bind_port + ".login";
       const auto cookie = tools::create_private_file(temp);
       if (!cookie)
       {
@@ -366,7 +366,7 @@ namespace tools
           }
           if (addresses.empty())
           {
-            er.message = std::string("No Monero address found at ") + url;
+            er.message = std::string("No Masari address found at ") + url;
             return {};
           }
           return addresses[0];
@@ -1011,7 +1011,7 @@ namespace tools
         }
         if (addresses.empty())
         {
-          er.message = std::string("No Monero address found at ") + url;
+          er.message = std::string("No Masari address found at ") + url;
           return {};
         }
         return addresses[0];
@@ -1423,7 +1423,7 @@ namespace tools
         }
         if (addresses.empty())
         {
-          er.message = std::string("No Monero address found at ") + url;
+          er.message = std::string("No Masari address found at ") + url;
           return {};
         }
         return addresses[0];
@@ -1741,10 +1741,10 @@ int main(int argc, char** argv) {
 
   const auto vm = wallet_args::main(
     argc, argv,
-    "monero-wallet-rpc [--wallet-file=<file>|--generate-from-json=<file>|--wallet-dir=<directory>] [--rpc-bind-port=<port>]",
+    "masari-wallet-rpc [--wallet-file=<file>|--generate-from-json=<file>|--wallet-dir=<directory>] [--rpc-bind-port=<port>]",
     desc_params,
     po::positional_options_description(),
-    "monero-wallet-rpc.log",
+    "masari-wallet-rpc.log",
     true
   );
   if (!vm)

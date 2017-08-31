@@ -1,4 +1,4 @@
-// Copyright (c) 2017, The Monero Project
+// Copyright (c) 2017, The Masari Project
 //
 // All rights reserved.
 //
@@ -43,8 +43,8 @@
 #include "wallet/api/unsigned_transaction.h"
 #include "wallet/api/pending_transaction.h"
 
-#undef MONERO_DEFAULT_LOG_CATEGORY
-#define MONERO_DEFAULT_LOG_CATEGORY "debugtools.objectsizes"
+#undef MASARI_DEFAULT_LOG_CATEGORY
+#define MASARI_DEFAULT_LOG_CATEGORY "debugtools.objectsizes"
 
 class size_logger
 {
@@ -105,12 +105,12 @@ int main(int argc, char* argv[])
   SL(tools::wallet2::unsigned_tx_set);
   SL(tools::wallet2::signed_tx_set);
 
-  SL(Monero::WalletImpl);
-  SL(Monero::AddressBookRow);
-  SL(Monero::TransactionInfoImpl);
-  SL(Monero::TransactionHistoryImpl);
-  SL(Monero::PendingTransactionImpl);
-  SL(Monero::UnsignedTransactionImpl);
+  SL(Masari::WalletImpl);
+  SL(Masari::AddressBookRow);
+  SL(Masari::TransactionInfoImpl);
+  SL(Masari::TransactionHistoryImpl);
+  SL(Masari::PendingTransactionImpl);
+  SL(Masari::UnsignedTransactionImpl);
 
   return 0;
 }

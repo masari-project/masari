@@ -31,8 +31,8 @@
 #include "levin_base.h"
 #include "serializeble_struct_helper.h"
 
-#undef MONERO_DEFAULT_LOG_CATEGORY
-#define MONERO_DEFAULT_LOG_CATEGORY "net"
+#undef MASARI_DEFAULT_LOG_CATEGORY
+#define MASARI_DEFAULT_LOG_CATEGORY "net"
 
 namespace epee
 {

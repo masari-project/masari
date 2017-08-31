@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2017, The Monero Project
+# Copyright (c) 2014-2017, The Masari Project
 #
 # All rights reserved.
 #
@@ -33,7 +33,7 @@ endif()
 
 cmake_minimum_required(VERSION 2.8.7)
 
-project(monero)
+project(masari)
 
 function (die msg)
   if (NOT WIN32)
@@ -237,7 +237,7 @@ if(STATIC)
 endif()
 
 # Set default blockchain storage location:
-# memory was the default in Cryptonote before Monero implimented LMDB, it still works but is unneccessary.
+# memory was the default in Cryptonote before Masari implimented LMDB, it still works but is unneccessary.
 # set(DATABASE memory)
 set(DATABASE lmdb)
 

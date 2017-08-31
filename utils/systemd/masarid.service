@@ -1,0 +1,17 @@
+[Unit]
+Description=Masari Full Node
+After=network.target
+
+[Service]
+User=masari
+Group=masari
+WorkingDirectory=~
+
+Type=forking
+PIDFile=/var/run/masarid.pid
+
+ExecStart=/usr/bin/masarid --config-file /etc/masarid.conf \
+    --detach --pidfile /var/run/masarid.pid
+
+[Install]
+WantedBy=multi-user.target

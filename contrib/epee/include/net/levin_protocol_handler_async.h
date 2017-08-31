@@ -39,8 +39,8 @@
 #include <random>
 #include <chrono>
 
-#undef MONERO_DEFAULT_LOG_CATEGORY
-#define MONERO_DEFAULT_LOG_CATEGORY "net"
+#undef MASARI_DEFAULT_LOG_CATEGORY
+#define MASARI_DEFAULT_LOG_CATEGORY "net"
 
 #ifndef MIN_BYTES_WANTED
 #define MIN_BYTES_WANTED	512

@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2017, The Monero Project
+# Copyright (c) 2014-2017, The Masari Project
 #
 # All rights reserved.
 #
@@ -54,9 +54,9 @@ else()
   )
 endif()
 
-monero_private_headers(daemonizer
+masari_private_headers(daemonizer
   ${daemonizer_private_headers})
-monero_add_library(daemonizer
+masari_add_library(daemonizer
   ${daemonizer_sources}
   ${daemonizer_headers}
   ${daemonizer_private_headers})
