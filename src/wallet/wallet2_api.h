@@ -112,12 +112,10 @@ struct UnsignedTransaction
     virtual std::string errorString() const = 0;
     virtual std::vector<uint64_t> amount() const = 0;
     virtual std::vector<uint64_t>  fee() const = 0;
-    virtual std::vector<uint64_t> mixin() const = 0;
     // returns a string with information about all transactions.
     virtual std::string confirmationMessage() const = 0;
     virtual std::vector<std::string> paymentId() const = 0;
     virtual std::vector<std::string> recipientAddress() const = 0;
-    virtual uint64_t minMixinCount() const = 0;
     /*!
      * \brief txCount - number of transactions current transaction will be splitted to
      * \return
@@ -497,14 +495,13 @@ struct Wallet
      * \param dst_addr          destination address as string
      * \param payment_id        optional payment_id, can be empty string
      * \param amount            amount
-     * \param mixin_count       mixin count. if 0 passed, wallet will use default value
      * \param priority
      * \return                  PendingTransaction object. caller is responsible to check PendingTransaction::status()
      *                          after object returned
      */
 
     virtual PendingTransaction * createTransaction(const std::string &dst_addr, const std::string &payment_id,
-                                                   optional<uint64_t> amount, uint32_t mixin_count,
+                                                   optional<uint64_t> amount,
                                                    PendingTransaction::Priority = PendingTransaction::Priority_Low) = 0;
 
    /*!
@@ -545,16 +542,6 @@ struct Wallet
     virtual TransactionHistory * history() const = 0;
     virtual AddressBook * addressBook() const = 0;
     virtual void setListener(WalletListener *) = 0;
-    /*!
-     * \brief defaultMixin - returns number of mixins used in transactions
-     * \return
-     */
-    virtual uint32_t defaultMixin() const = 0;
-    /*!
-     * \brief setDefaultMixin - setum number of mixins to be used for new transactions
-     * \param arg
-     */
-    virtual void setDefaultMixin(uint32_t arg) = 0;
 
     /*!
      * \brief setUserNote - attach an arbitrary string note to a txid

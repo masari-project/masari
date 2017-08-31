@@ -889,7 +889,7 @@ bool WalletImpl::importKeyImages(const string &filename)
 //    - unconfirmed_transfer_details;
 //    - confirmed_transfer_details)
 
-PendingTransaction *WalletImpl::createTransaction(const string &dst_addr, const string &payment_id, optional<uint64_t> amount, uint32_t mixin_count,
+PendingTransaction *WalletImpl::createTransaction(const string &dst_addr, const string &payment_id, optional<uint64_t> amount,
                                                   PendingTransaction::Priority priority)
 
 {
@@ -903,9 +903,6 @@ PendingTransaction *WalletImpl::createTransaction(const string &dst_addr, const 
     bool has_payment_id;
     crypto::hash8 payment_id_short;
     // TODO:  (https://bitcointalk.org/index.php?topic=753252.msg9985441#msg9985441)
-    size_t fake_outs_count = mixin_count > 0 ? mixin_count : m_wallet->default_mixin();
-    if (fake_outs_count == 0)
-        fake_outs_count = DEFAULT_MIXIN;
 
     PendingTransactionImpl * transaction = new PendingTransactionImpl(*this);
 
@@ -964,11 +961,11 @@ PendingTransaction *WalletImpl::createTransaction(const string &dst_addr, const 
                 de.addr = addr;
                 de.amount = *amount;
                 dsts.push_back(de);
-                transaction->m_pending_tx = m_wallet->create_transactions_2(dsts, fake_outs_count, 0 /* unlock_time */,
+                transaction->m_pending_tx = m_wallet->create_transactions_2(dsts, 0 /* unlock_time */,
                                                                           static_cast<uint32_t>(priority),
                                                                           extra, m_trustedDaemon);
             } else {
-                transaction->m_pending_tx = m_wallet->create_transactions_all(0, addr, fake_outs_count, 0 /* unlock_time */,
+                transaction->m_pending_tx = m_wallet->create_transactions_all(0, addr, 0 /* unlock_time */,
                                                                           static_cast<uint32_t>(priority),
                                                                           extra, m_trustedDaemon);
             }
@@ -1009,7 +1006,7 @@ PendingTransaction *WalletImpl::createTransaction(const string &dst_addr, const 
 
         } catch (const tools::error::not_enough_outs_to_mix& e) {
             std::ostringstream writer;
-            writer << tr("not enough outputs for specified ring size") << " = " << (e.mixin_count() + 1) << ":";
+            writer << tr("not enough outputs for specified ring size") << " = " << DEFAULT_RINGSIZE << ":";
             for (const std::pair<uint64_t, uint64_t> outs_for_amount : e.scanty_outs()) {
                 writer << "\n" << tr("output amount") << " = " << print_money(outs_for_amount.first) << ", " << tr("found outputs to use") << " = " << outs_for_amount.second;
             }
@@ -1073,16 +1070,6 @@ void WalletImpl::setListener(WalletListener *l)
 {
     // TODO thread synchronization;
     m_wallet2Callback->setListener(l);
-}
-
-uint32_t WalletImpl::defaultMixin() const
-{
-    return m_wallet->default_mixin();
-}
-
-void WalletImpl::setDefaultMixin(uint32_t arg)
-{
-    m_wallet->default_mixin(arg);
 }
 
 bool WalletImpl::setUserNote(const std::string &txid, const std::string &note)

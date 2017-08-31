@@ -47,14 +47,12 @@ public:
     std::string errorString() const;
     std::vector<uint64_t> amount() const;
     std::vector<uint64_t> fee() const;
-    std::vector<uint64_t> mixin() const;
     std::vector<std::string> paymentId() const;
     std::vector<std::string> recipientAddress() const;
     uint64_t txCount() const;
     // sign txs and save to file
     bool sign(const std::string &signedFileName);
     std::string confirmationMessage() const {return m_confirmationMessage;}
-    uint64_t minMixinCount() const;
 
 private:
     // Callback function to check all loaded tx's and generate confirmationMessage

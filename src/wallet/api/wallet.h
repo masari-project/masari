@@ -107,7 +107,7 @@ public:
     bool useForkRules(uint8_t version, int64_t early_blocks) const;
 
     PendingTransaction * createTransaction(const std::string &dst_addr, const std::string &payment_id,
-                                        optional<uint64_t> amount, uint32_t mixin_count,
+                                        optional<uint64_t> amount,
                                         PendingTransaction::Priority priority = PendingTransaction::Priority_Low);
     bool submitTransaction(const std::string &fileName);
     virtual UnsignedTransaction * loadUnsignedTx(const std::string &unsigned_filename);
@@ -118,8 +118,6 @@ public:
     virtual TransactionHistory * history() const;
     virtual AddressBook * addressBook() const;
     virtual void setListener(WalletListener * l);
-    virtual uint32_t defaultMixin() const;
-    virtual void setDefaultMixin(uint32_t arg);
     virtual bool setUserNote(const std::string &txid, const std::string &note);
     virtual std::string getUserNote(const std::string &txid) const;
     virtual std::string getTxKey(const std::string &txid) const;

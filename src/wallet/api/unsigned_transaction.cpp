@@ -205,22 +205,6 @@ std::vector<uint64_t> UnsignedTransactionImpl::fee() const
     return result;
 }
 
-std::vector<uint64_t> UnsignedTransactionImpl::mixin() const
-{
-    std::vector<uint64_t> result;
-    for (const auto &utx: m_unsigned_tx_set.txes) {
-        size_t min_mixin = ~0;
-        // TODO: Is this loop needed or is sources[0] ?
-        for (size_t s = 0; s < utx.sources.size(); ++s) {
-            size_t mixin = utx.sources[s].outputs.size() - 1;
-                if (mixin < min_mixin)
-                    min_mixin = mixin;
-        }
-        result.push_back(min_mixin);
-    }
-    return result;
-}
-
 uint64_t UnsignedTransactionImpl::txCount() const
 {
     return m_unsigned_tx_set.txes.size();
@@ -263,19 +247,6 @@ std::vector<std::string> UnsignedTransactionImpl::recipientAddress() const
         result.push_back(cryptonote::get_account_address_as_str(m_wallet.m_wallet->testnet(), utx.dests[0].addr));
     }
     return result;
-}
-
-uint64_t UnsignedTransactionImpl::minMixinCount() const
-{
-    uint64_t min_mixin = ~0;
-    for (const auto &utx: m_unsigned_tx_set.txes) {
-        for (size_t s = 0; s < utx.sources.size(); ++s) {
-            size_t mixin = utx.sources[s].outputs.size() - 1;
-                if (mixin < min_mixin)
-                    min_mixin = mixin;
-        }
-    }
-    return min_mixin;
 }
 
 } // namespace

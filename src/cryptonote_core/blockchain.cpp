@@ -2304,50 +2304,11 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 
   const uint8_t hf_version = m_hardfork->get_current_version();
 
-  // require mixin at least 2 unless one output cannot mix with 2 others
-  // if one output cannot mix with 2 others, we accept at most 1 output that can mix
-  size_t n_unmixable = 0, n_mixable = 0;
-  size_t mixin = std::numeric_limits<size_t>::max();
-  const size_t min_mixin = DEFAULT_MIXIN;
   for (const auto& txin : tx.vin)
   {
-    // non txin_to_key inputs will be rejected below
-    if (txin.type() == typeid(txin_to_key))
+    if (boost::get<txin_to_key>(txin).key_offsets.size() != DEFAULT_RINGSIZE)
     {
-      const txin_to_key& in_to_key = boost::get<txin_to_key>(txin);
-      if (in_to_key.amount == 0)
-      {
-        // always consider rct inputs mixable. Even if there's not enough rct
-        // inputs on the chain to mix with, this is going to be the case for
-        // just a few blocks right after the fork at most
-        ++n_mixable;
-      }
-      else
-      {
-        uint64_t n_outputs = m_db->get_num_outputs(in_to_key.amount);
-        MDEBUG("output size " << print_money(in_to_key.amount) << ": " << n_outputs << " available");
-        // n_outputs includes the output we're considering
-        if (n_outputs <= min_mixin)
-          ++n_unmixable;
-        else
-          ++n_mixable;
-      }
-      if (in_to_key.key_offsets.size() - 1 < mixin)
-        mixin = in_to_key.key_offsets.size() - 1;
-    }
-  }
-
-  if (mixin < min_mixin)
-  {
-    if (n_unmixable == 0)
-    {
-      MERROR_VER("Tx " << get_transaction_hash(tx) << " has too low mixin (" << mixin << "), and no unmixable inputs");
-      tvc.m_low_mixin = true;
-      return false;
-    }
-    if (n_mixable > 1)
-    {
-      MERROR_VER("Tx " << get_transaction_hash(tx) << " has too low mixin (" << mixin << "), and more than one mixable input with unmixable inputs");
+      MERROR_VER("Tx " << get_transaction_hash(tx) << " must have ring size (" << DEFAULT_RINGSIZE << ")");
       tvc.m_low_mixin = true;
       return false;
     }

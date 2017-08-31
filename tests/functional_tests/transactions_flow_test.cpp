@@ -56,7 +56,7 @@ inline uint64_t random(const uint64_t max_value) {
           (uint64_t(rand())<<48)) % max_value;
 }
 
-bool do_send_money(tools::wallet2& w1, tools::wallet2& w2, size_t mix_in_factor, uint64_t amount_to_transfer, transaction& tx, size_t parts=1)
+bool do_send_money(tools::wallet2& w1, tools::wallet2& w2, uint64_t amount_to_transfer, transaction& tx, size_t parts=1)
 {
   CHECK_AND_ASSERT_MES(parts > 0, false, "parts must be > 0");
 
@@ -85,7 +85,7 @@ bool do_send_money(tools::wallet2& w1, tools::wallet2& w2, size_t mix_in_factor,
   {
     tools::wallet2::pending_tx ptx;
     std::vector<size_t> indices = w1.select_available_outputs([](const tools::wallet2::transfer_details&) { return true; });
-    w1.transfer(dsts, mix_in_factor, indices, 0, TEST_FEE, std::vector<uint8_t>(), tx, ptx, true);
+    w1.transfer(dsts, indices, 0, TEST_FEE, std::vector<uint8_t>(), tx, ptx, true);
     w1.commit_tx(ptx);
     return true;
   }
@@ -115,7 +115,7 @@ bool transactions_flow_test(std::string& working_folder,
   std::string path_target_wallet,
   std::string& daemon_addr_a,
   std::string& daemon_addr_b,
-  uint64_t amount_to_transfer, size_t mix_in_factor, size_t transactions_count, size_t transactions_per_second)
+  uint64_t amount_to_transfer, size_t transactions_count, size_t transactions_per_second)
 {
   LOG_PRINT_L0("-----------------------STARTING TRANSACTIONS FLOW TEST-----------------------");
   tools::wallet2 w1, w2;
@@ -191,7 +191,7 @@ bool transactions_flow_test(std::string& working_folder,
       BOOST_FOREACH(tools::wallet2::transfer_details& td, incoming_transfers)
       {
         cryptonote::transaction tx_s;
-        bool r = do_send_money(w1, w1, 0, td.m_tx.vout[td.m_internal_output_index].amount - TEST_FEE, tx_s, 50);
+        bool r = do_send_money(w1, w1, td.m_tx.vout[td.m_internal_output_index].amount - TEST_FEE, tx_s, 50);
         CHECK_AND_ASSERT_MES(r, false, "Failed to send starter tx " << get_transaction_hash(tx_s));
         MGINFO_GREEN("Starter transaction sent " << get_transaction_hash(tx_s));
         if(++count >= FIRST_N_TRANSFERS)
@@ -228,18 +228,18 @@ bool transactions_flow_test(std::string& working_folder,
 
     transaction tx;
     /*size_t n_attempts = 0;
-    while (!do_send_money(w1, w2, mix_in_factor, amount_to_tx, tx)) {
+    while (!do_send_money(w1, w2, amount_to_tx, tx)) {
         n_attempts++;
         std::cout << "failed to transfer money, refresh and try again (attempts=" << n_attempts << ")" << std::endl;
         w1.refresh();
     }*/
 
 
-    if(!do_send_money(w1, w2, mix_in_factor, amount_to_tx, tx))
+    if(!do_send_money(w1, w2, amount_to_tx, tx))
     {
       LOG_PRINT_L0("failed to transfer money, tx: " << get_transaction_hash(tx) << ", refresh and try again" );
       w1.refresh(blocks_fetched, received_money, ok);
-      if(!do_send_money(w1, w2, mix_in_factor, amount_to_tx, tx))
+      if(!do_send_money(w1, w2, amount_to_tx, tx))
       {
         LOG_PRINT_L0( "failed to transfer money, second chance. tx: " << get_transaction_hash(tx) << ", exit" );
         LOCAL_ASSERT(false);

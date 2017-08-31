@@ -227,11 +227,6 @@ namespace tools
       return false;
   }
   //------------------------------------------------------------------------------------------------------------------------------
-  uint64_t wallet_rpc_server::adjust_mixin(uint64_t mixin)
-  {
-    return DEFAULT_MIXIN;
-  }
-  //------------------------------------------------------------------------------------------------------------------------------
   void wallet_rpc_server::fill_transfer_entry(tools::wallet_rpc::transfer_entry &entry, const crypto::hash &txid, const crypto::hash &payment_id, const tools::wallet2::payment_details &pd)
   {
     entry.txid = string_tools::pod_to_hex(pd.m_tx_hash);
@@ -463,8 +458,7 @@ namespace tools
 
     try
     {
-      uint64_t mixin = adjust_mixin(req.mixin);
-      std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_2(dsts, mixin, req.unlock_time, req.priority, extra, m_trusted_daemon);
+      std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_2(dsts, req.unlock_time, req.priority, extra, m_trusted_daemon);
 
       // reject proposed transactions if there are more than one.  see on_transfer_split below.
       if (ptx_vector.size() != 1)
@@ -536,11 +530,10 @@ namespace tools
 
     try
     {
-      uint64_t mixin = adjust_mixin(req.mixin);
       uint64_t ptx_amount;
       std::vector<wallet2::pending_tx> ptx_vector;
       LOG_PRINT_L2("on_transfer_split calling create_transactions_2");
-      ptx_vector = m_wallet->create_transactions_2(dsts, mixin, req.unlock_time, req.priority, extra, m_trusted_daemon);
+      ptx_vector = m_wallet->create_transactions_2(dsts, req.unlock_time, req.priority, extra, m_trusted_daemon);
       LOG_PRINT_L2("on_transfer_split called create_transactions_2");
 
       if (!req.do_not_relay)
@@ -622,8 +615,7 @@ namespace tools
 
     try
     {
-      uint64_t mixin = adjust_mixin(req.mixin);
-      std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_all(req.below_amount, dsts[0].addr, mixin, req.unlock_time, req.priority, extra, m_trusted_daemon);
+      std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_all(req.below_amount, dsts[0].addr, req.unlock_time, req.priority, extra, m_trusted_daemon);
 
       if (!req.do_not_relay)
         m_wallet->commit_tx(ptx_vector);

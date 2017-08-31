@@ -49,7 +49,6 @@ namespace
   const command_line::arg_descriptor<std::string> arg_daemon_addr_b   = {"daemon-addr-b",  "", "127.0.0.1:8082"};
 
   const command_line::arg_descriptor<uint64_t> arg_transfer_amount = {"transfer_amount",   "", 60000000000000};
-  const command_line::arg_descriptor<size_t> arg_mix_in_factor     = {"mix-in-factor",     "", 10};
   const command_line::arg_descriptor<size_t> arg_tx_count          = {"tx-count",          "", 100};
   const command_line::arg_descriptor<size_t> arg_tx_per_second     = {"tx-per-second",     "", 20};
   const command_line::arg_descriptor<size_t> arg_test_repeat_count = {"test_repeat_count", "", 1};
@@ -76,7 +75,6 @@ int main(int argc, char* argv[])
   command_line::add_arg(desc_options, arg_daemon_addr_b);
 
   command_line::add_arg(desc_options, arg_transfer_amount);
-  command_line::add_arg(desc_options, arg_mix_in_factor);
   command_line::add_arg(desc_options, arg_tx_count);
   command_line::add_arg(desc_options, arg_tx_per_second);
   command_line::add_arg(desc_options, arg_test_repeat_count);
@@ -109,13 +107,12 @@ int main(int argc, char* argv[])
     std::string daemon_addr_a = command_line::get_arg(vm, arg_daemon_addr_a);
     std::string daemon_addr_b = command_line::get_arg(vm, arg_daemon_addr_b);
     uint64_t amount_to_transfer = command_line::get_arg(vm, arg_transfer_amount);
-    size_t mix_in_factor = command_line::get_arg(vm, arg_mix_in_factor);
     size_t transactions_count = command_line::get_arg(vm, arg_tx_count);
     size_t transactions_per_second = command_line::get_arg(vm, arg_tx_per_second);
     size_t repeat_count = command_line::get_arg(vm, arg_test_repeat_count);
 
     for(size_t i = 0; i != repeat_count; i++)
-      if(!transactions_flow_test(working_folder, path_source_wallet, path_target_wallet, daemon_addr_a, daemon_addr_b, amount_to_transfer, mix_in_factor, transactions_count, transactions_per_second))
+      if(!transactions_flow_test(working_folder, path_source_wallet, path_target_wallet, daemon_addr_a, daemon_addr_b, amount_to_transfer, transactions_count, transactions_per_second))
         break;
 
     std::string s;
