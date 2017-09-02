@@ -1370,6 +1370,8 @@ bool simple_wallet::init(const boost::program_options::variables_map& vm)
     assert(!m_wallet_file.empty());
     bool r = open_wallet(vm);
     CHECK_AND_ASSERT_MES(r, false, tr("failed to open account"));
+    // TODO-TK: probably refreshing from scratch for new wallets, temp solution untill we address new wallet sync issue
+    m_wallet->set_refresh_from_block_height(m_restore_height);
   }
   if (!m_wallet)
   {
