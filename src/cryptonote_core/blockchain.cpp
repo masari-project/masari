@@ -87,7 +87,7 @@ static const struct {
   uint8_t threshold;
   time_t time;
 } mainnet_hard_forks[] = {
-  { 1, 1, 0, 1341378000 },
+  { 1, 1, 0, 1504387246 },
 };
 
 static const struct {
@@ -96,7 +96,7 @@ static const struct {
   uint8_t threshold;
   time_t time;
 } testnet_hard_forks[] = {
-  { 1, 1, 0, 1341378000 },
+  { 1, 1, 0, 1504374656 },
 };
 
 //------------------------------------------------------------------
@@ -3858,7 +3858,7 @@ void Blockchain::cancel()
 }
 
 #if defined(PER_BLOCK_CHECKPOINT)
-static const char expected_block_hashes_hash[] = "23d8a8c73de7b2383c72a016d9a6034e69d62dd48077d1c414e064ceab6daa94";
+static const char expected_block_hashes_hash[] = "b3ef31c591a00c207a6804395c1ebbf75df547ec78d4077f00f36a363287e569";
 void Blockchain::load_compiled_in_block_hashes()
 {
   if (m_fast_sync && get_blocks_dat_start(m_testnet) != nullptr && get_blocks_dat_size(m_testnet) > 0)
