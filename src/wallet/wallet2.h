@@ -524,7 +524,6 @@ namespace tools
 
     void get_hard_fork_info(uint8_t version, uint64_t &earliest_height);
     bool use_fork_rules(uint8_t version, int64_t early_blocks = 0);
-    int get_fee_algorithm();
 
     std::string get_wallet_file() const;
     std::string get_keys_file() const;
@@ -572,7 +571,7 @@ namespace tools
 
     std::vector<std::pair<uint64_t, uint64_t>> estimate_backlog(uint64_t min_blob_size, uint64_t max_blob_size, const std::vector<uint64_t> &fees);
 
-    uint64_t get_fee_multiplier(uint32_t priority, int fee_algorithm = -1);
+    uint64_t get_fee_multiplier(uint32_t priority);
     uint64_t get_per_kb_fee();
 
   private:
