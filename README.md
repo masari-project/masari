@@ -92,10 +92,10 @@ See [Vulnerability Response Process](VULNERABILITY_RESPONSE_PROCESS.md).
 ## Masari software updates and consensus protocol changes (hard fork schedule)
 
 Masari uses a fixed-schedule hard fork mechanism to implement new features. This means that users of Masari (end users and service providers) need to run current versions and update their software on a regular schedule. Here is the current schedule, versions, and compatibility.
-Dates are provided in the format YYYY-MM-DD. 
+Dates are provided in the format YYYY-MM-DD.
 
 
-| Fork Date              | Consensus version | Minimum Masari Version | Recommended Masari Version | Details            |  
+| Fork Date              | Consensus version | Minimum Masari Version | Recommended Masari Version | Details            |
 | ----------------- | ----------------- | ---------------------- | -------------------------- | ------------------ |
 | 2016-09-21        | v3                | v0.9.4                 | v0.10.0                    | Splits coinbase into denominations  |
 | 2017-01-05        | v4                | v0.10.1                 | v0.10.2.1                   | Allow normal and RingCT transactions |
@@ -124,12 +124,12 @@ Installing a snap is very quick. Snaps are secure. They are isolated with all of
 * Docker
 
         docker build -t masari .
-     
+
         # either run in foreground
-        docker run -it -v /masari/chain:/root/.bitmasari -v /masari/wallet:/wallet -p 18080:18080 masari
+        docker run -it -v /masari/chain:/root/.bitmasari -v /masari/wallet:/wallet -p 38080:38080 masari
 
         # or in background
-        docker run -it -d -v /masari/chain:/root/.bitmasari -v /masari/wallet:/wallet -p 18080:18080 masari
+        docker run -it -d -v /masari/chain:/root/.bitmasari -v /masari/wallet:/wallet -p 38080:38080 masari
 
 Packaging for your favorite distribution would be a welcome contribution!
 
@@ -218,19 +218,19 @@ Tested on a Raspberry Pi 2 with a clean install of minimal Debian Jessie from ht
 
 * Increase the system swap size:
 ```	
-	sudo /etc/init.d/dphys-swapfile stop  
-	sudo nano /etc/dphys-swapfile  
-	CONF_SWAPSIZE=1024  
-	sudo /etc/init.d/dphys-swapfile start  
+	sudo /etc/init.d/dphys-swapfile stop
+	sudo nano /etc/dphys-swapfile
+	CONF_SWAPSIZE=1024
+	sudo /etc/init.d/dphys-swapfile start
 ```
 * Install the latest version of boost (this may first require invoking `apt-get remove --purge libboost*` to remove a previous version if you're not using a clean install):
 ```
-	cd  
-	wget https://sourceforge.net/projects/boost/files/boost/1.64.0/boost_1_64_0.tar.bz2  
-	tar xvfo boost_1_64_0.tar.bz2  
-	cd boost_1_64_0  
-	./bootstrap.sh  
-	sudo ./b2  
+	cd
+	wget https://sourceforge.net/projects/boost/files/boost/1.64.0/boost_1_64_0.tar.bz2
+	tar xvfo boost_1_64_0.tar.bz2
+	cd boost_1_64_0
+	./bootstrap.sh
+	sudo ./b2
 ```
 * Wait ~8 hours
 ```
@@ -265,15 +265,15 @@ application.
 
 * Download and install the [MSYS2 installer](http://msys2.github.io), either the 64-bit or the 32-bit package, depending on your system.
 * Open the MSYS shell via the `MSYS2 Shell` shortcut
-* Update packages using pacman:  
+* Update packages using pacman:
 
-        pacman -Syuu  
+        pacman -Syuu
 
-* Exit the MSYS shell using Alt+F4  
+* Exit the MSYS shell using Alt+F4
 * Edit the properties for the `MSYS2 Shell` shortcut changing "msys2_shell.bat" to "msys2_shell.cmd -mingw64" for 64-bit builds or "msys2_shell.cmd -mingw32" for 32-bit builds
-* Restart MSYS shell via modified shortcut and update packages again using pacman:  
+* Restart MSYS shell via modified shortcut and update packages again using pacman:
 
-        pacman -Syuu  
+        pacman -Syuu
 
 
 * Install dependencies:
@@ -283,7 +283,7 @@ application.
         pacman -S mingw-w64-x86_64-toolchain make mingw-w64-x86_64-cmake mingw-w64-x86_64-boost
 
     To build for 32-bit Windows:
- 
+
         pacman -S mingw-w64-i686-toolchain make mingw-w64-i686-cmake mingw-w64-i686-boost
 
 * Open the MingW shell via `MinGW-w64-Win64 Shell` shortcut on 64-bit Windows
@@ -417,7 +417,7 @@ Run the build.
 Once it stalls, enter the following command:
 
 ```
-gdb /path/to/masarid `pidof masarid` 
+gdb /path/to/masarid `pidof masarid`
 ```
 
 Type `thread apply all bt` within gdb in order to obtain the stack trace
