@@ -120,10 +120,10 @@ ge_comments = textwrap.dedent("""\
     */
     """)
 
-xmr_comments = textwrap.dedent("""\
+msr_comments = textwrap.dedent("""\
     /*
      *
-     * xmr specific code
+     * msr specific code
      *
      *
     This code is from the original CryptoNote.
@@ -171,7 +171,7 @@ if a == "m":
         os.system("cp "+g+" "+g.replace("fe", "fe.masari."))
     qhasmToC("fe_pow22523.c", "pow22523.h", "fe.masari._pow22523.c")
     qhasmToC("fe_invert.c", "pow225521.h", "fe.masari._invert.c")
-    os.system("rm fe.masari._isnonzero.c") #since it's modified, it's in xmrSpecificOld
+    os.system("rm fe.masari._isnonzero.c") #since it's modified, it's in msrSpecificOld
     os.system("cat fe.masari.*.c | grep -v '^#include' > fe.masari.c")
 
     #sc things
@@ -180,7 +180,7 @@ if a == "m":
     #so you don't get multiple "loads"
     os.system("tail -n +24 sc_reduce.c > sc.masari._reduce.c") #also good on linux
     os.system("tail -n +24 sc_muladd.c > sc.masari._muladd.c")
-    os.system("tail -n +31 sc_sub.xmr.c > sc.masari._sub.xmr.c") #careful with the tails if you change these files!
+    os.system("tail -n +31 sc_sub.msr.c > sc.masari._sub.msr.c") #careful with the tails if you change these files!
     os.system("cat sc.masari.*.c | grep -v '^#include' > sc.masari.c")
 
     #ge stuff
@@ -223,9 +223,9 @@ if a == "m":
             text_file.write(ge_comments)
     with open("sc.masari.comments", "w") as text_file:
             text_file.write(sc_comments)
-    with open("xmr.masari.comments", "w") as text_file:
-            text_file.write(xmr_comments)
-    with open("xmr.masari.predeclarations", "w") as text_file:
+    with open("msr.masari.comments", "w") as text_file:
+            text_file.write(msr_comments)
+    with open("msr.masari.predeclarations", "w") as text_file:
             text_file.write(predeclarations)
 
 
@@ -238,7 +238,7 @@ if a == "m":
         text_file.write(crypto_ops_includes)
 
     #note you may have duplicates of load_3, load_4 and possibly some other functions ... 
-    os.system("cat masari.license crypto-ops.masari.includes xmr.masari.predeclarations fe.masari.comments fe.masari.c sc.masari.comments sc.masari.c ge.masari.comments ge.masari.c xmr.masari.comments xmrSpecificOld.c > crypto-ops.c")
+    os.system("cat masari.license crypto-ops.masari.includes msr.masari.predeclarations fe.masari.comments fe.masari.c sc.masari.comments sc.masari.c ge.masari.comments ge.masari.c msr.masari.comments msrSpecificOld.c > crypto-ops.c")
 
     #masari specific header files
     #print("making crypto-ops-tmp.h")

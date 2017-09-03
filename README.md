@@ -63,7 +63,7 @@ The Masari donation address is: `5nYWvcvNThsLaMmrsfpRLBRou1RuGtLabUwYH7v6b88bem2
 
 The Bitcoin donation address is: `1KTexdemPdxSBcG55heUuTjDRYqbC5ZL8H`
 
-*Note: you can easily donate XMR to the Masari donation address by using the `donate` command. Type `help` in the command-line wallet for details.*
+*Note: you can easily donate MSR to the Masari donation address by using the `donate` command. Type `help` in the command-line wallet for details.*
 
 Core development funding and/or some supporting services are also graciously provided by sponsors:
 

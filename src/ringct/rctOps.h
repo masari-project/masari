@@ -101,17 +101,17 @@ namespace rct {
     void skpkGen(key &sk, key &pk);
     tuple<key, key> skpkGen();
     //generates a <secret , public> / Pedersen commitment to the amount
-    tuple<ctkey, ctkey> ctskpkGen(xmr_amount amount);
+    tuple<ctkey, ctkey> ctskpkGen(msr_amount amount);
     //generates C =aG + bH from b, a is random
-    void genC(key & C, const key & a, xmr_amount amount);
+    void genC(key & C, const key & a, msr_amount amount);
     //this one is mainly for testing, can take arbitrary amounts..
     tuple<ctkey, ctkey> ctskpkGen(const key &bH);
     // make a pedersen commitment with given key
-    key commit(xmr_amount amount, const key &mask);
+    key commit(msr_amount amount, const key &mask);
     // make a pedersen commitment with zero key
-    key zeroCommit(xmr_amount amount);
+    key zeroCommit(msr_amount amount);
     //generates a random uint long long
-    xmr_amount randXmrAmount(xmr_amount upperlimit);
+    msr_amount randXmrAmount(msr_amount upperlimit);
 
     //Scalar multiplications of curve points
 
