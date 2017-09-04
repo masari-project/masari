@@ -1127,7 +1127,9 @@ namespace nodetool
         max_random_index = std::min<uint64_t>(local_peers_count -1, 20);
         random_index = get_random_index_with_fixed_probability(max_random_index);
       } else {
-        random_index = crypto::rand<size_t>() % m_peerlist.get_gray_peers_count();
+        size_t gray_peers_count = m_peerlist.get_gray_peers_count();
+        // divide by zero workaround (case can occur in small networks)
+        random_index = !gray_peers_count ? 0 : crypto::rand<size_t>() % gray_peers_count;
       }
 
       CHECK_AND_ASSERT_MES(random_index < local_peers_count, false, "random_starter_index < peers_local.size() failed!!");
