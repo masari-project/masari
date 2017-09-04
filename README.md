@@ -1,39 +1,10 @@
 # Masari
 
-Copyright (c) 2014-2017, The Masari Project
+Copyright (c) 2017, The Masari Project
+
+Portions Copyright (c) 2014-2017, The Monero Project
+
 Portions Copyright (c) 2012-2013, The Cryptonote developers
-
-## Development Resources
-
-- Web: [getmasari.org](https://getmasari.org)
-- Forum: [forum.getmasari.org](https://forum.getmasari.org)
-- Mail: [dev@getmasari.org](mailto:dev@getmasari.org)
-- GitHub: [https://github.com/masari-project/masari](https://github.com/masari-project/masari)
-- IRC: [#masari-dev on Freenode](http://webchat.freenode.net/?randomnick=1&channels=%23masari-dev&prompt=1&uio=d4)
-
-## Build
-
-| Operating System      | Processor | Status |
-| --------------------- | -------- |--------|
-| Ubuntu 16.04          |  i686    | [![Ubuntu 16.04 i686](https://build.getmasari.org/png?builder=masari-static-ubuntu-i686)](https://build.getmasari.org/builders/masari-static-ubuntu-i686)
-| Ubuntu 16.04          |  amd64   | [![Ubuntu 16.04 amd64](https://build.getmasari.org/png?builder=masari-static-ubuntu-amd64)](https://build.getmasari.org/builders/masari-static-ubuntu-amd64)
-| Ubuntu 16.04          |  armv7   | [![Ubuntu 16.04 armv7](https://build.getmasari.org/png?builder=masari-static-ubuntu-arm7)](https://build.getmasari.org/builders/masari-static-ubuntu-arm7)
-| Debian Stable         |  armv8   | [![Debian armv8](https://build.getmasari.org/png?builder=masari-static-debian-armv8)](https://build.getmasari.org/builders/masari-static-debian-armv8)
-| OSX 10.10             |  amd64   | [![OSX 10.10 amd64](https://build.getmasari.org/png?builder=masari-static-osx-10.10)](https://build.getmasari.org/builders/masari-static-osx-10.10)
-| OSX 10.11             |  amd64   | [![OSX 10.11 amd64](https://build.getmasari.org/png?builder=masari-static-osx-10.11)](https://build.getmasari.org/builders/masari-static-osx-10.11)
-| OSX 10.12             |  amd64   | [![OSX 10.12 amd64](https://build.getmasari.org/png?builder=masari-static-osx-10.12)](https://build.getmasari.org/builders/masari-static-osx-10.12)
-| FreeBSD 11            |  amd64   | [![FreeBSD 11 amd64](https://build.getmasari.org/png?builder=masari-static-freebsd64)](https://build.getmasari.org/builders/masari-static-freebsd64)
-| DragonFly BSD 4.6     |  amd64   | [![DragonFly BSD amd64](https://build.getmasari.org/png?builder=masari-static-dragonflybsd-amd64)](https://build.getmasari.org/builders/masari-static-dragonflybsd-amd64)
-| Windows (MSYS2/MinGW) |  i686    | [![Windows (MSYS2/MinGW) i686](https://build.getmasari.org/png?builder=masari-static-win32)](https://build.getmasari.org/builders/masari-static-win32)
-| Windows (MSYS2/MinGW) |  amd64   | [![Windows (MSYS2/MinGW) amd64](https://build.getmasari.org/png?builder=masari-static-win64)](https://build.getmasari.org/builders/masari-static-win64)
-
-## Coverage
-
-| Type      | Status |
-|-----------|--------|
-| Coverity  | [![Coverity Status](https://scan.coverity.com/projects/9657/badge.svg)](https://scan.coverity.com/projects/9657/)
-| Coveralls | [![Coveralls Status](https://coveralls.io/repos/github/masari-project/masari/badge.svg?branch=master)](https://coveralls.io/github/masari-project/masari?branch=master)
-| License   | [![License](https://img.shields.io/badge/license-BSD3-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 ## Introduction
 
@@ -61,25 +32,14 @@ Both Masari and Bitcoin donations can be made to donate.getmasari.org if using a
 
 The Masari donation address is: `5nYWvcvNThsLaMmrsfpRLBRou1RuGtLabUwYH7v6b88bem2J4aUwsoF33FbJuqMDgQjpDRTSpLCZu3dXpqXicE2uSWS4LUP` (viewkey: `99e21e00cce073c126e9aed800c9e2e82518534b3924b035a29436ff4f75bc0c`)
 
-The Bitcoin donation address is: `1KTexdemPdxSBcG55heUuTjDRYqbC5ZL8H`
+The Bitcoin donation address is: `1J1he4qtTuNpCxyEBozkeKfDpoeYxfE3rj`
 
 *Note: you can easily donate MSR to the Masari donation address by using the `donate` command. Type `help` in the command-line wallet for details.*
 
-Core development funding and/or some supporting services are also graciously provided by sponsors:
-
-[<img width="80" src="https://static.getmasari.org/images/sponsors/mymasari.png"/>](https://mymasari.com)
-[<img width="150" src="https://static.getmasari.org/images/sponsors/kitware.png?1"/>](http://kitware.com)
-[<img width="100" src="https://static.getmasari.org/images/sponsors/dome9.png"/>](http://dome9.com)
-[<img width="150" src="https://static.getmasari.org/images/sponsors/araxis.png"/>](http://araxis.com)
-[<img width="150" src="https://static.getmasari.org/images/sponsors/jetbrains.png"/>](http://www.jetbrains.com/)
-[<img width="150" src="https://static.getmasari.org/images/sponsors/navicat.png"/>](http://www.navicat.com/)
-[<img width="150" src="https://static.getmasari.org/images/sponsors/symas.png"/>](http://www.symas.com/)
-
-There are also several mining pools that kindly donate a portion of their fees, [a list of them can be found on our Bitcointalk post](https://bitcointalk.org/index.php?topic=583449.0).
-
+There are no mining pools yet, and this page will updated promptly when that milestone has been reached.
 ## License
 
-See [LICENSE](LICENSE).
+[![License](https://img.shields.io/badge/license-BSD3-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
 # Contributing
 
@@ -97,41 +57,7 @@ Dates are provided in the format YYYY-MM-DD.
 
 | Fork Date              | Consensus version | Minimum Masari Version | Recommended Masari Version | Details            |
 | ----------------- | ----------------- | ---------------------- | -------------------------- | ------------------ |
-| 2016-09-21        | v3                | v0.9.4                 | v0.10.0                    | Splits coinbase into denominations  |
-| 2017-01-05        | v4                | v0.10.1                 | v0.10.2.1                   | Allow normal and RingCT transactions |
-| 2017-04-15        | v5                | v0.10.3.0               | v0.10.3.1                    | Adjusted minimum blocksize and fee algorithm      |
-| 2017-09-21        | v6                | Not determined as of 2017-03-27                | Not determined as of 2017-03-27                    | Allow only RingCT transactions      |
-
-## Installing Masari from a Package
-
-Packages are available for
-
-* Ubuntu and [snap supported](https://snapcraft.io/docs/core/install) systems, via a community contributed build.
-
-    snap install masari --beta
-
-Installing a snap is very quick. Snaps are secure. They are isolated with all of their dependencies. Snaps also auto update when a new version is released.
-
-* Arch Linux (via [AUR](https://aur.archlinux.org/)):
-  - Stable release: [`masari`](https://aur.archlinux.org/packages/masari)
-  - Bleeding edge: [`bitmasari-git`](https://aur.archlinux.org/packages/bitmasari-git)
-
-* OS X via [Homebrew](http://brew.sh)
-
-        brew tap sammy007/cryptonight
-        brew install masari --build-from-source
-
-* Docker
-
-        docker build -t masari .
-
-        # either run in foreground
-        docker run -it -v /masari/chain:/root/.bitmasari -v /masari/wallet:/wallet -p 38080:38080 masari
-
-        # or in background
-        docker run -it -d -v /masari/chain:/root/.bitmasari -v /masari/wallet:/wallet -p 38080:38080 masari
-
-Packaging for your favorite distribution would be a welcome contribution!
+| TBD               | v2                | TBD                    | TBD                        | TBD                |
 
 ## Compiling Masari from Source
 
@@ -463,3 +389,4 @@ The output of `mdb_stat -ea <path to blockchain dir>` will indicate inconsistenc
 The output of `mdb_dump -s blocks <path to blockchain dir>` and `mdb_dump -s block_info <path to blockchain dir>` is useful for indicating whether blocks and block_info contain the same keys.
 
 These records are dumped as hex data, where the first line is the key and the second line is the data.
+
