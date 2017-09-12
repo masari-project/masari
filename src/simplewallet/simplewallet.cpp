@@ -426,19 +426,19 @@ bool simple_wallet::print_fee_info(const std::vector<std::string> &args/* = std:
   {
     uint64_t nblocks_low = blocks[priority - 1].first;
     uint64_t nblocks_high = blocks[priority - 1].second;
-    
+
     std::string priority_string;
     switch(priority)
     {
-		case 1 : 
+		case 1 :
 		priority_string = tr("low");
 		break;
 		
-		case 2 : 
+		case 2 :
 		priority_string = tr("medium");
 		break;
 		
-		case 3 : 
+		case 3 :
 		priority_string = tr("high");
 		break;
 	}
@@ -446,7 +446,7 @@ bool simple_wallet::print_fee_info(const std::vector<std::string> &args/* = std:
     if (nblocks_low > 0)
     {
       std::string msg;
-      if (priority == m_wallet->get_default_priority() || (m_wallet->get_default_priority() == 0 && priority == 2))
+      if (priority == m_wallet->get_default_priority() || (m_wallet->get_default_priority() == 0 && priority == 1))
         msg = tr(" (current)");
       uint64_t minutes_low = nblocks_low * DIFFICULTY_TARGET / 60, minutes_high = nblocks_high * DIFFICULTY_TARGET / 60;
       if (nblocks_high == nblocks_low)
