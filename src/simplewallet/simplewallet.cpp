@@ -416,16 +416,33 @@ bool simple_wallet::print_fee_info(const std::vector<std::string> &args/* = std:
     fail_msg_writer() << tr("Error: failed to estimate backlog array size: ") << e.what();
     return true;
   }
-  if (blocks.size() != 4)
+  if (blocks.size() != 3)
   {
     fail_msg_writer() << tr("Error: bad estimated backlog array size");
     return true;
   }
 
-  for (uint32_t priority = 1; priority <= 4; ++priority)
+  for (uint32_t priority = 1; priority <= 3; ++priority)
   {
     uint64_t nblocks_low = blocks[priority - 1].first;
     uint64_t nblocks_high = blocks[priority - 1].second;
+    
+    std::string priority_string;
+    switch(priority)
+    {
+		case 1 : 
+		priority_string = tr("low");
+		break;
+		
+		case 2 : 
+		priority_string = tr("medium");
+		break;
+		
+		case 3 : 
+		priority_string = tr("high");
+		break;
+	}
+	
     if (nblocks_low > 0)
     {
       std::string msg;
@@ -433,12 +450,12 @@ bool simple_wallet::print_fee_info(const std::vector<std::string> &args/* = std:
         msg = tr(" (current)");
       uint64_t minutes_low = nblocks_low * DIFFICULTY_TARGET / 60, minutes_high = nblocks_high * DIFFICULTY_TARGET / 60;
       if (nblocks_high == nblocks_low)
-        message_writer() << (boost::format(tr("%u block (%u minutes) backlog at priority %u%s")) % nblocks_low % minutes_low % priority % msg).str();
+        message_writer() << (boost::format(tr("%u block (%u minutes) backlog at priority %u%s")) % nblocks_low % minutes_low % priority_string % msg).str();
       else
-        message_writer() << (boost::format(tr("%u to %u block (%u to %u minutes) backlog at priority %u")) % nblocks_low % nblocks_high % minutes_low % minutes_high % priority).str();
+        message_writer() << (boost::format(tr("%u to %u block (%u to %u minutes) backlog at priority %u")) % nblocks_low % nblocks_high % minutes_low % minutes_high % priority_string).str();
     }
     else
-      message_writer() << tr("No backlog at priority ") << priority;
+      message_writer() << (boost::format(tr("No backlog at priority %u ")) % priority_string).str();
   }
   return true;
 }
