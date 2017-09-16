@@ -527,8 +527,8 @@
     </message>
     <message>
         <location filename="../src/simplewallet/simplewallet.cpp" line="710"/>
-        <source>sweep_below &lt;amount_threshold&gt; [mixin] address [payment_id] - Send all unlocked outputs below the threshold to an address</source>
-        <translation>sweep_below &lt;amount_threshold&gt; [mixin] address [payment_id] - Invia tutti gli outputs sbloccati sotto la soglia specificata a un indirizzo</translation>
+        <source>sweep_below &lt;amount_threshold&gt; address [payment_id] - Send all unlocked outputs below the threshold to an address</source>
+        <translation>sweep_below &lt;amount_threshold&gt; address [payment_id] - Invia tutti gli outputs sbloccati sotto la soglia specificata a un indirizzo</translation>
     </message>
     <message>
         <location filename="../src/simplewallet/simplewallet.cpp" line="727"/>

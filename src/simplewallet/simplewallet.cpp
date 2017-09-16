@@ -712,6 +712,7 @@ simple_wallet::simple_wallet()
   m_cmd_binder.set_handler("transfer", boost::bind(&simple_wallet::transfer, this, _1), tr("transfer [<priority>] <address> <amount> [<payment_id>] - Transfer <amount> to <address>. <priority> is the priority of the transaction. The higher the priority, the higher the fee of the transaction. Valid values in priority order (from lowest to highest) are: default, low, medium, high. If omitted, the default value (see the command \"set priority\") is used. Multiple payments can be made at once by adding <address_2> <amount_2> etcetera (before the payment ID, if it's included)"));
   m_cmd_binder.set_handler("locked_transfer", boost::bind(&simple_wallet::locked_transfer, this, _1), tr("locked_transfer <addr> <amount> <lockblocks>(Number of blocks to lock the transaction for, max 1000000) [<payment_id>]"));
   m_cmd_binder.set_handler("sweep_all", boost::bind(&simple_wallet::sweep_all, this, _1), tr("sweep_all address [payment_id] - Send all unlocked balance to an address"));
+  m_cmd_binder.set_handler("sweep_below", boost::bind(&simple_wallet::sweep_below, this, _1), tr("sweep_below <amount_threshold> address [payment_id] - Send all unlocked outputs below the threshold to an address"));
   m_cmd_binder.set_handler("donate", boost::bind(&simple_wallet::donate, this, _1), tr("donate <amount> [payment_id] - Donate <amount> to the development team (donate.getmasari.org)"));
   m_cmd_binder.set_handler("sign_transfer", boost::bind(&simple_wallet::sign_transfer, this, _1), tr("Sign a transaction from a file"));
   m_cmd_binder.set_handler("submit_transfer", boost::bind(&simple_wallet::submit_transfer, this, _1), tr("Submit a signed transaction from a file"));
@@ -2923,6 +2924,22 @@ bool simple_wallet::sweep_main(uint64_t below, const std::vector<std::string> &a
 bool simple_wallet::sweep_all(const std::vector<std::string> &args_)
 {
   return sweep_main(0, args_);
+}
+//----------------------------------------------------------------------------------------------------
+bool simple_wallet::sweep_below(const std::vector<std::string> &args_)
+{
+  uint64_t below = 0;
+  if (args_.size() < 1)
+  {
+    fail_msg_writer() << tr("missing amount threshold");
+    return true;
+  }
+  if (!cryptonote::parse_amount(below, args_[0]))
+  {
+    fail_msg_writer() << tr("invalid amount threshold");
+    return true;
+  }
+  return sweep_main(below, std::vector<std::string>(++args_.begin(), args_.end()));
 }
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::donate(const std::vector<std::string> &args_)
