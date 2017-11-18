@@ -2,7 +2,7 @@
 /// @author rfree (current maintainer in masari.cc project)
 /// @brief base for connection, contains e.g. the ratelimit hooks
 
-// Copyright (c) 2014-2017, The Masari Project
+// Copyright (c) 2017-2018, The Masari Project (forked from The Monero Project)
 //
 // All rights reserved.
 //

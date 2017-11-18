@@ -2,7 +2,7 @@
 /// @author rfree (current maintainer in masari.cc project)
 /// @brief This is the place to implement our handlers for protocol network actions, e.g. for ratelimit for download-requests
 
-// Copyright (c) 2014-2017, The Masari Project
+// Copyright (c) 2017-2018, The Masari Project (forked from The Monero Project)
 //
 // All rights reserved.
 //

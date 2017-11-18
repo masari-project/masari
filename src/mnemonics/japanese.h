@@ -21,7 +21,7 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
-// Code surrounding the word list is Copyright (c) 2014-2017, The Masari Project
+// Code surrounding the word list is Copyright (c) 2017-2018, The Masari Project (forked from The Monero Project)
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without modification, are
