@@ -88,7 +88,8 @@ static const struct {
   time_t time;
 } mainnet_hard_forks[] = {
   { 1, 1, 0, 1504387246 },
-  { 2, 28000, 0, 1507601066 }
+  { 2, 28000, 0, 1507601066 },
+  { 3, 63500, 0, 1512206452 }
 };
 
 static const struct {
@@ -98,7 +99,8 @@ static const struct {
   time_t time;
 } testnet_hard_forks[] = {
   { 1, 1, 0, 1504374656 },
-  { 2, 21700, 0, 1507182919 }
+  { 2, 21700, 0, 1507182919 },
+  { 3, 50900, 0, 1511981038 }
 };
 
 //------------------------------------------------------------------
@@ -675,7 +677,16 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   std::vector<uint64_t> timestamps;
   std::vector<difficulty_type> difficulties;
   auto height = m_db->height();
-  size_t difficulty_blocks_count = get_current_hard_fork_version() < 2 ? DIFFICULTY_BLOCKS_COUNT : DIFFICULTY_BLOCKS_COUNT_V2;
+
+  uint8_t version = get_current_hard_fork_version();
+  size_t difficulty_blocks_count;
+  if (version == 1) {
+    difficulty_blocks_count = DIFFICULTY_BLOCKS_COUNT;
+  } else if (version == 2) {
+    difficulty_blocks_count = DIFFICULTY_BLOCKS_COUNT_V2;
+  } else {
+    difficulty_blocks_count = DIFFICULTY_BLOCKS_COUNT_V3;
+  }
 
   // ND: Speedup
   // 1. Keep a list of the last 735 (or less) blocks that is used to compute difficulty,
@@ -716,7 +727,13 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
     m_difficulties = difficulties;
   }
   size_t target = DIFFICULTY_TARGET;
-  return get_current_hard_fork_version() < 2 ?  next_difficulty(timestamps, difficulties, target) : next_difficulty_v2(timestamps, difficulties, target);
+  if (version == 1) {
+    return next_difficulty(timestamps, difficulties, target);
+  } else if (version == 2) {
+    return next_difficulty_v2(timestamps, difficulties, target);
+  } else {
+    return next_difficulty_v3(timestamps, difficulties, target);
+  }
 }
 //------------------------------------------------------------------
 // This function removes blocks from the blockchain until it gets to the
@@ -864,7 +881,15 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
   LOG_PRINT_L3("Blockchain::" << __func__);
   std::vector<uint64_t> timestamps;
   std::vector<difficulty_type> cumulative_difficulties;
-  size_t difficulty_blocks_count = get_current_hard_fork_version() < 2 ? DIFFICULTY_BLOCKS_COUNT : DIFFICULTY_BLOCKS_COUNT_V2;
+  uint8_t version = get_current_hard_fork_version();
+  size_t difficulty_blocks_count;
+  if (version == 1) {
+    difficulty_blocks_count = DIFFICULTY_BLOCKS_COUNT;
+  } else if (version == 2) {
+    difficulty_blocks_count = DIFFICULTY_BLOCKS_COUNT_V2;
+  } else {
+    difficulty_blocks_count = DIFFICULTY_BLOCKS_COUNT_V3;
+  }
 
   // if the alt chain isn't long enough to calculate the difficulty target
   // based on its blocks alone, need to get more blocks from the main chain
@@ -920,7 +945,13 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
   size_t target = DIFFICULTY_TARGET;
 
   // calculate the difficulty target for the block and return it
-  return get_current_hard_fork_version() < 2 ?  next_difficulty(timestamps, cumulative_difficulties, target) : next_difficulty_v2(timestamps, cumulative_difficulties, target);
+  if (version == 1) {
+    return next_difficulty(timestamps, cumulative_difficulties, target);
+  } else if (version == 2) {
+    return next_difficulty_v2(timestamps, cumulative_difficulties, target);
+  } else {
+    return next_difficulty_v3(timestamps, cumulative_difficulties, target);
+  }
 }
 //------------------------------------------------------------------
 // This function does a sanity check on basic things that all miner
@@ -3867,7 +3898,7 @@ void Blockchain::cancel()
 }
 
 #if defined(PER_BLOCK_CHECKPOINT)
-static const char expected_block_hashes_hash[] = "d34e18816a62b2f967bb4eafa96a33489c695b5a4e068ede390dec71e2e3eca1";
+static const char expected_block_hashes_hash[] = "5c65bd976d6dc7cad588dd959d590fce9646d2209724c6de083772d9dbf0fd9b";
 void Blockchain::load_compiled_in_block_hashes()
 {
   if (m_fast_sync && get_blocks_dat_start(m_testnet) != nullptr && get_blocks_dat_size(m_testnet) > 0)
