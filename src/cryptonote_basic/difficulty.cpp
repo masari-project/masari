@@ -277,21 +277,22 @@ namespace cryptonote {
 
     uint64_t weighted_timespans = 0;
     for (size_t i = 1; i < length; i++) {
-      uint64_t timespan = timestamps[i] - timestamps[i - 1];
+      uint64_t timespan;
+      if (timestamps[i - 1] >= timestamps[i]) {
+        timespan = 1;
+      } else {
+        timespan = timestamps[i] - timestamps[i - 1];
+      }
       if (timespan > 10 * target_seconds) {
         timespan = 10 * target_seconds;
-      }
-      if (timespan == 0) {
-        timespan = 1;
       }
       weighted_timespans += i * timespan;
     }
 
-    // TODO-TK: add this floor limit recomendation for the protocol upgrade
-    //uint64_t minimum_timespan = target_seconds * length / 2;
-    //if (weighted_timespans < minimum_timespan) {
-    //  weighted_timespans = minimum_timespan;
-    //}
+    uint64_t minimum_timespan = target_seconds * length / 2;
+    if (weighted_timespans < minimum_timespan) {
+      weighted_timespans = minimum_timespan;
+    }
 
     difficulty_type total_work = cumulative_difficulties.back() - cumulative_difficulties.front();
     assert(total_work > 0);
