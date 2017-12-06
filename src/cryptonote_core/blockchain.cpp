@@ -89,7 +89,8 @@ static const struct {
 } mainnet_hard_forks[] = {
   { 1, 1, 0, 1504387246 },
   { 2, 28000, 0, 1507601066 },
-  { 3, 63500, 0, 1512206452 }
+  { 3, 63500, 0, 1512206452 },
+  { 4, 70000, 0, 1513136914 }
 };
 
 static const struct {
@@ -100,7 +101,8 @@ static const struct {
 } testnet_hard_forks[] = {
   { 1, 1, 0, 1504374656 },
   { 2, 21700, 0, 1507182919 },
-  { 3, 50900, 0, 1511981038 }
+  { 3, 50900, 0, 1511981038 },
+  { 4, 55555, 0, 1512627130 }
 };
 
 //------------------------------------------------------------------
@@ -731,8 +733,10 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
     return next_difficulty(timestamps, difficulties, target);
   } else if (version == 2) {
     return next_difficulty_v2(timestamps, difficulties, target);
+  } else if (version == 3) {
+    return next_difficulty_v3(timestamps, difficulties, target, false);
   } else {
-    return next_difficulty_v3(timestamps, difficulties, target);
+    return next_difficulty_v3(timestamps, difficulties, target, true);
   }
 }
 //------------------------------------------------------------------
@@ -949,8 +953,10 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
     return next_difficulty(timestamps, cumulative_difficulties, target);
   } else if (version == 2) {
     return next_difficulty_v2(timestamps, cumulative_difficulties, target);
+  } else if (version == 3) {
+    return next_difficulty_v3(timestamps, cumulative_difficulties, target, false);
   } else {
-    return next_difficulty_v3(timestamps, cumulative_difficulties, target);
+    return next_difficulty_v3(timestamps, cumulative_difficulties, target, true);
   }
 }
 //------------------------------------------------------------------
