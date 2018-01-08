@@ -261,7 +261,7 @@ namespace cryptonote {
   t=T*N/2 if t < T*N/2  # in case of startup weirdness, keep t reasonable
   next_D = d * k / t
   */
-  difficulty_type next_difficulty_v3(std::vector<std::uint64_t> timestamps, std::vector<difficulty_type> cumulative_difficulties, size_t target_seconds, bool max_only) {
+  difficulty_type next_difficulty_v3(std::vector<std::uint64_t> timestamps, std::vector<difficulty_type> cumulative_difficulties, size_t target_seconds, bool v4) {
 
     if (timestamps.size() > DIFFICULTY_BLOCKS_COUNT_V3)
     {
@@ -278,7 +278,7 @@ namespace cryptonote {
     uint64_t weighted_timespans = 0;
     uint64_t target;
 
-    if (max_only == true) {
+    if (v4 == true) {
       uint64_t previous_max = timestamps[0];
       for (size_t i = 1; i < length; i++) {
         uint64_t timespan;
