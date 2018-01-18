@@ -1,4 +1,4 @@
-// Copyright (c) 2017, The Monero Project
+// Copyright (c) 2014-2018, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -25,47 +25,44 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Adapted from Python code by Sarang Noether
+// 
+// Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #pragma once
 
-#ifndef MULTIEXP_H
-#define MULTIEXP_H
-
-#include <vector>
 #include "crypto/crypto.h"
-#include "rctTypes.h"
-#include "misc_log_ex.h"
+#include "cryptonote_basic/cryptonote_basic.h"
 
-namespace rct
+#include "single_tx_test_base.h"
+
+template<bool verify>
+class test_signature : public single_tx_test_base
 {
+public:
+  static const size_t loop_count = 10000;
 
-struct MultiexpData {
-  rct::key scalar;
-  ge_p3 point;
-
-  MultiexpData() {}
-  MultiexpData(const rct::key &s, const ge_p3 &p): scalar(s), point(p) {}
-  MultiexpData(const rct::key &s, const rct::key &p): scalar(s)
+  bool init()
   {
-    CHECK_AND_ASSERT_THROW_MES(ge_frombytes_vartime(&point, p.bytes) == 0, "ge_frombytes_vartime failed");
+    if (!single_tx_test_base::init())
+      return false;
+
+    message = crypto::rand<crypto::hash>();
+    keys = cryptonote::keypair::generate(hw::get_device("default"));
+    crypto::generate_signature(message, keys.pub, keys.sec, m_signature);
+
+    return true;
   }
+
+  bool test()
+  {
+    if (verify)
+      return crypto::check_signature(message, keys.pub, m_signature);
+    crypto::generate_signature(message, keys.pub, keys.sec, m_signature);
+    return true;
+  }
+
+private:
+  cryptonote::keypair keys;
+  crypto::hash message;
+  crypto::signature m_signature;
 };
-
-struct straus_cached_data;
-struct pippenger_cached_data;
-
-rct::key bos_coster_heap_conv(std::vector<MultiexpData> data);
-rct::key bos_coster_heap_conv_robust(std::vector<MultiexpData> data);
-std::shared_ptr<straus_cached_data> straus_init_cache(const std::vector<MultiexpData> &data, size_t N =0);
-size_t straus_get_cache_size(const std::shared_ptr<straus_cached_data> &cache);
-rct::key straus(const std::vector<MultiexpData> &data, const std::shared_ptr<straus_cached_data> &cache = NULL, size_t STEP = 0);
-std::shared_ptr<pippenger_cached_data> pippenger_init_cache(const std::vector<MultiexpData> &data, size_t N =0);
-size_t pippenger_get_cache_size(const std::shared_ptr<pippenger_cached_data> &cache);
-size_t get_pippenger_c(size_t N);
-rct::key pippenger(const std::vector<MultiexpData> &data, const std::shared_ptr<pippenger_cached_data> &cache = NULL, size_t c = 0);
-
-}
-
-#endif

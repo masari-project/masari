@@ -53,6 +53,7 @@ set(unit_tests_sources
   memwipe.cpp
   mnemonics.cpp
   mul_div.cpp
+  multiexp.cpp
   multisig.cpp
   parse_amount.cpp
   serialization.cpp
@@ -68,7 +69,11 @@ set(unit_tests_sources
   varint.cpp
   ringct.cpp
   output_selection.cpp
-  vercmp.cpp)
+  vercmp.cpp
+  ringdb.cpp
+  wipeable_string.cpp
+  is_hdd.cpp
+  aligned.cpp)
 
 set(unit_tests_headers
   unit_tests_utils.h)

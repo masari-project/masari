@@ -125,6 +125,48 @@ namespace cryptonote
     return h;
   }
   //---------------------------------------------------------------
+  bool expand_transaction_1(transaction &tx, bool base_only)
+  {
+    if (tx.version >= 1 && !is_coinbase(tx))
+    {
+      rct::rctSig &rv = tx.rct_signatures;
+      if (rv.outPk.size() != tx.vout.size())
+      {
+        LOG_PRINT_L1("Failed to parse transaction from blob, bad outPk size in tx " << get_transaction_hash(tx));
+        return false;
+      }
+      for (size_t n = 0; n < tx.rct_signatures.outPk.size(); ++n)
+        rv.outPk[n].dest = rct::pk2rct(boost::get<txout_to_key>(tx.vout[n].target).key);
+
+      if (!base_only)
+      {
+        const bool bulletproof = rct::is_rct_bulletproof(rv.type);
+        if (bulletproof)
+        {
+          if (rct::n_bulletproof_amounts(rv.p.bulletproofs) != tx.vout.size())
+          {
+            LOG_PRINT_L1("Failed to parse transaction from blob, bad bulletproofs size in tx " << get_transaction_hash(tx));
+            return false;
+          }
+          size_t idx = 0;
+          for (size_t n = 0; n < rv.p.bulletproofs.size(); ++n)
+          {
+            //rv.p.bulletproofs[n].V.resize(1);
+            //rv.p.bulletproofs[n].V[0] = rv.outPk[n].mask;
+            CHECK_AND_ASSERT_MES(rv.p.bulletproofs[n].L.size() >= 6, false, "Bad bulletproofs L size"); // at least 64 bits
+            const size_t n_amounts = rct::n_bulletproof_amounts(rv.p.bulletproofs[n]);
+            CHECK_AND_ASSERT_MES(idx + n_amounts <= rv.outPk.size(), false, "Internal error filling out V");
+            rv.p.bulletproofs[n].V.resize(n_amounts);
+            rv.p.bulletproofs[n].V.clear();
+            for (size_t i = 0; i < n_amounts; ++i)
+              rv.p.bulletproofs[n].V[i] = rv.outPk[idx++].mask;
+          }
+        }
+      }
+    }
+    return true;
+  }
+  //---------------------------------------------------------------
   bool parse_and_validate_tx_from_blob(const blobdata& tx_blob, transaction& tx)
   {
     std::stringstream ss;

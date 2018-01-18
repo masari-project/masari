@@ -246,6 +246,18 @@ int main(int argc, char* argv[])
     //GENERATE_AND_PLAY(spend_uncle_original_miner_tx);
     //GENERATE_AND_PLAY(spend_uncle_mined_txs);
 
+    GENERATE_AND_PLAY(gen_bp_tx_valid_1);
+    GENERATE_AND_PLAY(gen_bp_tx_invalid_1_1);
+    GENERATE_AND_PLAY(gen_bp_tx_valid_2);
+    GENERATE_AND_PLAY(gen_bp_tx_valid_4_2_1);
+    GENERATE_AND_PLAY(gen_bp_tx_valid_16_16);
+    GENERATE_AND_PLAY(gen_bp_txs_valid_2_and_2);
+    GENERATE_AND_PLAY(gen_bp_txs_valid_2_and_8_2_and_16_16_1);
+    GENERATE_AND_PLAY(gen_bp_tx_invalid_not_enough_proofs);
+    GENERATE_AND_PLAY(gen_bp_tx_invalid_too_many_proofs);
+    GENERATE_AND_PLAY(gen_bp_tx_invalid_wrong_amount);
+    GENERATE_AND_PLAY(gen_bp_tx_invalid_switched);
+
     el::Level level = (failed_tests.empty() ? el::Level::Info : el::Level::Error);
     MLOG(level, "\nREPORT:");
     MLOG(level, "  Test run: " << tests_count);

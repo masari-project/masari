@@ -1061,3 +1061,37 @@ TEST(ringct, key_ostream)
     out.str()
   );
 }
+
+TEST(ringct, zeroCommmit)
+{
+  static const uint64_t amount = crypto::rand<uint64_t>();
+  const rct::key z = rct::zeroCommit(amount);
+  const rct::key a = rct::scalarmultBase(rct::identity());
+  const rct::key b = rct::scalarmultH(rct::d2h(amount));
+  const rct::key manual = rct::addKeys(a, b);
+  ASSERT_EQ(z, manual);
+}
+
+TEST(ringct, H)
+{
+  ge_p3 p3;
+  ASSERT_EQ(ge_frombytes_vartime(&p3, rct::H.bytes), 0);
+  ASSERT_EQ(memcmp(&p3, &ge_p3_H, sizeof(ge_p3)), 0);
+}
+
+TEST(ringct, aggregated)
+{
+  static const size_t N_PROOFS = 16;
+  std::vector<rctSig> s(N_PROOFS);
+  std::vector<const rctSig*> sp(N_PROOFS);
+
+  for (size_t n = 0; n < N_PROOFS; ++n)
+  {
+    static const uint64_t inputs[] = {1000, 1000};
+    static const uint64_t outputs[] = {500, 1500};
+    s[n] = make_sample_simple_rct_sig(NELTS(inputs), inputs, NELTS(outputs), outputs, 0);
+    sp[n] = &s[n];
+  }
+
+  ASSERT_TRUE(verRctSemanticsSimple(sp));
+}

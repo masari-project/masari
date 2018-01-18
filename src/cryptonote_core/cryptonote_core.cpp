@@ -660,43 +660,155 @@ namespace cryptonote
       for (size_t n = 0; n < tx.rct_signatures.outPk.size(); ++n)
         rv.outPk[n].dest = rct::pk2rct(boost::get<txout_to_key>(tx.vout[n].target).key);
 
-      const bool bulletproof = rv.type == rct::RCTTypeFullBulletproof || rv.type == rct::RCTTypeSimpleBulletproof;
+      const bool bulletproof = rct::is_rct_bulletproof(rv.type);
       if (bulletproof)
       {
-        if (rv.p.bulletproofs.size() != tx.vout.size())
+        if (rct::n_bulletproof_amounts(rv.p.bulletproofs) != tx.vout.size())
         {
           LOG_PRINT_L1("WRONG TRANSACTION BLOB, Bad bulletproofs size in tx " << tx_hash << ", rejected");
           tvc.m_verifivation_failed = true;
           return false;
         }
-        for (size_t n = 0; n < rv.outPk.size(); ++n)
+        size_t idx = 0;
+        for (size_t n = 0; n < rv.p.bulletproofs.size(); ++n)
         {
-          rv.p.bulletproofs[n].V.resize(1);
-          rv.p.bulletproofs[n].V[0] = rv.outPk[n].mask;
+          CHECK_AND_ASSERT_MES(rv.p.bulletproofs[n].L.size() >= 6, false, "Bad bulletproofs L size"); // at least 64 bits
+          const size_t n_amounts = rct::n_bulletproof_amounts(rv.p.bulletproofs[n]);
+          CHECK_AND_ASSERT_MES(idx + n_amounts <= rv.outPk.size(), false, "Internal error filling out V");
+          rv.p.bulletproofs[n].V.clear();
+          for (size_t i = 0; i < n_amounts; ++i)
+            rv.p.bulletproofs[n].V.push_back(rv.outPk[idx++].mask);
+        }
+      }
+    }
+    return true;
+  }
+  //-----------------------------------------------------------------------------------------------
+  void core::set_semantics_failed(const crypto::hash &tx_hash)
+  {
+    LOG_PRINT_L1("WRONG TRANSACTION BLOB, Failed to check tx " << tx_hash << " semantic, rejected");
+    bad_semantics_txes_lock.lock();
+    bad_semantics_txes[0].insert(tx_hash);
+    if (bad_semantics_txes[0].size() >= BAD_SEMANTICS_TXES_MAX_SIZE)
+    {
+      std::swap(bad_semantics_txes[0], bad_semantics_txes[1]);
+      bad_semantics_txes[0].clear();
+    }
+    bad_semantics_txes_lock.unlock();
+  }
+  //-----------------------------------------------------------------------------------------------
+  static bool is_canonical_bulletproof_layout(const std::vector<rct::Bulletproof> &proofs)
+  {
+    size_t n_amounts = rct::n_bulletproof_amounts(proofs), amounts_proved = 0;
+    size_t n = 0;
+    while (amounts_proved < n_amounts)
+    {
+      if (n >= proofs.size())
+        return false;
+      size_t batch_size = 1;
+      while (batch_size * 2 + amounts_proved <= n_amounts && batch_size * 2 <= BULLETPROOF_MAX_OUTPUTS)
+        batch_size *= 2;
+      if (rct::n_bulletproof_amounts(proofs[n]) != batch_size)
+        return false;
+      amounts_proved += batch_size;
+      ++n;
+    }
+    return true;
+  }
+  //-----------------------------------------------------------------------------------------------
+  bool core::handle_incoming_tx_accumulated_batch(std::vector<tx_verification_batch_info> &tx_info, bool keeped_by_block)
+  {
+    bool ret = true;
+    if (keeped_by_block && get_blockchain_storage().is_within_compiled_block_hash_area())
+    {
+      MTRACE("Skipping semantics check for tx kept by block in embedded hash area");
+      return true;
+    }
+
+    std::vector<const rct::rctSig*> rvv;
+    for (size_t n = 0; n < tx_info.size(); ++n)
+    {
+      if (!check_tx_semantic(*tx_info[n].tx, keeped_by_block))
+      {
+        set_semantics_failed(tx_info[n].tx_hash);
+        tx_info[n].tvc.m_verifivation_failed = true;
+        tx_info[n].result = false;
+        continue;
+      }
+
+      if (tx_info[n].tx->version < 2)
+        continue;
+      const rct::rctSig &rv = tx_info[n].tx->rct_signatures;
+      switch (rv.type) {
+        case rct::RCTTypeNull:
+          // coinbase should not come here, so we reject for all other types
+          MERROR_VER("Unexpected Null rctSig type");
+          set_semantics_failed(tx_info[n].tx_hash);
+          tx_info[n].tvc.m_verifivation_failed = true;
+          tx_info[n].result = false;
+          break;
+        case rct::RCTTypeSimple:
+          if (!rct::verRctSemanticsSimple(rv))
+          {
+            MERROR_VER("rct signature semantics check failed");
+            set_semantics_failed(tx_info[n].tx_hash);
+            tx_info[n].tvc.m_verifivation_failed = true;
+            tx_info[n].result = false;
+            break;
+          }
+          break;
+        case rct::RCTTypeFull:
+          if (!rct::verRct(rv, true))
+          {
+            MERROR_VER("rct signature semantics check failed");
+            set_semantics_failed(tx_info[n].tx_hash);
+            tx_info[n].tvc.m_verifivation_failed = true;
+            tx_info[n].result = false;
+            break;
+          }
+          break;
+        case rct::RCTTypeBulletproof:
+          // in addition to valid bulletproofs, we want multi-out
+          // proofs to be in decreasing power of 2 constituents
+          if (!is_canonical_bulletproof_layout(rv.p.bulletproofs))
+          {
+            MERROR_VER("Bulletproof does not use decreasing power of 2 rule");
+            set_semantics_failed(tx_info[n].tx_hash);
+            tx_info[n].tvc.m_verifivation_failed = true;
+            tx_info[n].result = false;
+            break;
+          }
+          rvv.push_back(&rv); // delayed batch verification
+          break;
+        default:
+          MERROR_VER("Unknown rct type: " << rv.type);
+          set_semantics_failed(tx_info[n].tx_hash);
+          tx_info[n].tvc.m_verifivation_failed = true;
+          tx_info[n].result = false;
+          break;
+      }
+    }
+    if (!rvv.empty() && !rct::verRctSemanticsSimple(rvv))
+    {
+      LOG_PRINT_L1("One transaction among this group has bad semantics, verifying one at a time");
+      ret = false;
+      const bool assumed_bad = rvv.size() == 1; // if there's only one tx, it must be the bad one
+      for (size_t n = 0; n < tx_info.size(); ++n)
+      {
+        if (!tx_info[n].result)
+          continue;
+        if (tx_info[n].tx->rct_signatures.type != rct::RCTTypeBulletproof)
+          continue;
+        if (assumed_bad || !rct::verRctSemanticsSimple(tx_info[n].tx->rct_signatures))
+        {
+          set_semantics_failed(tx_info[n].tx_hash);
+          tx_info[n].tvc.m_verifivation_failed = true;
+          tx_info[n].result = false;
         }
       }
     }
 
-    if (keeped_by_block && get_blockchain_storage().is_within_compiled_block_hash_area())
-    {
-      MTRACE("Skipping semantics check for tx kept by block in embedded hash area");
-    }
-    else if(!check_tx_semantic(tx, keeped_by_block))
-    {
-      LOG_PRINT_L1("WRONG TRANSACTION BLOB, Failed to check tx " << tx_hash << " semantic, rejected");
-      tvc.m_verifivation_failed = true;
-      bad_semantics_txes_lock.lock();
-      bad_semantics_txes[0].insert(tx_hash);
-      if (bad_semantics_txes[0].size() >= BAD_SEMANTICS_TXES_MAX_SIZE)
-      {
-        std::swap(bad_semantics_txes[0], bad_semantics_txes[1]);
-        bad_semantics_txes[0].clear();
-      }
-      bad_semantics_txes_lock.unlock();
-      return false;
-    }
-
-    return true;
+    return ret;
   }
   //-----------------------------------------------------------------------------------------------
   bool core::handle_incoming_txs(const std::list<blobdata>& tx_blobs, std::vector<tx_verification_context>& tvc, bool keeped_by_block, bool relayed, bool do_not_relay)
@@ -751,6 +863,16 @@ namespace cryptonote
       }
     }
     waiter.wait();
+
+    std::vector<tx_verification_batch_info> tx_info;
+    tx_info.reserve(tx_blobs.size());
+    for (size_t i = 0; i < tx_blobs.size(); i++) {
+      if (!results[i].res)
+        continue;
+      tx_info.push_back({&results[i].tx, results[i].hash, tvc[i], results[i].res});
+    }
+    if (!tx_info.empty())
+      handle_incoming_tx_accumulated_batch(tx_info, keeped_by_block);
 
     bool ok = true;
     it = tx_blobs.begin();
@@ -855,36 +977,6 @@ namespace cryptonote
     {
       MERROR_VER("tx uses key image not in the valid domain");
       return false;
-    }
-
-    if (tx.version >= 1)
-    {
-      const rct::rctSig &rv = tx.rct_signatures;
-      switch (rv.type) {
-        case rct::RCTTypeNull:
-          // coinbase should not come here, so we reject for all other types
-          MERROR_VER("Unexpected Null rctSig type");
-          return false;
-        case rct::RCTTypeSimple:
-        case rct::RCTTypeSimpleBulletproof:
-          if (!rct::verRctSimple(rv, true))
-          {
-            MERROR_VER("rct signature semantics check failed");
-            return false;
-          }
-          break;
-        case rct::RCTTypeFull:
-        case rct::RCTTypeFullBulletproof:
-          if (!rct::verRct(rv, true))
-          {
-            MERROR_VER("rct signature semantics check failed");
-            return false;
-          }
-          break;
-        default:
-          MERROR_VER("Unknown rct type: " << rv.type);
-          return false;
-      }
     }
 
     return true;
