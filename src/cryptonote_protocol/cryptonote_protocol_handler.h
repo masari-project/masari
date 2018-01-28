@@ -2,7 +2,8 @@
 /// @author rfree (current maintainer/user in masari.cc project - most of code is from CryptoNote)
 /// @brief This is the orginal cryptonote protocol network-events handler, modified by us
 
-// Copyright (c) 2017-2018, The Masari Project (forked from The Monero Project)
+// Copyright (c) 2017-2018, The Masari Project
+// Copyright (c) 2014-2017, The Monero Project
 //
 // All rights reserved.
 //

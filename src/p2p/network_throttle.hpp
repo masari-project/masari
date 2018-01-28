@@ -2,7 +2,8 @@
 /// @author rfree (current maintainer in masari.cc project)
 /// @brief interface for throttling of connection (count and rate-limit speed etc)
 
-// Copyright (c) 2017-2018, The Masari Project (forked from The Monero Project)
+// Copyright (c) 2017-2018, The Masari Project
+// Copyright (c) 2014-2017, The Monero Project
 // 
 // All rights reserved.
 // 
