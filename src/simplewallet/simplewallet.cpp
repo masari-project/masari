@@ -507,7 +507,7 @@ bool simple_wallet::set_default_priority(const std::vector<std::string> &args/* 
   {
     if (strchr(args[1].c_str(), '-'))
     {
-      fail_msg_writer() << tr("priority must be 0, 1, 2, 3, or 4 ");
+      fail_msg_writer() << tr("priority must be 0, 1, 2, or 3 ");
       return true;
     }
     if (args[1] == "0")
@@ -517,9 +517,9 @@ bool simple_wallet::set_default_priority(const std::vector<std::string> &args/* 
     else
     {
       priority = boost::lexical_cast<int>(args[1]);
-      if (priority < 1 || priority > 4)
+      if (priority < 1 || priority > 3)
       {
-        fail_msg_writer() << tr("priority must be 0, 1, 2, 3,or 4");
+        fail_msg_writer() << tr("priority must be 0, 1, 2, or 3 ");
         return true;
       }
     }
@@ -534,7 +534,7 @@ bool simple_wallet::set_default_priority(const std::vector<std::string> &args/* 
   }
   catch(const boost::bad_lexical_cast &)
   {
-    fail_msg_writer() << tr("priority must be 0, 1, 2 3,or 4");
+    fail_msg_writer() << tr("priority must be 0, 1, 2, or 3");
     return true;
   }
   catch(...)
@@ -806,7 +806,7 @@ bool simple_wallet::set_variable(const std::vector<std::string> &args)
     CHECK_SIMPLE_VARIABLE("store-tx-info", set_store_tx_info, tr("0 or 1"));
     CHECK_SIMPLE_VARIABLE("auto-refresh", set_auto_refresh, tr("0 or 1"));
     CHECK_SIMPLE_VARIABLE("refresh-type", set_refresh_type, tr("full (slowest, no assumptions); optimize-coinbase (fast, assumes the whole coinbase is paid to a single address); no-coinbase (fastest, assumes we receive no coinbase transaction), default (same as optimize-coinbase)"));
-    CHECK_SIMPLE_VARIABLE("priority", set_default_priority, tr("0, 1, 2, 3, or 4"));
+    CHECK_SIMPLE_VARIABLE("priority", set_default_priority, tr("0, 1, 2, or 3"));
     CHECK_SIMPLE_VARIABLE("confirm-missing-payment-id", set_confirm_missing_payment_id, tr("0 or 1"));
     CHECK_SIMPLE_VARIABLE("ask-password", set_ask_password, tr("0 or 1"));
     CHECK_SIMPLE_VARIABLE("unit", set_unit, tr("masari, millisari, microsari, nanosari, picosari"));
