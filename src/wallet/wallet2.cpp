@@ -4335,6 +4335,7 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions_from(const crypton
       {
         LOG_PRINT_L2("We have more to pay, starting another tx");
         txes.push_back(TX());
+        original_output_index = 0;
       }
     }
   }
