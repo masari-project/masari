@@ -2295,6 +2295,10 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
       local_args.erase(local_args.begin());
       priority = std::distance(allowed_priority_strings.begin(), priority_pos);
     }
+    else
+    {
+      priority = m_wallet->get_default_priority();
+    }
   }
 
   const size_t min_args = (transfer_type == TransferLocked) ? 3 : 2;
