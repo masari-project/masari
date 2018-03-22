@@ -59,7 +59,10 @@ Dates are provided in the format YYYY-MM-DD.
 
 | Fork Date              | Consensus version | Minimum Masari Version | Recommended Masari Version | Details            |
 | ----------------- | ----------------- | ---------------------- | -------------------------- | ------------------ |
-| TBD               | v2                | TBD                    | TBD                        | TBD                |
+| 2017-10-05               | v2                | 0.1.2.0                    | 01.2.0                        | Difficulty adjustment algorithm adjusted                |
+| 2017-11-29               | v3                | 0.1.3.0                    | 0.1.3.1                        | Difficulty adjustment algorithm updated to WWHM                |
+| 2017-12-06               | v4                | 0.1.4.0                    | 0.1.4.0                        | Difficulty adjustment tweaks                |
+| TBD               | v5                | TBD                      | TBD                        | TBD                |
 
 ## Compiling Masari from Source
 
