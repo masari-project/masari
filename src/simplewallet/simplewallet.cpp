@@ -1866,9 +1866,9 @@ void simple_wallet::on_skip_transaction(uint64_t height, const crypto::hash &txi
     m_refresh_progress_reporter.update(height, true);
 }
 //----------------------------------------------------------------------------------------------------
-bool simple_wallet::refresh_main(uint64_t start_height, bool reset)
+bool simple_wallet::refresh_main(uint64_t start_height, bool reset, bool is_init)
 {
-  if (!try_connect_to_daemon())
+  if (!try_connect_to_daemon(is_init))
     return true;
 
   LOCK_IDLE_SCOPE();
@@ -4026,7 +4026,7 @@ bool simple_wallet::run()
   // check and display warning, but go on anyway
   try_connect_to_daemon();
 
-  refresh_main(0, false);
+  refresh_main(0, false, true);
 
   m_auto_refresh_enabled = m_wallet->auto_refresh();
   m_idle_thread = boost::thread([&]{wallet_idle_thread();});
