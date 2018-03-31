@@ -100,7 +100,7 @@ namespace tests
     uint8_t get_ideal_hard_fork_version(uint64_t height) const { return 0; }
     uint8_t get_hard_fork_version(uint64_t height) const { return 0; }
     cryptonote::difficulty_type get_block_cumulative_difficulty(uint64_t height) const { return 0; }
-    bool fluffy_blocks_enabled() const { return false; }
+    bool fluffy_blocks_enabled() const { return true; }
     uint64_t prevalidate_block_hashes(uint64_t height, const std::list<crypto::hash> &hashes) { return 0; }
   };
 }
