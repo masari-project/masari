@@ -139,39 +139,7 @@ namespace cryptonote
     }
 
     // fee per kilobyte, size rounded up.
-    uint64_t fee;
-
-    if (tx.version == 1)
-    {
-      uint64_t inputs_amount = 0;
-      if(!get_inputs_money_amount(tx, inputs_amount))
-      {
-        tvc.m_verifivation_failed = true;
-        return false;
-      }
-
-      uint64_t outputs_amount = get_outs_money_amount(tx);
-      if(outputs_amount > inputs_amount)
-      {
-        LOG_PRINT_L1("transaction use more money than it has: use " << print_money(outputs_amount) << ", have " << print_money(inputs_amount));
-        tvc.m_verifivation_failed = true;
-        tvc.m_overspend = true;
-        return false;
-      }
-      else if(outputs_amount == inputs_amount)
-      {
-        LOG_PRINT_L1("transaction fee is zero: outputs_amount == inputs_amount, rejecting.");
-        tvc.m_verifivation_failed = true;
-        tvc.m_fee_too_low = true;
-        return false;
-      }
-
-      fee = inputs_amount - outputs_amount;
-    }
-    else
-    {
-      fee = tx.rct_signatures.txnFee;
-    }
+    uint64_t fee = tx.rct_signatures.txnFee;
 
     if (!kept_by_block && !m_blockchain.check_fee(blob_size, fee))
     {
@@ -1083,9 +1051,7 @@ namespace cryptonote
     get_block_reward(median_size, total_size, already_generated_coins, best_coinbase, version);
 
 
-    size_t max_total_size_pre_v5 = (130 * median_size) / 100 - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
-    size_t max_total_size_v5 = 2 * median_size - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
-    size_t max_total_size = version >= 5 ? max_total_size_v5 : max_total_size_pre_v5;
+    size_t max_total_size = 2 * median_size - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
     std::unordered_set<crypto::key_image> k_images;
 
     LOG_PRINT_L2("Filling block template, median size " << median_size << ", " << m_txs_by_fee_and_receive_time.size() << " txes in the pool");
@@ -1112,7 +1078,7 @@ namespace cryptonote
       }
 
       // start using the optimal filling algorithm from v5
-      if (version >= 5)
+      if (version >= 1)
       {
         // If we're getting lower coinbase tx,
         // stop including more tx
@@ -1129,16 +1095,6 @@ namespace cryptonote
           LOG_PRINT_L2("  would decrease coinbase to " << print_money(coinbase));
           sorted_it++;
           continue;
-        }
-      }
-      else
-      {
-        // If we've exceeded the penalty free size,
-        // stop including more tx
-        if (total_size > median_size)
-        {
-          LOG_PRINT_L2("  would exceed median block size");
-          break;
         }
       }
 

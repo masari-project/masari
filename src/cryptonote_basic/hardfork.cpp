@@ -40,12 +40,6 @@ using namespace cryptonote;
 
 static uint8_t get_block_vote(const cryptonote::block &b)
 {
-  // Pre-hardfork blocks have a minor version hardcoded to 0.
-  // For the purposes of voting, we consider 0 to refer to
-  // version number 1, which is what all blocks from the genesis
-  // block are. It makes things simpler.
-  if (b.minor_version == 0)
-    return 1;
   return b.minor_version;
 }
 
