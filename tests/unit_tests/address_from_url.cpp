@@ -84,7 +84,7 @@ TEST(AddressFromTXT, Failure)
 
 TEST(AddressFromURL, Success)
 {
-  const std::string addr = MONERO_DONATION_ADDR;
+  const std::string addr = MASARI_DONATION_ADDR;
   
   bool dnssec_result = false;
 
