@@ -1,3 +1,4 @@
+// Copyright (c) 2017-2018, The Masari Project
 // Copyright (c) 2014-2018, The Monero Project
 // 
 // All rights reserved.
@@ -127,7 +128,7 @@ class gen_double_spend_in_different_chains : public test_chain_unit_base
 {
 public:
   static const uint64_t send_amount = FIRST_BLOCK_REWARD - TESTS_DEFAULT_FEE;
-  static const size_t expected_blockchain_height = 4 + 2 * CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
+  static const size_t expected_blockchain_height = 4 + 4 * CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
 
   gen_double_spend_in_different_chains();
 
@@ -143,10 +144,12 @@ public:
   MAKE_GENESIS_BLOCK(events, blk_0, miner_account, ts_start);              \
   MAKE_ACCOUNT(events, bob_account);                                       \
   MAKE_ACCOUNT(events, alice_account);                                     \
-  REWIND_BLOCKS(events, blk_0r, blk_0, miner_account);                     \
-  MAKE_TX(events, tx_0, miner_account, bob_account, send_amount, blk_0);   \
+  REWIND_BLOCKS(events, blk_0i, blk_0, miner_account);                     \
+  REWIND_BLOCKS(events, blk_0r, blk_0i, miner_account);                     \
+  MAKE_TX(events, tx_0, miner_account, bob_account, send_amount, blk_0i);   \
   MAKE_NEXT_BLOCK_TX1(events, blk_1, blk_0r, miner_account, tx_0);         \
-  REWIND_BLOCKS(events, blk_1r, blk_1, miner_account);
+  REWIND_BLOCKS(events, blk_1i, blk_1, miner_account);                      \
+  REWIND_BLOCKS(events, blk_1r, blk_1i, miner_account);
 
 
 #include "double_spend.inl"

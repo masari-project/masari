@@ -111,7 +111,8 @@ bool gen_simple_chain_001::generate(std::vector<test_event_entry> &events)
     MAKE_GENESIS_BLOCK(events, blk_0, miner, ts_start);
     MAKE_NEXT_BLOCK(events, blk_1, blk_0, miner);
     MAKE_NEXT_BLOCK(events, blk_1_side, blk_0, miner);
-    MAKE_NEXT_BLOCK(events, blk_2, blk_1, miner);
+    MAKE_NEXT_BLOCK(events, blk_1r, blk_1, miner);
+    REWIND_BLOCKS(events, blk_2, blk_1r, miner);
     //MAKE_TX(events, tx_0, first_miner_account, alice, 151, blk_2);
 
     std::vector<cryptonote::block> chain;
