@@ -1642,6 +1642,30 @@ void wallet2::parse_block_round(const cryptonote::blobdata &blob, cryptonote::bl
 //----------------------------------------------------------------------------------------------------
 void wallet2::pull_blocks(uint64_t start_height, uint64_t &blocks_start_height, const std::list<crypto::hash> &short_chain_history, std::list<cryptonote::block_complete_entry> &blocks, std::vector<cryptonote::COMMAND_RPC_GET_BLOCKS_FAST::block_output_indices> &o_indices)
 {
+  cryptonote::COMMAND_RPC_GET_INFO::request getinfo_req = AUTO_VAL_INIT(getinfo_req);
+  cryptonote::COMMAND_RPC_GET_INFO::response getinfo_res = AUTO_VAL_INIT(getinfo_res);
+  m_daemon_rpc_mutex.lock();
+  bool re = net_utils::invoke_http_json_rpc("/json_rpc", "get_info", getinfo_req, getinfo_res, m_http_client);
+  m_daemon_rpc_mutex.unlock();
+  THROW_WALLET_EXCEPTION_IF(!re, error::no_connection_to_daemon, "get_info");
+  THROW_WALLET_EXCEPTION_IF(getinfo_res.status == CORE_RPC_STATUS_BUSY, error::daemon_busy, "get_info");
+   
+  if(getinfo_res.mainnet)
+  {
+    if(m_nettype != MAINNET)
+       THROW_WALLET_EXCEPTION(error::wallet_internal_error, "Tried to connect to a non mainnet node while using a mainnet wallet");
+  }
+  if(getinfo_res.testnet)
+  {
+    if(m_nettype != TESTNET)
+      THROW_WALLET_EXCEPTION(error::wallet_internal_error, "Tried to connect to a non testnet node while using a testnet wallet");
+  }
+  if(getinfo_res.stagenet)
+  {
+    if(m_nettype != STAGENET)
+      THROW_WALLET_EXCEPTION(error::wallet_internal_error, "Tried to connect to a non stagenet node while using a stagenet wallet");
+  }
+
   cryptonote::COMMAND_RPC_GET_BLOCKS_FAST::request req = AUTO_VAL_INIT(req);
   cryptonote::COMMAND_RPC_GET_BLOCKS_FAST::response res = AUTO_VAL_INIT(res);
   req.block_ids = short_chain_history;
