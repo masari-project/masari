@@ -2381,13 +2381,19 @@ bool simple_wallet::set_variable(const std::vector<std::string> &args)
 //----------------------------------------------------------------------------------------------------
 bool simple_wallet::set_log(const std::vector<std::string> &args)
 {
-  if(args.size() > 1)
+  if(args.size() > 1 || args.empty())
   {
     fail_msg_writer() << tr("usage: set_log <log_level_number_0-4> | <categories>");
     return true;
   }
-  if (!args.empty())
-    mlog_set_log(args[0].c_str());
+  
+  uint64_t log_level_numeric = boost::lexical_cast<uint64_t>(args[0]);
+  if(log_level_numeric > 4)
+  {
+    fail_msg_writer() << tr("log level must be between 0 and 4");
+    return true;
+  }
+  mlog_set_log(args[0].c_str());
   success_msg_writer() << "New log categories: " << mlog_get_categories();
   return true;
 }
