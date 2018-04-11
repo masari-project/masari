@@ -85,7 +85,7 @@ bool gen_multisig_tx_validation_base::generate_with(std::vector<test_event_entry
 
   // create 8 miner accounts, and have them mine the next 8 blocks
   // they will have a coinbase with a single out that's pseudo rct
-  constexpr size_t n_coinbases = 8;
+  constexpr size_t n_coinbases = 4 * 13;
   cryptonote::account_base miner_accounts[n_coinbases];
   const cryptonote::block *prev_block = &blk_0;
   cryptonote::block blocks[n_coinbases];
@@ -93,11 +93,7 @@ bool gen_multisig_tx_validation_base::generate_with(std::vector<test_event_entry
     // the first block goes to the multisig account
     miner_accounts[n].generate();
     account_base &account = n < inputs ? miner_account[creator] : miner_accounts[n];
-    CHECK_AND_ASSERT_MES(generator.construct_block_manually(blocks[n], *prev_block, account,
-        test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_timestamp | test_generator::bf_hf_version | test_generator::bf_max_outs,
-        4, 4, prev_block->timestamp + DIFFICULTY_BLOCKS_ESTIMATE_TIMESPAN * 2, // v2 has blocks twice as long
-          crypto::hash(), 0, transaction(), std::vector<crypto::hash>(), 0, 1, 4),
-        false, "Failed to generate block");
+    CHECK_AND_ASSERT_MES(generator.construct_block_manually(blocks[n], *prev_block, account), false, "Failed to generate block");
     events.push_back(blocks[n]);
     prev_block = blocks + n;
     LOG_PRINT_L0("Initial miner tx " << n << ": " << obj_to_json_str(blocks[n].miner_tx));
@@ -111,11 +107,7 @@ bool gen_multisig_tx_validation_base::generate_with(std::vector<test_event_entry
     for (size_t i = 0; i < CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW; ++i)
     {
       cryptonote::block blk;
-      CHECK_AND_ASSERT_MES(generator.construct_block_manually(blk, blk_last, miner_accounts[0],
-          test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_timestamp | test_generator::bf_hf_version | test_generator::bf_max_outs,
-          4, 4, blk_last.timestamp + DIFFICULTY_BLOCKS_ESTIMATE_TIMESPAN * 2, // v2 has blocks twice as long
-          crypto::hash(), 0, transaction(), std::vector<crypto::hash>(), 0, 1, 4),
-          false, "Failed to generate block");
+      CHECK_AND_ASSERT_MES(generator.construct_block_manually(blk, blk_last, miner_accounts[0]), false, "Failed to generate block");
       events.push_back(blk);
       blk_last = blk;
     }
@@ -255,7 +247,7 @@ bool gen_multisig_tx_validation_base::generate_with(std::vector<test_event_entry
     src.rct = true;
     src.multisig_kLRki = kLRkis[n];
 
-    for (size_t m = 0; m <= mixin; ++m)
+    for (size_t m = 0; m <= DEFAULT_MIXIN; ++m)
     {
       rct::ctkey ctkey;
       ctkey.dest = rct::pk2rct(boost::get<txout_to_key>(blocks[m].miner_tx.vout[0].target).key);
