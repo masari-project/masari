@@ -38,7 +38,7 @@ The Bitcoin donation address is: `1J1he4qtTuNpCxyEBozkeKfDpoeYxfE3rj`
 
 *Note: you can easily donate MSR to the Masari donation address by using the `donate` command. Type `help` in the command-line wallet for details.*
 
-There are no mining pools yet, and this page will updated promptly when that milestone has been reached.
+A list of active mining pools can be found on [CryptoIsMe.](https://www.cryptoisme.com/coin/masari)
 ## License
 
 [![License](https://img.shields.io/badge/license-BSD3-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
