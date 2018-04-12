@@ -5786,6 +5786,7 @@ bool simple_wallet::show_transfers(const std::vector<std::string> &args_)
   bool pending = true;
   bool failed = true;
   bool pool = true;
+  bool transfers_found = false;
   uint64_t min_height = 0;
   uint64_t max_height = (uint64_t)-1;
   boost::optional<uint32_t> subaddr_index;
@@ -5864,6 +5865,8 @@ bool simple_wallet::show_transfers(const std::vector<std::string> &args_)
   if (in) {
     std::list<std::pair<crypto::hash, tools::wallet2::payment_details>> payments;
     m_wallet->get_payments(payments, min_height, max_height, m_current_subaddress_account, subaddr_indices);
+    if(payments.size() != 0)
+      transfers_found = true;
     for (std::list<std::pair<crypto::hash, tools::wallet2::payment_details>>::const_iterator i = payments.begin(); i != payments.end(); ++i) {
       const tools::wallet2::payment_details &pd = i->second;
       std::string payment_id = string_tools::pod_to_hex(i->first);
@@ -5889,6 +5892,8 @@ bool simple_wallet::show_transfers(const std::vector<std::string> &args_)
   if (out) {
     std::list<std::pair<crypto::hash, tools::wallet2::confirmed_transfer_details>> payments;
     m_wallet->get_payments_out(payments, min_height, max_height, m_current_subaddress_account, subaddr_indices);
+    if(payments.size() != 0)
+      transfers_found = true;
     for (std::list<std::pair<crypto::hash, tools::wallet2::confirmed_transfer_details>>::const_iterator i = payments.begin(); i != payments.end(); ++i) {
       const tools::wallet2::confirmed_transfer_details &pd = i->second;
       uint64_t change = pd.m_change == (uint64_t)-1 ? 0 : pd.m_change; // change may not be known
@@ -5920,6 +5925,8 @@ bool simple_wallet::show_transfers(const std::vector<std::string> &args_)
       m_wallet->update_pool_state();
       std::list<std::pair<crypto::hash, tools::wallet2::pool_payment_details>> payments;
       m_wallet->get_unconfirmed_payments(payments, m_current_subaddress_account, subaddr_indices);
+      if(payments.size() != 0)
+        transfers_found = true;
       for (std::list<std::pair<crypto::hash, tools::wallet2::pool_payment_details>>::const_iterator i = payments.begin(); i != payments.end(); ++i) {
         const tools::wallet2::payment_details &pd = i->second.m_pd;
         std::string payment_id = string_tools::pod_to_hex(i->first);
@@ -5955,6 +5962,11 @@ bool simple_wallet::show_transfers(const std::vector<std::string> &args_)
         message_writer() << (boost::format("%8.8s %6.6s %16.16s %20.20s %s %s %14.14s %s - %s") % (is_failed ? tr("failed") : tr("pending")) % tr("out") % get_human_readable_timestamp(pd.m_timestamp) % print_money(amount - pd.m_change - fee) % string_tools::pod_to_hex(i->first) % payment_id % print_money(fee) % print_subaddr_indices(pd.m_subaddr_indices) % note).str();
       }
     }
+  }
+  
+  if(!transfers_found)
+  {
+    message_writer() << tr("No transfers found");
   }
 
   return true;
