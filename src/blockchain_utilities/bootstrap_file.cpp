@@ -1,3 +1,4 @@
+// Copyright (c) 2017-2018, The Masari Project
 // Copyright (c) 2014-2018, The Monero Project
 //
 // All rights reserved.
@@ -43,8 +44,8 @@ using namespace epee;
 namespace
 {
   // This number was picked by taking the leading 4 bytes from this output:
-  // echo Monero bootstrap file | sha1sum
-  const uint32_t blockchain_raw_magic = 0x28721586;
+  // echo Masari bootstrap file | sha1sum
+  const uint32_t blockchain_raw_magic = 0x9147080a;
   const uint32_t header_size = 1024;
 
   std::string refresh_string = "\r                                    \r";

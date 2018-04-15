@@ -1673,7 +1673,7 @@ skip:
     {
       if (peer_id && exclude_context.m_connection_id != context.m_connection_id)
       {
-        if(m_core.fluffy_blocks_enabled() && (support_flags & P2P_SUPPORT_FLAG_FLUFFY_BLOCKS))
+        if(support_flags & P2P_SUPPORT_FLAG_FLUFFY_BLOCKS)
         {
           LOG_DEBUG_CC(context, "PEER SUPPORTS FLUFFY BLOCKS - RELAYING THIN/COMPACT WHATEVER BLOCK");
           fluffyConnections.push_back(context.m_connection_id);
