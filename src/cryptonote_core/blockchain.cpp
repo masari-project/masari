@@ -117,9 +117,9 @@ static const struct {
   // version 1 from the start of the blockchain
   { 1, 1, 0, 1504374656 },
   // versions 2-4 in rapid succession from March 13th, 2018
-  { 2, 32000, 0, 1521000000 },
-  { 3, 33000, 0, 1521120000 },
-  { 4, 34000, 0, 1521240000 },
+  { 2, 2, 0, 1521000000 },
+  { 3, 3, 0, 1521120000 },
+  { 4, 4, 0, 1521240000 },
 };
 
 //------------------------------------------------------------------
@@ -3446,7 +3446,7 @@ void Blockchain::check_against_checkpoints(const checkpoints& points, bool enfor
       }
       else
       {
-        LOG_ERROR("WARNING: local blockchain failed to pass a MoneroPulse checkpoint, and you could be on a fork. You should either sync up from scratch, OR download a fresh blockchain bootstrap, OR enable checkpoint enforcing with the --enforce-dns-checkpointing command-line option");
+        LOG_ERROR("WARNING: local blockchain failed to pass a MasariPulse checkpoint, and you could be on a fork. You should either sync up from scratch, OR download a fresh blockchain bootstrap, OR enable checkpoint enforcing with the --enforce-dns-checkpointing command-line option");
       }
     }
   }

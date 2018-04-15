@@ -90,7 +90,7 @@ typedef cryptonote::simple_wallet sw;
 
 #define MIN_RING_SIZE DEFAULT_RINGSIZE // Used to inform user about min ring size -- does not track actual protocol
 
-#define OUTPUT_EXPORT_FILE_MAGIC "Monero output export\003"
+#define OUTPUT_EXPORT_FILE_MAGIC "Masari output export\003"
 
 #define LOCK_IDLE_SCOPE() \
   bool auto_refresh_enabled = m_auto_refresh_enabled.load(std::memory_order_relaxed); \
@@ -758,7 +758,7 @@ bool simple_wallet::print_fee_info(const std::vector<std::string> &args/* = std:
   }
   const uint64_t per_kb_fee = m_wallet->get_per_kb_fee();
   const uint64_t typical_size_kb = 13;
-  message_writer() << (boost::format(tr("Current fee is %s monero per kB")) % print_money(per_kb_fee)).str();
+  message_writer() << (boost::format(tr("Current fee is %s masari per kB")) % print_money(per_kb_fee)).str();
 
   std::vector<uint64_t> fees;
   for (uint32_t priority = 1; priority <= 3; ++priority)
@@ -777,7 +777,7 @@ bool simple_wallet::print_fee_info(const std::vector<std::string> &args/* = std:
     fail_msg_writer() << tr("Error: failed to estimate backlog array size: ") << e.what();
     return true;
   }
-  if (blocks.size() != 4)
+  if (blocks.size() != 3)
   {
     fail_msg_writer() << tr("Error: bad estimated backlog array size");
     return true;
@@ -790,7 +790,7 @@ bool simple_wallet::print_fee_info(const std::vector<std::string> &args/* = std:
     if (nblocks_low > 0)
     {
       std::string msg;
-      if (priority == m_wallet->get_default_priority() || (m_wallet->get_default_priority() == 0 && priority == 2))
+      if (priority == m_wallet->get_default_priority() || (m_wallet->get_default_priority() == 0 && priority == 1))
         msg = tr(" (current)");
       uint64_t minutes_low = nblocks_low * DIFFICULTY_TARGET / 60, minutes_high = nblocks_high * DIFFICULTY_TARGET / 60;
       if (nblocks_high == nblocks_low)
@@ -1636,7 +1636,7 @@ bool simple_wallet::set_default_priority(const std::vector<std::string> &args/* 
   {
     if (strchr(args[1].c_str(), '-'))
     {
-      fail_msg_writer() << tr("priority must be 0, 1, 2, or 3 ");
+      fail_msg_writer() << tr("priority must be 0, 1, 2, or 3");
       return true;
     }
     if (args[1] == "0")
@@ -1739,15 +1739,15 @@ bool simple_wallet::set_unit(const std::vector<std::string> &args/* = std::vecto
   const std::string &unit = args[1];
   unsigned int decimal_point = CRYPTONOTE_DISPLAY_DECIMAL_POINT;
 
-  if (unit == "monero")
+  if (unit == "masari")
     decimal_point = CRYPTONOTE_DISPLAY_DECIMAL_POINT;
-  else if (unit == "millinero")
+  else if (unit == "millisari")
     decimal_point = CRYPTONOTE_DISPLAY_DECIMAL_POINT - 3;
-  else if (unit == "micronero")
+  else if (unit == "microsari")
     decimal_point = CRYPTONOTE_DISPLAY_DECIMAL_POINT - 6;
-  else if (unit == "nanonero")
+  else if (unit == "nanosari")
     decimal_point = CRYPTONOTE_DISPLAY_DECIMAL_POINT - 9;
-  else if (unit == "piconero")
+  else if (unit == "picosari")
     decimal_point = 0;
   else
   {
@@ -2020,7 +2020,7 @@ simple_wallet::simple_wallet()
   m_cmd_binder.set_handler("donate",
                            boost::bind(&simple_wallet::donate, this, _1),
                            tr("donate [index=<N1>[,<N2>,...]] [<priority>] <amount> [<payment_id>]"),
-                           tr("Donate <amount> to the development team (donate.getmonero.org)."));
+                           tr("Donate <amount> to the development team (donate.masari.org)."));
   m_cmd_binder.set_handler("sign_transfer",
                            boost::bind(&simple_wallet::sign_transfer, this, _1),
                            tr("sign_transfer <file>"),
@@ -2097,8 +2097,8 @@ simple_wallet::simple_wallet()
                                   "  Set the fee too default/low/medium/high.\n "
                                   "confirm-missing-payment-id <1|0>\n "
                                   "ask-password <1|0>\n "
-                                  "unit <monero|millinero|micronero|nanonero|piconero>\n "
-                                  "  Set the default monero (sub-)unit.\n "
+                                  "unit <masari|millisari|microsari|nanosari|picosari>\n "
+                                  "  Set the default masari (sub-)unit.\n "
                                   "min-outputs-count [n]\n "
                                   "  Try to keep at least that many outputs of value at least min-outputs-value.\n "
                                   "min-outputs-value [n]\n "
@@ -2114,12 +2114,12 @@ simple_wallet::simple_wallet()
                                   "auto-low-priority <1|0>\n "
                                   "  Whether to automatically use the low priority fee level when it's safe to do so.\n "
                                   "segregate-pre-fork-outputs <1|0>\n "
-                                  "  Set this if you intend to spend outputs on both Monero AND a key reusing fork.\n "
+                                  "  Set this if you intend to spend outputs on both Masari AND a key reusing fork.\n "
                                   "key-reuse-mitigation2 <1|0>\n "
-                                  "  Set this if you are not sure whether you will spend on a key reusing Monero fork later.\n"
+                                  "  Set this if you are not sure whether you will spend on a key reusing Masari fork later.\n"
                                   "subaddress-lookahead <major>:<minor>\n "
                                   "  Set the lookahead sizes for the subaddress hash table.\n "
-                                  "  Set this if you are not sure whether you will spend on a key reusing Monero fork later.\n "
+                                  "  Set this if you are not sure whether you will spend on a key reusing Masari fork later.\n "
                                   "segregation-height <n>\n "
                                   "  Set to the height of a key reusing fork you want to use, 0 to use default."));
   m_cmd_binder.set_handler("encrypted_seed",
@@ -4259,8 +4259,11 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
   }
 
   uint32_t priority = 0;
-  if (local_args.size() > 0 && parse_priority(local_args[0], priority))
+  if (local_args.size() > 0 && parse_priority(local_args[0], priority)) {
     local_args.erase(local_args.begin());
+  } else {
+    priority = m_wallet->get_default_priority();
+  }
 
   priority = m_wallet->adjust_priority(priority);
 
