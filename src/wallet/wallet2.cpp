@@ -122,9 +122,8 @@ namespace
   std::string get_default_ringdb_path()
   {
     boost::filesystem::path dir = tools::get_default_data_dir();
-    // remove .bitmonero, replace with .shared-ringdb
-    dir = dir.remove_filename();
-    dir /= ".shared-ringdb";
+    // .masari/shared-ringdb is the default path
+    dir /= "shared-ringdb";
     return dir.string();
   }
 }
