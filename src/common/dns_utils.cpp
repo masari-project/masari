@@ -344,8 +344,8 @@ namespace dns_utils
 // TODO: parse the string in a less stupid way, probably with regex
 std::string address_from_txt_record(const std::string& s)
 {
-  // make sure the txt record has "oa1:xmr" and find it
-  auto pos = s.find("oa1:xmr");
+  // make sure the txt record has "oa1:msr" and find it
+  auto pos = s.find("oa1:msr");
   if (pos == std::string::npos)
     return {};
   // search from there to find "recipient_address="
