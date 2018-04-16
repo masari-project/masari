@@ -335,7 +335,7 @@ namespace
     std::stringstream prompt;
     prompt << tr("For URL: ") << url
            << ", " << dnssec_str << std::endl
-           << tr(" Monero Address = ") << addresses[0]
+           << tr(" Masari Address = ") << addresses[0]
            << std::endl
            << tr("Is this OK? (Y/n) ")
     ;
