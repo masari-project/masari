@@ -1836,19 +1836,7 @@ void Blockchain::get_output_key_mask_unlocked(const uint64_t& amount, const uint
 //------------------------------------------------------------------
 bool Blockchain::get_output_distribution(uint64_t amount, uint64_t from_height, uint64_t &start_height, std::vector<uint64_t> &distribution, uint64_t &base) const
 {
-  // rct outputs don't exist before v3
-  if (amount == 0)
-  {
-    switch (m_nettype)
-    {
-      case STAGENET: start_height = stagenet_hard_forks[2].height; break;
-      case TESTNET: start_height = testnet_hard_forks[2].height; break;
-      case MAINNET: start_height = mainnet_hard_forks[2].height; break;
-      default: return false;
-    }
-  }
-  else
-    start_height = 0;
+  start_height = 0;
   base = 0;
 
   const uint64_t real_start_height = start_height;
