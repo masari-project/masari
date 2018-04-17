@@ -1,5 +1,5 @@
 // Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
+// Copyright (c) 2014-2018, The Monero Project
 //
 // All rights reserved.
 //
@@ -29,14 +29,14 @@
 //
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
-#include "wallet/wallet2_api.h"
+#include "wallet/api/wallet2_api.h"
 #include "wallet/wallet2.h"
 
 #include <string>
 #include <vector>
 
 
-namespace Masari {
+namespace Monero {
 
 class WalletImpl;
 class UnsignedTransactionImpl : public UnsignedTransaction
@@ -48,17 +48,19 @@ public:
     std::string errorString() const;
     std::vector<uint64_t> amount() const;
     std::vector<uint64_t> fee() const;
+    std::vector<uint64_t> mixin() const;
     std::vector<std::string> paymentId() const;
     std::vector<std::string> recipientAddress() const;
     uint64_t txCount() const;
     // sign txs and save to file
     bool sign(const std::string &signedFileName);
     std::string confirmationMessage() const {return m_confirmationMessage;}
+    uint64_t minMixinCount() const;
 
 private:
     // Callback function to check all loaded tx's and generate confirmationMessage
     bool checkLoadedTx(const std::function<size_t()> get_num_txes, const std::function<const tools::wallet2::tx_construction_data&(size_t)> &get_tx, const std::string &extra_message);
-
+    
     friend class WalletImpl;
     WalletImpl &m_wallet;
 
@@ -70,3 +72,5 @@ private:
 
 
 }
+
+namespace Bitmonero = Monero;

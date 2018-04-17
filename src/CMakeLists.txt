@@ -1,5 +1,4 @@
-# Copyright (c) 2017-2018, The Masari Project
-# Copyright (c) 2014-2017, The Monero Project
+# Copyright (c) 2014-2018, The Monero Project
 #
 # All rights reserved.
 #
@@ -35,13 +34,18 @@ if (WIN32 OR STATIC)
   add_definitions(-DMINIUPNP_STATICLIB)
 endif ()
 
-function (masari_private_headers group)
+# warnings are cleared only for GCC on Linux
+if (NOT (MINGW OR APPLE OR FREEBSD OR OPENBSD OR DRAGONFLY))
+  add_compile_options("${WARNINGS_AS_ERRORS_FLAG}") # applies only to targets that follow
+endif()
+
+function (monero_private_headers group)
   source_group("${group}\\Private"
     FILES
       ${ARGN})
 endfunction ()
 
-function (masari_install_headers subdir)
+function (monero_install_headers subdir)
   install(
     FILES       ${ARGN}
     DESTINATION "include/${subdir}"
@@ -59,7 +63,7 @@ function (enable_stack_trace target)
   endif()
 endfunction()
 
-function (masari_add_executable name)
+function (monero_add_executable name)
   source_group("${name}"
     FILES
       ${ARGN})
@@ -78,36 +82,46 @@ function (masari_add_executable name)
   enable_stack_trace("${name}")
 endfunction ()
 
-function (masari_add_library name)
-  source_group("${name}"
-    FILES
-      ${ARGN})
+function (monero_add_library name)
+    monero_add_library_with_deps(NAME "${name}" SOURCES ${ARGN})
+endfunction()
+
+function (monero_add_library_with_deps)
+  cmake_parse_arguments(MONERO_ADD_LIBRARY "" "NAME" "DEPENDS;SOURCES" ${ARGN})
+  source_group("${MONERO_ADD_LIBRARY_NAME}" FILES ${MONERO_ADD_LIBRARY_SOURCES})
 
   # Define a ("virtual") object library and an actual library that links those
   # objects together. The virtual libraries can be arbitrarily combined to link
   # any subset of objects into one library archive. This is used for releasing
   # libwallet, which combines multiple components.
-  set(objlib obj_${name})
-  add_library(${objlib} OBJECT ${ARGN})
-  add_library("${name}" $<TARGET_OBJECTS:${objlib}>)
-  set_property(TARGET "${name}"
-    PROPERTY
-      FOLDER "libs")
+  set(objlib obj_${MONERO_ADD_LIBRARY_NAME})
+  add_library(${objlib} OBJECT ${MONERO_ADD_LIBRARY_SOURCES})
+  add_library("${MONERO_ADD_LIBRARY_NAME}" $<TARGET_OBJECTS:${objlib}>)
+  if (MONERO_ADD_LIBRARY_DEPENDS)
+    add_dependencies(${objlib} ${MONERO_ADD_LIBRARY_DEPENDS})
+  endif()
+  set_property(TARGET "${MONERO_ADD_LIBRARY_NAME}" PROPERTY FOLDER "libs")
   target_compile_definitions(${objlib}
-    PRIVATE $<TARGET_PROPERTY:${name},INTERFACE_COMPILE_DEFINITIONS>)
+    PRIVATE $<TARGET_PROPERTY:${MONERO_ADD_LIBRARY_NAME},INTERFACE_COMPILE_DEFINITIONS>)
 endfunction ()
+
+include(Version)
+monero_add_library(version SOURCES ${CMAKE_BINARY_DIR}/version.cpp DEPENDS genversion)
 
 add_subdirectory(common)
 add_subdirectory(crypto)
 add_subdirectory(ringct)
+add_subdirectory(checkpoints)
 add_subdirectory(cryptonote_basic)
 add_subdirectory(cryptonote_core)
+add_subdirectory(multisig)
 if(NOT IOS)
   add_subdirectory(blockchain_db)
 endif()
 add_subdirectory(mnemonics)
 if(NOT IOS)
   add_subdirectory(rpc)
+  add_subdirectory(serialization)
 endif()
 add_subdirectory(wallet)
 if(NOT IOS)
@@ -116,6 +130,7 @@ endif()
 add_subdirectory(cryptonote_protocol)
 if(NOT IOS)
   add_subdirectory(simplewallet)
+  add_subdirectory(gen_multisig)
   add_subdirectory(daemonizer)
   add_subdirectory(daemon)
   add_subdirectory(blockchain_utilities)
@@ -128,3 +143,5 @@ endif()
 if(PER_BLOCK_CHECKPOINT)
   add_subdirectory(blocks)
 endif()
+
+add_subdirectory(device)

@@ -1,22 +1,22 @@
 // Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
-//
+// Copyright (c) 2014-2018, The Monero Project
+// 
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-//
+// 
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-//
+// 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-//
+// 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -26,7 +26,7 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #pragma once
@@ -126,8 +126,8 @@ bool gen_double_spend_in_tx<txs_keeped_by_block>::generate(std::vector<test_even
   INIT_DOUBLE_SPEND_TEST();
   DO_CALLBACK(events, "mark_last_valid_block");
 
-  vector<cryptonote::tx_source_entry> sources;
-  vector<cryptonote::tx_destination_entry> destinations;
+  std::vector<cryptonote::tx_source_entry> sources;
+  std::vector<cryptonote::tx_destination_entry> destinations;
   rct::key mask;
   uint64_t tx_amount;
   try { // TODO-TK: temp hack against randomization of destination outs
@@ -138,7 +138,7 @@ bool gen_double_spend_in_tx<txs_keeped_by_block>::generate(std::vector<test_even
   fill_tx_sources_and_destinations(events, blk_1i, bob_account, alice_account, tx_amount - TESTS_DEFAULT_FEE, TESTS_DEFAULT_FEE, DEFAULT_MIXIN, sources, destinations);
   sources.push_back(sources[0]);
   cryptonote::transaction tx_1;
-  if (!construct_tx(bob_account.get_keys(), sources, destinations, std::vector<uint8_t>(), tx_1, 0)) {
+  if (!construct_tx(bob_account.get_keys(), sources, destinations, boost::none, std::vector<uint8_t>(), tx_1, 0)) {
     return false;
   }
   SET_EVENT_VISITOR_SETT(events, event_visitor_settings::set_txs_keeped_by_block, txs_keeped_by_block);

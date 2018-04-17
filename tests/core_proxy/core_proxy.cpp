@@ -1,22 +1,22 @@
 // Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
-//
+// Copyright (c) 2014-2018, The Monero Project
+// 
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-//
+// 
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-//
+// 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-//
+// 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -26,7 +26,7 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 // node.cpp : Defines the entry point for the console application.
@@ -35,20 +35,18 @@
 
 #include "include_base_utils.h"
 #include "version.h"
-
-using namespace epee;
-
 #include <iostream>
 #include <sstream>
-using namespace std;
 
 #include <boost/program_options.hpp>
 
 #include "common/command_line.h"
 #include "console_handler.h"
 #include "p2p/net_node.h"
+#include "p2p/net_node.inl"
 //#include "cryptonote_core/cryptonote_core.h"
 #include "cryptonote_protocol/cryptonote_protocol_handler.h"
+#include "cryptonote_protocol/cryptonote_protocol_handler.inl"
 #include "core_proxy.h"
 #include "version.h"
 
@@ -57,6 +55,8 @@ using namespace std;
 #endif
 
 namespace po = boost::program_options;
+using namespace std;
+using namespace epee;
 using namespace cryptonote;
 using namespace crypto;
 
@@ -68,11 +68,11 @@ int main(int argc, char* argv[])
 
 #ifdef WIN32
   _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
-#endif
+#endif 
 
   TRY_ENTRY();
 
-
+  tools::on_startup();
   string_tools::set_module_name_and_folder(argv[0]);
 
   //set up logging options
@@ -81,8 +81,7 @@ int main(int argc, char* argv[])
 
 
   po::options_description desc("Allowed options");
-  // tools::get_default_data_dir() can't be called during static initialization
-  command_line::add_arg(desc, command_line::arg_data_dir, tools::get_default_data_dir());
+  command_line::add_arg(desc, cryptonote::arg_data_dir);
   nodetool::node_server<cryptonote::t_cryptonote_protocol_handler<tests::proxy_core> >::init_options(desc);
 
   po::variables_map vm;
@@ -124,14 +123,14 @@ int main(int argc, char* argv[])
   //initialize core here
   MGINFO("Initializing proxy core...");
   res = pr_core.init(vm);
-  CHECK_AND_ASSERT_MES(res, 1, "Failed to initialize core");
+  CHECK_AND_ASSERT_MES(res, 1, "Failed to initialize core");  
   MGINFO("Core initialized OK");
 
   MGINFO("Starting p2p net loop...");
   p2psrv.run();
   MGINFO("p2p net loop stopped");
 
-  //deinitialize components
+  //deinitialize components  
   MGINFO("Deinitializing core...");
   pr_core.deinit();
   MGINFO("Deinitializing cryptonote_protocol...");
@@ -230,10 +229,9 @@ bool tests::proxy_core::get_short_chain_history(std::list<crypto::hash>& ids) {
     return true;
 }
 
-bool tests::proxy_core::get_blockchain_top(uint64_t& height, crypto::hash& top_id) {
+void tests::proxy_core::get_blockchain_top(uint64_t& height, crypto::hash& top_id) {
     height = 0;
     top_id = get_block_hash(m_genesis);
-    return true;
 }
 
 bool tests::proxy_core::init(const boost::program_options::variables_map& /*vm*/) {
@@ -257,7 +255,7 @@ void tests::proxy_core::build_short_history(std::list<crypto::hash> &m_history, 
         m_history.push_front(cit->first);
 
         size_t n = 1 << m_history.size();
-        while (m_hash2blkidx.end() != cit && cryptonote::null_hash != cit->second.blk.prev_id && n > 0) {
+        while (m_hash2blkidx.end() != cit && crypto::null_hash != cit->second.blk.prev_id && n > 0) {
             n--;
             cit = m_hash2blkidx.find(cit->second.blk.prev_id);
         }
@@ -267,7 +265,7 @@ void tests::proxy_core::build_short_history(std::list<crypto::hash> &m_history, 
 bool tests::proxy_core::add_block(const crypto::hash &_id, const crypto::hash &_longhash, const cryptonote::block &_blk, const cryptonote::blobdata &_blob) {
     size_t height = 0;
 
-    if (cryptonote::null_hash != _blk.prev_id) {
+    if (crypto::null_hash != _blk.prev_id) {
         std::unordered_map<crypto::hash, tests::block_index>::const_iterator cit = m_hash2blkidx.find(_blk.prev_id);
         if (m_hash2blkidx.end() == cit) {
             cerr << "ERROR: can't find previous block with id \"" << _blk.prev_id << "\"" << endl;

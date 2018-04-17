@@ -1,22 +1,21 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
-//
+// Copyright (c) 2014-2018, The Monero Project
+// 
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-//
+// 
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-//
+// 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-//
+// 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -26,7 +25,7 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #include <cstddef>
@@ -51,10 +50,6 @@ bool operator !=(const ec_scalar &a, const ec_scalar &b) {
 
 bool operator !=(const ec_point &a, const ec_point &b) {
   return 0 != memcmp(&a, &b, sizeof(ec_point));
-}
-
-bool operator !=(const secret_key &a, const secret_key &b) {
-  return 0 != memcmp(&a, &b, sizeof(secret_key));
 }
 
 bool operator !=(const key_derivation &a, const key_derivation &b) {
@@ -100,7 +95,7 @@ int main(int argc, char *argv[]) {
       vector<char> data;
       ec_scalar expected, actual;
       get(input, data, expected);
-      hash_to_scalar(data.data(), data.size(), actual);
+      crypto::hash_to_scalar(data.data(), data.size(), actual);
       if (expected != actual) {
         goto error;
       }

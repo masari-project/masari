@@ -1,6 +1,6 @@
 // Copyright (c) 2006-2013, Andrey N. Sabelnikov, www.sabelnikov.net
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // * Redistributions of source code must retain the above copyright
@@ -11,7 +11,7 @@
 // * Neither the name of the Andrey N. Sabelnikov nor the
 // names of its contributors may be used to endorse or promote products
 // derived from this software without specific prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -22,7 +22,7 @@
 // ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 
 
 
@@ -35,6 +35,7 @@
 # include <windows.h>
 #endif
 
+#include <string.h>
 #include <locale>
 #include <cstdlib>
 #include <string>
@@ -42,8 +43,9 @@
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 #include "hex.h"
+#include "memwipe.h"
 #include "span.h"
 #include "warnings.h"
 
@@ -160,7 +162,7 @@ DISABLE_GCC_WARNING(maybe-uninitialized)
       val = boost::lexical_cast<XType>(str_id);
       return true;
     }
-    catch(std::exception& /*e*/)
+    catch(const std::exception& /*e*/)
     {
       //const char* pmsg = e.what();
       return false;
@@ -264,7 +266,7 @@ POP_WARNINGS
     std::string path_to_process = path_to_process_;
 #ifdef _WIN32
     path_to_process = get_current_module_path();
-#endif
+#endif 
 		std::string::size_type a = path_to_process.rfind( '\\' );
 		if(a == std::string::npos )
 		{
@@ -329,7 +331,7 @@ POP_WARNINGS
   template<class t_pod_type>
   std::string pod_to_hex(const t_pod_type& s)
   {
-    static_assert(std::is_pod<t_pod_type>::value, "expected pod type");
+    static_assert(std::is_standard_layout<t_pod_type>(), "expected standard layout type");
     return to_hex::string(as_byte_span(s));
   }
   //----------------------------------------------------------------------------
@@ -349,6 +351,14 @@ POP_WARNINGS
     s = *(t_pod_type*)bin_buff.data();
     return true;
   }
+  //----------------------------------------------------------------------------
+  template<class t_pod_type>
+  bool hex_to_pod(const std::string& hex_str, tools::scrubbed<t_pod_type>& s)
+  {
+    return hex_to_pod(hex_str, unwrap(s));
+  }
+  //----------------------------------------------------------------------------
+  bool validate_hex(uint64_t length, const std::string& str);
   //----------------------------------------------------------------------------
 	inline std::string get_extension(const std::string& str)
 	{

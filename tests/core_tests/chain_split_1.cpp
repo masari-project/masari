@@ -1,22 +1,21 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
-//
+// Copyright (c) 2014-2018, The Monero Project
+// 
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-//
+// 
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-//
+// 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-//
+// 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -26,11 +25,11 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #include "chaingen.h"
-#include "chaingen_tests_list.h"
+#include "chain_split_1.h"
 
 using namespace std;
 
@@ -64,7 +63,7 @@ bool gen_simple_chain_split_1::generate(std::vector<test_event_entry> &events) c
   /*
    1    2    3    4    5    6     7     8      9    10    11    12    13    14    15    16    17    18   19   20     21    22    23   <-- main blockchain height
   (0 )-(1 )-(2 )-(3 )-(4 )-(5 ) -(6 ) -(7 ) -(8 )|-(17) -(18) -(19) -(20) -(21)|-(22)|-(23)|-(24)|
-                              \ -(9 ) -(10)|-(11)|-(12)|-(13) -(14) -(15) -(16)
+                              \ -(9 ) -(10)|-(11)|-(12)|-(13) -(14) -(15) -(16)       
                                                                                       -(25) -(26)|
                                                                                 -(27)|             #check switching to alternative
                                                               ----------------------------------------------------------------------------------
@@ -73,9 +72,9 @@ bool gen_simple_chain_split_1::generate(std::vector<test_event_entry> &events) c
                                                               ----------------------------------------------------------------------------------
                                                                                       -(33) -(34)       -(35) -(36)       -(37) -(38)|
                                                                                 -(39)|           #<--this part becomes alternative chain connected to main
-                                                                                                                    -(40)|  #still marked as orphaned
+                                                                                                                    -(40)|  #still marked as orphaned 
                                                                                                   -(41)|
-                                                                                                   #check orphaned with block in the middle of the orphaned chain
+                                                                                                   #check orphaned with block in the middle of the orphaned chain 
   */
 
   GENERATE_ACCOUNT(first_miner_account);
@@ -113,28 +112,25 @@ bool gen_simple_chain_split_1::generate(std::vector<test_event_entry> &events) c
   MAKE_NEXT_BLOCK(events, blk_23, blk_22, first_miner_account);                               //  28
   DO_CALLBACK(events, "check_split_switched_back_2");                                         //  29
 
-  REWIND_BLOCKS_N(events, blk_23i, blk_23, first_miner_account, 10);                          //  30...N1
-  REWIND_BLOCKS_N(events, blk_23j, blk_23i, first_miner_account, 10);                         //  30...N1
-  REWIND_BLOCKS_N(events, blk_23k, blk_23j, first_miner_account, 10);                         //  30...N1
-  REWIND_BLOCKS(events, blk_23r, blk_23k, first_miner_account);                               //  30...N1
+  REWIND_BLOCKS(events, blk_23r, blk_23, first_miner_account);                                //  30...N1
   GENERATE_ACCOUNT(alice);
-  MAKE_TX(events, tx_0, first_miner_account, alice, MK_COINS(10), blk_23i);                   //  N1+1
-  MAKE_TX(events, tx_1, first_miner_account, alice, MK_COINS(20), blk_23j);                   //  N1+2
-  MAKE_TX(events, tx_2, first_miner_account, alice, MK_COINS(30), blk_23k);                   //  N1+3
+  MAKE_TX(events, tx_0, first_miner_account, alice, MK_COINS(10), blk_23);                    //  N1+1
+  MAKE_TX(events, tx_1, first_miner_account, alice, MK_COINS(20), blk_23);                    //  N1+2
+  MAKE_TX(events, tx_2, first_miner_account, alice, MK_COINS(30), blk_23);                    //  N1+3
   DO_CALLBACK(events, "check_mempool_1");                                                     //  N1+4
   MAKE_NEXT_BLOCK_TX1(events, blk_24, blk_23r, first_miner_account, tx_0);                    //  N1+5
   DO_CALLBACK(events, "check_mempool_2");                                                     //  N1+6
   /*
   //check orphaned blocks
-  MAKE_NEXT_BLOCK_NO_ADD(events, blk_orph_27, blk_16, get_test_target(), first_miner_account);
+  MAKE_NEXT_BLOCK_NO_ADD(events, blk_orph_27, blk_16, get_test_target(), first_miner_account);     
   MAKE_NEXT_BLOCK(events, blk_25, blk_orph_27, get_test_target(), first_miner_account);       //  36
   MAKE_NEXT_BLOCK(events, blk_26, blk_25, get_test_target(), first_miner_account);            //  37
   DO_CALLBACK(events, "check_orphaned_chain_1");                                              //  38
   ADD_BLOCK(events, blk_orph_27);                                                             //  39
   DO_CALLBACK(events, "check_orphaned_switched_to_alternative");                              //  40
-
+  
   //check orphaned check to main chain
-  MAKE_NEXT_BLOCK_NO_ADD(events, blk_orph_32, blk_16, get_test_target(), first_miner_account);
+  MAKE_NEXT_BLOCK_NO_ADD(events, blk_orph_32, blk_16, get_test_target(), first_miner_account);     
   MAKE_NEXT_BLOCK(events, blk_28, blk_orph_32, get_test_target(), first_miner_account);       //  41
   MAKE_NEXT_BLOCK(events, blk_29, blk_28, get_test_target(), first_miner_account);            //  42
   MAKE_NEXT_BLOCK(events, blk_30, blk_29, get_test_target(), first_miner_account);            //  43
@@ -144,13 +140,13 @@ bool gen_simple_chain_split_1::generate(std::vector<test_event_entry> &events) c
   DO_CALLBACK(events, "check_orphaned_switched_to_main");                                     //  47
 
   //check orphaned check to main chain
-  MAKE_NEXT_BLOCK_NO_ADD(events, blk_orph_39, blk_16, get_test_target(), first_miner_account);
+  MAKE_NEXT_BLOCK_NO_ADD(events, blk_orph_39, blk_16, get_test_target(), first_miner_account);     
   MAKE_NEXT_BLOCK(events, blk_33, blk_orph_39, get_test_target(), first_miner_account);       //  48
   MAKE_NEXT_BLOCK(events, blk_34, blk_33, get_test_target(), first_miner_account);            //  49
-  MAKE_NEXT_BLOCK_NO_ADD(events, blk_orph_41, blk_34, get_test_target(), first_miner_account);
+  MAKE_NEXT_BLOCK_NO_ADD(events, blk_orph_41, blk_34, get_test_target(), first_miner_account);     
   MAKE_NEXT_BLOCK(events, blk_35, blk_orph_41, get_test_target(), first_miner_account);       //  50
   MAKE_NEXT_BLOCK(events, blk_36, blk_35, get_test_target(), first_miner_account);            //  51
-  MAKE_NEXT_BLOCK_NO_ADD(events, blk_orph_40, blk_36, get_test_target(), first_miner_account);
+  MAKE_NEXT_BLOCK_NO_ADD(events, blk_orph_40, blk_36, get_test_target(), first_miner_account);     
   MAKE_NEXT_BLOCK(events, blk_37, blk_orph_40, get_test_target(), first_miner_account);       //  52
   MAKE_NEXT_BLOCK(events, blk_38, blk_37, get_test_target(), first_miner_account);            //  53
   DO_CALLBACK(events, "check_orphaned_chain_38");                                             //  54
@@ -317,7 +313,7 @@ bool gen_simple_chain_split_1::check_orphaned_chain_41(cryptonote::core& c, size
 
   return true;
 }*/
-//-----------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------- 
 
 
 

@@ -1,22 +1,21 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
-//
+// Copyright (c) 2014-2018, The Monero Project
+// 
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-//
+// 
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-//
+// 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-//
+// 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -26,7 +25,7 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #include <boost/uuid/uuid.hpp>
@@ -41,6 +40,7 @@ using namespace cryptonote;
 namespace
 {
   uint64_t const TEST_FEE = 5000000000; // 5 * 10^9
+  uint64_t const TEST_DUST_THRESHOLD = 5000000000; // 5 * 10^9
 }
 
 std::string generate_random_wallet_name()
@@ -57,7 +57,7 @@ inline uint64_t random(const uint64_t max_value) {
           (uint64_t(rand())<<48)) % max_value;
 }
 
-bool do_send_money(tools::wallet2& w1, tools::wallet2& w2, uint64_t amount_to_transfer, transaction& tx, size_t parts=1)
+bool do_send_money(tools::wallet2& w1, tools::wallet2& w2, size_t mix_in_factor, uint64_t amount_to_transfer, transaction& tx, size_t parts=1)
 {
   CHECK_AND_ASSERT_MES(parts > 0, false, "parts must be > 0");
 
@@ -86,7 +86,7 @@ bool do_send_money(tools::wallet2& w1, tools::wallet2& w2, uint64_t amount_to_tr
   {
     tools::wallet2::pending_tx ptx;
     std::vector<size_t> indices = w1.select_available_outputs([](const tools::wallet2::transfer_details&) { return true; });
-    w1.transfer(dsts, indices, 0, TEST_FEE, std::vector<uint8_t>(), tx, ptx, true);
+    w1.transfer(dsts, mix_in_factor, indices, 0, TEST_FEE, std::vector<uint8_t>(), tools::detail::null_split_strategy, tools::tx_dust_policy(TEST_DUST_THRESHOLD), tx, ptx, true);
     w1.commit_tx(ptx);
     return true;
   }
@@ -116,7 +116,7 @@ bool transactions_flow_test(std::string& working_folder,
   std::string path_target_wallet,
   std::string& daemon_addr_a,
   std::string& daemon_addr_b,
-  uint64_t amount_to_transfer, size_t transactions_count, size_t transactions_per_second)
+  uint64_t amount_to_transfer, size_t mix_in_factor, size_t transactions_count, size_t transactions_per_second)
 {
   LOG_PRINT_L0("-----------------------STARTING TRANSACTIONS FLOW TEST-----------------------");
   tools::wallet2 w1, w2;
@@ -152,8 +152,8 @@ bool transactions_flow_test(std::string& working_folder,
   w2.init(daemon_addr_b);
 
   MGINFO_GREEN("Using wallets: " << ENDL
-    << "Source:  " << w1.get_account().get_public_address_str(false) << ENDL << "Path: " << working_folder + "/" + path_source_wallet << ENDL
-    << "Target:  " << w2.get_account().get_public_address_str(false) << ENDL << "Path: " << working_folder + "/" + path_target_wallet);
+    << "Source:  " << w1.get_account().get_public_address_str(MAINNET) << ENDL << "Path: " << working_folder + "/" + path_source_wallet << ENDL
+    << "Target:  " << w2.get_account().get_public_address_str(MAINNET) << ENDL << "Path: " << working_folder + "/" + path_target_wallet);
 
   //lets do some money
   epee::net_utils::http::http_simple_client http_client;
@@ -164,7 +164,7 @@ bool transactions_flow_test(std::string& working_folder,
 
   COMMAND_RPC_START_MINING::request daemon_req = AUTO_VAL_INIT(daemon_req);
   COMMAND_RPC_START_MINING::response daemon_rsp = AUTO_VAL_INIT(daemon_rsp);
-  daemon_req.miner_address = w1.get_account().get_public_address_str(false);
+  daemon_req.miner_address = w1.get_account().get_public_address_str(MAINNET);
   daemon_req.threads_count = 9;
   r = net_utils::invoke_http_json("/start_mining", daemon_req, daemon_rsp, http_client, std::chrono::seconds(10));
   CHECK_AND_ASSERT_MES(r, false, "failed to get getrandom_outs");
@@ -172,7 +172,7 @@ bool transactions_flow_test(std::string& working_folder,
 
   //wait for money, until balance will have enough money
   w1.refresh(blocks_fetched, received_money, ok);
-  while(w1.unlocked_balance() < amount_to_transfer)
+  while(w1.unlocked_balance(0) < amount_to_transfer)
   {
     misc_utils::sleep_no_w(1000);
     w1.refresh(blocks_fetched, received_money, ok);
@@ -185,14 +185,14 @@ bool transactions_flow_test(std::string& working_folder,
   {
     tools::wallet2::transfer_container incoming_transfers;
     w1.get_transfers(incoming_transfers);
-    if(incoming_transfers.size() > FIRST_N_TRANSFERS && get_money_in_first_transfers(incoming_transfers, FIRST_N_TRANSFERS) < w1.unlocked_balance() )
+    if(incoming_transfers.size() > FIRST_N_TRANSFERS && get_money_in_first_transfers(incoming_transfers, FIRST_N_TRANSFERS) < w1.unlocked_balance(0) )
     {
       //lets go!
       size_t count = 0;
       BOOST_FOREACH(tools::wallet2::transfer_details& td, incoming_transfers)
       {
         cryptonote::transaction tx_s;
-        bool r = do_send_money(w1, w1, td.m_tx.vout[td.m_internal_output_index].amount - TEST_FEE, tx_s, 50);
+        bool r = do_send_money(w1, w1, 0, td.m_tx.vout[td.m_internal_output_index].amount - TEST_FEE, tx_s, 50);
         CHECK_AND_ASSERT_MES(r, false, "Failed to send starter tx " << get_transaction_hash(tx_s));
         MGINFO_GREEN("Starter transaction sent " << get_transaction_hash(tx_s));
         if(++count >= FIRST_N_TRANSFERS)
@@ -220,7 +220,7 @@ bool transactions_flow_test(std::string& working_folder,
   for(i = 0; i != transactions_count; i++)
   {
     uint64_t amount_to_tx = (amount_to_transfer - transfered_money) > transfer_size ? transfer_size: (amount_to_transfer - transfered_money);
-    while(w1.unlocked_balance() < amount_to_tx + TEST_FEE)
+    while(w1.unlocked_balance(0) < amount_to_tx + TEST_FEE)
     {
       misc_utils::sleep_no_w(1000);
       LOG_PRINT_L0("not enough money, waiting for cashback or mining");
@@ -229,18 +229,18 @@ bool transactions_flow_test(std::string& working_folder,
 
     transaction tx;
     /*size_t n_attempts = 0;
-    while (!do_send_money(w1, w2, amount_to_tx, tx)) {
+    while (!do_send_money(w1, w2, mix_in_factor, amount_to_tx, tx)) {
         n_attempts++;
         std::cout << "failed to transfer money, refresh and try again (attempts=" << n_attempts << ")" << std::endl;
         w1.refresh();
     }*/
 
 
-    if(!do_send_money(w1, w2, amount_to_tx, tx))
+    if(!do_send_money(w1, w2, mix_in_factor, amount_to_tx, tx))
     {
       LOG_PRINT_L0("failed to transfer money, tx: " << get_transaction_hash(tx) << ", refresh and try again" );
       w1.refresh(blocks_fetched, received_money, ok);
-      if(!do_send_money(w1, w2, amount_to_tx, tx))
+      if(!do_send_money(w1, w2, mix_in_factor, amount_to_tx, tx))
       {
         LOG_PRINT_L0( "failed to transfer money, second chance. tx: " << get_transaction_hash(tx) << ", exit" );
         LOCAL_ASSERT(false);
@@ -261,15 +261,15 @@ bool transactions_flow_test(std::string& working_folder,
 
 
   LOG_PRINT_L0( "waiting some new blocks...");
-  misc_utils::sleep_no_w(DIFFICULTY_TARGET*20*1000);//wait two blocks before sync on another wallet on another daemon
+  misc_utils::sleep_no_w(DIFFICULTY_BLOCKS_ESTIMATE_TIMESPAN*20*1000);//wait two blocks before sync on another wallet on another daemon
   LOG_PRINT_L0( "refreshing...");
   bool recvd_money = false;
   while(w2.refresh(blocks_fetched, recvd_money, ok) && ( (blocks_fetched && recvd_money) || !blocks_fetched  ) )
   {
-    misc_utils::sleep_no_w(DIFFICULTY_TARGET*1000);//wait two blocks before sync on another wallet on another daemon
+    misc_utils::sleep_no_w(DIFFICULTY_BLOCKS_ESTIMATE_TIMESPAN*1000);//wait two blocks before sync on another wallet on another daemon
   }
 
-  uint64_t money_2 = w2.balance();
+  uint64_t money_2 = w2.balance(0);
   if(money_2 == transfered_money)
   {
     MGINFO_GREEN("-----------------------FINISHING TRANSACTIONS FLOW TEST OK-----------------------");

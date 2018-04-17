@@ -1,22 +1,21 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
-//
+// Copyright (c) 2014-2018, The Monero Project
+// 
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-//
+// 
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-//
+// 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-//
+// 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -26,10 +25,10 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
-#pragma once
+#pragma once 
 
 #include <boost/program_options.hpp>
 #include <boost/logic/tribool_fwd.hpp>
@@ -62,10 +61,10 @@ namespace cryptonote
   /************************************************************************/
   class miner
   {
-  public:
+  public: 
     miner(i_miner_handler* phandler);
     ~miner();
-    bool init(const boost::program_options::variables_map& vm, bool testnet);
+    bool init(const boost::program_options::variables_map& vm, network_type nettype);
     static void init_options(boost::program_options::options_description& desc);
     bool set_block_template(const block& bl, const difficulty_type& diffic, uint64_t height);
     bool on_block_chain_update();
@@ -102,14 +101,14 @@ namespace cryptonote
     static constexpr uint8_t  BACKGROUND_MINING_MIN_MINING_TARGET_PERCENTAGE            = 5;
     static constexpr uint8_t  BACKGROUND_MINING_MAX_MINING_TARGET_PERCENTAGE            = 50;
     static constexpr uint8_t  BACKGROUND_MINING_MINER_MONITOR_INVERVAL_IN_SECONDS       = 10;
-    static constexpr uint64_t BACKGROUND_MINING_DEFAULT_MINER_EXTRA_SLEEP_MILLIS        = 400; // ramp up
+    static constexpr uint64_t BACKGROUND_MINING_DEFAULT_MINER_EXTRA_SLEEP_MILLIS        = 400; // ramp up 
     static constexpr uint64_t BACKGROUND_MINING_MIN_MINER_EXTRA_SLEEP_MILLIS            = 5;
 
   private:
     bool worker_thread();
     bool request_block_template();
     void  merge_hr();
-
+    
     struct miner_config
     {
       uint64_t current_extra_message_index;
@@ -127,7 +126,7 @@ namespace cryptonote
     std::atomic<uint32_t> m_starter_nonce;
     difficulty_type m_diffic;
     uint64_t m_height;
-    volatile uint32_t m_thread_index;
+    volatile uint32_t m_thread_index; 
     volatile uint32_t m_threads_total;
     std::atomic<int32_t> m_pausers_count;
     epee::critical_section m_miners_count_lock;
@@ -140,7 +139,7 @@ namespace cryptonote
     epee::math_helper::once_a_time_seconds<2> m_update_merge_hr_interval;
     std::vector<blobdata> m_extra_messages;
     miner_config m_config;
-    std::string m_config_folder_path;
+    std::string m_config_folder_path;    
     std::atomic<uint64_t> m_last_hr_merge_time;
     std::atomic<uint64_t> m_hashes;
     std::atomic<uint64_t> m_current_hash_rate;
@@ -160,7 +159,7 @@ namespace cryptonote
     boost::condition_variable m_is_background_mining_enabled_cond;
     std::atomic<bool> m_is_background_mining_started;
     boost::mutex m_is_background_mining_started_mutex;
-    boost::condition_variable m_is_background_mining_started_cond;
+    boost::condition_variable m_is_background_mining_started_cond;    
     boost::thread m_background_mining_thread;
     uint64_t m_min_idle_seconds;
     uint8_t m_idle_threshold;

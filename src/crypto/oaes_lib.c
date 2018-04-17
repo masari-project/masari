@@ -1,19 +1,19 @@
-/*
+/* 
  * ---------------------------------------------------------------------------
  * OpenAES License
  * ---------------------------------------------------------------------------
  * Copyright (c) 2012, Nabil S. Al Ramli, www.nalramli.com
  * All rights reserved.
- *
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *
+ * 
  *   - Redistributions of source code must retain the above copyright notice,
  *     this list of conditions and the following disclaimer.
  *   - Redistributions in binary form must reproduce the above copyright
  *     notice, this list of conditions and the following disclaimer in the
  *     documentation and/or other materials provided with the distribution.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -28,7 +28,7 @@
  * ---------------------------------------------------------------------------
  */
 #include <stddef.h>
-#include <time.h>
+#include <time.h> 
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -51,6 +51,12 @@
 #else
 #include <sys/types.h>
 #include <unistd.h>
+#endif
+
+#ifdef _MSC_VER
+#define GETPID() _getpid()
+#else
+#define GETPID() getpid()
 #endif
 
 #include "oaes_config.h"
@@ -478,7 +484,7 @@ static void oaes_get_seed( char buf[RANDSIZ + 1] )
 	sprintf( buf, "%04d%02d%02d%02d%02d%02d%03d%p%d",
 		gmTimer->tm_year + 1900, gmTimer->tm_mon + 1, gmTimer->tm_mday,
 		gmTimer->tm_hour, gmTimer->tm_min, gmTimer->tm_sec, timer.millitm,
-		_test + timer.millitm, getpid() );
+		_test + timer.millitm, GETPID() );
 	#else
 	struct timeval timer;
 	struct tm *gmTimer;
@@ -490,7 +496,7 @@ static void oaes_get_seed( char buf[RANDSIZ + 1] )
 	sprintf( buf, "%04d%02d%02d%02d%02d%02d%03d%p%d",
 		gmTimer->tm_year + 1900, gmTimer->tm_mon + 1, gmTimer->tm_mday,
 		gmTimer->tm_hour, gmTimer->tm_min, gmTimer->tm_sec, timer.tv_usec/1000,
-		_test + timer.tv_usec/1000, getpid() );
+		_test + timer.tv_usec/1000, GETPID() );
 	#endif
 		
 	if( _test )
@@ -510,7 +516,7 @@ static uint32_t oaes_get_seed(void)
 	_test = (char *) calloc( sizeof( char ), timer.millitm );
 	_ret = gmTimer->tm_year + 1900 + gmTimer->tm_mon + 1 + gmTimer->tm_mday +
 			gmTimer->tm_hour + gmTimer->tm_min + gmTimer->tm_sec + timer.millitm +
-			(uintptr_t) ( _test + timer.millitm ) + getpid();
+			(uintptr_t) ( _test + timer.millitm ) + GETPID();
 	#else
 	struct timeval timer;
 	struct tm *gmTimer;
@@ -522,7 +528,7 @@ static uint32_t oaes_get_seed(void)
 	_test = (char *) calloc( sizeof( char ), timer.tv_usec/1000 );
 	_ret = gmTimer->tm_year + 1900 + gmTimer->tm_mon + 1 + gmTimer->tm_mday +
 			gmTimer->tm_hour + gmTimer->tm_min + gmTimer->tm_sec + timer.tv_usec/1000 +
-			(uintptr_t) ( _test + timer.tv_usec/1000 ) + getpid();
+			(uintptr_t) ( _test + timer.tv_usec/1000 ) + GETPID();
 	#endif
 
 	if( _test )

@@ -1,5 +1,4 @@
-# Copyright (c) 2017-2018, The Masari Project
-# Copyright (c) 2014-2017, The Monero Project
+# Copyright (c) 2014-2018, The Monero Project
 #
 # All rights reserved.
 #
@@ -35,7 +34,6 @@ endif()
 
 set(cryptonote_basic_sources
   account.cpp
-  checkpoints.cpp
   cryptonote_basic_impl.cpp
   cryptonote_format_utils.cpp
   difficulty.cpp
@@ -47,7 +45,6 @@ set(cryptonote_basic_headers)
 set(cryptonote_basic_private_headers
   account.h
   account_boost_serialization.h
-  checkpoints.h
   connection_context.h
   cryptonote_basic.h
   cryptonote_basic_impl.h
@@ -60,9 +57,9 @@ set(cryptonote_basic_private_headers
   tx_extra.h
   verification_context.h)
 
-masari_private_headers(cryptonote_basic
-  ${crypto_private_headers})
-masari_add_library(cryptonote_basic
+monero_private_headers(cryptonote_basic
+  ${cryptonote_basic_private_headers})
+monero_add_library(cryptonote_basic
   ${cryptonote_basic_sources}
   ${cryptonote_basic_headers}
   ${cryptonote_basic_private_headers})
@@ -70,6 +67,8 @@ target_link_libraries(cryptonote_basic
   PUBLIC
     common
     cncrypto
+    checkpoints
+    device
     ${Boost_DATE_TIME_LIBRARY}
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
     ${Boost_SERIALIZATION_LIBRARY}

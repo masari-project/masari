@@ -1,22 +1,21 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
-//
+// Copyright (c) 2014-2018, The Monero Project
+// 
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-//
+// 
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-//
+// 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-//
+// 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -26,7 +25,7 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #include "gtest/gtest.h"
@@ -468,50 +467,50 @@ namespace
     "\x22\x09\x39\x68\x9e\xdf\x1a\xbd\x5b\xc1\xd0\x31\xf7\x3e\xcd\x6c"
     "\x99\x3a\xdd\x66\xd6\x80\x88\x70\x45\x6a\xfe\xb8\xe7\xee\xb6\x8d");
   // DON'T ever use this as a destination for funds, as the keys are right above this comment...
-  std::string test_keys_addr_str = "5r13NbFccJUdNeM6dfiBFL7kqund3HYGvMBF3ttsNd9SfzgYB6L7ep1Yg1osYJzLdaKAYSLVh6e6jKnAuzj3bw1oGvDtQoa";
+  std::string test_keys_addr_str = "4AzKEX4gXdJdNeM6dfiBFL7kqund3HYGvMBF3ttsNd9SfzgYB6L7ep1Yg1osYJzLdaKAYSLVh6e6jKnAuzj3bw1oGy9kXCb";
 }
 
 TEST(get_account_address_as_str, works_correctly)
 {
   cryptonote::account_public_address addr;
   ASSERT_TRUE(serialization::parse_binary(test_serialized_keys, addr));
-  std::string addr_str = cryptonote::get_account_address_as_str(false, addr);
+  std::string addr_str = cryptonote::get_account_address_as_str(cryptonote::MAINNET, false, addr);
   ASSERT_EQ(addr_str, test_keys_addr_str);
 }
 
 TEST(get_account_address_from_str, handles_valid_address)
 {
-  cryptonote::account_public_address addr;
-  ASSERT_TRUE(cryptonote::get_account_address_from_str(addr, false, test_keys_addr_str));
+  cryptonote::address_parse_info info;
+  ASSERT_TRUE(cryptonote::get_account_address_from_str(info, cryptonote::MAINNET, test_keys_addr_str));
 
   std::string blob;
-  ASSERT_TRUE(serialization::dump_binary(addr, blob));
+  ASSERT_TRUE(serialization::dump_binary(info.address, blob));
   ASSERT_EQ(blob, test_serialized_keys);
 }
 
 TEST(get_account_address_from_str, fails_on_invalid_address_format)
 {
-  cryptonote::account_public_address addr;
+  cryptonote::address_parse_info info;
   std::string addr_str = test_keys_addr_str;
   addr_str[0] = '0';
 
-  ASSERT_FALSE(cryptonote::get_account_address_from_str(addr, false, addr_str));
+  ASSERT_FALSE(cryptonote::get_account_address_from_str(info, cryptonote::MAINNET, addr_str));
 }
 
 TEST(get_account_address_from_str, fails_on_invalid_address_prefix)
 {
   std::string addr_str = base58::encode_addr(0, test_serialized_keys);
 
-  cryptonote::account_public_address addr;
-  ASSERT_FALSE(cryptonote::get_account_address_from_str(addr, false, addr_str));
+  cryptonote::address_parse_info info;
+  ASSERT_FALSE(cryptonote::get_account_address_from_str(info, cryptonote::MAINNET, addr_str));
 }
 
 TEST(get_account_address_from_str, fails_on_invalid_address_content)
 {
   std::string addr_str = base58::encode_addr(config::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, test_serialized_keys.substr(1));
 
-  cryptonote::account_public_address addr;
-  ASSERT_FALSE(cryptonote::get_account_address_from_str(addr, false, addr_str));
+  cryptonote::address_parse_info info;
+  ASSERT_FALSE(cryptonote::get_account_address_from_str(info, cryptonote::MAINNET, addr_str));
 }
 
 TEST(get_account_address_from_str, fails_on_invalid_address_spend_key)
@@ -520,8 +519,8 @@ TEST(get_account_address_from_str, fails_on_invalid_address_spend_key)
   serialized_keys_copy[0] = '\0';
   std::string addr_str = base58::encode_addr(config::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, serialized_keys_copy);
 
-  cryptonote::account_public_address addr;
-  ASSERT_FALSE(cryptonote::get_account_address_from_str(addr, false, addr_str));
+  cryptonote::address_parse_info info;
+  ASSERT_FALSE(cryptonote::get_account_address_from_str(info, cryptonote::MAINNET, addr_str));
 }
 
 TEST(get_account_address_from_str, fails_on_invalid_address_view_key)
@@ -530,12 +529,12 @@ TEST(get_account_address_from_str, fails_on_invalid_address_view_key)
   serialized_keys_copy.back() = '\x01';
   std::string addr_str = base58::encode_addr(config::CRYPTONOTE_PUBLIC_ADDRESS_BASE58_PREFIX, serialized_keys_copy);
 
-  cryptonote::account_public_address addr;
-  ASSERT_FALSE(cryptonote::get_account_address_from_str(addr, false, addr_str));
+  cryptonote::address_parse_info info;
+  ASSERT_FALSE(cryptonote::get_account_address_from_str(info, cryptonote::MAINNET, addr_str));
 }
 
 TEST(get_account_address_from_str, parses_old_address_format)
 {
-  cryptonote::account_public_address addr;
-  ASSERT_TRUE(cryptonote::get_account_address_from_str(addr, false, "002391bbbb24dea6fd95232e97594a27769d0153d053d2102b789c498f57a2b00b69cd6f2f5c529c1660f2f4a2b50178d6640c20ce71fe26373041af97c5b10236fc"));
+  cryptonote::address_parse_info info;
+  ASSERT_TRUE(cryptonote::get_account_address_from_str(info, cryptonote::MAINNET, "002391bbbb24dea6fd95232e97594a27769d0153d053d2102b789c498f57a2b00b69cd6f2f5c529c1660f2f4a2b50178d6640c20ce71fe26373041af97c5b10236fc"));
 }

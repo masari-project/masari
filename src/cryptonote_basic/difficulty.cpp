@@ -1,5 +1,5 @@
 // Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
+// Copyright (c) 2014-2018, The Monero Project
 //
 // All rights reserved.
 //
@@ -43,8 +43,8 @@
 #include "misc_language.h"
 #include "difficulty.h"
 
-#undef MASARI_DEFAULT_LOG_CATEGORY
-#define MASARI_DEFAULT_LOG_CATEGORY "difficulty"
+#undef MONERO_DEFAULT_LOG_CATEGORY
+#define MONERO_DEFAULT_LOG_CATEGORY "difficulty"
 #define MAX_AVERAGE_TIMESPAN          (uint64_t) DIFFICULTY_TARGET*6   // 24 minutes
 #define MIN_AVERAGE_TIMESPAN          (uint64_t) DIFFICULTY_TARGET/24  // 10s
 

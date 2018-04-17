@@ -1,22 +1,22 @@
 // Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
-//
+// Copyright (c) 2014-2018, The Monero Project
+// 
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-//
+// 
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-//
+// 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-//
+// 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -26,11 +26,12 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #include "chaingen.h"
-#include "chaingen_tests_list.h"
+#include "tx_validation.h"
+#include "device/device.hpp"
 
 using namespace epee;
 using namespace crypto;
@@ -49,7 +50,7 @@ namespace
       m_tx.version = version;
       m_tx.unlock_time = unlock_time;
 
-      m_tx_key = keypair::generate();
+      m_tx_key = keypair::generate(hw::get_device("default"));
       add_tx_pub_key_to_extra(m_tx, m_tx_key.pub);
     }
 
@@ -60,7 +61,10 @@ namespace
         m_in_contexts.push_back(keypair());
         keypair& in_ephemeral = m_in_contexts.back();
         crypto::key_image img;
-        generate_key_image_helper(sender_account_keys, src_entr.real_out_tx_key, src_entr.real_output_in_tx_index, in_ephemeral, img);
+        std::unordered_map<crypto::public_key, cryptonote::subaddress_index> subaddresses;
+        subaddresses[sender_account_keys.m_account_address.m_spend_public_key] = {0,0};
+        auto& out_key = reinterpret_cast<const crypto::public_key&>(src_entr.outputs[src_entr.real_output].second.dest);
+        generate_key_image_helper(sender_account_keys, subaddresses, out_key, src_entr.real_out_tx_key, src_entr.real_out_additional_tx_keys, src_entr.real_output_in_tx_index, in_ephemeral, img, hw::get_device(("default")));
 
         // put key image into tx input
         txin_to_key input_to_key;
@@ -142,7 +146,10 @@ namespace
 
     transaction tx;
     crypto::secret_key tx_key;
-    bool r = construct_tx_and_get_tx_key(from.get_keys(), sources, destinations, std::vector<uint8_t>(), tx, unlock_time, tx_key);
+    std::vector<crypto::secret_key> additional_tx_keys;
+    std::unordered_map<crypto::public_key, cryptonote::subaddress_index> subaddresses;
+    subaddresses[from.get_keys().m_account_address.m_spend_public_key] = {0,0};
+    bool r = construct_tx_and_get_tx_key(from.get_keys(), subaddresses, sources, destinations, cryptonote::account_public_address{}, std::vector<uint8_t>(), tx, unlock_time, tx_key, additional_tx_keys);
     LOG_PRINT_L2("tx: " << obj_to_json_str(tx));
     return tx;
   };
@@ -191,7 +198,10 @@ bool gen_tx_big_version::generate(std::vector<test_event_entry>& events) const
 
   transaction tx;
   crypto::secret_key tx_key;
-  bool r = construct_tx_and_get_tx_key(miner_account.get_keys(), sources, destinations, std::vector<uint8_t>(), tx, 0, tx_key);
+  std::vector<crypto::secret_key> additional_tx_keys;
+  std::unordered_map<crypto::public_key, cryptonote::subaddress_index> subaddresses;
+  subaddresses[miner_account.get_keys().m_account_address.m_spend_public_key] = {0,0};
+  bool r = construct_tx_and_get_tx_key(miner_account.get_keys(), subaddresses, sources, destinations, cryptonote::account_public_address{}, std::vector<uint8_t>(), tx, 0, tx_key, additional_tx_keys);
   CHECK_AND_ASSERT_MES(r, false, "failed to construct transaction");
   tx.version = 2;  // TODO-TK: there might be some serialization problems here
   DO_CALLBACK(events, "mark_invalid_tx");
@@ -294,13 +304,12 @@ bool gen_tx_no_inputs_no_outputs::generate(std::vector<test_event_entry>& events
 
   transaction tx;
   crypto::secret_key tx_key;
-  try {
-    bool r = construct_tx_and_get_tx_key(miner_account.get_keys(), sources, destinations, std::vector<uint8_t>(), tx, 0, tx_key);
-  } catch (const std::runtime_error&) {
-    LOG_ERROR("Caught runtime exception from bad transaction");
-    return true;
-  }
-  return false;
+  std::vector<crypto::secret_key> additional_tx_keys;
+  std::unordered_map<crypto::public_key, cryptonote::subaddress_index> subaddresses;
+  subaddresses[miner_account.get_keys().m_account_address.m_spend_public_key] = {0,0};
+  bool r = construct_tx_and_get_tx_key(miner_account.get_keys(), subaddresses, sources, destinations, cryptonote::account_public_address{}, std::vector<uint8_t>(), tx, 0, tx_key, additional_tx_keys);
+  CHECK_AND_ASSERT_MES(!r, false, "Transaction didn't fail.");
+  return true;
 }
 
 bool gen_tx_no_inputs_has_outputs::generate(std::vector<test_event_entry>& events) const
@@ -318,7 +327,10 @@ bool gen_tx_no_inputs_has_outputs::generate(std::vector<test_event_entry>& event
 
   transaction tx;
   crypto::secret_key tx_key;
-  bool r = construct_tx_and_get_tx_key(miner_account.get_keys(), sources, destinations, std::vector<uint8_t>(), tx, 0, tx_key);
+  std::vector<crypto::secret_key> additional_tx_keys;
+  std::unordered_map<crypto::public_key, cryptonote::subaddress_index> subaddresses;
+  subaddresses[miner_account.get_keys().m_account_address.m_spend_public_key] = {0,0};
+  bool r = construct_tx_and_get_tx_key(miner_account.get_keys(), subaddresses, sources, destinations, cryptonote::account_public_address{}, std::vector<uint8_t>(), tx, 0, tx_key, additional_tx_keys);
   DO_CALLBACK(events, "mark_invalid_tx");
   events.push_back(tx);
 
@@ -341,7 +353,10 @@ bool gen_tx_has_inputs_no_outputs::generate(std::vector<test_event_entry>& event
 
   transaction tx;
   crypto::secret_key tx_key;
-  bool r = construct_tx_and_get_tx_key(miner_account.get_keys(), sources, destinations, std::vector<uint8_t>(), tx, 0, tx_key);
+  std::vector<crypto::secret_key> additional_tx_keys;
+  std::unordered_map<crypto::public_key, cryptonote::subaddress_index> subaddresses;
+  subaddresses[miner_account.get_keys().m_account_address.m_spend_public_key] = {0,0};
+  bool r = construct_tx_and_get_tx_key(miner_account.get_keys(), subaddresses, sources, destinations, cryptonote::account_public_address{}, std::vector<uint8_t>(), tx, 0, tx_key, additional_tx_keys);
   CHECK_AND_ASSERT_MES(r, false, "failed to construct transaction");
   events.push_back(tx);
 
@@ -379,7 +394,10 @@ bool gen_tx_invalid_input_amount::generate(std::vector<test_event_entry>& events
 
   transaction tx;
   crypto::secret_key tx_key;
-  bool r = construct_tx_and_get_tx_key(miner_account.get_keys(), sources, destinations, std::vector<uint8_t>(), tx, 0, tx_key);
+  std::vector<crypto::secret_key> additional_tx_keys;
+  std::unordered_map<crypto::public_key, cryptonote::subaddress_index> subaddresses;
+  subaddresses[miner_account.get_keys().m_account_address.m_spend_public_key] = {0,0};
+  bool r = construct_tx_and_get_tx_key(miner_account.get_keys(), subaddresses, sources, destinations, cryptonote::account_public_address{}, std::vector<uint8_t>(), tx, 0, tx_key, additional_tx_keys);
   CHECK_AND_ASSERT_MES(r, false, "failed to construct transaction");
   DO_CALLBACK(events, "mark_invalid_tx");
   events.push_back(tx);
@@ -533,7 +551,7 @@ bool gen_tx_key_image_not_derive_from_tx_key::generate(std::vector<test_event_en
   builder.step2_fill_inputs(miner_account.get_keys(), sources);
 
   txin_to_key& in_to_key = boost::get<txin_to_key>(builder.m_tx.vin.front());
-  keypair kp = keypair::generate();
+  keypair kp = keypair::generate(hw::get_device("default"));
   key_image another_ki;
   crypto::generate_key_image(kp.pub, kp.sec, another_ki);
   in_to_key.k_image = another_ki;

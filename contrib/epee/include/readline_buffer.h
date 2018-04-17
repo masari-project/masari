@@ -2,9 +2,7 @@
 
 #include <streambuf>
 #include <sstream>
-#include <iostream>
 #include <vector>
-#include <algorithm>
 
 namespace rdln
 {
@@ -23,7 +21,7 @@ namespace rdln
     void set_prompt(const std::string& prompt);
     static void add_completion(const std::string& command);
     static const std::vector<std::string>& get_completions();
-
+    
   protected:
     virtual int sync();
 
@@ -31,7 +29,7 @@ namespace rdln
     std::streambuf* m_cout_buf;
     static std::vector<std::string>& completion_commands();
   };
-
+  
   class suspend_readline
   {
   public:

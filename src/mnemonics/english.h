@@ -1,5 +1,4 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
+// Copyright (c) 2014-2018, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -50,7 +49,7 @@ namespace Language
   class English: public Base
   {
   public:
-    English(): Base("English", std::vector<std::string>({
+    English(): Base("English", "English", std::vector<std::string>({
         "abbey",
         "abducts",
         "ability",

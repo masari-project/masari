@@ -54,7 +54,7 @@ int main(int argc,char * argv[])
 
 	E(mdb_txn_begin(env, NULL, 0, &txn));
 	E(mdb_dbi_open(txn, "id1", MDB_CREATE, &dbi));
-
+   
 	key.mv_size = sizeof(int);
 	key.mv_data = sval;
 

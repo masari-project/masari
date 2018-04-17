@@ -1,5 +1,5 @@
 name: masari
-version: 0.10.2-1
+version: 0.1.5.0
 summary: "Masari: the secure, private, untraceable cryptocurrency https://getmasari.org"
 description: |
     Masari is a private, secure, untraceable, decentralised digital currency.
@@ -46,11 +46,15 @@ parts:
             - libunbound-dev
             - libevent-dev
             - libboost-all-dev
+            - libzmqpp-dev
+            - libzmq3-dev
+            - libsodium-dev
             - libdb-dev
             - libunwind-dev
             - libminiupnpc-dev
             - libldns-dev
             - libexpat1-dev
+            - libreadline6-dev
             - bison
             - doxygen
             - graphviz

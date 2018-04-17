@@ -16,7 +16,7 @@ namespace demo
   };
 
   struct some_test_data
-  {
+  {      
     std::string m_str;
     uint64_t m_uint64;
     uint32_t m_uint32;
@@ -24,7 +24,7 @@ namespace demo
     uint8_t m_uint8;
     int64_t m_int64;
     int32_t m_int32;
-    int16_t m_int16;
+    int16_t m_int16;      
     int8_t m_int8;
     double m_double;
     bool m_bool;
@@ -85,7 +85,7 @@ namespace demo
 		{		
       std::string example_string_data;
       some_test_data sub;
-
+      
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(example_string_data)
         KV_SERIALIZE(sub)
@@ -95,7 +95,7 @@ namespace demo
 
 		struct response
 		{
-			bool 	 m_success;
+			bool 	 m_success; 
       std::list<some_test_data> subs;
 
       BEGIN_KV_SERIALIZE_MAP()
@@ -122,7 +122,7 @@ namespace demo
 
     struct response
     {
-      bool 	 m_success;
+      bool 	 m_success; 
 
 
       BEGIN_KV_SERIALIZE_MAP()
@@ -142,7 +142,7 @@ namespace demo
 
   bool operator == (const some_test_data& a, const some_test_data& b)
   {
-    if(   b.m_str != a.m_str
+    if(   b.m_str != a.m_str 
       ||  b.m_uint64 != a.m_uint64
       ||  b.m_uint32 != a.m_uint32
       ||  b.m_uint16 != a.m_uint16

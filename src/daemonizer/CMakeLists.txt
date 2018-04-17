@@ -1,5 +1,4 @@
-# Copyright (c) 2017-2018, The Masari Project
-# Copyright (c) 2014-2017, The Monero Project
+# Copyright (c) 2014-2018, The Monero Project
 #
 # All rights reserved.
 #
@@ -55,9 +54,13 @@ else()
   )
 endif()
 
-masari_private_headers(daemonizer
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+  add_definitions(-DDEBUG_TMPDIR_LOG=1)
+endif()
+
+monero_private_headers(daemonizer
   ${daemonizer_private_headers})
-masari_add_library(daemonizer
+monero_add_library(daemonizer
   ${daemonizer_sources}
   ${daemonizer_headers}
   ${daemonizer_private_headers})

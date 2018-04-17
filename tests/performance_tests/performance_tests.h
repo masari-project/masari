@@ -1,22 +1,21 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
-//
+// Copyright (c) 2014-2018, The Monero Project
+// 
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-//
+// 
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-//
+// 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-//
+// 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -26,7 +25,7 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #pragma once
@@ -35,6 +34,7 @@
 #include <stdint.h>
 
 #include <boost/chrono.hpp>
+#include <boost/regex.hpp>
 
 class performance_timer
 {
@@ -123,8 +123,12 @@ private:
 };
 
 template <typename T>
-void run_test(const char* test_name)
+void run_test(const std::string &filter, const char* test_name)
 {
+  boost::smatch match;
+  if (!filter.empty() && !boost::regex_match(std::string(test_name), match, boost::regex(filter)))
+    return;
+
   test_runner<T> runner;
   if (runner.run())
   {
@@ -150,7 +154,7 @@ void run_test(const char* test_name)
 }
 
 #define QUOTEME(x) #x
-#define TEST_PERFORMANCE0(test_class)         run_test< test_class >(QUOTEME(test_class))
-#define TEST_PERFORMANCE1(test_class, a0)     run_test< test_class<a0> >(QUOTEME(test_class<a0>))
-#define TEST_PERFORMANCE2(test_class, a0, a1) run_test< test_class<a0, a1> >(QUOTEME(test_class) "<" QUOTEME(a0) ", " QUOTEME(a1) ">")
-#define TEST_PERFORMANCE3(test_class, a0, a1, a2) run_test< test_class<a0, a1, a2> >(QUOTEME(test_class) "<" QUOTEME(a0) ", " QUOTEME(a1) ", " QUOTEME(a2) ">")
+#define TEST_PERFORMANCE0(filter, test_class)         run_test< test_class >(filter, QUOTEME(test_class))
+#define TEST_PERFORMANCE1(filter, test_class, a0)     run_test< test_class<a0> >(filter, QUOTEME(test_class<a0>))
+#define TEST_PERFORMANCE2(filter, test_class, a0, a1) run_test< test_class<a0, a1> >(filter, QUOTEME(test_class) "<" QUOTEME(a0) ", " QUOTEME(a1) ">")
+#define TEST_PERFORMANCE3(filter, test_class, a0, a1, a2) run_test< test_class<a0, a1, a2> >(filter, QUOTEME(test_class) "<" QUOTEME(a0) ", " QUOTEME(a1) ", " QUOTEME(a2) ">")

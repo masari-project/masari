@@ -1,22 +1,22 @@
 // Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
-//
+// Copyright (c) 2014-2018, The Monero Project
+// 
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-//
+// 
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-//
+// 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-//
+// 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -26,7 +26,7 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #include <vector>
@@ -50,6 +50,7 @@
 using namespace std;
 
 using namespace epee;
+using namespace crypto;
 using namespace cryptonote;
 
 
@@ -218,13 +219,14 @@ bool test_generator::construct_block_manually(block& blk, const block& prev_bloc
                                               const crypto::hash& prev_id/* = crypto::hash()*/, const difficulty_type& diffic/* = 1*/,
                                               const transaction& miner_tx/* = transaction()*/,
                                               const std::vector<crypto::hash>& tx_hashes/* = std::vector<crypto::hash>()*/,
-                                              size_t txs_sizes/* = 0*/, uint8_t hf_version/* = 1*/, uint64_t block_fees/* = 0*/)
+                                              size_t txs_sizes/* = 0*/, size_t max_outs/* = 0*/, uint8_t hf_version/* = 1*/, uint64_t block_fees/* = 0*/)
 {
   blk.major_version = actual_params & bf_major_ver ? major_ver : CURRENT_BLOCK_MAJOR_VERSION;
   blk.minor_version = actual_params & bf_minor_ver ? minor_ver : CURRENT_BLOCK_MINOR_VERSION;
-  blk.timestamp     = actual_params & bf_timestamp ? timestamp : prev_block.timestamp + DIFFICULTY_TARGET; // Keep difficulty unchanged
+  blk.timestamp     = actual_params & bf_timestamp ? timestamp : prev_block.timestamp + DIFFICULTY_BLOCKS_ESTIMATE_TIMESPAN; // Keep difficulty unchanged
   blk.prev_id       = actual_params & bf_prev_id   ? prev_id   : get_block_hash(prev_block);
   blk.tx_hashes     = actual_params & bf_tx_hashes ? tx_hashes : std::vector<crypto::hash>();
+  max_outs          = actual_params & bf_max_outs ? max_outs : 9999;
   hf_version        = actual_params & bf_hf_version ? hf_version : 1;
 
   size_t height = get_block_height(prev_block) + 1;
@@ -239,7 +241,7 @@ bool test_generator::construct_block_manually(block& blk, const block& prev_bloc
   {
     size_t current_block_size = txs_sizes + get_object_blobsize(blk.miner_tx);
     // TODO: This will work, until size of constructed block is less then CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE
-    if (!construct_miner_tx(height, misc_utils::median(block_sizes), already_generated_coins, current_block_size, block_fees, miner_acc.get_keys().m_account_address, blk.miner_tx, blobdata(), hf_version))
+    if (!construct_miner_tx(height, misc_utils::median(block_sizes), already_generated_coins, current_block_size, block_fees, miner_acc.get_keys().m_account_address, blk.miner_tx, blobdata(), max_outs, hf_version))
       return false;
   }
 
@@ -257,7 +259,7 @@ bool test_generator::construct_block_manually_tx(cryptonote::block& blk, const c
                                                  const cryptonote::account_base& miner_acc,
                                                  const std::vector<crypto::hash>& tx_hashes, size_t txs_size, uint64_t block_fees/*= 0*/)
 {
-  return construct_block_manually(blk, prev_block, miner_acc, bf_tx_hashes, 0, 0, 0, crypto::hash(), 0, transaction(), tx_hashes, txs_size, 0, block_fees);
+  return construct_block_manually(blk, prev_block, miner_acc, bf_tx_hashes, 0, 0, 0, crypto::hash(), 0, transaction(), tx_hashes, txs_size, 0, 0, block_fees);
 }
 
 
@@ -346,7 +348,7 @@ bool init_output_indices(std::vector<output_index>& outs, std::vector<size_t>& o
                     size_t tx_global_idx = outs.size() - 1;
                     outs[tx_global_idx].idx = tx_global_idx;
                     // Is out to me?
-                    if (is_out_to_acc(from.get_keys(), boost::get<txout_to_key>(out.target), get_tx_pub_key_from_extra(tx), j)) {
+                    if (is_out_to_acc(from.get_keys(), boost::get<txout_to_key>(out.target), get_tx_pub_key_from_extra(tx), get_additional_tx_pub_keys_from_extra(tx), j)) {
                         outs_mine.push_back(tx_global_idx);
                     }
                 }
@@ -364,7 +366,11 @@ bool init_spent_output_indices(std::vector<output_index> &outs, std::vector<size
     // construct key image for this output
     crypto::key_image img;
     keypair in_ephemeral;
-    generate_key_image_helper(from.get_keys(), get_tx_pub_key_from_extra(*oi.p_tx), oi.out_no, in_ephemeral, img);
+    crypto::public_key out_key = boost::get<txout_to_key>(oi.out).key;
+    std::unordered_map<crypto::public_key, cryptonote::subaddress_index> subaddresses;
+
+    subaddresses[from.get_keys().m_account_address.m_spend_public_key] = {0,0};
+    generate_key_image_helper(from.get_keys(), subaddresses, out_key, get_tx_pub_key_from_extra(*oi.p_tx), get_additional_tx_pub_keys_from_extra(*oi.p_tx), oi.out_no, in_ephemeral, img, hw::get_device(("default")));
 
     // lookup for this key image in the events vector
     BOOST_FOREACH(auto& tx_pair, mtx) {
@@ -531,7 +537,7 @@ bool construct_miner_tx_manually(size_t height, uint64_t already_generated_coins
                                  keypair* p_txkey/* = 0*/)
 {
   keypair txkey;
-  txkey = keypair::generate();
+  txkey = keypair::generate(hw::get_device("default"));
   add_tx_pub_key_to_extra(tx, txkey.pub);
 
   if (0 != p_txkey)
@@ -574,7 +580,7 @@ bool construct_tx_to_key(const std::vector<test_event_entry>& events, cryptonote
   vector<tx_destination_entry> destinations;
   fill_tx_sources_and_destinations(events, blk_head, from, to, amount, fee, nmix, sources, destinations);
 
-  return construct_tx(from.get_keys(), sources, destinations, std::vector<uint8_t>(), tx, 0);
+  return construct_tx(from.get_keys(), sources, destinations, from.get_keys().m_account_address, std::vector<uint8_t>(), tx, 0);
 }
 
 transaction construct_tx_with_fee(std::vector<test_event_entry>& events, const block& blk_head,
@@ -592,7 +598,7 @@ uint64_t get_tx_amount(const cryptonote::transaction &tx, const cryptonote::acco
   for(const tx_out& o: tx.vout)
   {
     CHECK_AND_ASSERT_MES(o.target.type() ==  typeid(txout_to_key), false, "wrong type id in transaction out" );
-    if(is_out_to_acc(addr.get_keys(), boost::get<txout_to_key>(o.target), get_tx_pub_key_from_extra(tx), i))
+    if(is_out_to_acc(addr.get_keys(), boost::get<txout_to_key>(o.target), get_tx_pub_key_from_extra(tx), get_additional_tx_pub_keys_from_extra(tx), i))
     {
       rct::key mask;
       amounts += get_tx_amount_and_mask(tx, addr, i, mask);
@@ -609,9 +615,9 @@ uint64_t get_tx_amount_and_mask(const cryptonote::transaction &tx, const crypton
   crypto::secret_key amount_key;
   crypto::derivation_to_scalar(derivation, out_no, amount_key);
   if (tx.rct_signatures.type == rct::RCTTypeSimple) {
-    return rct::decodeRctSimple(tx.rct_signatures, rct::sk2rct(amount_key), out_no, mask);
+    return rct::decodeRctSimple(tx.rct_signatures, rct::sk2rct(amount_key), out_no, mask, hw::get_device(("default")));
   } else {
-    return rct::decodeRct(tx.rct_signatures, rct::sk2rct(amount_key), out_no, mask);
+    return rct::decodeRct(tx.rct_signatures, rct::sk2rct(amount_key), out_no, mask, hw::get_device(("default")));
   }
 }
 

@@ -1,22 +1,21 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
-//
+// Copyright (c) 2014-2018, The Monero Project
+// 
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-//
+// 
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-//
+// 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-//
+// 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -26,10 +25,10 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
-#pragma once
+#pragma once 
 
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
@@ -40,12 +39,17 @@
 #include <memory>
 #include <string>
 
+#ifdef _WIN32
+#include "windows.h"
+#include "misc_log_ex.h"
+#endif
+
 #include "crypto/hash.h"
 
 /*! \brief Various Tools
  *
- *
- *
+ *  
+ * 
  */
 namespace tools
 {
@@ -61,8 +65,30 @@ namespace tools
     }
   };
 
-  //! \return File only readable by owner. nullptr if `filename` exists.
-  std::unique_ptr<std::FILE, close_file> create_private_file(const std::string& filename);
+  //! A file restricted to process owner AND process. Deletes file on destruction.
+  class private_file {
+    std::unique_ptr<std::FILE, close_file> m_handle;
+    std::string m_filename;
+
+    private_file(std::FILE* handle, std::string&& filename) noexcept;
+  public:
+
+    //! `handle() == nullptr && filename.empty()`.
+    private_file() noexcept;
+
+    /*! \return File only readable by owner and only used by this process
+      OR `private_file{}` on error. */
+    static private_file create(std::string filename);
+
+    private_file(private_file&&) = default;
+    private_file& operator=(private_file&&) = default;
+
+    //! Deletes `filename()` and closes `handle()`.
+    ~private_file() noexcept;
+
+    std::FILE* handle() const noexcept { return m_handle.get(); }
+    const std::string& filename() const noexcept { return m_filename; }
+  };
 
   /*! \brief Returns the default data directory.
    *
@@ -78,12 +104,12 @@ namespace tools
 
 #ifdef WIN32
   /**
-   * @brief
+   * @brief 
    *
    * @param nfolder
    * @param iscreate
    *
-   * @return
+   * @return 
    */
   std::string get_special_folder_path(int nfolder, bool iscreate);
 #endif
@@ -98,7 +124,7 @@ namespace tools
 
   /*! \brief creates directories for a path
    *
-   *  wrapper around boost::filesyste::create_directories.
+   *  wrapper around boost::filesyste::create_directories.  
    *  (ensure-directory-exists): greenspun's tenth rule in action!
    */
   bool create_directories_if_necessary(const std::string& path);
@@ -107,6 +133,8 @@ namespace tools
   std::error_code replace_file(const std::string& replacement_name, const std::string& replaced_name);
 
   bool sanitize_locale();
+
+  bool on_startup();
 
   /*! \brief Defines a signal handler for win32 and *nix
    */
@@ -125,9 +153,14 @@ namespace tools
       }
       return r;
 #else
-      /* Only blocks SIGINT and SIGTERM */
-      signal(SIGINT, posix_handler);
+      static struct sigaction sa;
+      memset(&sa, 0, sizeof(struct sigaction));
+      sa.sa_handler = posix_handler;
+      sa.sa_flags = 0;
+      /* Only blocks SIGINT, SIGTERM and SIGPIPE */
+      sigaction(SIGINT, &sa, NULL);
       signal(SIGTERM, posix_handler);
+      signal(SIGPIPE, SIG_IGN);
       m_handler = t;
       return true;
 #endif

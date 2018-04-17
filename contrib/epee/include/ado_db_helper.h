@@ -1,6 +1,6 @@
 // Copyright (c) 2006-2013, Andrey N. Sabelnikov, www.sabelnikov.net
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // * Redistributions of source code must retain the above copyright
@@ -11,7 +11,7 @@
 // * Neither the name of the Andrey N. Sabelnikov nor the
 // names of its contributors may be used to endorse or promote products
 // derived from this software without specific prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -22,7 +22,7 @@
 // ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 
 
 #ifndef _DB_ADO_HELPER_H_
@@ -81,7 +81,7 @@ namespace ado_db_helper
 
 	class profiler_manager
 	{
-	public:
+	public: 
 		typedef std::map<std::string, profile_entry> sqls_map;
 		profiler_manager(){}
 
@@ -104,7 +104,7 @@ namespace ado_db_helper
 			for(std::list<sqls_map::iterator>::iterator it = m_sorted_by_time_sqls.begin();it!=m_sorted_by_time_sqls.end();it++)
 			{
 				strm << "---------------------------------------------------------------------------------------------------------\r\nSQL: " << (*it)->first << "\r\n";
-				strm << "\tavrg: " << (*it)->second.m_avrg.get_avg() << "\r\n\tmax: " << (*it)->second.m_max_time << "\r\n\tmin: " << (*it)->second.m_min_time << "\r\n\tcount: " << (*it)->second.m_call_count << "\r\n";
+				strm << "\tavrg: " << (*it)->second.m_avrg.get_avg() << "\r\n\tmax: " << (*it)->second.m_max_time << "\r\n\tmin: " << (*it)->second.m_min_time << "\r\n\tcount: " << (*it)->second.m_call_count << "\r\n"; 
 			}
 
 			return file_io_utils::save_string_to_file(path.c_str(), strm.str());
@@ -140,7 +140,7 @@ namespace ado_db_helper
 		sqls_map m_sqls;
 		critical_section m_sqls_lock;
 	};
-inline
+inline 
 	profiler_manager* get_set_profiler(bool need_to_set = false, profiler_manager** pprofiler = NULL)
 	{
 		static profiler_manager* pmanager = NULL;
@@ -945,7 +945,7 @@ inline
 			ADODB::_ConnectionPtr& get_db_connection()
 			{
 
-				//soci::session
+				//soci::session 
 
 				m_db_connections_lock.lock();
 				boost::shared_ptr<ADODB::_ConnectionPtr>& conn_ptr = m_db_connections[::GetCurrentThreadId()];
@@ -966,7 +966,7 @@ inline
 					}
 
 					HRESULT res = conn->Open(_bstr_t(m_connection_string.c_str()), _bstr_t(m_login.c_str()), _bstr_t(m_password.c_str()), NULL);
-					if(res != S_OK)
+					if(res != S_OK) 
 					{
 						LOG_ERROR("Failed to connect do DB, connection str:" << m_connection_string);
 						return conn;
@@ -997,7 +997,7 @@ inline
 					BEGIN_TRY_SECTION();
 
 					HRESULT res = rconn->Open(_bstr_t(m_connection_string.c_str()), _bstr_t(m_login.c_str()), _bstr_t(m_password.c_str()), NULL);
-					if(res != S_OK)
+					if(res != S_OK) 
 					{
 						LOG_PRINT("Failed to restore connection to local AI DB", LOG_LEVEL_1);
 						return false;

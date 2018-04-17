@@ -1,6 +1,6 @@
 // Copyright (c) 2006-2013, Andrey N. Sabelnikov, www.sabelnikov.net
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // * Redistributions of source code must retain the above copyright
@@ -11,7 +11,7 @@
 // * Neither the name of the Andrey N. Sabelnikov nor the
 // names of its contributors may be used to endorse or promote products
 // derived from this software without specific prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -22,19 +22,19 @@
 // ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 
 
 #pragma comment(lib, "Ws2_32.lib")
 
-#undef MASARI_DEFAULT_LOG_CATEGORY
-#define MASARI_DEFAULT_LOG_CATEGORY "net"
+#undef MONERO_DEFAULT_LOG_CATEGORY
+#define MONERO_DEFAULT_LOG_CATEGORY "net"
 
 namespace epee
 {
 namespace net_utils
 {
-template<class TProtocol>
+template<class TProtocol> 
 cp_server_impl<TProtocol>::cp_server_impl():
 									m_port(0), m_stop(false),
 									m_worker_thread_counter(0), m_listen_socket(INVALID_SOCKET)
@@ -47,7 +47,7 @@ cp_server_impl<TProtocol>::~cp_server_impl()
 	deinit_server();
 }
 //-------------------------------------------------------------
-template<class TProtocol>
+template<class TProtocol> 
 bool cp_server_impl<TProtocol>::init_server(int port_no)
 {
 	m_port = port_no;
@@ -154,7 +154,7 @@ unsigned CALLBACK cp_server_impl<TProtocol>::worker_thread(void* param)
 	return 1;
 }
 //-------------------------------------------------------------
-template<class TProtocol>
+template<class TProtocol> 
 bool cp_server_impl<TProtocol>::worker_thread_member()
 {
 	LOG_PRINT("Worker thread STARTED", LOG_LEVEL_1);
@@ -238,7 +238,7 @@ bool cp_server_impl<TProtocol>::worker_thread_member()
 
 		}
 
-		//preparing new request,
+		//preparing new request, 
 
 		{
 			PROFILE_FUNC("[worker_thread]RECV Request small loop");
@@ -297,7 +297,7 @@ bool cp_server_impl<TProtocol>::worker_thread_member()
 	return true;
 }
 //-------------------------------------------------------------
-template<class TProtocol>
+template<class TProtocol> 
 bool cp_server_impl<TProtocol>::shutdown_connection(connection<TProtocol>* pconn)
 {
 	PROFILE_FUNC("[shutdown_connection]");
@@ -307,7 +307,7 @@ bool cp_server_impl<TProtocol>::shutdown_connection(connection<TProtocol>* pconn
 		LOG_ERROR("Attempt to remove null pptr connection!");
 		return false;
 	}
-	else
+	else 
 	{
 		LOG_PRINT("Shutting down connection ("<< pconn << ")", LOG_LEVEL_3);
 	}
@@ -355,7 +355,7 @@ bool cp_server_impl<TProtocol>::shutdown_connection(connection<TProtocol>* pconn
 	return true;
 }
 //-------------------------------------------------------------
-template<class TProtocol>
+template<class TProtocol> 
 bool cp_server_impl<TProtocol>::run_server(int threads_count = 0)
 {
 	int err = listen(m_listen_socket, 100);
