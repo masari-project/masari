@@ -1,22 +1,21 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
-//
+// Copyright (c) 2014-2018, The Monero Project
+// 
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-//
+// 
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-//
+// 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-//
+// 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -26,7 +25,7 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #pragma once
@@ -98,7 +97,7 @@ bool gen_double_spend_base<concrete_test>::check_double_spend(cryptonote::core& 
   CHECK_NOT_EQ(invalid_index_value, m_invalid_block_index);
 
   std::list<cryptonote::block> block_list;
-  bool r = c.get_blocks(0, 100 + 3 * CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW, block_list);
+  bool r = c.get_blocks(0, 100 + 2 * CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW, block_list);
   CHECK_TEST_CONDITION(r);
   CHECK_TEST_CONDITION(m_last_valid_block == block_list.back());
 
@@ -126,21 +125,28 @@ bool gen_double_spend_in_tx<txs_keeped_by_block>::generate(std::vector<test_even
   INIT_DOUBLE_SPEND_TEST();
   DO_CALLBACK(events, "mark_last_valid_block");
 
-  vector<cryptonote::tx_source_entry> sources;
-  vector<cryptonote::tx_destination_entry> destinations;
-  rct::key mask;
-  uint64_t tx_amount;
-  try { // TODO-TK: temp hack against randomization of destination outs
-    tx_amount = get_tx_amount_and_mask(tx_0, bob_account, 0, mask);
-  } catch (...) {
-    tx_amount = get_tx_amount_and_mask(tx_0, bob_account, 1, mask);
-  }
-  fill_tx_sources_and_destinations(events, blk_1i, bob_account, alice_account, tx_amount - TESTS_DEFAULT_FEE, TESTS_DEFAULT_FEE, DEFAULT_MIXIN, sources, destinations);
-  sources.push_back(sources[0]);
+  std::vector<cryptonote::tx_source_entry> sources;
+  cryptonote::tx_source_entry se;
+  se.amount = tx_0.vout[0].amount;
+  se.push_output(0, boost::get<cryptonote::txout_to_key>(tx_0.vout[0].target).key, se.amount);
+  se.real_output = 0;
+  se.rct = false;
+  se.real_out_tx_key = get_tx_pub_key_from_extra(tx_0);
+  se.real_output_in_tx_index = 0;
+  sources.push_back(se);
+  // Double spend!
+  sources.push_back(se);
+
+  cryptonote::tx_destination_entry de;
+  de.addr = alice_account.get_keys().m_account_address;
+  de.amount = 2 * se.amount - TESTS_DEFAULT_FEE;
+  std::vector<cryptonote::tx_destination_entry> destinations;
+  destinations.push_back(de);
+
   cryptonote::transaction tx_1;
-  if (!construct_tx(bob_account.get_keys(), sources, destinations, std::vector<uint8_t>(), tx_1, 0)) {
+  if (!construct_tx(bob_account.get_keys(), sources, destinations, boost::none, std::vector<uint8_t>(), tx_1, 0))
     return false;
-  }
+
   SET_EVENT_VISITOR_SETT(events, event_visitor_settings::set_txs_keeped_by_block, txs_keeped_by_block);
   DO_CALLBACK(events, "mark_invalid_tx");
   events.push_back(tx_1);

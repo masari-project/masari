@@ -1,5 +1,4 @@
-# Copyright (c) 2017-2018, The Masari Project
-# Copyright (c) 2014-2017, The Monero Project
+# Copyright (c) 2014-2018, The Monero Project
 #
 # All rights reserved.
 #
@@ -31,31 +30,30 @@ set(cn_deserialize_sources
   cn_deserialize.cpp
   )
 
-masari_add_executable(cn_deserialize
+monero_add_executable(cn_deserialize
   ${cn_deserialize_sources}
   ${cn_deserialize_private_headers})
 
 target_link_libraries(cn_deserialize
   LINK_PRIVATE
     cryptonote_core
-    common
     blockchain_db
+    device
+    ringct
     p2p
     epee
     ${CMAKE_THREAD_LIBS_INIT})
 
-add_dependencies(cn_deserialize
-	version)
 set_property(TARGET cn_deserialize
 	PROPERTY
-	OUTPUT_NAME "masari-utils-deserialize")
+	OUTPUT_NAME "monero-utils-deserialize")
 
 
 set(object_sizes_sources
   object_sizes.cpp
   )
 
-masari_add_executable(object_sizes
+monero_add_executable(object_sizes
   ${object_sizes_sources}
   ${object_sizes_private_headers})
 
@@ -67,9 +65,7 @@ target_link_libraries(object_sizes
     epee
     ${CMAKE_THREAD_LIBS_INIT})
 
-add_dependencies(object_sizes
-	version)
 set_property(TARGET object_sizes
 	PROPERTY
-	OUTPUT_NAME "masari-utils-object-sizes")
+	OUTPUT_NAME "monero-utils-object-sizes")
 

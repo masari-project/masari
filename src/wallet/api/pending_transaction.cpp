@@ -1,5 +1,4 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
+// Copyright (c) 2014-2018, The Monero Project
 //
 // All rights reserved.
 //
@@ -43,7 +42,7 @@
 
 using namespace std;
 
-namespace Masari {
+namespace Monero {
 
 PendingTransaction::~PendingTransaction() {}
 
@@ -150,6 +149,15 @@ uint64_t PendingTransactionImpl::amount() const
     return result;
 }
 
+uint64_t PendingTransactionImpl::dust() const
+{
+    uint64_t result = 0;
+    for (const auto & ptx : m_pending_tx) {
+        result += ptx.dust;
+    }
+    return result;
+}
+
 uint64_t PendingTransactionImpl::fee() const
 {
     uint64_t result = 0;
@@ -164,5 +172,23 @@ uint64_t PendingTransactionImpl::txCount() const
     return m_pending_tx.size();
 }
 
+std::vector<uint32_t> PendingTransactionImpl::subaddrAccount() const
+{
+    std::vector<uint32_t> result;
+    for (const auto& ptx : m_pending_tx)
+        result.push_back(ptx.construction_data.subaddr_account);
+    return result;
 }
+
+std::vector<std::set<uint32_t>> PendingTransactionImpl::subaddrIndices() const
+{
+    std::vector<std::set<uint32_t>> result;
+    for (const auto& ptx : m_pending_tx)
+        result.push_back(ptx.construction_data.subaddr_indices);
+    return result;
+}
+
+}
+
+namespace Bitmonero = Monero;
 

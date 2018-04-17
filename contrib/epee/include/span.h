@@ -1,4 +1,4 @@
-// Copyright (c) 2017, The Masari Project
+// Copyright (c) 2017-2018, The Monero Project
 //
 // All rights reserved.
 //
@@ -108,7 +108,7 @@ namespace epee
   template<typename T>
   constexpr bool has_padding() noexcept
   {
-    return !std::is_pod<T>() || alignof(T) != 1;
+    return !std::is_standard_layout<T>() || alignof(T) != 1;
   }
 
   //! \return Cast data from `src` as `span<const std::uint8_t>`.
@@ -116,7 +116,7 @@ namespace epee
   span<const std::uint8_t> to_byte_span(const span<const T> src) noexcept
   {
     static_assert(!has_padding<T>(), "source type may have padding");
-    return {reinterpret_cast<const std::uint8_t*>(src.data()), src.size_bytes()};
+    return {reinterpret_cast<const std::uint8_t*>(src.data()), src.size_bytes()}; 
   }
 
   //! \return `span<const std::uint8_t>` which represents the bytes at `&src`.

@@ -1,22 +1,21 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
-//
+// Copyright (c) 2014-2018, The Monero Project
+// 
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-//
+// 
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-//
+// 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-//
+// 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -26,11 +25,11 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #include "chaingen.h"
-#include "chaingen_tests_list.h"
+#include "chain_switch_1.h"
 
 using namespace epee;
 using namespace cryptonote;
@@ -72,43 +71,38 @@ bool gen_chain_switch_1::generate(std::vector<test_event_entry>& events) const
   MAKE_ACCOUNT(events, recipient_account_2);                                                      //  2
   MAKE_ACCOUNT(events, recipient_account_3);                                                      //  3
   MAKE_ACCOUNT(events, recipient_account_4);                                                      //  4
-  REWIND_BLOCKS(events, blk_0i, blk_0, miner_account);                                            // <N blocks>
-  REWIND_BLOCKS(events, blk_0r, blk_0i, miner_account);                                           // <N blocks>
-  MAKE_TX(events, tx_00, miner_account, recipient_account_1, MK_COINS(5), blk_0i);                 //  5 + N
+  REWIND_BLOCKS(events, blk_0r, blk_0, miner_account)                                             // <N blocks>
+  MAKE_TX(events, tx_00, miner_account, recipient_account_1, MK_COINS(5), blk_0);                 //  5 + N
   MAKE_NEXT_BLOCK_TX1(events, blk_1, blk_0r, miner_account, tx_00);                               //  6 + N
   MAKE_NEXT_BLOCK(events, blk_2, blk_1, miner_account);                                           //  7 + N
-  REWIND_BLOCKS_N(events, blk_2a, blk_2, miner_account, 5)                                        // <5 blocks>
-  REWIND_BLOCKS_N(events, blk_2b, blk_2a, miner_account, 5)                                       // <5 blocks>
-  REWIND_BLOCKS_N(events, blk_2c, blk_2b, miner_account, 5)                                       // <5 blocks>
-  REWIND_BLOCKS(events, blk_2r, blk_2c, miner_account)                                            // <N blocks>
+  REWIND_BLOCKS(events, blk_2r, blk_2, miner_account)                                             // <N blocks>
 
   // Transactions to test account balances after switch
-  MAKE_TX_LIST_START(events, txs_blk_3, miner_account, recipient_account_2, MK_COINS(7), blk_2);  //  8 + 3N
-  MAKE_TX_LIST_START(events, txs_blk_4, miner_account, recipient_account_3, MK_COINS(11), blk_2a); //  9 + 2N
-  MAKE_TX_LIST_START(events, txs_blk_5, miner_account, recipient_account_4, MK_COINS(13), blk_2b); // 10 + 2N
+  MAKE_TX_LIST_START(events, txs_blk_3, miner_account, recipient_account_2, MK_COINS(7), blk_2);  //  8 + 2N
+  MAKE_TX_LIST_START(events, txs_blk_4, miner_account, recipient_account_3, MK_COINS(11), blk_2); //  9 + 2N
+  MAKE_TX_LIST_START(events, txs_blk_5, miner_account, recipient_account_4, MK_COINS(13), blk_2); // 10 + 2N
   std::list<transaction> txs_blk_6;
   txs_blk_6.push_back(txs_blk_4.front());
 
   // Transactions, that has different order in alt block chains
-  MAKE_TX_LIST(events, txs_blk_3, miner_account, recipient_account_1, MK_COINS(1), blk_2c);        // 11 + 2N
+  MAKE_TX_LIST(events, txs_blk_3, miner_account, recipient_account_1, MK_COINS(1), blk_2);        // 11 + 2N
   txs_blk_5.push_back(txs_blk_3.back());
-  MAKE_TX_LIST(events, txs_blk_3, miner_account, recipient_account_1, MK_COINS(2), blk_2c);        // 12 + 2N
+  MAKE_TX_LIST(events, txs_blk_3, miner_account, recipient_account_1, MK_COINS(2), blk_2);        // 12 + 2N
   txs_blk_6.push_back(txs_blk_3.back());
 
-
-  MAKE_TX_LIST(events, txs_blk_3, miner_account, recipient_account_2, MK_COINS(1), blk_2c);        // 13 + 2N
+  MAKE_TX_LIST(events, txs_blk_3, miner_account, recipient_account_2, MK_COINS(1), blk_2);        // 13 + 2N
   txs_blk_5.push_back(txs_blk_3.back());
-  MAKE_TX_LIST(events, txs_blk_4, miner_account, recipient_account_2, MK_COINS(2), blk_2c);        // 14 + 2N
+  MAKE_TX_LIST(events, txs_blk_4, miner_account, recipient_account_2, MK_COINS(2), blk_2);        // 14 + 2N
   txs_blk_5.push_back(txs_blk_4.back());
 
-  MAKE_TX_LIST(events, txs_blk_3, miner_account, recipient_account_3, MK_COINS(1), blk_2c);        // 15 + 2N
+  MAKE_TX_LIST(events, txs_blk_3, miner_account, recipient_account_3, MK_COINS(1), blk_2);        // 15 + 2N
   txs_blk_6.push_back(txs_blk_3.back());
-  MAKE_TX_LIST(events, txs_blk_4, miner_account, recipient_account_3, MK_COINS(2), blk_2c);        // 16 + 2N
+  MAKE_TX_LIST(events, txs_blk_4, miner_account, recipient_account_3, MK_COINS(2), blk_2);        // 16 + 2N
   txs_blk_5.push_back(txs_blk_4.back());
 
-  MAKE_TX_LIST(events, txs_blk_4, miner_account, recipient_account_4, MK_COINS(1), blk_2c);        // 17 + 2N
+  MAKE_TX_LIST(events, txs_blk_4, miner_account, recipient_account_4, MK_COINS(1), blk_2);        // 17 + 2N
   txs_blk_5.push_back(txs_blk_4.back());
-  MAKE_TX_LIST(events, txs_blk_3, miner_account, recipient_account_4, MK_COINS(2), blk_2c);        // 18 + 2N
+  MAKE_TX_LIST(events, txs_blk_3, miner_account, recipient_account_4, MK_COINS(2), blk_2);        // 18 + 2N
   txs_blk_6.push_back(txs_blk_3.back());
 
   MAKE_NEXT_BLOCK_TX_LIST(events, blk_3, blk_2r, miner_account, txs_blk_3);                       // 19 + 2N
@@ -137,8 +131,8 @@ bool gen_chain_switch_1::check_split_not_switched(cryptonote::core& c, size_t ev
   std::list<block> blocks;
   bool r = c.get_blocks(0, 10000, blocks);
   CHECK_TEST_CONDITION(r);
-  CHECK_EQ(20 + 3 * CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW, blocks.size());
-  CHECK_TEST_CONDITION(blocks.back() == boost::get<block>(events[35 + 3 * CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW]));  // blk_4
+  CHECK_EQ(5 + 2 * CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW, blocks.size());
+  CHECK_TEST_CONDITION(blocks.back() == boost::get<block>(events[20 + 2 * CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW]));  // blk_4
 
   CHECK_EQ(2, c.get_alternative_blocks_count());
 
@@ -156,7 +150,10 @@ bool gen_chain_switch_1::check_split_not_switched(cryptonote::core& c, size_t ev
   CHECK_TEST_CONDITION(r);
   CHECK_EQ(1, tx_pool.size());
 
-  CHECK_EQ(MK_COINS(13), get_tx_amount(tx_pool.front(), m_recipient_account_4));
+  std::vector<size_t> tx_outs;
+  uint64_t transfered;
+  lookup_acc_outs(m_recipient_account_4.get_keys(), tx_pool.front(), get_tx_pub_key_from_extra(tx_pool.front()), get_additional_tx_pub_keys_from_extra(tx_pool.front()), tx_outs, transfered);
+  CHECK_EQ(MK_COINS(13), transfered);
 
   m_chain_1.swap(blocks);
   m_tx_pool.swap(tx_pool);
@@ -172,11 +169,11 @@ bool gen_chain_switch_1::check_split_switched(cryptonote::core& c, size_t ev_ind
   std::list<block> blocks;
   bool r = c.get_blocks(0, 10000, blocks);
   CHECK_TEST_CONDITION(r);
-  CHECK_EQ(15 + 6 + 3 * CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW, blocks.size());
+  CHECK_EQ(6 + 2 * CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW, blocks.size());
   auto it = blocks.end();
   --it; --it; --it;
   CHECK_TEST_CONDITION(std::equal(blocks.begin(), it, m_chain_1.begin()));
-  CHECK_TEST_CONDITION(blocks.back() == boost::get<block>(events[15 + 24 + 3 * CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW]));  // blk_7
+  CHECK_TEST_CONDITION(blocks.back() == boost::get<block>(events[24 + 2 * CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW]));  // blk_7
 
   std::list<block> alt_blocks;
   r = c.get_alternative_blocks(alt_blocks);
@@ -204,7 +201,10 @@ bool gen_chain_switch_1::check_split_switched(cryptonote::core& c, size_t ev_ind
   CHECK_EQ(1, tx_pool.size());
   CHECK_TEST_CONDITION(!(tx_pool.front() == m_tx_pool.front()));
 
-  CHECK_EQ(MK_COINS(7), get_tx_amount(tx_pool.front(), m_recipient_account_2));
+  std::vector<size_t> tx_outs;
+  uint64_t transfered;
+  lookup_acc_outs(m_recipient_account_2.get_keys(), tx_pool.front(), tx_outs, transfered);
+  CHECK_EQ(MK_COINS(7), transfered);
 
   return true;
 }

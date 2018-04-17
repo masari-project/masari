@@ -1,8 +1,8 @@
 #include "readline_buffer.h"
 #include <readline/readline.h>
 #include <readline/history.h>
-#include <sys/select.h>
 #include <unistd.h>
+#include <iostream>
 #include <boost/thread.hpp>
 #include <boost/algorithm/string.hpp>
 
@@ -132,8 +132,6 @@ int rdln::readline_buffer::sync()
     m_cout_buf->sputc( this->sgetc() );
   }
   while ( this->snextc() != EOF );
-
-
 
 #if RL_READLINE_VERSION < 0x0700
   if (end || *rl_prompt)

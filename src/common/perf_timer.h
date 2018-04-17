@@ -1,21 +1,21 @@
-// Copyright (c) 2016, The Masari Project
-//
+// Copyright (c) 2016-2018, The Monero Project
+// 
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-//
+// 
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-//
+// 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-//
+// 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -30,10 +30,11 @@
 
 #include <string>
 #include <stdio.h>
+#include <memory>
 #include "misc_log_ex.h"
 
-#undef MASARI_DEFAULT_LOG_CATEGORY
-#define MASARI_DEFAULT_LOG_CATEGORY "perf"
+#undef MONERO_DEFAULT_LOG_CATEGORY
+#define MONERO_DEFAULT_LOG_CATEGORY "perf"
 
 namespace tools
 {
@@ -41,44 +42,14 @@ namespace tools
 class PerformanceTimer;
 
 extern el::Level performance_timer_log_level;
-extern __thread std::vector<PerformanceTimer*> *performance_timers;
 
 class PerformanceTimer
 {
 public:
-  PerformanceTimer(const std::string &s, uint64_t unit, el::Level l = el::Level::Debug): name(s), unit(unit), level(l), started(false)
-  {
-    ticks = epee::misc_utils::get_ns_count();
-    if (!performance_timers)
-    {
-      MLOG(level, "PERF             ----------");
-      performance_timers = new std::vector<PerformanceTimer*>();
-    }
-    else
-    {
-      PerformanceTimer *pt = performance_timers->back();
-      if (!pt->started)
-      {
-        MLOG(pt->level, "PERF           " << std::string((performance_timers->size()-1) * 2, ' ') << "  " << pt->name);
-        pt->started = true;
-      }
-    }
-    performance_timers->push_back(this);
-  }
-
-  ~PerformanceTimer()
-  {
-    performance_timers->pop_back();
-    ticks = epee::misc_utils::get_ns_count() - ticks;
-    char s[12];
-    snprintf(s, sizeof(s), "%8llu  ", (unsigned long long)ticks / (1000000000 / unit));
-    MLOG(level, "PERF " << s << std::string(performance_timers->size() * 2, ' ') << "  " << name);
-    if (performance_timers->empty())
-    {
-      delete performance_timers;
-      performance_timers = NULL;
-    }
-  }
+  PerformanceTimer(const std::string &s, uint64_t unit, el::Level l = el::Level::Debug);
+  ~PerformanceTimer();
+  void pause();
+  void resume();
 
 private:
   std::string name;
@@ -86,6 +57,7 @@ private:
   el::Level level;
   uint64_t ticks;
   bool started;
+  bool paused;
 };
 
 void set_performance_timer_log_level(el::Level level);
@@ -94,5 +66,10 @@ void set_performance_timer_log_level(el::Level level);
 #define PERF_TIMER_UNIT_L(name, unit, l) tools::PerformanceTimer pt_##name(#name, unit, l)
 #define PERF_TIMER(name) PERF_TIMER_UNIT(name, 1000)
 #define PERF_TIMER_L(name, l) PERF_TIMER_UNIT_L(name, 1000, l)
+#define PERF_TIMER_START_UNIT(name, unit) std::unique_ptr<tools::PerformanceTimer> pt_##name(new tools::PerformanceTimer(#name, unit, el::Level::Info))
+#define PERF_TIMER_START(name) PERF_TIMER_START_UNIT(name, 1000)
+#define PERF_TIMER_STOP(name) do { pt_##name.reset(NULL); } while(0)
+#define PERF_TIMER_PAUSE(name) pt_##name->pause()
+#define PERF_TIMER_RESUME(name) pt_##name->resume()
 
 }

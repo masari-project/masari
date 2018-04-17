@@ -1,5 +1,4 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
+// Copyright (c) 2014-2018, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -59,7 +58,7 @@ namespace Language
   class Esperanto: public Base
   {
   public:
-    Esperanto(): Base("Esperanto", std::vector<std::string>({
+    Esperanto(): Base("Esperanto", "Esperanto", std::vector<std::string>({
       "abako",
       "abdiki",
       "abelo",
@@ -1095,7 +1094,7 @@ namespace Language
       "mokadi",
       "molaro",
       "momento",
-      "masari",
+      "monero",
       "mopso",
       "mordi",
       "moskito",

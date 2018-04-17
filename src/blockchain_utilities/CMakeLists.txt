@@ -1,5 +1,4 @@
-# Copyright (c) 2017-2018, The Masari Project
-# Copyright (c) 2014-2017, The Monero Project
+# Copyright (c) 2014-2018, The Monero Project
 #
 # All rights reserved.
 #
@@ -30,9 +29,9 @@
 set(blocksdat "")
 if(PER_BLOCK_CHECKPOINT)
   if(APPLE)
-    add_custom_command(OUTPUT blocksdat.o MAIN_DEPENDENCY ../blocks/checkpoints.dat COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR} && touch stub.c && ${CMAKE_C_COMPILER} -o stub.o -c stub.c COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR} && ${CMAKE_LINKER} -r -sectcreate __DATA __blocks_dat ../blocks/checkpoints.dat -o ${CMAKE_CURRENT_BINARY_DIR}/blocksdat.o stub.o && rm -f stub.*)
+    add_custom_command(OUTPUT blocksdat.o MAIN_DEPENDENCY ../blocks/checkpoints.dat COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR} && touch stub.c && ${CMAKE_C_COMPILER} -o stub.o -c stub.c COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR} && ${CMAKE_LINKER} ${LD_RAW_FLAGS} -r -sectcreate __DATA __blocks_dat ../blocks/checkpoints.dat -o ${CMAKE_CURRENT_BINARY_DIR}/blocksdat.o stub.o && rm -f stub.*)
   else()
-    add_custom_command(OUTPUT blocksdat.o MAIN_DEPENDENCY ../blocks/checkpoints.dat COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR} && cp ../blocks/checkpoints.dat blocks.dat && ${CMAKE_LINKER} -r -b binary -o ${CMAKE_CURRENT_BINARY_DIR}/blocksdat.o blocks.dat && rm -f blocks.dat)
+    add_custom_command(OUTPUT blocksdat.o MAIN_DEPENDENCY ../blocks/checkpoints.dat COMMAND cd ${CMAKE_CURRENT_SOURCE_DIR} && cp ../blocks/checkpoints.dat blocks.dat && ${CMAKE_LINKER} ${LD_RAW_FLAGS} -r -b binary -o ${CMAKE_CURRENT_BINARY_DIR}/blocksdat.o blocks.dat && rm -f blocks.dat)
   endif()
   set(blocksdat "blocksdat.o")
 endif()
@@ -49,7 +48,7 @@ set(blockchain_import_private_headers
   bootstrap_serialization.h
   )
 
-masari_private_headers(blockchain_import
+monero_private_headers(blockchain_import
 	  ${blockchain_import_private_headers})
 
 set(blockchain_export_sources
@@ -64,11 +63,35 @@ set(blockchain_export_private_headers
   bootstrap_serialization.h
   )
 
-masari_private_headers(blockchain_export
+monero_private_headers(blockchain_export
 	  ${blockchain_export_private_headers})
 
 
-masari_add_executable(blockchain_import
+set(blockchain_blackball_sources
+  blockchain_blackball.cpp
+  )
+
+set(blockchain_blackball_private_headers
+  bootstrap_file.h
+  blocksdat_file.h
+  bootstrap_serialization.h
+  )
+
+monero_private_headers(blockchain_blackball
+	  ${blockchain_blackball_private_headers})
+
+set(blockchain_usage_sources
+  blockchain_usage.cpp
+  )
+
+set(blockchain_usage_private_headers)
+
+monero_private_headers(blockchain_usage
+	  ${blockchain_usage_private_headers})
+
+
+
+monero_add_executable(blockchain_import
   ${blockchain_import_sources}
   ${blockchain_import_private_headers}
   ${blocksdat})
@@ -78,6 +101,7 @@ target_link_libraries(blockchain_import
     cryptonote_core
     blockchain_db
     p2p
+    version
     epee
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
@@ -90,13 +114,12 @@ if(ARCH_WIDTH)
     PUBLIC -DARCH_WIDTH=${ARCH_WIDTH})
 endif()
 
-add_dependencies(blockchain_import
-	version)
 set_property(TARGET blockchain_import
 	PROPERTY
-	OUTPUT_NAME "masari-blockchain-import")
+	OUTPUT_NAME "monero-blockchain-import")
+install(TARGETS blockchain_import DESTINATION bin)
 
-masari_add_executable(blockchain_export
+monero_add_executable(blockchain_export
   ${blockchain_export_sources}
   ${blockchain_export_private_headers})
 
@@ -105,6 +128,7 @@ target_link_libraries(blockchain_export
     cryptonote_core
     blockchain_db
     p2p
+    version
     epee
     ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY}
@@ -112,9 +136,54 @@ target_link_libraries(blockchain_export
     ${CMAKE_THREAD_LIBS_INIT}
     ${EXTRA_LIBRARIES})
 
-add_dependencies(blockchain_export
-	version)
 set_property(TARGET blockchain_export
 	PROPERTY
-	OUTPUT_NAME "masari-blockchain-export")
+	OUTPUT_NAME "monero-blockchain-export")
+install(TARGETS blockchain_export DESTINATION bin)
+
+monero_add_executable(blockchain_blackball
+  ${blockchain_blackball_sources}
+  ${blockchain_blackball_private_headers})
+
+target_link_libraries(blockchain_blackball
+  PRIVATE
+    wallet
+    cryptonote_core
+    blockchain_db
+    p2p
+    version
+    epee
+    ${Boost_FILESYSTEM_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY}
+    ${Boost_THREAD_LIBRARY}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${EXTRA_LIBRARIES})
+
+set_property(TARGET blockchain_blackball
+	PROPERTY
+	OUTPUT_NAME "monero-blockchain-blackball")
+install(TARGETS blockchain_blackball DESTINATION bin)
+
+
+monero_add_executable(blockchain_usage
+  ${blockchain_usage_sources}
+  ${blockchain_usage_private_headers})
+
+target_link_libraries(blockchain_usage
+  PRIVATE
+    cryptonote_core
+    blockchain_db
+    p2p
+    version
+    epee
+    ${Boost_FILESYSTEM_LIBRARY}
+    ${Boost_SYSTEM_LIBRARY}
+    ${Boost_THREAD_LIBRARY}
+    ${CMAKE_THREAD_LIBS_INIT}
+    ${EXTRA_LIBRARIES})
+
+set_property(TARGET blockchain_usage
+	PROPERTY
+	OUTPUT_NAME "monero-blockchain-usage")
+install(TARGETS blockchain_usage DESTINATION bin)
 

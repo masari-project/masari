@@ -1,6 +1,6 @@
 // Copyright (c) 2006-2013, Andrey N. Sabelnikov, www.sabelnikov.net
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // * Redistributions of source code must retain the above copyright
@@ -11,7 +11,7 @@
 // * Neither the name of the Andrey N. Sabelnikov nor the
 // names of its contributors may be used to endorse or promote products
 // derived from this software without specific prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -22,7 +22,7 @@
 // ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 
 
 
@@ -38,10 +38,10 @@
 
 #pragma comment(lib, "Ws2_32.lib")
 
-#undef MASARI_DEFAULT_LOG_CATEGORY
-#define MASARI_DEFAULT_LOG_CATEGORY "net"
+#undef MONERO_DEFAULT_LOG_CATEGORY
+#define MONERO_DEFAULT_LOG_CATEGORY "net"
 
-namespace epee
+namespace epee 
 {
 namespace net_utils
 {
@@ -159,8 +159,8 @@ namespace net_utils
 	}
 	//----------------------------------------------------------------------------------------
 	template<class THandler>
-	abstract_tcp_server<THandler>::abstract_tcp_server():m_listen_socket(INVALID_SOCKET),
-														 m_initialized(false),
+	abstract_tcp_server<THandler>::abstract_tcp_server():m_listen_socket(INVALID_SOCKET), 
+														 m_initialized(false), 
 														 m_stop_server(0), m_port(0), m_threads_count(0)
 	{
 
@@ -305,7 +305,7 @@ namespace net_utils
 		m_connections.back().powner = this;
 		m_connections.back().m_self_it = --m_connections.end();
 		m_connections.back().m_context.m_remote_address = remote_address;
-		m_connections.back().m_htread = threads_helper::create_thread(ConnectionHandlerProc, &m_connections.back());
+		m_connections.back().m_htread = threads_helper::create_thread(ConnectionHandlerProc, &m_connections.back()); // ugh, seems very risky
 
 		return true;
 	}

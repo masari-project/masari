@@ -1,5 +1,4 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
+// Copyright (c) 2014-2018, The Monero Project
 //
 // All rights reserved.
 //
@@ -29,9 +28,9 @@
 #include "wallet/wallet_args.h"
 
 #include <boost/filesystem/path.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <boost/format.hpp>
 #include "common/i18n.h"
-#include "common/scoped_message_writer.h"
 #include "common/util.h"
 #include "misc_log_ex.h"
 #include "string_tools.h"
@@ -41,8 +40,8 @@
 #include <crtdbg.h>
 #endif
 
-#undef MASARI_DEFAULT_LOG_CATEGORY
-#define MASARI_DEFAULT_LOG_CATEGORY "wallet.wallet2"
+#undef MONERO_DEFAULT_LOG_CATEGORY
+#define MONERO_DEFAULT_LOG_CATEGORY "wallet.wallet2"
 
 // workaround for a suspected bug in pthread/kernel on MacOS X
 #ifdef __APPLE__
@@ -51,6 +50,20 @@
 #define DEFAULT_MAX_CONCURRENCY 0
 #endif
 
+namespace
+{
+  class Print
+  {
+  public:
+    Print(const std::function<void(const std::string&, bool)> &p, bool em = false): print(p), emphasis(em) {}
+    ~Print() { print(ss.str(), emphasis); }
+    template<typename T> std::ostream &operator<<(const T &t) { ss << t; return ss; }
+  private:
+    const std::function<void(const std::string&, bool)> &print;
+    std::stringstream ss;
+    bool emphasis;
+  };
+}
 
 namespace wallet_args
 {
@@ -72,11 +85,13 @@ namespace wallet_args
   boost::optional<boost::program_options::variables_map> main(
     int argc, char** argv,
     const char* const usage,
+    const char* const notice,
     boost::program_options::options_description desc_params,
     const boost::program_options::positional_options_description& positional_options,
+    const std::function<void(const std::string&, bool)> &print,
     const char *default_log_name,
     bool log_to_console)
-
+  
   {
     namespace bf = boost::filesystem;
     namespace po = boost::program_options;
@@ -85,13 +100,14 @@ namespace wallet_args
 #endif
 
     const command_line::arg_descriptor<std::string> arg_log_level = {"log-level", "0-4 or categories", ""};
+    const command_line::arg_descriptor<std::size_t> arg_max_log_file_size = {"max-log-file-size", "Specify maximum log file size [B]", MAX_LOG_FILE_SIZE};
     const command_line::arg_descriptor<uint32_t> arg_max_concurrency = {"max-concurrency", wallet_args::tr("Max number of threads to use for a parallel job"), DEFAULT_MAX_CONCURRENCY};
     const command_line::arg_descriptor<std::string> arg_log_file = {"log-file", wallet_args::tr("Specify log file"), ""};
     const command_line::arg_descriptor<std::string> arg_config_file = {"config-file", wallet_args::tr("Config file"), "", true};
 
 
     std::string lang = i18n_get_language();
-    tools::sanitize_locale();
+    tools::on_startup();
     tools::set_strict_default_file_permissions(true);
 
     epee::string_tools::set_module_name_and_folder(argv[0]);
@@ -100,12 +116,13 @@ namespace wallet_args
     command_line::add_arg(desc_general, command_line::arg_help);
     command_line::add_arg(desc_general, command_line::arg_version);
 
-    command_line::add_arg(desc_params, arg_log_file, "");
+    command_line::add_arg(desc_params, arg_log_file);
     command_line::add_arg(desc_params, arg_log_level);
+    command_line::add_arg(desc_params, arg_max_log_file_size);
     command_line::add_arg(desc_params, arg_max_concurrency);
     command_line::add_arg(desc_params, arg_config_file);
 
-    i18n_set_language("translations", "masari", lang);
+    i18n_set_language("translations", "monero", lang);
 
     po::options_description desc_all;
     desc_all.add(desc_general).add(desc_params);
@@ -114,6 +131,21 @@ namespace wallet_args
     {
       auto parser = po::command_line_parser(argc, argv).options(desc_all).positional(positional_options);
       po::store(parser.run(), vm);
+
+      if (command_line::get_arg(vm, command_line::arg_help))
+      {
+        Print(print) << "Monero '" << MONERO_RELEASE_NAME << "' (v" << MONERO_VERSION_FULL << ")" << ENDL;
+        Print(print) << wallet_args::tr("This is the command line monero wallet. It needs to connect to a monero\n"
+												  "daemon to work correctly.") << ENDL;
+        Print(print) << wallet_args::tr("Usage:") << ENDL << "  " << usage;
+        Print(print) << desc_all;
+        return false;
+      }
+      else if (command_line::get_arg(vm, command_line::arg_version))
+      {
+        Print(print) << "Monero '" << MONERO_RELEASE_NAME << "' (v" << MONERO_VERSION_FULL << ")";
+        return false;
+      }
 
       if(command_line::has_arg(vm, arg_config_file))
       {
@@ -126,7 +158,7 @@ namespace wallet_args
         }
         else
         {
-          tools::fail_msg_writer() << wallet_args::tr("Can't find config file ") << config;
+          MERROR(wallet_args::tr("Can't find config file ") << config);
           return false;
         }
       }
@@ -138,42 +170,31 @@ namespace wallet_args
       return boost::none;
 
     std::string log_path;
-    if (!vm["log-file"].defaulted())
+    if (!command_line::is_arg_defaulted(vm, arg_log_file))
       log_path = command_line::get_arg(vm, arg_log_file);
     else
       log_path = mlog_get_default_log_path(default_log_name);
-    mlog_configure(log_path, log_to_console);
-    if (!vm["log-level"].defaulted())
+    mlog_configure(log_path, log_to_console, command_line::get_arg(vm, arg_max_log_file_size));
+    if (!command_line::is_arg_defaulted(vm, arg_log_level))
     {
       mlog_set_log(command_line::get_arg(vm, arg_log_level).c_str());
     }
 
-    if (command_line::get_arg(vm, command_line::arg_help))
-    {
-      tools::msg_writer() << "Masari '" << MASARI_RELEASE_NAME << "' (v" << MASARI_VERSION_FULL << ")" << ENDL;
-      tools::msg_writer() << wallet_args::tr("This is the command line masari wallet. It needs to connect to a masari\n"
-												"daemon to work correctly.") << ENDL;
-      tools::msg_writer() << wallet_args::tr("Usage:") << ENDL << "  " << usage;
-      tools::msg_writer() << desc_all;
-      return boost::none;
-    }
-    else if (command_line::get_arg(vm, command_line::arg_version))
-    {
-      tools::msg_writer() << "Masari '" << MASARI_RELEASE_NAME << "' (v" << MASARI_VERSION_FULL << ")";
-      return boost::none;
-    }
+    if (notice)
+      Print(print) << notice << ENDL;
 
-    if(command_line::has_arg(vm, arg_max_concurrency))
+    if (!command_line::is_arg_defaulted(vm, arg_max_concurrency))
       tools::set_max_concurrency(command_line::get_arg(vm, arg_max_concurrency));
 
-    tools::scoped_message_writer(epee::console_color_white, true) << "Masari '" << MASARI_RELEASE_NAME << "' (v" << MASARI_VERSION_FULL << ")";
+    Print(print) << "Monero '" << MONERO_RELEASE_NAME << "' (v" << MONERO_VERSION_FULL << ")";
 
-    if (!vm["log-level"].defaulted())
+    if (!command_line::is_arg_defaulted(vm, arg_log_level))
       MINFO("Setting log level = " << command_line::get_arg(vm, arg_log_level));
     else
-      MINFO("Setting log levels = " << getenv("MASARI_LOGS"));
+      MINFO("Setting log levels = " << getenv("MONERO_LOGS"));
     MINFO(wallet_args::tr("Logging to: ") << log_path);
-    tools::scoped_message_writer(epee::console_color_white, true) << boost::format(wallet_args::tr("Logging to %s")) % log_path;
+
+    Print(print) << boost::format(wallet_args::tr("Logging to %s")) % log_path;
 
     return {std::move(vm)};
   }

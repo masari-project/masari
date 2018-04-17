@@ -1,7 +1,7 @@
 
 // Copyright (c) 2006-2013, Andrey N. Sabelnikov, www.sabelnikov.net
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
 // * Redistributions of source code must retain the above copyright
@@ -12,7 +12,7 @@
 // * Neither the name of the Andrey N. Sabelnikov nor the
 // names of its contributors may be used to endorse or promote products
 // derived from this software without specific prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 // ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
 // WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -23,7 +23,7 @@
 // ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 
 #pragma once
 #include <boost/utility/string_ref.hpp>
@@ -44,8 +44,11 @@ namespace epee
       if(!serialization::store_t_to_json(out_struct, req_param))
         return false;
 
+      http::fields_list additional_params;
+      additional_params.push_back(std::make_pair("Content-Type","application/json; charset=utf-8"));
+
       const http::http_response_info* pri = NULL;
-      if(!transport.invoke(uri, method, req_param, timeout, std::addressof(pri)))
+      if(!transport.invoke(uri, method, req_param, timeout, std::addressof(pri), std::move(additional_params)))
       {
         LOG_PRINT_L1("Failed to invoke http request to  " << uri);
         return false;
@@ -112,7 +115,7 @@ namespace epee
       }
       if(resp_t.error.code || resp_t.error.message.size())
       {
-        LOG_ERROR("RPC call of \"" << method_name << "\" returned error: " << resp_t.error.code << ", message: " << resp_t.error.message);
+        LOG_ERROR("RPC call of \"" << req_t.method << "\" returned error: " << resp_t.error.code << ", message: " << resp_t.error.message);
         return false;
       }
       result_struct = resp_t.result;

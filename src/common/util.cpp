@@ -1,22 +1,21 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
-//
+// Copyright (c) 2014-2018, The Monero Project
+// 
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-//
+// 
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-//
+// 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-//
+// 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -26,27 +25,39 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #include <cstdio>
 
+#ifdef __GLIBC__
+#include <gnu/libc-version.h>
+#endif
+
+#include "unbound.h"
+
 #include "include_base_utils.h"
 #include "file_io_utils.h"
+#include "wipeable_string.h"
 using namespace epee;
 
+#include "crypto/crypto.h"
 #include "util.h"
+#include "memwipe.h"
 #include "cryptonote_config.h"
 #include "net/http_client.h"                        // epee::net_utils::...
 
 #ifdef WIN32
-#include <windows.h>
-#include <shlobj.h>
-#include <strsafe.h>
-#else
-#include <sys/utsname.h>
+  #include <windows.h>
+  #include <shlobj.h>
+  #include <strsafe.h>
+#else 
+  #include <sys/file.h>
+  #include <sys/utsname.h>
+  #include <sys/stat.h>
 #endif
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/asio.hpp>
 #include <openssl/sha.h>
 
@@ -54,7 +65,12 @@ namespace tools
 {
   std::function<void(int)> signal_handler::m_handler;
 
-  std::unique_ptr<std::FILE, tools::close_file> create_private_file(const std::string& name)
+  private_file::private_file() noexcept : m_handle(), m_filename() {}
+
+  private_file::private_file(std::FILE* handle, std::string&& filename) noexcept
+    : m_handle(handle), m_filename(std::move(filename)) {}
+
+  private_file private_file::create(std::string name)
   {
 #ifdef WIN32
     struct close_handle
@@ -71,17 +87,17 @@ namespace tools
       const bool fail = OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, std::addressof(temp)) == 0;
       process.reset(temp);
       if (fail)
-        return nullptr;
+        return {};
     }
 
     DWORD sid_size = 0;
     GetTokenInformation(process.get(), TokenOwner, nullptr, 0, std::addressof(sid_size));
     if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-      return nullptr;
+      return {};
 
     std::unique_ptr<char[]> sid{new char[sid_size]};
     if (!GetTokenInformation(process.get(), TokenOwner, sid.get(), sid_size, std::addressof(sid_size)))
-      return nullptr;
+      return {};
 
     const PSID psid = reinterpret_cast<const PTOKEN_OWNER>(sid.get())->Owner;
     const DWORD daclSize =
@@ -89,17 +105,17 @@ namespace tools
 
     const std::unique_ptr<char[]> dacl{new char[daclSize]};
     if (!InitializeAcl(reinterpret_cast<PACL>(dacl.get()), daclSize, ACL_REVISION))
-      return nullptr;
+      return {};
 
     if (!AddAccessAllowedAce(reinterpret_cast<PACL>(dacl.get()), ACL_REVISION, (READ_CONTROL | FILE_GENERIC_READ | DELETE), psid))
-      return nullptr;
+      return {};
 
     SECURITY_DESCRIPTOR descriptor{};
     if (!InitializeSecurityDescriptor(std::addressof(descriptor), SECURITY_DESCRIPTOR_REVISION))
-      return nullptr;
+      return {};
 
     if (!SetSecurityDescriptorDacl(std::addressof(descriptor), true, reinterpret_cast<PACL>(dacl.get()), false))
-      return nullptr;
+      return {};
 
     SECURITY_ATTRIBUTES attributes{sizeof(SECURITY_ATTRIBUTES), std::addressof(descriptor), false};
     std::unique_ptr<void, close_handle> file{
@@ -107,7 +123,7 @@ namespace tools
         name.c_str(),
         GENERIC_WRITE, FILE_SHARE_READ,
         std::addressof(attributes),
-        CREATE_NEW, FILE_ATTRIBUTE_TEMPORARY,
+        CREATE_NEW, (FILE_ATTRIBUTE_TEMPORARY | FILE_FLAG_DELETE_ON_CLOSE),
         nullptr
       )
     };
@@ -122,22 +138,49 @@ namespace tools
         {
           _close(fd);
         }
-        return {real_file, tools::close_file{}};
+        return {real_file, std::move(name)};
       }
     }
 #else
-    const int fd = open(name.c_str(), (O_RDWR | O_EXCL | O_CREAT), S_IRUSR);
-    if (0 <= fd)
+    const int fdr = open(name.c_str(), (O_RDONLY | O_CREAT), S_IRUSR);
+    if (0 <= fdr)
     {
-      std::FILE* file = fdopen(fd, "w");
-      if (!file)
+      struct stat rstats = {};
+      if (fstat(fdr, std::addressof(rstats)) != 0)
       {
-        close(fd);
+        close(fdr);
+        return {};
       }
-      return {file, tools::close_file{}};
+      fchmod(fdr, (S_IRUSR | S_IWUSR));
+      const int fdw = open(name.c_str(), O_RDWR);
+      fchmod(fdr, rstats.st_mode);
+      close(fdr);
+
+      if (0 <= fdw)
+      {
+        struct stat wstats = {};
+        if (fstat(fdw, std::addressof(wstats)) == 0 &&
+            rstats.st_dev == wstats.st_dev && rstats.st_ino == wstats.st_ino &&
+            flock(fdw, (LOCK_EX | LOCK_NB)) == 0 && ftruncate(fdw, 0) == 0)
+        {
+          std::FILE* file = fdopen(fdw, "w");
+          if (file) return {file, std::move(name)};
+        }
+        close(fdw);
+      }
     }
 #endif
-    return nullptr;
+    return {};
+  }
+
+  private_file::~private_file() noexcept
+  {
+    try
+    {
+      boost::system::error_code ec{};
+      boost::filesystem::remove(filename(), ec);
+    }
+    catch (...) {}
   }
 
 #ifdef WIN32
@@ -166,13 +209,13 @@ namespace tools
     // Call GetNativeSystemInfo if supported or GetSystemInfo otherwise.
 
     pGNSI = (PGNSI) GetProcAddress(
-      GetModuleHandle(TEXT("kernel32.dll")),
+      GetModuleHandle(TEXT("kernel32.dll")), 
       "GetNativeSystemInfo");
     if(NULL != pGNSI)
       pGNSI(&si);
     else GetSystemInfo(&si);
 
-    if ( VER_PLATFORM_WIN32_NT==osvi.dwPlatformId &&
+    if ( VER_PLATFORM_WIN32_NT==osvi.dwPlatformId && 
       osvi.dwMajorVersion > 4 )
     {
       StringCchCopy(pszOS, BUFSIZE, TEXT("Microsoft "));
@@ -196,7 +239,7 @@ namespace tools
         }
 
         pGPI = (PGPI) GetProcAddress(
-          GetModuleHandle(TEXT("kernel32.dll")),
+          GetModuleHandle(TEXT("kernel32.dll")), 
           "GetProductInfo");
 
         pGPI( osvi.dwMajorVersion, osvi.dwMinorVersion, 0, 0, &dwType);
@@ -326,7 +369,7 @@ namespace tools
         {
           StringCchCat(pszOS, BUFSIZE, TEXT( "Professional" ));
         }
-        else
+        else 
         {
           if( osvi.wSuiteMask & VER_SUITE_DATACENTER )
             StringCchCat(pszOS, BUFSIZE, TEXT( "Datacenter Server" ));
@@ -357,10 +400,10 @@ namespace tools
           StringCchCat(pszOS, BUFSIZE, TEXT(", 32-bit"));
       }
 
-      return pszOS;
+      return pszOS; 
     }
     else
-    {
+    {  
       printf( "This sample does not support this version of Windows.\n");
       return pszOS;
     }
@@ -368,7 +411,7 @@ namespace tools
 #else
 std::string get_nix_version_display_string()
 {
-  utsname un;
+  struct utsname un;
 
   if(uname(&un) < 0)
     return std::string("*nix: failed to get os version");
@@ -392,19 +435,21 @@ std::string get_nix_version_display_string()
 #ifdef WIN32
   std::string get_special_folder_path(int nfolder, bool iscreate)
   {
-    namespace fs = boost::filesystem;
-    char psz_path[MAX_PATH] = "";
+    WCHAR psz_path[MAX_PATH] = L"";
 
-    if(SHGetSpecialFolderPathA(NULL, psz_path, nfolder, iscreate))
+    if (SHGetSpecialFolderPathW(NULL, psz_path, nfolder, iscreate))
     {
-      return psz_path;
+      int size_needed = WideCharToMultiByte(CP_UTF8, 0, psz_path, wcslen(psz_path), NULL, 0, NULL, NULL);
+      std::string folder_name(size_needed, 0);
+      WideCharToMultiByte(CP_UTF8, 0, psz_path, wcslen(psz_path), &folder_name[0], size_needed, NULL, NULL);
+      return folder_name;
     }
 
-    LOG_ERROR("SHGetSpecialFolderPathA() failed, could not obtain requested path.");
+    LOG_ERROR("SHGetSpecialFolderPathW() failed, could not obtain requested path.");
     return "";
   }
 #endif
-
+  
   std::string get_default_data_dir()
   {
     /* Please for the love of god refactor  the ifdefs out of this */
@@ -412,8 +457,7 @@ std::string get_nix_version_display_string()
     // namespace fs = boost::filesystem;
     // Windows < Vista: C:\Documents and Settings\Username\Application Data\CRYPTONOTE_NAME
     // Windows >= Vista: C:\Users\Username\AppData\Roaming\CRYPTONOTE_NAME
-    // Mac: ~/Library/Application Support/CRYPTONOTE_NAME
-    // Unix: ~/.CRYPTONOTE_NAME
+    // Unix & Mac: ~/.CRYPTONOTE_NAME
     std::string config_folder;
 
 #ifdef WIN32
@@ -425,14 +469,7 @@ std::string get_nix_version_display_string()
       pathRet = "/";
     else
       pathRet = pszHome;
-#ifdef MAC_OSX
-    // Mac
-    pathRet /= "Library/Application Support";
-    config_folder =  (pathRet + "/" + CRYPTONOTE_NAME);
-#else
-    // Unix
     config_folder = (pathRet + "/." + CRYPTONOTE_NAME);
-#endif
 #endif
 
     return config_folder;
@@ -466,19 +503,36 @@ std::string get_nix_version_display_string()
     int code;
 #if defined(WIN32)
     // Maximizing chances for success
-    DWORD attributes = ::GetFileAttributes(replaced_name.c_str());
+    WCHAR wide_replacement_name[1000];
+    MultiByteToWideChar(CP_UTF8, 0, replacement_name.c_str(), replacement_name.size() + 1, wide_replacement_name, 1000);
+    WCHAR wide_replaced_name[1000];
+    MultiByteToWideChar(CP_UTF8, 0, replaced_name.c_str(), replaced_name.size() + 1, wide_replaced_name, 1000);
+
+    DWORD attributes = ::GetFileAttributesW(wide_replaced_name);
     if (INVALID_FILE_ATTRIBUTES != attributes)
     {
-      ::SetFileAttributes(replaced_name.c_str(), attributes & (~FILE_ATTRIBUTE_READONLY));
+      ::SetFileAttributesW(wide_replaced_name, attributes & (~FILE_ATTRIBUTE_READONLY));
     }
 
-    bool ok = 0 != ::MoveFileEx(replacement_name.c_str(), replaced_name.c_str(), MOVEFILE_REPLACE_EXISTING);
+    bool ok = 0 != ::MoveFileExW(wide_replacement_name, wide_replaced_name, MOVEFILE_REPLACE_EXISTING);
     code = ok ? 0 : static_cast<int>(::GetLastError());
 #else
     bool ok = 0 == std::rename(replacement_name.c_str(), replaced_name.c_str());
     code = ok ? 0 : errno;
 #endif
     return std::error_code(code, std::system_category());
+  }
+
+  static bool unbound_built_with_threads()
+  {
+    ub_ctx *ctx = ub_ctx_create();
+    if (!ctx) return false; // cheat a bit, should not happen unless OOM
+    ub_ctx_zone_add(ctx, "monero", "unbound"); // this calls ub_ctx_finalize first, then errors out with UB_SYNTAX
+    // if no threads, bails out early with UB_NOERROR, otherwise fails with UB_AFTERFINAL id already finalized
+    bool with_threads = ub_ctx_async(ctx, 1) != 0; // UB_AFTERFINAL is not defined in public headers, check any error
+    ub_ctx_delete(ctx);
+    MINFO("libunbound was built " << (with_threads ? "with" : "without") << " threads");
+    return with_threads;
   }
 
   bool sanitize_locale()
@@ -502,6 +556,29 @@ std::string get_nix_version_display_string()
       return true;
     }
     return false;
+  }
+  bool on_startup()
+  {
+    mlog_configure("", true);
+
+    sanitize_locale();
+
+#ifdef __GLIBC__
+    const char *ver = gnu_get_libc_version();
+    if (!strcmp(ver, "2.25"))
+      MCLOG_RED(el::Level::Warning, "global", "Running with glibc " << ver << ", hangs may occur - change glibc version if possible");
+#endif
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000 || defined(LIBRESSL_VERSION_TEXT)
+    SSL_library_init();
+#else
+    OPENSSL_init_ssl(0, NULL);
+#endif
+
+    if (!unbound_built_with_threads())
+      MCLOG_RED(el::Level::Warning, "global", "libunbound was not built with threads enabled - crashes may occur");
+
+    return true;
   }
   void set_strict_default_file_permissions(bool strict)
   {
@@ -573,13 +650,13 @@ std::string get_nix_version_display_string()
   int vercmp(const char *v0, const char *v1)
   {
     std::vector<std::string> f0, f1;
-    boost::split(f0, v0, boost::is_any_of("."));
-    boost::split(f1, v1, boost::is_any_of("."));
-    while (f0.size() < f1.size())
-      f0.push_back("0");
-    while (f1.size() < f0.size())
-      f1.push_back("0");
-    for (size_t i = 0; i < f0.size(); ++i) {
+    boost::split(f0, v0, boost::is_any_of(".-"));
+    boost::split(f1, v1, boost::is_any_of(".-"));
+    for (size_t i = 0; i < std::max(f0.size(), f1.size()); ++i) {
+      if (i >= f0.size())
+        return -1;
+      if (i >= f1.size())
+        return 1;
       int f0i = atoi(f0[i].c_str()), f1i = atoi(f1[i].c_str());
       int n = f0i - f1i;
       if (n)

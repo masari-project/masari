@@ -1,22 +1,21 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
-//
+// Copyright (c) 2014-2018, The Monero Project
+// 
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-//
+// 
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-//
+// 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-//
+// 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -26,7 +25,7 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #include <boost/thread/mutex.hpp>
@@ -188,9 +187,11 @@ namespace
 
     typedef std::unique_ptr<test_connection> test_connection_ptr;
 
-    async_protocol_handler_test()
+    async_protocol_handler_test():
+      m_pcommands_handler(new test_levin_commands_handler()),
+      m_commands_handler(*m_pcommands_handler)
     {
-      m_handler_config.m_pcommands_handler = &m_commands_handler;
+      m_handler_config.set_handler(m_pcommands_handler, [](epee::levin::levin_commands_handler<test_levin_connection_context> *handler) { delete handler; });
       m_handler_config.m_invoke_timeout = invoke_timeout;
       m_handler_config.m_max_packet_size = max_packet_size;
     }
@@ -213,7 +214,7 @@ namespace
   protected:
     boost::asio::io_service m_io_service;
     test_levin_protocol_handler_config m_handler_config;
-    test_levin_commands_handler m_commands_handler;
+    test_levin_commands_handler *m_pcommands_handler, &m_commands_handler;
   };
 
   class positive_test_connection_to_levin_protocol_handler_calls : public async_protocol_handler_test
@@ -496,7 +497,7 @@ TEST_F(test_levin_protocol_handler__hanle_recv_with_invalid_data, handles_chunke
 
   ASSERT_TRUE(m_conn->m_protocol_handler.handle_recv(buf2.data(), buf2.size()));
   ASSERT_EQ(1, m_commands_handler.invoke_counter());
-}
+} 
 
 
 TEST_F(test_levin_protocol_handler__hanle_recv_with_invalid_data, handles_chunked_body)

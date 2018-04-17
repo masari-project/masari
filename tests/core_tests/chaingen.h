@@ -1,22 +1,21 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
-//
+// Copyright (c) 2014-2018, The Monero Project
+// 
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-//
+// 
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-//
+// 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-//
+// 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -26,7 +25,7 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #pragma once
@@ -53,8 +52,8 @@
 #include "cryptonote_basic/cryptonote_boost_serialization.h"
 #include "misc_language.h"
 
-#undef MASARI_DEFAULT_LOG_CATEGORY
-#define MASARI_DEFAULT_LOG_CATEGORY "tests.core"
+#undef MONERO_DEFAULT_LOG_CATEGORY
+#define MONERO_DEFAULT_LOG_CATEGORY "tests.core"
 
 
 
@@ -186,7 +185,8 @@ public:
     bf_miner_tx  = 1 << 4,
     bf_tx_hashes = 1 << 5,
     bf_diffic    = 1 << 6,
-    bf_hf_version= 1 << 7
+    bf_max_outs  = 1 << 7,
+    bf_hf_version= 1 << 8
   };
 
   void get_block_chain(std::vector<block_info>& blockchain, const crypto::hash& head, size_t n) const;
@@ -207,9 +207,10 @@ public:
     const cryptonote::account_base& miner_acc, int actual_params = bf_none, uint8_t major_ver = 0,
     uint8_t minor_ver = 0, uint64_t timestamp = 0, const crypto::hash& prev_id = crypto::hash(),
     const cryptonote::difficulty_type& diffic = 1, const cryptonote::transaction& miner_tx = cryptonote::transaction(),
-    const std::vector<crypto::hash>& tx_hashes = std::vector<crypto::hash>(), size_t txs_sizes = 0, uint8_t hf_version = 1, uint64_t block_fees = 0);
+    const std::vector<crypto::hash>& tx_hashes = std::vector<crypto::hash>(), size_t txs_sizes = 0, size_t max_outs = 999,
+    uint8_t hf_version = 1);
   bool construct_block_manually_tx(cryptonote::block& blk, const cryptonote::block& prev_block,
-    const cryptonote::account_base& miner_acc, const std::vector<crypto::hash>& tx_hashes, size_t txs_size, uint64_t block_fees = 0);
+    const cryptonote::account_base& miner_acc, const std::vector<crypto::hash>& tx_hashes, size_t txs_size);
 
 private:
   std::unordered_map<crypto::hash, block_info> m_blocks_info;
@@ -235,8 +236,6 @@ void fill_tx_sources_and_destinations(const std::vector<test_event_entry>& event
                                       uint64_t amount, uint64_t fee, size_t nmix,
                                       std::vector<cryptonote::tx_source_entry>& sources,
                                       std::vector<cryptonote::tx_destination_entry>& destinations);
-uint64_t get_tx_amount(const cryptonote::transaction &tx, const cryptonote::account_base& addr);
-uint64_t get_tx_amount_and_mask(const cryptonote::transaction &tx, const cryptonote::account_base& addr, size_t out_no, rct::key& mask);
 uint64_t get_balance(const cryptonote::account_base& addr, const std::vector<cryptonote::block>& blockchain, const map_hash2tx_t& mtx);
 
 //--------------------------------------------------------------------------
@@ -468,7 +467,7 @@ inline bool do_replay_events(std::vector<test_event_entry>& events)
   // FIXME: make sure that vm has arg_testnet_on set to true or false if
   // this test needs for it to be so.
   get_test_options<t_test_class> gto;
-  if (!c.init(vm, &gto.test_options))
+  if (!c.init(vm, NULL, &gto.test_options))
   {
     MERROR("Failed to init core");
     return false;
@@ -505,6 +504,56 @@ inline bool do_replay_file(const std::string& filename)
 #define GENERATE_ACCOUNT(account) \
     cryptonote::account_base account; \
     account.generate();
+
+#define GENERATE_MULTISIG_ACCOUNT(account, threshold, total) \
+    CHECK_AND_ASSERT_MES(threshold >= 2 && threshold <= total, false, "Invalid multisig scheme"); \
+    std::vector<cryptonote::account_base> account(total); \
+    do \
+    { \
+      for (size_t msidx = 0; msidx < total; ++msidx) \
+        account[msidx].generate(); \
+      std::unordered_set<crypto::public_key> all_multisig_keys; \
+      std::vector<std::vector<crypto::secret_key>> view_keys(total); \
+      std::vector<std::vector<crypto::public_key>> spend_keys(total); \
+      for (size_t msidx = 0; msidx < total; ++msidx) \
+      { \
+        for (size_t msidx_inner = 0; msidx_inner < total; ++msidx_inner) \
+        { \
+          if (msidx_inner != msidx) \
+          { \
+            crypto::secret_key vkh = cryptonote::get_multisig_blinded_secret_key(account[msidx_inner].get_keys().m_view_secret_key); \
+            view_keys[msidx].push_back(vkh); \
+            crypto::secret_key skh = cryptonote::get_multisig_blinded_secret_key(account[msidx_inner].get_keys().m_spend_secret_key); \
+            crypto::public_key pskh; \
+            crypto::secret_key_to_public_key(skh, pskh); \
+            spend_keys[msidx].push_back(pskh); \
+          } \
+        } \
+      } \
+      for (size_t msidx = 0; msidx < total; ++msidx) \
+      { \
+        std::vector<crypto::secret_key> multisig_keys; \
+        crypto::secret_key spend_skey; \
+        crypto::public_key spend_pkey; \
+        if (threshold == total) \
+          cryptonote::generate_multisig_N_N(account[msidx].get_keys(), spend_keys[msidx], multisig_keys, (rct::key&)spend_skey, (rct::key&)spend_pkey); \
+        else \
+          cryptonote::generate_multisig_N1_N(account[msidx].get_keys(), spend_keys[msidx], multisig_keys, (rct::key&)spend_skey, (rct::key&)spend_pkey); \
+        crypto::secret_key view_skey = cryptonote::generate_multisig_view_secret_key(account[msidx].get_keys().m_view_secret_key, view_keys[msidx]); \
+        account[msidx].make_multisig(view_skey, spend_skey, spend_pkey, multisig_keys); \
+        for (const auto &k: multisig_keys) \
+          all_multisig_keys.insert(rct::rct2pk(rct::scalarmultBase(rct::sk2rct(k)))); \
+      } \
+      if (threshold < total) \
+      { \
+        std::vector<crypto::public_key> spend_public_keys; \
+        for (const auto &k: all_multisig_keys) \
+          spend_public_keys.push_back(k); \
+        crypto::public_key spend_pkey = cryptonote::generate_multisig_N1_N_spend_public_key(spend_public_keys); \
+        for (size_t msidx = 0; msidx < total; ++msidx) \
+          account[msidx].finalize_multisig(spend_pkey); \
+      } \
+    } while(0)
 
 #define MAKE_ACCOUNT(VEC_EVENTS, account) \
   cryptonote::account_base account; \
@@ -552,13 +601,13 @@ inline bool do_replay_file(const std::string& filename)
 #define REWIND_BLOCKS_N(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, COUNT)           \
   cryptonote::block BLK_NAME;                                                           \
   {                                                                                   \
-    cryptonote::block _blk_last = PREV_BLOCK;                                         \
+    cryptonote::block blk_last = PREV_BLOCK;                                            \
     for (size_t i = 0; i < COUNT; ++i)                                                \
     {                                                                                 \
-      MAKE_NEXT_BLOCK(VEC_EVENTS, blk, _blk_last, MINER_ACC);                         \
-      _blk_last = blk;                                                                \
+      MAKE_NEXT_BLOCK(VEC_EVENTS, blk, blk_last, MINER_ACC);                          \
+      blk_last = blk;                                                                 \
     }                                                                                 \
-    BLK_NAME = _blk_last;                                                             \
+    BLK_NAME = blk_last;                                                              \
   }
 
 #define REWIND_BLOCKS(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC) REWIND_BLOCKS_N(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW)
@@ -568,7 +617,7 @@ inline bool do_replay_file(const std::string& filename)
   construct_tx_to_key(VEC_EVENTS, TX_NAME, HEAD, FROM, TO, AMOUNT, TESTS_DEFAULT_FEE, NMIX); \
   VEC_EVENTS.push_back(TX_NAME);
 
-#define MAKE_TX(VEC_EVENTS, TX_NAME, FROM, TO, AMOUNT, HEAD) MAKE_TX_MIX(VEC_EVENTS, TX_NAME, FROM, TO, AMOUNT, 12, HEAD)
+#define MAKE_TX(VEC_EVENTS, TX_NAME, FROM, TO, AMOUNT, HEAD) MAKE_TX_MIX(VEC_EVENTS, TX_NAME, FROM, TO, AMOUNT, 0, HEAD)
 
 #define MAKE_TX_MIX_LIST(VEC_EVENTS, SET_NAME, FROM, TO, AMOUNT, NMIX, HEAD)             \
   {                                                                                      \
@@ -578,7 +627,7 @@ inline bool do_replay_file(const std::string& filename)
     VEC_EVENTS.push_back(t);                                                             \
   }
 
-#define MAKE_TX_LIST(VEC_EVENTS, SET_NAME, FROM, TO, AMOUNT, HEAD) MAKE_TX_MIX_LIST(VEC_EVENTS, SET_NAME, FROM, TO, AMOUNT, 12, HEAD)
+#define MAKE_TX_LIST(VEC_EVENTS, SET_NAME, FROM, TO, AMOUNT, HEAD) MAKE_TX_MIX_LIST(VEC_EVENTS, SET_NAME, FROM, TO, AMOUNT, 0, HEAD)
 
 #define MAKE_TX_LIST_START(VEC_EVENTS, SET_NAME, FROM, TO, AMOUNT, HEAD) \
     std::list<cryptonote::transaction> SET_NAME; \
@@ -662,4 +711,4 @@ inline bool do_replay_file(const std::string& filename)
 #define CHECK_EQ(v1, v2) CHECK_AND_ASSERT_MES(v1 == v2, false, "[" << perr_context << "] failed: \"" << QUOTEME(v1) << " == " << QUOTEME(v2) << "\", " << v1 << " != " << v2)
 #define CHECK_NOT_EQ(v1, v2) CHECK_AND_ASSERT_MES(!(v1 == v2), false, "[" << perr_context << "] failed: \"" << QUOTEME(v1) << " != " << QUOTEME(v2) << "\", " << v1 << " == " << v2)
 #define MK_COINS(amount) (UINT64_C(amount) * COIN)
-#define TESTS_DEFAULT_FEE ((uint64_t)30000000000) // 3 * pow(10, 10)
+#define TESTS_DEFAULT_FEE ((uint64_t)20000000000) // 2 * pow(10, 10)

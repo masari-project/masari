@@ -1,6 +1,6 @@
 /*
  * sc_sub, sc_mulsub, sc_mul
- *
+ * 
  * (These are from the old code as well)
  */
 

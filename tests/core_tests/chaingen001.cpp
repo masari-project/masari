@@ -1,22 +1,21 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2017, The Monero Project
-//
+// Copyright (c) 2014-2018, The Monero Project
+// 
 // All rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without modification, are
 // permitted provided that the following conditions are met:
-//
+// 
 // 1. Redistributions of source code must retain the above copyright notice, this list of
 //    conditions and the following disclaimer.
-//
+// 
 // 2. Redistributions in binary form must reproduce the above copyright notice, this list
 //    of conditions and the following disclaimer in the documentation and/or other
 //    materials provided with the distribution.
-//
+// 
 // 3. Neither the name of the copyright holder nor the names of its contributors may be
 //    used to endorse or promote products derived from this software without specific
 //    prior written permission.
-//
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY
 // EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
 // MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
@@ -26,7 +25,7 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
+// 
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #include <vector>
@@ -112,7 +111,7 @@ bool gen_simple_chain_001::generate(std::vector<test_event_entry> &events)
     MAKE_GENESIS_BLOCK(events, blk_0, miner, ts_start);
     MAKE_NEXT_BLOCK(events, blk_1, blk_0, miner);
     MAKE_NEXT_BLOCK(events, blk_1_side, blk_0, miner);
-    REWIND_BLOCKS(events, blk_2, blk_1, miner);
+    MAKE_NEXT_BLOCK(events, blk_2, blk_1, miner);
     //MAKE_TX(events, tx_0, first_miner_account, alice, 151, blk_2);
 
     std::vector<cryptonote::block> chain;
@@ -120,23 +119,19 @@ bool gen_simple_chain_001::generate(std::vector<test_event_entry> &events)
     /*bool r = */find_block_chain(events, chain, mtx, get_block_hash(boost::get<cryptonote::block>(events[3])));
     std::cout << "BALANCE = " << get_balance(miner, chain, mtx) << std::endl;
 
-    // TODO-TK: need to overhaul test code to deal with split non-coinbase key masks
     REWIND_BLOCKS(events, blk_2r, blk_2, miner);
     MAKE_TX_LIST_START(events, txlist_0, miner, alice, MK_COINS(1), blk_2);
     MAKE_TX_LIST(events, txlist_0, miner, alice, MK_COINS(2), blk_2);
     MAKE_TX_LIST(events, txlist_0, miner, alice, MK_COINS(4), blk_2);
     MAKE_NEXT_BLOCK_TX_LIST(events, blk_3, blk_2r, miner, txlist_0);
-    REWIND_BLOCKS_N(events, blk_3i, blk_3, miner, 10);
-    REWIND_BLOCKS(events, blk_3r, blk_3i, miner);
-    MAKE_TX(events, tx_1, miner, alice, MK_COINS(50), blk_3i);
+    REWIND_BLOCKS(events, blk_3r, blk_3, miner);
+    MAKE_TX(events, tx_1, miner, alice, MK_COINS(50), blk_3);
     MAKE_NEXT_BLOCK_TX1(events, blk_4, blk_3r, miner, tx_1);
-    REWIND_BLOCKS_N(events, blk_4i, blk_4, miner, 10);
-    REWIND_BLOCKS(events, blk_4r, blk_4i, miner);
-    MAKE_TX(events, tx_2, miner, alice, MK_COINS(50), blk_4i);
+    REWIND_BLOCKS(events, blk_4r, blk_4, miner);
+    MAKE_TX(events, tx_2, miner, alice, MK_COINS(50), blk_4);
     MAKE_NEXT_BLOCK_TX1(events, blk_5, blk_4r, miner, tx_2);
-    REWIND_BLOCKS(events, blk_5i, blk_5, miner);
-    REWIND_BLOCKS(events, blk_5r, blk_5i, miner);
-    MAKE_TX(events, tx_3, miner, alice, MK_COINS(50), blk_5i);
+    REWIND_BLOCKS(events, blk_5r, blk_5, miner);
+    MAKE_TX(events, tx_3, miner, alice, MK_COINS(50), blk_5);
     MAKE_NEXT_BLOCK_TX1(events, blk_6, blk_5r, miner, tx_3);
 
     DO_CALLBACK(events, "verify_callback_1");
