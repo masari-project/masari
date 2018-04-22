@@ -661,8 +661,8 @@ wallet2::wallet2(network_type nettype, bool restricted):
   m_confirm_backlog_threshold(0),
   m_confirm_export_overwrite(true),
   m_auto_low_priority(true),
-  m_segregate_pre_fork_outputs(true),
-  m_key_reuse_mitigation2(true),
+  m_segregate_pre_fork_outputs(false),
+  m_key_reuse_mitigation2(false),
   m_segregation_height(0),
   m_is_initialized(false),
   m_restricted(restricted),
@@ -2690,8 +2690,8 @@ bool wallet2::load_keys(const std::string& keys_file_name, const epee::wipeable_
     m_confirm_backlog_threshold = 0;
     m_confirm_export_overwrite = true;
     m_auto_low_priority = true;
-    m_segregate_pre_fork_outputs = true;
-    m_key_reuse_mitigation2 = true;
+    m_segregate_pre_fork_outputs = false;
+    m_key_reuse_mitigation2 = false;
     m_segregation_height = 0;
     m_key_on_device = false;
   }

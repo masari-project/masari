@@ -2479,14 +2479,14 @@ bool Blockchain::check_tx_inputs(transaction& tx, tx_verification_context &tvc, 
 
     // min/max tx version based on HF, and we accept v1 txes if having a non mixable
     const size_t max_tx_version = 1;
-    if (tx.version > max_tx_version)
+    if (tx.version > max_tx_version && hf_version >= 5)
     {
       MERROR_VER("transaction version " << (unsigned)tx.version << " is higher than max accepted version " << max_tx_version);
       tvc.m_verifivation_failed = true;
       return false;
     }
     const size_t min_tx_version = 1;
-    if (tx.version < min_tx_version)
+    if (tx.version < min_tx_version && hf_version >= 5)
     {
       MERROR_VER("transaction version " << (unsigned)tx.version << " is lower than min accepted version " << min_tx_version);
       tvc.m_verifivation_failed = true;
@@ -4156,7 +4156,7 @@ void Blockchain::cancel()
 }
 
 #if defined(PER_BLOCK_CHECKPOINT)
-static const char expected_block_hashes_hash[] = "62575ae1d7dc424a6c8fcdaa50428a0a9e5b322a42947ea3b8bd37f0f0cc9c54";
+static const char expected_block_hashes_hash[] = "d03f6537df70c7432d55423788c46c276b7317bdfc78bb509c4fff9b5ad4490a";
 void Blockchain::load_compiled_in_block_hashes()
 {
   const bool testnet = m_nettype == TESTNET;

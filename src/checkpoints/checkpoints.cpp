@@ -162,6 +162,22 @@ namespace cryptonote
 
   bool checkpoints::init_default_checkpoints(network_type nettype)
   {
+    if (nettype == TESTNET)
+    {
+      ADD_CHECKPOINT(0,     "96375dc8a8dd960c33f59190edf51a3f458d6e8d8a2c7bc7517c5dee26955174");
+      ADD_CHECKPOINT(76100, "b93cb511bd77e4b46f3eefc70bc02d0769b1c00f5ba1701445873d4dd8fcc246");
+      return true;
+    }
+    if (nettype == STAGENET)
+    {
+      return true;
+    }
+    ADD_CHECKPOINT(1, "f350ce8a0c4f1ef8c4b63dca3ce1bcd3c8446accc0667c6b1c6c7d787a4d149f");
+    ADD_CHECKPOINT(1000, "556752819bf7248a67b87f3658c5dc29987789a084cd37aea40c7763bfe72d1c");
+    ADD_CHECKPOINT(10000, "76589c75f4164e36b22bfc4d3bc2b6e1b60bcd0d5fc794e9b3cd34579dea4a36");
+    ADD_CHECKPOINT(100000, "7861d0516895f29e7b30f8256ceba7d9cb63cc71bad6e4193a6ecf90a68f0736");
+    ADD_CHECKPOINT(150000, "905961c9667aa6dac3748a26b6f0ac2be777ebe108a7deb099179ef93b321eef");
+    ADD_CHECKPOINT(160000, "ed8dcebfd49197f628fd41ae2f9d0e25ba31bfa019216974cfd7aaec804d9f63");
     return true;
   }
 
