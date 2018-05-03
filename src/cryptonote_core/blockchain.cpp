@@ -2939,7 +2939,7 @@ bool Blockchain::check_block_timestamp(std::vector<uint64_t>& timestamps, const 
   uint8_t hf_version = get_current_hard_fork_version();
   size_t blockchain_timestamp_check_window = hf_version < 2 ? BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW : BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V2;
 
-  uint64_t top_block_timestamp = m_db->get_top_block_timestamp();
+  uint64_t top_block_timestamp = timestamps.back();
   if (hf_version > 5 && b.timestamp < top_block_timestamp - CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V6)
   {
     MERROR_VER("Timestamp of block with id: " << get_block_hash(b) << ", " << b.timestamp << ", is less than top block timestamp - FTL " << top_block_timestamp - CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V6);
