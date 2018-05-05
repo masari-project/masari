@@ -90,6 +90,7 @@ WORKDIR /src
 COPY . .
 
 ARG NPROC
+RUN alias make='make -f Makefile'
 RUN rm -rf build && \
     if [ -z "$NPROC" ];then make -j$(nproc) release-static;else make -j$NPROC release-static;fi
 
