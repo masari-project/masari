@@ -2387,7 +2387,27 @@ bool simple_wallet::set_log(const std::vector<std::string> &args)
     return true;
   }
   if (!args.empty())
-    mlog_set_log(args[0].c_str());
+  {
+    try
+    {
+      uint64_t log_level_numeric = boost::lexical_cast<uint64_t>(args[0]);
+      if(log_level_numeric > 4)
+      {
+        fail_msg_writer() << tr("log level must be between 0 and 4");
+        return true;
+      }
+      
+      mlog_set_log_level(log_level_numeric);
+      success_msg_writer() << boost::format(tr("Set log level: %u")) % log_level_numeric;
+    }
+    
+    catch(boost::bad_lexical_cast &)
+    {
+      // If the cast doesn't succeed then log categories are being used instead of the default levels
+      mlog_set_log(args[0].c_str());
+    }
+  }
+  
   success_msg_writer() << "New log categories: " << mlog_get_categories();
   return true;
 }
