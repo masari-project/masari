@@ -511,8 +511,8 @@ bool WalletImpl::recoverFromKeysWithPassword(const std::string &path,
     // parse optional spend key
     crypto::secret_key spendkey;
     bool has_spendkey = false;
+    cryptonote::blobdata spendkey_data;
     if (!spendkey_string.empty()) {
-        cryptonote::blobdata spendkey_data;
         if(!epee::string_tools::parse_hexstr_to_binbuff(spendkey_string, spendkey_data) || spendkey_data.size() != sizeof(crypto::secret_key))
         {
             m_errorString = tr("failed to parse secret spend key");
@@ -524,20 +524,33 @@ bool WalletImpl::recoverFromKeysWithPassword(const std::string &path,
     }
 
     // parse view secret key
+    crypto::secret_key viewkey;
     if (viewkey_string.empty()) {
-        m_errorString = tr("No view key supplied, cancelled");
-        m_status = Status_Error;
-        return false;
+        if(has_spendkey)
+        {
+          // generate deterministic view key if it was not supplied
+          crypto::ec_scalar scalar;
+          crypto::hash_to_scalar(spendkey_data.data(), sizeof(crypto::secret_key), scalar);
+          viewkey = reinterpret_cast<crypto::secret_key &>(scalar);
+        }
+        else {
+          m_errorString = tr("No keys supplied, cancelled");
+          m_status = Status_Error;
+          return false;
+        }
     }
-    cryptonote::blobdata viewkey_data;
-    if(!epee::string_tools::parse_hexstr_to_binbuff(viewkey_string, viewkey_data) || viewkey_data.size() != sizeof(crypto::secret_key))
+    else
     {
-        m_errorString = tr("failed to parse secret view key");
-        m_status = Status_Error;
-        return false;
+      cryptonote::blobdata viewkey_data;
+      if(!epee::string_tools::parse_hexstr_to_binbuff(viewkey_string, viewkey_data) || viewkey_data.size() != sizeof(crypto::secret_key))
+      {
+          m_errorString = tr("failed to parse secret view key");
+          m_status = Status_Error;
+          return false;
+      }
+      viewkey = *reinterpret_cast<const crypto::secret_key*>(viewkey_data.data());
     }
-    crypto::secret_key viewkey = *reinterpret_cast<const crypto::secret_key*>(viewkey_data.data());
-
+    
     // check the spend and view keys match the given address
     crypto::public_key pkey;
     if(has_spendkey) {
