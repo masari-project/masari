@@ -3022,7 +3022,7 @@ void wallet2::generate(const std::string& wallet_, const epee::wipeable_string& 
   add_subaddress_account(tr("Primary account"));
 
   if (!wallet_.empty())
-    store();
+    store(create_address_file);
 }
 
 /*!
@@ -3081,7 +3081,7 @@ crypto::secret_key wallet2::generate(const std::string& wallet_, const epee::wip
   add_subaddress_account(tr("Primary account"));
 
   if (!wallet_.empty())
-    store();
+    store(create_address_file);
 
   return retval;
 }
@@ -3174,7 +3174,7 @@ void wallet2::generate(const std::string& wallet_, const epee::wipeable_string& 
   add_subaddress_account(tr("Primary account"));
 
   if (!wallet_.empty())
-    store();
+    store(create_address_file);
 }
 
 /*!
@@ -3224,7 +3224,7 @@ void wallet2::generate(const std::string& wallet_, const epee::wipeable_string& 
   add_subaddress_account(tr("Primary account"));
 
   if (!wallet_.empty())
-    store();
+    store(create_address_file);
 }
 
 /*!
@@ -3915,12 +3915,12 @@ std::string wallet2::path() const
   return m_wallet_file;
 }
 //----------------------------------------------------------------------------------------------------
-void wallet2::store()
+void wallet2::store(bool create_address_file)
 {
-  store_to("", epee::wipeable_string());
+  store_to("", epee::wipeable_string(), create_address_file);
 }
 //----------------------------------------------------------------------------------------------------
-void wallet2::store_to(const std::string &path, const epee::wipeable_string &password)
+void wallet2::store_to(const std::string &path, const epee::wipeable_string &password, bool create_address_file)
 {
   trim_hashchain();
 
@@ -3997,10 +3997,13 @@ void wallet2::store_to(const std::string &path, const epee::wipeable_string &pas
     if (!r) {
       LOG_ERROR("error removing file: " << old_keys_file);
     }
-    // remove old address file
-    r = boost::filesystem::remove(old_address_file);
-    if (!r) {
-      LOG_ERROR("error removing file: " << old_address_file);
+    // remove old address file if it was created
+    if(create_address_file)
+    {
+      r = boost::filesystem::remove(old_address_file);
+      if (!r) {
+        LOG_ERROR("error removing file: " << old_address_file);
+      }
     }
   } else {
     // save to new file
