@@ -2408,7 +2408,7 @@ bool simple_wallet::set_log(const std::vector<std::string> &args)
     }
   }
   
-  success_msg_writer() << "New log categories: " << mlog_get_categories();
+  success_msg_writer() << "Log categories in use: " << mlog_get_categories();
   return true;
 }
 //----------------------------------------------------------------------------------------------------
