@@ -856,13 +856,14 @@ namespace cryptonote
     blobdata bd = get_block_hashing_blob(b);
     
     int cn_variant;
-    if(b.major_version < 5)
-    {
+    if(b.major_version < 5) {
       cn_variant = 0;
-	}
-	else
-	{
+    }
+    else if (b.major_version < 7) {
       cn_variant = 1;
+    }
+    else {
+      cn_variant = 2;
     }
     
     crypto::cn_slow_hash(bd.data(), bd.size(), res, cn_variant);
