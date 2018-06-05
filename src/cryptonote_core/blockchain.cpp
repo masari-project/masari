@@ -95,7 +95,8 @@ static const struct {
   { 3, 63500, 0, 1512206452 },
   { 4, 70000, 0, 1513136914 },
   { 5, 170000, 0, 1525150523},
-  { 6, 172500, 0, 1525504168}
+  { 6, 172500, 0, 1525504168},
+  { 7, 204000, 0, 1529361270}
 };
 
 static const struct {
@@ -4205,7 +4206,7 @@ void Blockchain::cancel()
 }
 
 #if defined(PER_BLOCK_CHECKPOINT)
-static const char expected_block_hashes_hash[] = "3be90cc612aec2f9dd44fdd795fbd46d3950cd509a533ec8008738b8ae6c2825";
+static const char expected_block_hashes_hash[] = "c5c5a8f6f413073bebda24d7ce69306b5690a55876dfe120e524934ccf6e8cf1";
 void Blockchain::load_compiled_in_block_hashes()
 {
   const bool testnet = m_nettype == TESTNET;
