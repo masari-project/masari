@@ -83,6 +83,7 @@ public:
     void setSeedLanguage(const std::string &arg);
     // void setListener(Listener *) {}
     int status() const;
+    bool isMultisig() const;
     std::string errorString() const;
     bool setPassword(const std::string &password);
     std::string address(uint32_t accountIndex = 0, uint32_t addressIndex = 0) const;

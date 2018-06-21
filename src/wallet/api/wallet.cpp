@@ -701,6 +701,17 @@ int WalletImpl::status() const
     return m_status;
 }
 
+bool WalletImpl::isMultisig() const
+{
+  bool ready;
+  if(!m_wallet->multisig(&ready))
+    return false;
+  else if(!ready)
+    return false;
+  else
+    return true;
+}
+
 std::string WalletImpl::errorString() const
 {
     return m_errorString;
