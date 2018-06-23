@@ -5061,7 +5061,7 @@ bool simple_wallet::donate(const std::vector<std::string> &args_)
   local_args.push_back(amount_str);
   if (!payment_id_str.empty())
     local_args.push_back(payment_id_str);
-  message_writer() << (boost::format(tr("Donating %s MSR to The Masari Project (donate.getmasari.org / %s ).")) % amount_str % MASARI_DONATION_ADDR).str(); 
+  message_writer() << (boost::format(tr("Donating %s %s to The Masari Project (donate.getmasari.org / %s ).")) % amount_str % cryptonote::get_unit(cryptonote::get_default_decimal_point()) % MASARI_DONATION_ADDR).str(); 
   transfer(local_args);
   return true;
 }
