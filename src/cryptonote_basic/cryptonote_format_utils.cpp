@@ -818,6 +818,19 @@ namespace cryptonote
     return blob;
   }
   //---------------------------------------------------------------
+  blobdata get_uncle_block_old_hashing_blob(const block& b)
+  {
+    blobdata blob = t_serializable_object_to_blob(static_cast<block_header>(b));
+    std::vector<crypto::hash> tx_hashes;
+    tx_hashes.push_back(b.uncle.miner_tx_hash);
+    for(auto& th : b.uncle.tx_hashes)
+      tx_hashes.push_back(th);
+    crypto::hash tree_root_hash = get_tx_tree_hash(tx_hashes);
+    blob.append(reinterpret_cast<const char*>(&tree_root_hash), sizeof(tree_root_hash));
+    blob.append(tools::get_varint_data(b.uncle.tx_hashes.size()+1));
+    return blob;
+  }
+  //---------------------------------------------------------------
   bool calculate_block_hash(const block& b, crypto::hash& res)
   {
     bool hash_result = get_object_hash(get_block_hashing_blob(b), res);
@@ -867,6 +880,14 @@ namespace cryptonote
     }
     
     crypto::cn_slow_hash(bd.data(), bd.size(), res, cn_variant);
+    return true;
+  }
+  //---------------------------------------------------------------
+  bool hash_block_hashing_blob(blobdata blob, crypto::hash& res, int cn_variant)
+  {
+    if(cn_variant < 0 || cn_variant > 2)
+      return false;
+    crypto::cn_slow_hash(blob.data(), blob.size(), res, cn_variant);
     return true;
   }
   //---------------------------------------------------------------
