@@ -112,6 +112,7 @@ static const struct {
   { 5, 76030, 0, 1524112219 },
   { 6, 76188, 0, 1525277953 },
   { 7, 76470, 0, 1527868842 }
+  
 };
 
 static const struct {
@@ -1170,11 +1171,79 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
 
   CRITICAL_REGION_BEGIN(m_blockchain_lock);
   height = m_db->height();
-
+  
+  block top_block = m_db->get_block(m_db->top_block_hash());
+  
   b.major_version = m_hardfork->get_current_version();
   b.minor_version = m_hardfork->get_ideal_version();
   b.prev_id = get_tail_id();
   b.timestamp = time(NULL);
+  
+  std::list<block> alt_blocks;
+  get_alternative_blocks(alt_blocks);
+  
+  if(alt_blocks.size() > 0) {
+    block last_alt_block = alt_blocks.back();
+    // check that alternative block and top block are on top of the same block
+    if(last_alt_block.prev_id == top_block.prev_id)
+    {
+      crypto::hash top_block_hash = get_block_hash(top_block);
+      crypto::hash alt_block_hash = get_block_hash(last_alt_block);
+      uint32_t top_hash_int = reinterpret_cast< uint32_t &>(top_block_hash);
+      uint32_t alt_hash_int = reinterpret_cast< uint32_t &>(alt_block_hash);
+      // if top block hash isn't lowest then reorg
+      if(top_hash_int > alt_hash_int)
+      {
+         LOG_PRINT_L2("Attempting to reorganize for uncle block"); 
+         block old_top = pop_block_from_blockchain();
+         block_verification_context bvcontext;
+         if(!handle_block_to_main_chain(last_alt_block, bvcontext))
+           LOG_ERROR("Failed to add alternative block as top block");
+         
+         m_uncle_blocks.push_back(old_top);
+         b.uncle.major_version = b.major_version;
+         b.uncle.minor_version = b.minor_version;
+         b.uncle.timestamp = old_top.timestamp;
+         b.uncle.prev_id = old_top.prev_id;
+         b.uncle.nonce = old_top.nonce;
+         b.uncle.miner_tx_hash = get_transaction_hash(old_top.miner_tx);
+         LOG_PRINT_L3("Reoganization for uncle block success");
+      }
+      // if top block has lowest hash then the alternative block is the uncle
+      else if(top_hash_int < alt_hash_int)
+      {
+        b.uncle.major_version = b.major_version;
+        b.uncle.minor_version = b.minor_version;
+        b.uncle.timestamp = last_alt_block.timestamp;
+        b.uncle.prev_id = last_alt_block.prev_id;
+        b.uncle.nonce = last_alt_block.nonce;
+        b.uncle.miner_tx_hash = get_transaction_hash(last_alt_block.miner_tx);
+      }
+      else if(m_uncle_blocks.size() > 0)
+      {
+        block uncle_b = m_uncle_blocks.back();
+        crypto::hash uncle_block_hash = get_block_hash(uncle_b);
+        uint32_t uncle_hash_int = reinterpret_cast< uint32_t &>(uncle_block_hash);
+        if(top_hash_int < uncle_hash_int)
+        {
+          b.uncle.major_version = b.major_version;
+          b.uncle.minor_version = b.minor_version;
+          b.uncle.timestamp = uncle_b.timestamp;
+          b.uncle.prev_id = uncle_b.prev_id;
+          b.uncle.nonce = uncle_b.nonce;
+          b.uncle.miner_tx_hash = get_transaction_hash(uncle_b.miner_tx);
+        }
+        else
+          b.uncle.miner_tx_hash = null_hash;
+      }
+      else
+        b.uncle.miner_tx_hash = null_hash;
+    }
+    else
+      b.uncle.miner_tx_hash = null_hash;
+  }
+  else
+    b.uncle.miner_tx_hash = null_hash;
 
   uint64_t median_timestamp;
   if (!check_median_block_timestamp(b, median_timestamp)) {

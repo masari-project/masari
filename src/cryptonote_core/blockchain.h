@@ -1016,6 +1016,8 @@ namespace cryptonote
     // some invalid blocks
     blocks_ext_by_hash m_invalid_blocks;     // crypto::hash -> block_extended_info
 
+    std::vector<block> m_uncle_blocks;
+
 
     checkpoints m_checkpoints;
     bool m_enforce_dns_checkpoints;
@@ -1391,3 +1393,4 @@ namespace cryptonote
     bool expand_transaction_2(transaction &tx, const crypto::hash &tx_prefix_hash, const std::vector<std::vector<rct::ctkey>> &pubkeys);
   };
 }  // namespace cryptonote
+

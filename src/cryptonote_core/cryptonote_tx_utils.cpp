@@ -587,6 +587,7 @@ namespace cryptonote
     bl.nonce = config::GENESIS_NONCE;
     miner::find_nonce_for_given_block(bl, 1, 0);
     bl.invalidate_hashes();
+    bl.uncle.miner_tx_hash = null_hash;
     return true;
   }
   //---------------------------------------------------------------
