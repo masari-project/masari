@@ -1201,12 +1201,6 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
            LOG_ERROR("Failed to add alternative block as top block");
          
          m_uncle_blocks.push_back(old_top);
-         b.uncle.major_version = b.major_version;
-         b.uncle.minor_version = b.minor_version;
-         b.uncle.timestamp = old_top.timestamp;
-         b.uncle.prev_id = old_top.prev_id;
-         b.uncle.nonce = old_top.nonce;
-         b.uncle.miner_tx_hash = get_transaction_hash(old_top.miner_tx);
          LOG_PRINT_L3("Reoganization for uncle block success");
       }
       // if top block has lowest hash then the alternative block is the uncle
@@ -1219,7 +1213,9 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
         b.uncle.nonce = last_alt_block.nonce;
         b.uncle.miner_tx_hash = get_transaction_hash(last_alt_block.miner_tx);
       }
-      else if(m_uncle_blocks.size() > 0)
+      else
+        b.uncle.miner_tx_hash = null_hash;
+      if(m_uncle_blocks.size() > 0)
       {
         block uncle_b = m_uncle_blocks.back();
         crypto::hash uncle_block_hash = get_block_hash(uncle_b);
@@ -1233,11 +1229,7 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
           b.uncle.nonce = uncle_b.nonce;
           b.uncle.miner_tx_hash = get_transaction_hash(uncle_b.miner_tx);
         }
-        else
-          b.uncle.miner_tx_hash = null_hash;
       }
-      else
-        b.uncle.miner_tx_hash = null_hash;
     }
     else
       b.uncle.miner_tx_hash = null_hash;
