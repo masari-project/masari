@@ -284,7 +284,7 @@ namespace cryptonote
      *
      * @return the target
      */
-    difficulty_type get_difficulty_for_next_block();
+    difficulty_type get_difficulty_for_next_block(bool uncle = false);
 
     /**
      * @brief adds a block to the blockchain

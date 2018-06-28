@@ -883,13 +883,13 @@ namespace cryptonote
     return true;
   }
   //---------------------------------------------------------------
-  crypto::hash get_uncle_block_long_hash(block b, uint8_t hf_version)
+  crypto::hash get_uncle_block_long_hash(block b)
   {
     int cn_variant;
-    if(hf_version < 5) {
+    if(b.major_version < 5) {
       cn_variant = 0;
     }
-    else if (hf_version < 7) {
+    else if (b.major_version < 7) {
       cn_variant = 1;
     }
     else {

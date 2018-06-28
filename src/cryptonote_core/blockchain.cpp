@@ -112,7 +112,6 @@ static const struct {
   { 5, 76030, 0, 1524112219 },
   { 6, 76188, 0, 1525277953 },
   { 7, 76470, 0, 1527868842 }
-  
 };
 
 static const struct {
@@ -760,7 +759,7 @@ bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orph
 // last DIFFICULTY_BLOCKS_COUNT blocks and passes them to next_difficulty,
 // returning the result of that call.  Ignores the genesis block, and can use
 // less blocks than desired if there aren't enough.
-difficulty_type Blockchain::get_difficulty_for_next_block()
+difficulty_type Blockchain::get_difficulty_for_next_block(bool uncle)
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
@@ -786,7 +785,11 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   //    of doing 735 (DIFFICULTY_BLOCKS_COUNT).
   if (m_timestamps_and_difficulties_height != 0 && ((height - m_timestamps_and_difficulties_height) == 1) && m_timestamps.size() >= difficulty_blocks_count)
   {
-    uint64_t index = height - 1;
+    uint64_t index;
+    if (uncle)
+      index = height - 2;
+    else
+      index = height - 1;
     m_timestamps.push_back(m_db->get_block_timestamp(index));
     m_difficulties.push_back(m_db->get_block_cumulative_difficulty(index));
 
@@ -3209,7 +3212,7 @@ leave:
   // do some basic validation on the uncle block
   if (bl.uncle.major_version != 0 || bl.uncle.minor_version != 0 || bl.uncle.timestamp != 0 || bl.uncle.prev_id != null_hash || bl.uncle.nonce != 0 || bl.uncle.miner_tx_hash != null_hash)
   {
-    if (bl.uncle.minor_version != m_hardfork->get_current_version())
+    if (bl.uncle.minor_version != bl.minor_version)
     {
       MERROR_VER("Block with id: " << id << std::endl << "has invalid uncle block minor version: " << bl.uncle.minor_version);
       bvc.m_verifivation_failed = true;
@@ -3221,6 +3224,15 @@ leave:
     if (previous_block_hash != bl.uncle.prev_id)
     {
       MERROR_VER("Block with id: " << id << std::endl << "has uncle block with invalid previous hash: " << bl.uncle.prev_id << " Expected: " << previous_block_hash);
+      bvc.m_verifivation_failed = true;
+      goto leave;
+    }
+    difficulty_type previous_diffic = get_difficulty_for_next_block(true);
+    crypto::hash uncle_proof_of_work = get_uncle_block_long_hash(bl);
+    // validate proof of work versus difficulty target
+    if(!check_hash(uncle_proof_of_work, previous_diffic))
+    {
+      MERROR_VER("Block with id: " << id << std::endl << " has an uncle that does not have enough proof of work: " << uncle_proof_of_work << std::endl << "unexpected difficulty: " << previous_diffic);
       bvc.m_verifivation_failed = true;
       goto leave;
     }
