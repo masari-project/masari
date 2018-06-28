@@ -883,12 +883,23 @@ namespace cryptonote
     return true;
   }
   //---------------------------------------------------------------
-  bool hash_block_hashing_blob(blobdata blob, crypto::hash& res, int cn_variant)
+  crypto::hash get_uncle_block_long_hash(block b, uint8_t hf_version)
   {
-    if(cn_variant < 0 || cn_variant > 2)
-      return false;
+    int cn_variant;
+    if(hf_version < 5) {
+      cn_variant = 0;
+    }
+    else if (hf_version < 7) {
+      cn_variant = 1;
+    }
+    else {
+      cn_variant = 2;
+    }
+    
+    crypto::hash res = null_hash;
+    blobdata blob = get_uncle_block_old_hashing_blob(b);
     crypto::cn_slow_hash(blob.data(), blob.size(), res, cn_variant);
-    return true;
+    return res;
   }
   //---------------------------------------------------------------
   std::vector<uint64_t> relative_output_offsets_to_absolute(const std::vector<uint64_t>& off)
