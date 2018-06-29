@@ -3179,6 +3179,7 @@ bool Blockchain::handle_block_to_main_chain(const block& bl, const crypto::hash&
   TIME_MEASURE_START(t1);
 
   static bool seen_future_version = false;
+  bvc.m_verifivation_failed = false;
 
   m_db->block_txn_start(true);
   if(bl.prev_id != get_tail_id())
