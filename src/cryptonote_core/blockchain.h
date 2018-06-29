@@ -284,7 +284,7 @@ namespace cryptonote
      *
      * @return the target
      */
-    difficulty_type get_difficulty_for_next_block();
+    difficulty_type get_difficulty_for_next_block(bool uncle = false);
 
     /**
      * @brief adds a block to the blockchain
@@ -1016,6 +1016,8 @@ namespace cryptonote
     // some invalid blocks
     blocks_ext_by_hash m_invalid_blocks;     // crypto::hash -> block_extended_info
 
+    std::vector<block> m_uncle_blocks;
+
 
     checkpoints m_checkpoints;
     bool m_enforce_dns_checkpoints;
@@ -1391,3 +1393,4 @@ namespace cryptonote
     bool expand_transaction_2(transaction &tx, const crypto::hash &tx_prefix_hash, const std::vector<std::vector<rct::ctkey>> &pubkeys);
   };
 }  // namespace cryptonote
+

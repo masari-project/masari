@@ -759,7 +759,7 @@ bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orph
 // last DIFFICULTY_BLOCKS_COUNT blocks and passes them to next_difficulty,
 // returning the result of that call.  Ignores the genesis block, and can use
 // less blocks than desired if there aren't enough.
-difficulty_type Blockchain::get_difficulty_for_next_block()
+difficulty_type Blockchain::get_difficulty_for_next_block(bool uncle)
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
@@ -785,7 +785,11 @@ difficulty_type Blockchain::get_difficulty_for_next_block()
   //    of doing 735 (DIFFICULTY_BLOCKS_COUNT).
   if (m_timestamps_and_difficulties_height != 0 && ((height - m_timestamps_and_difficulties_height) == 1) && m_timestamps.size() >= difficulty_blocks_count)
   {
-    uint64_t index = height - 1;
+    uint64_t index;
+    if (uncle)
+      index = height - 2;
+    else
+      index = height - 1;
     m_timestamps.push_back(m_db->get_block_timestamp(index));
     m_difficulties.push_back(m_db->get_block_cumulative_difficulty(index));
 
@@ -1170,11 +1174,71 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
 
   CRITICAL_REGION_BEGIN(m_blockchain_lock);
   height = m_db->height();
-
+  
+  block top_block = m_db->get_block(m_db->top_block_hash());
+  
   b.major_version = m_hardfork->get_current_version();
   b.minor_version = m_hardfork->get_ideal_version();
   b.prev_id = get_tail_id();
   b.timestamp = time(NULL);
+  
+  std::list<block> alt_blocks;
+  get_alternative_blocks(alt_blocks);
+  
+  if(alt_blocks.size() > 0) {
+    block last_alt_block = alt_blocks.back();
+    // check that alternative block and top block are on top of the same block
+    if(last_alt_block.prev_id == top_block.prev_id)
+    {
+      crypto::hash top_block_hash = get_block_hash(top_block);
+      crypto::hash alt_block_hash = get_block_hash(last_alt_block);
+      uint32_t top_hash_int = reinterpret_cast< uint32_t &>(top_block_hash);
+      uint32_t alt_hash_int = reinterpret_cast< uint32_t &>(alt_block_hash);
+      // if top block hash isn't lowest then reorg
+      if(top_hash_int > alt_hash_int)
+      {
+         LOG_PRINT_L2("Attempting to reorganize for uncle block"); 
+         block old_top = pop_block_from_blockchain();
+         block_verification_context bvcontext;
+         if(!handle_block_to_main_chain(last_alt_block, bvcontext))
+           LOG_ERROR("Failed to add alternative block as top block");
+         
+         m_uncle_blocks.push_back(old_top);
+         LOG_PRINT_L3("Reoganization for uncle block success");
+      }
+      // if top block has lowest hash then the alternative block is the uncle
+      else if(top_hash_int < alt_hash_int)
+      {
+        b.uncle.major_version = b.major_version;
+        b.uncle.minor_version = b.minor_version;
+        b.uncle.timestamp = last_alt_block.timestamp;
+        b.uncle.prev_id = last_alt_block.prev_id;
+        b.uncle.nonce = last_alt_block.nonce;
+        b.uncle.miner_tx_hash = get_transaction_hash(last_alt_block.miner_tx);
+      }
+      else
+        b.uncle.miner_tx_hash = null_hash;
+      if(m_uncle_blocks.size() > 0)
+      {
+        block uncle_b = m_uncle_blocks.back();
+        crypto::hash uncle_block_hash = get_block_hash(uncle_b);
+        uint32_t uncle_hash_int = reinterpret_cast< uint32_t &>(uncle_block_hash);
+        if(top_hash_int < uncle_hash_int)
+        {
+          b.uncle.major_version = b.major_version;
+          b.uncle.minor_version = b.minor_version;
+          b.uncle.timestamp = uncle_b.timestamp;
+          b.uncle.prev_id = uncle_b.prev_id;
+          b.uncle.nonce = uncle_b.nonce;
+          b.uncle.miner_tx_hash = get_transaction_hash(uncle_b.miner_tx);
+        }
+      }
+    }
+    else
+      b.uncle.miner_tx_hash = null_hash;
+  }
+  else
+    b.uncle.miner_tx_hash = null_hash;
 
   uint64_t median_timestamp;
   if (!check_median_block_timestamp(b, median_timestamp)) {
@@ -3143,6 +3207,35 @@ leave:
     MERROR_VER("Block with id: " << id << std::endl << "has old version: " << (unsigned)bl.major_version << std::endl << "current: " << (unsigned)m_hardfork->get_current_version());
     bvc.m_verifivation_failed = true;
     goto leave;
+  }
+  
+  // do some basic validation on the uncle block
+  if (bl.uncle.major_version != 0 || bl.uncle.minor_version != 0 || bl.uncle.timestamp != 0 || bl.uncle.prev_id != null_hash || bl.uncle.nonce != 0 || bl.uncle.miner_tx_hash != null_hash)
+  {
+    if (bl.uncle.minor_version != bl.minor_version)
+    {
+      MERROR_VER("Block with id: " << id << std::endl << "has invalid uncle block minor version: " << bl.uncle.minor_version);
+      bvc.m_verifivation_failed = true;
+      goto leave;
+    }
+    // check that the uncle block is on top of the second to last block in the main chain
+    block previous_block = m_db->get_block_from_height(m_db->height() - 2);
+    crypto::hash previous_block_hash = get_block_hash(previous_block);
+    if (previous_block_hash != bl.uncle.prev_id)
+    {
+      MERROR_VER("Block with id: " << id << std::endl << "has uncle block with invalid previous hash: " << bl.uncle.prev_id << " Expected: " << previous_block_hash);
+      bvc.m_verifivation_failed = true;
+      goto leave;
+    }
+    difficulty_type previous_diffic = get_difficulty_for_next_block(true);
+    crypto::hash uncle_proof_of_work = get_uncle_block_long_hash(bl);
+    // validate proof of work versus difficulty target
+    if(!check_hash(uncle_proof_of_work, previous_diffic))
+    {
+      MERROR_VER("Block with id: " << id << std::endl << " has an uncle that does not have enough proof of work: " << uncle_proof_of_work << std::endl << "unexpected difficulty: " << previous_diffic);
+      bvc.m_verifivation_failed = true;
+      goto leave;
+    }
   }
 
   TIME_MEASURE_FINISH(t1);
