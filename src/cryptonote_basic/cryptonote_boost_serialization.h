@@ -186,6 +186,20 @@ namespace boost
     //------------------
     a & b.miner_tx;
     a & b.tx_hashes;
+    if(b.major_version > 1)
+      a & b.uncle;
+  }
+  
+  template <class Archive>
+  inline void serialize(Archive &a, cryptonote::uncle_block &ub, const boost::serialization::version_type ver)
+  {
+    a & ub.major_version;
+    a & ub.minor_version;
+    a & ub.timestamp;
+    a & ub.prev_id;
+    a & ub.nonce;
+    a & ub.miner_tx_hash;
+    a & ub.tx_hashes;
   }
 
   template <class Archive>

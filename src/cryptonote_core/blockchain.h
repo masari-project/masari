@@ -1393,4 +1393,3 @@ namespace cryptonote
     bool expand_transaction_2(transaction &tx, const crypto::hash &tx_prefix_hash, const std::vector<std::vector<rct::ctkey>> &pubkeys);
   };
 }  // namespace cryptonote
-

@@ -388,7 +388,8 @@ namespace cryptonote
       FIELDS(*static_cast<block_header *>(this))
       FIELD(miner_tx)
       FIELD(tx_hashes)
-      FIELD(uncle)
+      if (major_version > 1)
+        FIELD(uncle)
     END_SERIALIZE()
   };
 
