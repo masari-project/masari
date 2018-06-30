@@ -1185,7 +1185,8 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
   std::list<block> alt_blocks;
   get_alternative_blocks(alt_blocks);
   
-  if(alt_blocks.size() > 0) {
+  if(alt_blocks.size() > 0 && m_hardfork->get_current_version() > 1) 
+  {
     block last_alt_block = alt_blocks.back();
     // check that alternative block and top block are on top of the same block
     if(last_alt_block.prev_id == top_block.prev_id)
@@ -1237,7 +1238,7 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
     else
       b.uncle.miner_tx_hash = null_hash;
   }
-  else
+  else if (alt_blocks.size() == 0 && m_hardfork->get_current_version() > 1)
     b.uncle.miner_tx_hash = null_hash;
 
   uint64_t median_timestamp;
