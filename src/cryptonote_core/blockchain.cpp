@@ -1171,6 +1171,8 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
   LOG_PRINT_L3("Blockchain::" << __func__);
   size_t median_size;
   uint64_t already_generated_coins;
+  crypto::public_key uncle_out = null_pkey;
+  crypto::public_key uncle_tx_pubkey = null_pkey;
 
   CRITICAL_REGION_BEGIN(m_blockchain_lock);
   height = m_db->height();
@@ -1216,6 +1218,8 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
         b.uncle.prev_id = last_alt_block.prev_id;
         b.uncle.nonce = last_alt_block.nonce;
         b.uncle.miner_tx_hash = get_transaction_hash(last_alt_block.miner_tx);
+        uncle_out = boost::get<txout_to_key>(last_alt_block.miner_tx.vout[0].target).key;
+        uncle_tx_pubkey = get_tx_pub_key_from_extra(last_alt_block.miner_tx);
       }
       else
         b.uncle.miner_tx_hash = null_hash;
@@ -1232,6 +1236,8 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
           b.uncle.prev_id = uncle_b.prev_id;
           b.uncle.nonce = uncle_b.nonce;
           b.uncle.miner_tx_hash = get_transaction_hash(uncle_b.miner_tx);
+          uncle_out = boost::get<txout_to_key>(uncle_b.miner_tx.vout[0].target).key;
+          uncle_tx_pubkey = get_tx_pub_key_from_extra(uncle_b.miner_tx);
         }
       }
     }
@@ -1361,6 +1367,10 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
     MDEBUG("Creating block template: miner tx size " << coinbase_blob_size <<
         ", cumulative size " << cumulative_size << " is now good");
 #endif
+
+    if (uncle_tx_pubkey != null_pkey && uncle_out != null_pkey)
+      construct_uncle_miner_tx(height, b.miner_tx.vout[0].amount, uncle_out , uncle_tx_pubkey, b.uncle.miner_tx);
+
     return true;
   }
   LOG_ERROR("Failed to create_block_template with " << 10 << " tries");
