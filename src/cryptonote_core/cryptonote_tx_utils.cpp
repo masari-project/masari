@@ -148,6 +148,34 @@ namespace cryptonote
     return true;
   }
   //---------------------------------------------------------------
+  bool construct_uncle_miner_tx(size_t height, uint64_t amount, crypto::public_key out_eph_public_key, crypto::public_key tx_pubkey, transaction& tx) {
+    tx.vin.clear();
+    tx.vout.clear();
+    tx.extra.clear();
+    
+    add_tx_pub_key_to_extra(tx, tx_pubkey);
+
+    txin_gen in;
+    in.height = height;
+
+    txout_to_key tk;
+    tk.key = out_eph_public_key;
+
+    tx_out out;
+    out.amount = amount / 2;
+    out.target = tk;
+    tx.vout.push_back(out);
+
+    tx.version = CURRENT_TRANSACTION_VERSION;
+
+    //lock
+    tx.unlock_time = height + CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
+    tx.vin.push_back(in);
+
+    tx.invalidate_hashes();
+    return true;
+  }
+  //---------------------------------------------------------------
   crypto::public_key get_destination_view_key_pub(const std::vector<tx_destination_entry> &destinations, const boost::optional<cryptonote::account_public_address>& change_addr)
   {
     account_public_address addr = {null_pkey, null_pkey};
