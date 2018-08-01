@@ -1218,6 +1218,8 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
         b.uncle.prev_id = last_alt_block.prev_id;
         b.uncle.nonce = last_alt_block.nonce;
         b.uncle.miner_tx_hash = get_transaction_hash(last_alt_block.miner_tx);
+        for(auto& th: last_alt_block.tx_hashes)
+            b.uncle.tx_hashes.push_back(th);
         uncle_out = boost::get<txout_to_key>(last_alt_block.miner_tx.vout[0].target).key;
         uncle_tx_pubkey = get_tx_pub_key_from_extra(last_alt_block.miner_tx);
       }
@@ -1236,6 +1238,8 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
           b.uncle.prev_id = uncle_b.prev_id;
           b.uncle.nonce = uncle_b.nonce;
           b.uncle.miner_tx_hash = get_transaction_hash(uncle_b.miner_tx);
+          for(auto& th: uncle_b.tx_hashes)
+            b.uncle.tx_hashes.push_back(th);
           uncle_out = boost::get<txout_to_key>(uncle_b.miner_tx.vout[0].target).key;
           uncle_tx_pubkey = get_tx_pub_key_from_extra(uncle_b.miner_tx);
         }
