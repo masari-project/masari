@@ -3225,6 +3225,7 @@ leave:
     goto leave;
   }
   
+  bool uncle_included = false;
   // only allow uncle blocks after version 1
   if (bl.major_version > 1)
   {
@@ -3255,6 +3256,7 @@ leave:
         bvc.m_verifivation_failed = true;
         goto leave;
       }
+      uncle_included = true;
     }
   }
 
@@ -3493,7 +3495,20 @@ leave:
     return_tx_to_pool(txs);
     goto leave;
   }
-
+  
+  if(uncle_included)
+  {
+    uint64_t uncle_reward_money = 0;
+    for(auto& o: bl.uncle.miner_tx.vout)
+      uncle_reward_money += o.amount;
+    if(uncle_reward_money > (base_reward / 2))
+    {
+      MERROR_VER("Block with id: " << id << std::endl << " has an uncle with an invalid reward amount: " << uncle_reward_money << std::endl << "expected: " << base_reward / 2);
+      bvc.m_verifivation_failed = true;
+      goto leave;
+    }
+  }
+  
   TIME_MEASURE_FINISH(vmt);
   size_t block_size;
   difficulty_type cumulative_difficulty;
