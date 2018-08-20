@@ -119,6 +119,7 @@ namespace cryptonote {
     );
 
   bool is_coinbase(const transaction& tx);
+  bool is_uncle_block_included(const block& bl);
 
   bool operator ==(const cryptonote::transaction& a, const cryptonote::transaction& b);
   bool operator ==(const cryptonote::block& a, const cryptonote::block& b);

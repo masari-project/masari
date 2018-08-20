@@ -3230,7 +3230,7 @@ leave:
   if (bl.major_version > 1)
   {
     // do some validation on the uncle block
-    if (bl.uncle.major_version != 0 || bl.uncle.minor_version != 0 || bl.uncle.timestamp != 0 || bl.uncle.prev_id != null_hash || bl.uncle.nonce != 0 || bl.uncle.miner_tx_hash != null_hash)
+    if (is_uncle_block_included(bl))
     {
       if (bl.uncle.major_version != bl.major_version)
       {
