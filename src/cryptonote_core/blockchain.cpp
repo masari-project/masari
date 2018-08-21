@@ -3242,10 +3242,10 @@ leave:
   }
   
   bool uncle_included = false;
-  // only allow uncle blocks after version 1
-  if (bl.major_version > 1)
+  // only allow uncle blocks after version 7
+  if (bl.major_version > 7)
   {
-    // do some validation on the uncle block
+    // do some validation on the uncle block if it's included
     if (is_uncle_block_included(bl))
     {
       if (bl.uncle.major_version != bl.major_version)
