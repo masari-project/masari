@@ -87,6 +87,13 @@ static void init_exponents()
   init_done = true;
 }
 
+static bool is_reduced(const rct::key &scalar)
+{
+  rct::key reduced = scalar;
+  sc_reduce32(reduced.bytes);
+  return scalar == reduced;
+}
+
 /* Given two scalar arrays, construct a vector commitment */
 static rct::key vector_exponent(const rct::keyV &a, const rct::keyV &b)
 {
@@ -333,6 +340,9 @@ static rct::key hash_cache_mash(rct::key &hash_cache, const rct::key &mash0, con
 /* Given a value v (0..2^N-1) and a mask gamma, construct a range proof */
 Bulletproof bulletproof_PROVE(const rct::key &sv, const rct::key &gamma)
 {
+  CHECK_AND_ASSERT_THROW_MES(is_reduced(sv), "Invalid sv input");
+  CHECK_AND_ASSERT_THROW_MES(is_reduced(gamma), "Invalid gamma input");
+  
   init_exponents();
 
   PERF_TIMER_UNIT(PROVE, 1000000);
@@ -576,6 +586,25 @@ bool bulletproof_VERIFY(const Bulletproof &proof)
   CHECK_AND_ASSERT_MES(proof.L.size() == proof.R.size(), false, "Mismatched L and R sizes");
   CHECK_AND_ASSERT_MES(proof.L.size() > 0, false, "Empty proof");
   CHECK_AND_ASSERT_MES(proof.L.size() == 6, false, "Proof is not for 64 bits");
+  
+  for (const rct::key &k: proof.V)
+    CHECK_AND_ASSERT_MES(rct::isInMainSubgroup(k), false, "Input point not in subgroup");
+  for (const rct::key &k: proof.L)
+    CHECK_AND_ASSERT_MES(rct::isInMainSubgroup(k), false, "Input point not in subgroup");
+  for (const rct::key &k: proof.R)
+    CHECK_AND_ASSERT_MES(rct::isInMainSubgroup(k), false, "Input point not in subgroup");
+
+  CHECK_AND_ASSERT_MES(rct::isInMainSubgroup(proof.A), false, "Input point not in subgroup");
+  CHECK_AND_ASSERT_MES(rct::isInMainSubgroup(proof.S), false, "Input point not in subgroup");
+  CHECK_AND_ASSERT_MES(rct::isInMainSubgroup(proof.T1), false, "Input point not in subgroup");
+  CHECK_AND_ASSERT_MES(rct::isInMainSubgroup(proof.T2), false, "Input point not in subgroup");
+  
+  // check scalar range
+  CHECK_AND_ASSERT_MES(is_reduced(proof.taux), false, "Input scalar not in range");
+  CHECK_AND_ASSERT_MES(is_reduced(proof.mu), false, "Input scalar not in range");
+  CHECK_AND_ASSERT_MES(is_reduced(proof.a), false, "Input scalar not in range");
+  CHECK_AND_ASSERT_MES(is_reduced(proof.b), false, "Input scalar not in range");
+  CHECK_AND_ASSERT_MES(is_reduced(proof.t), false, "Input scalar not in range");
 
   const size_t logN = proof.L.size();
   const size_t N = 1 << logN;
