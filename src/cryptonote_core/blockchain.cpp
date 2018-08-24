@@ -1106,12 +1106,28 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
     MERROR_VER("block size " << cumulative_block_size << " is bigger than allowed for this blockchain");
     return false;
   }
-  if(base_reward + fee < money_in_use)
+  if(m_hardfork->get_current_version() > 7)
   {
-    MERROR_VER("coinbase transaction spend too much money (" << print_money(money_in_use) << "). Block reward is " << print_money(base_reward + fee) << "(" << print_money(base_reward) << "+" << print_money(fee) << ")");
-    return false;
+    if(is_uncle_block_included(b))
+    {
+      uint64_t max_nephew_reward = base_reward / 20;
+      if(base_reward  + max_nephew_reward + fee < money_in_use)
+      {
+        MERROR_VER("coinbase transaction spend too much money (" << print_money(money_in_use) << "). Block reward is " << print_money(base_reward + max_nephew_reward + fee) << "(" << print_money(base_reward) << "+" << print_money(max_nephew_reward) << "+" << print_money(fee) << ")");
+        return false;
+      }
+    }
+    else
+    {
+      if(base_reward + fee != money_in_use)
+      {
+        MERROR_VER("coinbase transaction spend too much money or does not use full block reward amount (" << print_money(money_in_use) << "). Block reward is " << print_money(base_reward + fee) << "(" << print_money(base_reward) << "+" << print_money(fee) << ")");
+        return false;
+      }
+    }
   }
-  if (m_hardfork->get_current_version() >= 1)
+  
+  if (m_hardfork->get_current_version() >= 1 && m_hardfork->get_current_version() < 8)
   {
     if(base_reward + fee != money_in_use)
     {
@@ -1319,7 +1335,7 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
    */
   //make blocks coin-base tx looks close to real coinbase tx to get truthful blob size
   uint8_t hf_version = m_hardfork->get_current_version();
-  bool r = construct_miner_tx(height, median_size, already_generated_coins, txs_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version);
+  bool r = construct_miner_tx(height, median_size, already_generated_coins, txs_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version, is_uncle_block_included(b));
   CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, first chance");
   size_t cumulative_size = txs_size + get_object_blobsize(b.miner_tx);
 #if defined(DEBUG_CREATE_BLOCK_TEMPLATE)
@@ -1328,7 +1344,7 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
 #endif
   for (size_t try_count = 0; try_count != 10; ++try_count)
   {
-    r = construct_miner_tx(height, median_size, already_generated_coins, cumulative_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version);
+    r = construct_miner_tx(height, median_size, already_generated_coins, cumulative_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version, is_uncle_block_included(b));
 
     CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, second chance");
     size_t coinbase_blob_size = get_object_blobsize(b.miner_tx);
@@ -3225,11 +3241,12 @@ leave:
     goto leave;
   }
   
-  // only allow uncle blocks after version 1
-  if (bl.major_version > 1)
+  bool uncle_included = false;
+  // only allow uncle blocks after version 7
+  if (bl.major_version > 7)
   {
-    // do some validation on the uncle block
-    if (bl.uncle.major_version != 0 || bl.uncle.minor_version != 0 || bl.uncle.timestamp != 0 || bl.uncle.prev_id != null_hash || bl.uncle.nonce != 0 || bl.uncle.miner_tx_hash != null_hash)
+    // do some validation on the uncle block if it's included
+    if (is_uncle_block_included(bl))
     {
       if (bl.uncle.major_version != bl.major_version)
       {
@@ -3255,6 +3272,7 @@ leave:
         bvc.m_verifivation_failed = true;
         goto leave;
       }
+      uncle_included = true;
     }
   }
 
@@ -3493,7 +3511,20 @@ leave:
     return_tx_to_pool(txs);
     goto leave;
   }
-
+  
+  uint64_t uncle_reward_money = 0;
+  if(uncle_included)
+  {
+    for(auto& o: bl.uncle.miner_tx.vout)
+      uncle_reward_money += o.amount;
+    if(uncle_reward_money > (base_reward / 2))
+    {
+      MERROR_VER("Block with id: " << id << std::endl << " has an uncle with an invalid reward amount: " << uncle_reward_money << std::endl << "expected: " << base_reward / 2);
+      bvc.m_verifivation_failed = true;
+      goto leave;
+    }
+  }
+  
   TIME_MEASURE_FINISH(vmt);
   size_t block_size;
   difficulty_type cumulative_difficulty;
@@ -3505,7 +3536,17 @@ leave:
   // coins will eventually exceed MONEY_SUPPLY and overflow a uint64. To prevent overflow, cap already_generated_coins
   // at MONEY_SUPPLY. already_generated_coins is only used to compute the block subsidy and MONEY_SUPPLY yields a
   // subsidy of 0 under the base formula and therefore the minimum subsidy >0 in the tail state.
-  already_generated_coins = base_reward < (MONEY_SUPPLY-already_generated_coins) ? already_generated_coins + base_reward : MONEY_SUPPLY;
+  
+  if(m_hardfork->get_current_version() > 7)
+  {
+    if(uncle_included)
+      already_generated_coins = base_reward < (MONEY_SUPPLY-already_generated_coins) ? already_generated_coins + base_reward + uncle_reward_money + (base_reward / 2): MONEY_SUPPLY;
+    else
+      already_generated_coins = base_reward < (MONEY_SUPPLY-already_generated_coins) ? already_generated_coins + base_reward + uncle_reward_money: MONEY_SUPPLY;
+  }
+  else
+    already_generated_coins = base_reward < (MONEY_SUPPLY-already_generated_coins) ? already_generated_coins + base_reward: MONEY_SUPPLY;
+
   if(m_db->height())
     cumulative_difficulty += m_db->get_block_cumulative_difficulty(m_db->height() - 1);
 

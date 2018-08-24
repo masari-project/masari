@@ -191,6 +191,14 @@ namespace cryptonote {
     return true;
   }
   //-----------------------------------------------------------------------
+  bool is_uncle_block_included(const block& bl)
+  {
+    if (bl.uncle.major_version != 0 || bl.uncle.minor_version != 0 || bl.uncle.timestamp != 0 || bl.uncle.prev_id != crypto::null_hash || bl.uncle.nonce != 0 || bl.uncle.miner_tx_hash != crypto::null_hash)
+      return true;
+    else
+      return false;
+  }
+  //-----------------------------------------------------------------------
   bool get_account_address_from_str(
       address_parse_info& info
     , network_type nettype
