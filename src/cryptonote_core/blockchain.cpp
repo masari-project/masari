@@ -1195,6 +1195,7 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
   uint64_t already_generated_coins;
   crypto::public_key uncle_out = null_pkey;
   crypto::public_key uncle_tx_pubkey = null_pkey;
+  bool uncle_included = false;
 
   CRITICAL_REGION_BEGIN(m_blockchain_lock);
   height = m_db->height();
@@ -1244,6 +1245,7 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
             b.uncle.tx_hashes.push_back(th);
         uncle_out = boost::get<txout_to_key>(last_alt_block.miner_tx.vout[0].target).key;
         uncle_tx_pubkey = get_tx_pub_key_from_extra(last_alt_block.miner_tx);
+        uncle_included = true;
       }
       else
         b.uncle.miner_tx_hash = null_hash;
@@ -1264,6 +1266,7 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
             b.uncle.tx_hashes.push_back(th);
           uncle_out = boost::get<txout_to_key>(uncle_b.miner_tx.vout[0].target).key;
           uncle_tx_pubkey = get_tx_pub_key_from_extra(uncle_b.miner_tx);
+          uncle_included = true;
         }
       }
     }
@@ -1341,7 +1344,7 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
    */
   //make blocks coin-base tx looks close to real coinbase tx to get truthful blob size
   uint8_t hf_version = m_hardfork->get_current_version();
-  bool r = construct_miner_tx(height, median_size, already_generated_coins, txs_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version, is_uncle_block_included(b));
+  bool r = construct_miner_tx(height, median_size, already_generated_coins, txs_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version, uncle_included);
   CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, first chance");
   size_t cumulative_size = txs_size + get_object_blobsize(b.miner_tx);
 #if defined(DEBUG_CREATE_BLOCK_TEMPLATE)
@@ -1350,7 +1353,7 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
 #endif
   for (size_t try_count = 0; try_count != 10; ++try_count)
   {
-    r = construct_miner_tx(height, median_size, already_generated_coins, cumulative_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version, is_uncle_block_included(b));
+    r = construct_miner_tx(height, median_size, already_generated_coins, cumulative_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version, uncle_included);
 
     CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, second chance");
     size_t coinbase_blob_size = get_object_blobsize(b.miner_tx);
