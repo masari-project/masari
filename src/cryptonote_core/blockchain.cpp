@@ -1212,7 +1212,7 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
   
   if(alt_blocks.size() > 0 && m_hardfork->get_current_version() > 7) 
   {
-    block last_alt_block = alt_blocks.back();
+    block last_alt_block = alt_blocks.front();
     // check that alternative block and top block are on top of the same block
     if(last_alt_block.prev_id == top_block.prev_id)
     {
