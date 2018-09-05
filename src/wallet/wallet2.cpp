@@ -1068,7 +1068,7 @@ void wallet2::scan_output(const cryptonote::transaction &tx, const crypto::publi
     bool r = cryptonote::generate_key_image_helper_precomp(m_account.get_keys(), boost::get<cryptonote::txout_to_key>(tx.vout[i].target).key, tx_scan_info.received->derivation, i, tx_scan_info.received->index, tx_scan_info.in_ephemeral, tx_scan_info.ki, m_account.get_device());
     if(!r)
     {
-      LOG_PRINT_L0("Failed to generate key image for tx" << get_transaction_hash(tx));
+      LOG_PRINT_L0("Failed to generate key image for tx: " << get_transaction_hash(tx));
       if(tx_scan_info.in_ephemeral.pub != boost::get<cryptonote::txout_to_key>(tx.vout[i].target).key)
        LOG_PRINT_L0("key_image generated ephemeral public key not matched with output_key");
       return;
