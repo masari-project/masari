@@ -3251,6 +3251,7 @@ leave:
   }
   
   bool uncle_included = false;
+  difficulty_type previous_diffic;
   // only allow uncle blocks after version 7
   if (bl.major_version > 7)
   {
@@ -3272,7 +3273,7 @@ leave:
         bvc.m_verifivation_failed = true;
         goto leave;
       }
-      difficulty_type previous_diffic = get_difficulty_for_next_block(true);
+      previous_diffic = get_difficulty_for_next_block(true);
       crypto::hash uncle_proof_of_work = get_uncle_block_long_hash(bl);
       // validate proof of work versus difficulty target
       if(!check_hash(uncle_proof_of_work, previous_diffic))
@@ -3557,7 +3558,11 @@ leave:
     already_generated_coins = base_reward < (MONEY_SUPPLY-already_generated_coins) ? already_generated_coins + base_reward: MONEY_SUPPLY;
 
   if(m_db->height())
+  {
     cumulative_difficulty += m_db->get_block_cumulative_difficulty(m_db->height() - 1);
+    if(uncle_included)
+      cumulative_difficulty += previous_diffic;
+  }
 
   TIME_MEASURE_FINISH(block_processing_time);
   if(precomputed)
