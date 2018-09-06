@@ -3260,6 +3260,7 @@ leave:
     {
       if (bl.uncle.major_version != bl.major_version)
       {
+        LOG_PRINT_L0("Uncle block failed major version check");
         MERROR_VER("Block with id: " << id << std::endl << "has invalid uncle block major version: " << bl.uncle.major_version << " which doesn't agree agree with sibling block version: " << bl.major_version);
         bvc.m_verifivation_failed = true;
         goto leave;
@@ -3269,6 +3270,7 @@ leave:
       crypto::hash previous_block_hash = get_block_hash(previous_block);
       if (previous_block_hash != bl.uncle.prev_id)
       {
+        LOG_PRINT_L0("Uncle block failed previous hash check");
         MERROR_VER("Block with id: " << id << std::endl << "has uncle block with invalid previous hash: " << bl.uncle.prev_id << " Expected: " << previous_block_hash);
         bvc.m_verifivation_failed = true;
         goto leave;
@@ -3278,6 +3280,7 @@ leave:
       // validate proof of work versus difficulty target
       if(!check_hash(uncle_proof_of_work, previous_diffic))
       {
+        LOG_PRINT_L0("Uncle block failed PoW check");
         MERROR_VER("Block with id: " << id << std::endl << " has an uncle that does not have enough proof of work: " << uncle_proof_of_work << std::endl << "unexpected difficulty: " << previous_diffic);
         bvc.m_verifivation_failed = true;
         goto leave;
