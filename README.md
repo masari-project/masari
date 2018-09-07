@@ -33,7 +33,7 @@ Masari is a private, secure, untraceable, decentralised digital currency. You ar
 
 **Untraceability:** By taking advantage of ring signatures, a special property of a certain type of cryptography, Masari is able to ensure that transactions are not only untraceable, but have an optional measure of ambiguity that ensures that transactions cannot easily be tied back to an individual user or computer.
 
-**Scalability:** By taking advantage of ring signatures, a special property of a certain type of cryptography, Masari is able to ensure that transactions are not only untraceable, but have an optional measure of ambiguity that ensures that transactions cannot easily be tied back to an individual user or computer.
+**Scalability:** Masari aims to scale as a cryptocurrency to acheive high transaction speed and capacity while maintaining all of its privacy features as it explores unique solutions such as blocktree. 
 
 ## About this project
 
