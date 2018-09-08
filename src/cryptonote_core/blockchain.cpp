@@ -3549,16 +3549,14 @@ leave:
   // coins will eventually exceed MONEY_SUPPLY and overflow a uint64. To prevent overflow, cap already_generated_coins
   // at MONEY_SUPPLY. already_generated_coins is only used to compute the block subsidy and MONEY_SUPPLY yields a
   // subsidy of 0 under the base formula and therefore the minimum subsidy >0 in the tail state.
-  
-  if(m_hardfork->get_current_version() > 7)
+
+  if (m_hardfork->get_current_version() > 7 && uncle_included)
   {
-    if(uncle_included)
-      already_generated_coins = base_reward < (MONEY_SUPPLY-already_generated_coins) ? already_generated_coins + base_reward + uncle_reward_money + (base_reward / 2): MONEY_SUPPLY;
-    else
-      already_generated_coins = base_reward < (MONEY_SUPPLY-already_generated_coins) ? already_generated_coins + base_reward + uncle_reward_money: MONEY_SUPPLY;
-  }
-  else
+    already_generated_coins = base_reward < (MONEY_SUPPLY-already_generated_coins) ? already_generated_coins + base_reward + uncle_reward_money + (base_reward / 2): MONEY_SUPPLY;
+  } else
+  {
     already_generated_coins = base_reward < (MONEY_SUPPLY-already_generated_coins) ? already_generated_coins + base_reward: MONEY_SUPPLY;
+  }
 
   if(m_db->height())
   {
