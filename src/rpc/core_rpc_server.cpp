@@ -1008,8 +1008,7 @@ namespace cryptonote
     bool r;
     if (use_bootstrap_daemon_if_necessary<COMMAND_RPC_GET_BLOCKS_JSON>(invoke_http_mode::JON, "/get_blocks_json", req, res, r))
       return r;
-
-    std::cout << req.heights.size();
+    
     for (size_t i = 0; i < req.heights.size(); i++)
     {
       block blk;
