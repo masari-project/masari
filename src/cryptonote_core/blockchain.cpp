@@ -823,7 +823,7 @@ difficulty_type Blockchain::get_difficulty_for_next_block(bool uncle)
     m_timestamps = timestamps;
     m_difficulties = difficulties;
   }
-  size_t target = version < 7 ? DIFFICULTY_TARGET : DIFFICULTY_TARGET_V2;
+  size_t target = version < 8 ? DIFFICULTY_TARGET : DIFFICULTY_TARGET_V2;
   if (version == 1) {
     return next_difficulty(timestamps, difficulties, target);
   } else if (version == 2) {
@@ -1045,7 +1045,7 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
   }
 
   // FIXME: This will fail if fork activation heights are subject to voting
-  size_t target = version < 7 ? DIFFICULTY_TARGET : DIFFICULTY_TARGET_V2;
+  size_t target = version < 8 ? DIFFICULTY_TARGET : DIFFICULTY_TARGET_V2;
 
   // calculate the difficulty target for the block and return it
   if (version == 1) {
