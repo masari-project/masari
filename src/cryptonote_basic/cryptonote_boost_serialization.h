@@ -189,7 +189,7 @@ namespace boost
     if(b.major_version > 7)
       a & b.uncle;
   }
-  
+
   template <class Archive>
   inline void serialize(Archive &a, cryptonote::uncle_block &ub, const boost::serialization::version_type ver)
   {

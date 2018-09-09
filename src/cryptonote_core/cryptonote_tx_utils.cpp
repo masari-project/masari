@@ -118,10 +118,7 @@ namespace cryptonote
       ", fee " << fee);
 #endif
 
-    if (nephew_reward)
-      block_reward += (block_reward / 20);
-    
-    block_reward += fee;
+    block_reward += nephew_reward ? (fee + block_reward / NEPHEW_REWARD_RATIO) : fee;
 
     crypto::key_derivation derivation = AUTO_VAL_INIT(derivation);;
     crypto::public_key out_eph_public_key = AUTO_VAL_INIT(out_eph_public_key);
@@ -156,7 +153,7 @@ namespace cryptonote
     tx.vin.clear();
     tx.vout.clear();
     tx.extra.clear();
-    
+
     add_tx_pub_key_to_extra(tx, tx_pubkey);
 
     txin_gen in;
@@ -166,7 +163,7 @@ namespace cryptonote
     tk.key = out_eph_public_key;
 
     tx_out out;
-    out.amount = amount / 2;
+    out.amount = amount / UNCLE_REWARD_RATIO;
     out.target = tk;
     tx.vout.push_back(out);
 

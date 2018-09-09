@@ -787,6 +787,7 @@ difficulty_type Blockchain::get_difficulty_for_next_block(bool uncle)
   //    of doing 735 (DIFFICULTY_BLOCKS_COUNT).
   if (m_timestamps_and_difficulties_height != 0 && ((height - m_timestamps_and_difficulties_height) == 1) && m_timestamps.size() >= difficulty_blocks_count)
   {
+    // TODO-TK: what case is this height indexing logic for?
     uint64_t index;
     if (uncle)
       index = height - 2;
@@ -822,7 +823,7 @@ difficulty_type Blockchain::get_difficulty_for_next_block(bool uncle)
     m_timestamps = timestamps;
     m_difficulties = difficulties;
   }
-  size_t target = DIFFICULTY_TARGET;
+  size_t target = version < 7 ? DIFFICULTY_TARGET : DIFFICULTY_TARGET_V2;
   if (version == 1) {
     return next_difficulty(timestamps, difficulties, target);
   } else if (version == 2) {
@@ -831,10 +832,8 @@ difficulty_type Blockchain::get_difficulty_for_next_block(bool uncle)
     return next_difficulty_v3(timestamps, difficulties, target, false);
   } else if (version < 6) {
     return next_difficulty_v3(timestamps, difficulties, target, true);
-  } else if (version < 7) {
-    return next_difficulty_v6(timestamps, difficulties, target);
   } else {
-    return next_difficulty_v6(timestamps, difficulties, DIFFICULTY_TARGET_V2);
+    return next_difficulty_v6(timestamps, difficulties, target);
   }
 }
 //------------------------------------------------------------------
@@ -1046,7 +1045,7 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
   }
 
   // FIXME: This will fail if fork activation heights are subject to voting
-  size_t target = DIFFICULTY_TARGET;
+  size_t target = version < 7 ? DIFFICULTY_TARGET : DIFFICULTY_TARGET_V2;
 
   // calculate the difficulty target for the block and return it
   if (version == 1) {
@@ -1057,10 +1056,8 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
     return next_difficulty_v3(timestamps, cumulative_difficulties, target, false);
   } else if (version < 6) {
     return next_difficulty_v3(timestamps, cumulative_difficulties, target, true);
-  } else if (version < 7){
-    return next_difficulty_v6(timestamps, cumulative_difficulties, target);
   } else {
-    return next_difficulty_v6(timestamps, cumulative_difficulties, DIFFICULTY_TARGET_V2);
+    return next_difficulty_v6(timestamps, cumulative_difficulties, target);
   }
 }
 //------------------------------------------------------------------
@@ -1112,28 +1109,16 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
     MERROR_VER("block size " << cumulative_block_size << " is bigger than allowed for this blockchain");
     return false;
   }
-  if(m_hardfork->get_current_version() > 7)
+  uint64_t max_nephew_reward = m_hardfork->get_current_version() > 7 && is_uncle_block_included(b) ? base_reward / NEPHEW_REWARD_RATIO : 0;
+  uint64_t max_reward = base_reward + fee + max_nephew_reward;
+
+  if(max_reward < money_in_use)
   {
-    if(is_uncle_block_included(b))
-    {
-      uint64_t max_nephew_reward = base_reward / 20;
-      if(base_reward  + max_nephew_reward + fee < money_in_use)
-      {
-        MERROR_VER("coinbase transaction spend too much money (" << print_money(money_in_use) << "). Block reward is " << print_money(base_reward + max_nephew_reward + fee) << "(" << print_money(base_reward) << "+" << print_money(max_nephew_reward) << "+" << print_money(fee) << ")");
-        return false;
-      }
-    }
-    else
-    {
-      if(base_reward + fee != money_in_use)
-      {
-        MERROR_VER("coinbase transaction spend too much money or does not use full block reward amount (" << print_money(money_in_use) << "). Block reward is " << print_money(base_reward + fee) << "(" << print_money(base_reward) << "+" << print_money(fee) << ")");
-        return false;
-      }
-    }
+    MERROR_VER("coinbase transaction spend too much money (" << print_money(money_in_use) << "). Block reward is " << print_money(max_reward) << "(" << print_money(base_reward) << "+" << print_money(fee) << "+" << print_money(max_nephew_reward) << ")");
+    return false;
   }
-  
-  if (m_hardfork->get_current_version() >= 1 && m_hardfork->get_current_version() < 8)
+
+  if (m_hardfork->get_current_version() >= 1)
   {
     if(base_reward + fee != money_in_use)
     {
@@ -1199,18 +1184,18 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
 
   CRITICAL_REGION_BEGIN(m_blockchain_lock);
   height = m_db->height();
-  
+
   block top_block = m_db->get_block(m_db->top_block_hash());
-  
+
   b.major_version = m_hardfork->get_current_version();
   b.minor_version = m_hardfork->get_ideal_version();
   b.prev_id = get_tail_id();
   b.timestamp = time(NULL);
-  
+
   std::list<block> alt_blocks;
   get_alternative_blocks(alt_blocks);
-  
-  if(alt_blocks.size() > 0 && m_hardfork->get_current_version() > 7) 
+
+  if(alt_blocks.size() > 0 && m_hardfork->get_current_version() > 7)
   {
     block last_alt_block = alt_blocks.front();
     // check that alternative block and top block are on top of the same block
@@ -1223,12 +1208,12 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
       // if top block hash isn't lowest then reorg
       if(top_hash_int > alt_hash_int)
       {
-         LOG_PRINT_L2("Attempting to reorganize for uncle block"); 
+         LOG_PRINT_L2("Attempting to reorganize for uncle block");
          block old_top = pop_block_from_blockchain();
          block_verification_context bvcontext;
          if(!handle_block_to_main_chain(last_alt_block, bvcontext))
            LOG_ERROR("Failed to add alternative block as top block");
-         
+
          m_uncle_blocks.push_back(old_top);
          LOG_PRINT_L3("Reoganization for uncle block success");
       }
@@ -1248,7 +1233,9 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
         uncle_included = true;
       }
       else
+      {
         b.uncle.miner_tx_hash = null_hash;
+      }
       if(m_uncle_blocks.size() > 0)
       {
         block uncle_b = m_uncle_blocks.back();
@@ -1271,10 +1258,14 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
       }
     }
     else
+    {
       b.uncle.miner_tx_hash = null_hash;
+    }
   }
   else if (alt_blocks.size() == 0 && m_hardfork->get_current_version() > 7)
+  {
     b.uncle.miner_tx_hash = null_hash;
+  }
 
   uint64_t median_timestamp;
   if (!check_median_block_timestamp(b, median_timestamp)) {
@@ -3249,7 +3240,7 @@ leave:
     bvc.m_verifivation_failed = true;
     goto leave;
   }
-  
+
   bool uncle_included = false;
   difficulty_type previous_diffic;
   // only allow uncle blocks after version 7
@@ -3524,20 +3515,20 @@ leave:
     return_tx_to_pool(txs);
     goto leave;
   }
-  
+
   uint64_t uncle_reward_money = 0;
   if(uncle_included)
   {
     for(auto& o: bl.uncle.miner_tx.vout)
       uncle_reward_money += o.amount;
-    if(uncle_reward_money > (base_reward / 2))
+    if(uncle_reward_money > (base_reward / UNCLE_REWARD_RATIO))
     {
-      MERROR_VER("Block with id: " << id << std::endl << " has an uncle with an invalid reward amount: " << uncle_reward_money << std::endl << "expected: " << base_reward / 2);
+      MERROR_VER("Block with id: " << id << std::endl << " has an uncle with an invalid reward amount: " << uncle_reward_money << std::endl << "expected: " << base_reward / UNCLE_REWARD_RATIO);
       bvc.m_verifivation_failed = true;
       goto leave;
     }
   }
-  
+
   TIME_MEASURE_FINISH(vmt);
   size_t block_size;
   difficulty_type cumulative_difficulty;
@@ -3552,7 +3543,7 @@ leave:
 
   if (m_hardfork->get_current_version() > 7 && uncle_included)
   {
-    already_generated_coins = base_reward < (MONEY_SUPPLY-already_generated_coins) ? already_generated_coins + base_reward + uncle_reward_money + (base_reward / 2): MONEY_SUPPLY;
+    already_generated_coins = base_reward < (MONEY_SUPPLY-already_generated_coins) ? already_generated_coins + base_reward + uncle_reward_money + (base_reward / UNCLE_REWARD_RATIO): MONEY_SUPPLY;
   } else
   {
     already_generated_coins = base_reward < (MONEY_SUPPLY-already_generated_coins) ? already_generated_coins + base_reward: MONEY_SUPPLY;
