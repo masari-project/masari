@@ -700,13 +700,16 @@ namespace cryptonote
 
     std::vector<crypto::hash> vh;
     
-    block blk;
-    bool orphan = false;
-    crypto::hash block_hash = m_core.get_block_id_by_height(req.height);
-    bool have_block = m_core.get_block_by_hash(block_hash, blk, &orphan);
+    for (size_t i = 0; i < req.heights.size(); i++)
+    {
+      block blk;
+      bool orphan = false;
+      crypto::hash block_hash = m_core.get_block_id_by_height(req.heights[i]);
+      bool have_block = m_core.get_block_by_hash(block_hash, blk, &orphan);
     
-    for(auto& btxs: blk.tx_hashes)
-      vh.push_back(btxs);
+      for(auto& btxs: blk.tx_hashes)
+        vh.push_back(btxs);
+    }
     
     std::list<crypto::hash> missed_txs;
     std::list<transaction> txs;

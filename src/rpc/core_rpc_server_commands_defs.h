@@ -625,12 +625,12 @@ namespace cryptonote
   {
     struct request
     {
-      uint64_t height;
+      std::vector<uint64_t> heights;
       bool decode_as_json;
       bool prune;
 
       BEGIN_KV_SERIALIZE_MAP()
-        KV_SERIALIZE(height)
+        KV_SERIALIZE(heights)
         KV_SERIALIZE(decode_as_json)
         KV_SERIALIZE_OPT(prune, false)
       END_KV_SERIALIZE_MAP()
