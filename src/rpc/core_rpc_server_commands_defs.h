@@ -1456,7 +1456,9 @@ namespace cryptonote
   {
     struct request
     {
+      bool json_only;
       BEGIN_KV_SERIALIZE_MAP()
+      KV_SERIALIZE_OPT(json_only, false)
       END_KV_SERIALIZE_MAP()
     };
 
