@@ -691,11 +691,11 @@ namespace cryptonote
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
-  bool core_rpc_server::on_get_transactions_by_height(const COMMAND_RPC_GET_TRANSACTIONS_BY_HEIGHT::request& req, COMMAND_RPC_GET_TRANSACTIONS_BY_HEIGHT::response& res)
+  bool core_rpc_server::on_get_transactions_by_heights(const COMMAND_RPC_GET_TRANSACTIONS_BY_HEIGHT::request& req, COMMAND_RPC_GET_TRANSACTIONS_BY_HEIGHT::response& res)
   {
     PERF_TIMER(on_get_transactions_by_height);
     bool ok;
-    if (use_bootstrap_daemon_if_necessary<COMMAND_RPC_GET_TRANSACTIONS_BY_HEIGHT>(invoke_http_mode::JON, "/gettransactions_by_height", req, res, ok))
+    if (use_bootstrap_daemon_if_necessary<COMMAND_RPC_GET_TRANSACTIONS_BY_HEIGHT>(invoke_http_mode::JON, "/gettransactions_by_heights", req, res, ok))
       return ok;
 
     std::vector<crypto::hash> vh;
