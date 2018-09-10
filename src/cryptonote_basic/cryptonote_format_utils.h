@@ -102,13 +102,12 @@ namespace cryptonote
   bool get_transaction_hash(const transaction& t, crypto::hash& res, size_t* blob_size);
   bool calculate_transaction_hash(const transaction& t, crypto::hash& res, size_t* blob_size);
   blobdata get_block_hashing_blob(const block& b);
-  blobdata get_uncle_block_old_hashing_blob(const block& b);
   bool calculate_block_hash(const block& b, crypto::hash& res);
   bool get_block_hash(const block& b, crypto::hash& res);
   crypto::hash get_block_hash(const block& b);
   bool get_block_longhash(const block& b, crypto::hash& res, uint64_t height);
   crypto::hash get_block_longhash(const block& b, uint64_t height);
-  crypto::hash get_uncle_block_long_hash(block b);
+  crypto::hash get_block_longhash(const block& b);
   bool parse_and_validate_block_from_blob(const blobdata& b_blob, block& b);
   bool get_inputs_money_amount(const transaction& tx, uint64_t& money);
   uint64_t get_outs_money_amount(const transaction& tx);

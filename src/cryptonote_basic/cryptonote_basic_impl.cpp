@@ -194,10 +194,8 @@ namespace cryptonote {
   //-----------------------------------------------------------------------
   bool is_uncle_block_included(const block& bl)
   {
-    if (bl.uncle.major_version != 0 || bl.uncle.minor_version != 0 || bl.uncle.timestamp != 0 || bl.uncle.prev_id != crypto::null_hash || bl.uncle.nonce != 0 || bl.uncle.miner_tx_hash != crypto::null_hash)
-      return true;
-    else
-      return false;
+    // TODO-TK: could do this better
+    return strcmp(bl.uncle.data, crypto::null_hash.data) != 0;
   }
   //-----------------------------------------------------------------------
   bool get_account_address_from_str(
@@ -242,7 +240,7 @@ namespace cryptonote {
         info.has_payment_id = false;
       }
       else {
-        LOG_PRINT_L1("Wrong address prefix: " << prefix << ", expected " << address_prefix 
+        LOG_PRINT_L1("Wrong address prefix: " << prefix << ", expected " << address_prefix
           << " or " << integrated_address_prefix
           << " or " << subaddress_prefix);
         return false;

@@ -1178,9 +1178,11 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
   LOG_PRINT_L3("Blockchain::" << __func__);
   size_t median_size;
   uint64_t already_generated_coins;
+
   crypto::public_key uncle_out = null_pkey;
   crypto::public_key uncle_tx_pubkey = null_pkey;
   bool uncle_included = false;
+  cryptonote::block uncle;
 
   CRITICAL_REGION_BEGIN(m_blockchain_lock);
   height = m_db->height();
@@ -1203,10 +1205,8 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
     {
       crypto::hash top_block_hash = get_block_hash(top_block);
       crypto::hash alt_block_hash = get_block_hash(last_alt_block);
-      uint32_t top_hash_int = reinterpret_cast< uint32_t &>(top_block_hash);
-      uint32_t alt_hash_int = reinterpret_cast< uint32_t &>(alt_block_hash);
       // if top block hash isn't lowest then reorg
-      if(top_hash_int > alt_hash_int)
+      if(strcmp(top_block_hash.data, alt_block_hash.data) > 0) // TODO-TK: enforcing this needs a revisit to see which weight is heavier
       {
          LOG_PRINT_L2("Attempting to reorganize for uncle block");
          block old_top = pop_block_from_blockchain();
@@ -1214,57 +1214,29 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
          if(!handle_block_to_main_chain(last_alt_block, bvcontext))
            LOG_ERROR("Failed to add alternative block as top block");
 
-         m_uncle_blocks.push_back(old_top);
          LOG_PRINT_L3("Reoganization for uncle block success");
+
+         LOG_PRINT_L2("Setting uncle to nephew");
+         b.uncle = get_block_hash(old_top);
+         uncle = old_top;
+         uncle_out = boost::get<txout_to_key>(old_top.miner_tx.vout[0].target).key;
+         uncle_tx_pubkey = get_tx_pub_key_from_extra(old_top.miner_tx);
       }
       // if top block has lowest hash then the alternative block is the uncle
-      else if(top_hash_int < alt_hash_int)
-      {
-        b.uncle.major_version = b.major_version;
-        b.uncle.minor_version = b.minor_version;
-        b.uncle.timestamp = last_alt_block.timestamp;
-        b.uncle.prev_id = last_alt_block.prev_id;
-        b.uncle.nonce = last_alt_block.nonce;
-        b.uncle.miner_tx_hash = get_transaction_hash(last_alt_block.miner_tx);
-        for(auto& th: last_alt_block.tx_hashes)
-            b.uncle.tx_hashes.push_back(th);
-        uncle_out = boost::get<txout_to_key>(last_alt_block.miner_tx.vout[0].target).key;
-        uncle_tx_pubkey = get_tx_pub_key_from_extra(last_alt_block.miner_tx);
-        uncle_included = true;
-      }
       else
       {
-        b.uncle.miner_tx_hash = null_hash;
+        LOG_PRINT_L2("Setting uncle to nephew");
+        b.uncle = alt_block_hash;
+        uncle_out = boost::get<txout_to_key>(last_alt_block.miner_tx.vout[0].target).key;
+        uncle_tx_pubkey = get_tx_pub_key_from_extra(last_alt_block.miner_tx);
+        uncle = last_alt_block;
       }
-      if(m_uncle_blocks.size() > 0)
-      {
-        block uncle_b = m_uncle_blocks.back();
-        crypto::hash uncle_block_hash = get_block_hash(uncle_b);
-        uint32_t uncle_hash_int = reinterpret_cast< uint32_t &>(uncle_block_hash);
-        if(top_hash_int < uncle_hash_int)
-        {
-          b.uncle.major_version = b.major_version;
-          b.uncle.minor_version = b.minor_version;
-          b.uncle.timestamp = uncle_b.timestamp;
-          b.uncle.prev_id = uncle_b.prev_id;
-          b.uncle.nonce = uncle_b.nonce;
-          b.uncle.miner_tx_hash = get_transaction_hash(uncle_b.miner_tx);
-          for(auto& th: uncle_b.tx_hashes)
-            b.uncle.tx_hashes.push_back(th);
-          uncle_out = boost::get<txout_to_key>(uncle_b.miner_tx.vout[0].target).key;
-          uncle_tx_pubkey = get_tx_pub_key_from_extra(uncle_b.miner_tx);
-          uncle_included = true;
-        }
-      }
+      uncle_included = true;
     }
     else
     {
-      b.uncle.miner_tx_hash = null_hash;
+      b.uncle = null_hash;
     }
-  }
-  else if (alt_blocks.size() == 0 && m_hardfork->get_current_version() > 7)
-  {
-    b.uncle.miner_tx_hash = null_hash;
   }
 
   uint64_t median_timestamp;
@@ -1388,8 +1360,9 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
         ", cumulative size " << cumulative_size << " is now good");
 #endif
 
+    // TODO-TK: this needs to be part of nephew's coinbase (can't invalidate uncle hash)
     if (uncle_tx_pubkey != null_pkey && uncle_out != null_pkey)
-      construct_uncle_miner_tx(height, b.miner_tx.vout[0].amount, uncle_out , uncle_tx_pubkey, b.uncle.miner_tx);
+      construct_uncle_miner_tx(height, b.miner_tx.vout[0].amount, uncle_out , uncle_tx_pubkey, uncle.miner_tx);
 
     return true;
   }
@@ -3242,6 +3215,7 @@ leave:
   }
 
   bool uncle_included = false;
+  cryptonote::block uncle;
   difficulty_type previous_diffic;
   // only allow uncle blocks after version 7
   if (bl.major_version > 7)
@@ -3249,25 +3223,30 @@ leave:
     // do some validation on the uncle block if it's included
     if (is_uncle_block_included(bl))
     {
-      if (bl.uncle.major_version != bl.major_version)
+      bool orphan = false;
+      get_block_by_hash(bl.uncle, uncle, &orphan);
+
+      if (uncle.major_version != bl.major_version)
       {
         LOG_PRINT_L0("Uncle block failed major version check");
-        MERROR_VER("Block with id: " << id << std::endl << "has invalid uncle block major version: " << bl.uncle.major_version << " which doesn't agree agree with sibling block version: " << bl.major_version);
+        MERROR_VER("Block with id: " << id << std::endl << "has invalid uncle block major version: " << uncle.major_version << " which doesn't agree agree with sibling block version: " << bl.major_version);
         bvc.m_verifivation_failed = true;
         goto leave;
       }
       // check that the uncle block is on top of the second to last block in the main chain
       block previous_block = m_db->get_block_from_height(m_db->height() - 2);
       crypto::hash previous_block_hash = get_block_hash(previous_block);
-      if (previous_block_hash != bl.uncle.prev_id)
+      if (previous_block_hash != uncle.prev_id)
       {
         LOG_PRINT_L0("Uncle block failed previous hash check");
-        MERROR_VER("Block with id: " << id << std::endl << "has uncle block with invalid previous hash: " << bl.uncle.prev_id << " Expected: " << previous_block_hash);
+        MERROR_VER("Block with id: " << id << std::endl << "has uncle block with invalid previous hash: " << uncle.prev_id << " Expected: " << previous_block_hash);
         bvc.m_verifivation_failed = true;
         goto leave;
       }
+      // TODO-TK: ensure uncle is part of main block's hash
+
       previous_diffic = get_difficulty_for_next_block(true);
-      crypto::hash uncle_proof_of_work = get_uncle_block_long_hash(bl);
+      crypto::hash uncle_proof_of_work = get_block_longhash(uncle);
       // validate proof of work versus difficulty target
       if(!check_hash(uncle_proof_of_work, previous_diffic))
       {
@@ -3516,10 +3495,11 @@ leave:
     goto leave;
   }
 
+  // TODO-TK: this needs to be part of nephew's coinbase (can't invalidate uncle hash)
   uint64_t uncle_reward_money = 0;
   if(uncle_included)
   {
-    for(auto& o: bl.uncle.miner_tx.vout)
+    for(auto& o: uncle.miner_tx.vout)
       uncle_reward_money += o.amount;
     if(uncle_reward_money > (base_reward / UNCLE_REWARD_RATIO))
     {

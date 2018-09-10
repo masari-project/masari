@@ -191,18 +191,6 @@ namespace boost
   }
 
   template <class Archive>
-  inline void serialize(Archive &a, cryptonote::uncle_block &ub, const boost::serialization::version_type ver)
-  {
-    a & ub.major_version;
-    a & ub.minor_version;
-    a & ub.timestamp;
-    a & ub.prev_id;
-    a & ub.nonce;
-    a & ub.miner_tx_hash;
-    a & ub.tx_hashes;
-  }
-
-  template <class Archive>
   inline void serialize(Archive &a, rct::key &x, const boost::serialization::version_type ver)
   {
     a & reinterpret_cast<char (&)[sizeof(rct::key)]>(x);

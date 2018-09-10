@@ -330,38 +330,6 @@ namespace cryptonote
     END_SERIALIZE()
   };
 
-  struct uncle_block: public block_header
-  {
-  private:
-    // hash cash
-    mutable std::atomic<bool> hash_valid;
-
-  public:
-    uncle_block(): block_header(), hash_valid(false) {}
-    uncle_block(const uncle_block &b): block_header(b), hash_valid(false), miner_tx_hash(b.miner_tx_hash), tx_hashes(b.tx_hashes), miner_tx(b.miner_tx) { if (b.is_hash_valid()) { hash = b.hash; set_hash_valid(true); } }
-    uncle_block &operator=(const uncle_block &b) { block_header::operator=(b); hash_valid = false; miner_tx_hash = b.miner_tx_hash; tx_hashes = b.tx_hashes; miner_tx = b.miner_tx; if (b.is_hash_valid()) { hash = b.hash; set_hash_valid(true); } return *this; }
-    void invalidate_hashes() { set_hash_valid(false); }
-    bool is_hash_valid() const { return hash_valid.load(std::memory_order_acquire); }
-    void set_hash_valid(bool v) const { hash_valid.store(v,std::memory_order_release); }
-
-    crypto::hash miner_tx_hash;
-    std::vector<crypto::hash> tx_hashes;
-    transaction miner_tx;
-
-    // hash cash
-    mutable crypto::hash hash;
-
-    BEGIN_SERIALIZE_OBJECT()
-      if (!typename Archive<W>::is_saving())
-        set_hash_valid(false);
-
-      FIELDS(*static_cast<block_header *>(this))
-      FIELD(miner_tx_hash)
-      FIELD(tx_hashes)
-      FIELD(miner_tx)
-    END_SERIALIZE()
-  };
-
   struct block: public block_header
   {
   private:
@@ -378,10 +346,10 @@ namespace cryptonote
 
     transaction miner_tx;
     std::vector<crypto::hash> tx_hashes;
-    uncle_block uncle;
 
     // hash cash
     mutable crypto::hash hash;
+    mutable crypto::hash uncle;
 
     BEGIN_SERIALIZE_OBJECT()
       if (!typename Archive<W>::is_saving())

@@ -818,19 +818,6 @@ namespace cryptonote
     return blob;
   }
   //---------------------------------------------------------------
-  blobdata get_uncle_block_old_hashing_blob(const block& b)
-  {
-    blobdata blob = t_serializable_object_to_blob(static_cast<block_header>(b));
-    std::vector<crypto::hash> tx_hashes;
-    tx_hashes.push_back(b.uncle.miner_tx_hash);
-    for(auto& th : b.uncle.tx_hashes)
-      tx_hashes.push_back(th);
-    crypto::hash tree_root_hash = get_tx_tree_hash(tx_hashes);
-    blob.append(reinterpret_cast<const char*>(&tree_root_hash), sizeof(tree_root_hash));
-    blob.append(tools::get_varint_data(b.uncle.tx_hashes.size()+1));
-    return blob;
-  }
-  //---------------------------------------------------------------
   bool calculate_block_hash(const block& b, crypto::hash& res)
   {
     bool hash_result = get_object_hash(get_block_hashing_blob(b), res);
@@ -883,23 +870,11 @@ namespace cryptonote
     return true;
   }
   //---------------------------------------------------------------
-  crypto::hash get_uncle_block_long_hash(block b)
+  crypto::hash get_block_longhash(const block& b)
   {
-    int cn_variant;
-    if(b.major_version < 5) {
-      cn_variant = 0;
-    }
-    else if (b.major_version < 7) {
-      cn_variant = 1;
-    }
-    else {
-      cn_variant = 2;
-    }
-    
-    crypto::hash res = null_hash;
-    blobdata blob = get_uncle_block_old_hashing_blob(b);
-    crypto::cn_slow_hash(blob.data(), blob.size(), res, cn_variant);
-    return res;
+    crypto::hash proof_of_work = null_hash;
+    get_block_longhash(b, proof_of_work, 0 /* TODO-TK: why does it need this? looks like it could be mismatched in current state */);
+    return proof_of_work;
   }
   //---------------------------------------------------------------
   std::vector<uint64_t> relative_output_offsets_to_absolute(const std::vector<uint64_t>& off)
