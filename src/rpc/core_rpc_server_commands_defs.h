@@ -621,7 +621,7 @@ namespace cryptonote
   };
 
   //-----------------------------------------------
-  struct COMMAND_RPC_GET_TRANSACTIONS_BY_HEIGHT
+  struct COMMAND_RPC_GET_TRANSACTIONS_BY_HEIGHTS
   {
     struct request
     {
