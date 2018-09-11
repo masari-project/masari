@@ -691,11 +691,11 @@ namespace cryptonote
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
-  bool core_rpc_server::on_get_transactions_by_heights(const COMMAND_RPC_GET_TRANSACTIONS_BY_HEIGHT::request& req, COMMAND_RPC_GET_TRANSACTIONS_BY_HEIGHT::response& res)
+  bool core_rpc_server::on_get_transactions_by_heights(const COMMAND_RPC_GET_TRANSACTIONS_BY_HEIGHTS::request& req, COMMAND_RPC_GET_TRANSACTIONS_BY_HEIGHTS::response& res)
   {
-    PERF_TIMER(on_get_transactions_by_height);
+    PERF_TIMER(on_get_transactions_by_heights);
     bool ok;
-    if (use_bootstrap_daemon_if_necessary<COMMAND_RPC_GET_TRANSACTIONS_BY_HEIGHT>(invoke_http_mode::JON, "/gettransactions_by_heights", req, res, ok))
+    if (use_bootstrap_daemon_if_necessary<COMMAND_RPC_GET_TRANSACTIONS_BY_HEIGHTS>(invoke_http_mode::JON, "/gettransactions_by_heights", req, res, ok))
       return ok;
 
     std::vector<crypto::hash> vh;
@@ -790,8 +790,8 @@ namespace cryptonote
     std::vector<crypto::hash>::const_iterator vhi = vh.begin();
     for(auto& tx: txs)
     {
-      res.txs.push_back(COMMAND_RPC_GET_TRANSACTIONS_BY_HEIGHT::entry());
-      COMMAND_RPC_GET_TRANSACTIONS_BY_HEIGHT::entry &e = res.txs.back();
+      res.txs.push_back(COMMAND_RPC_GET_TRANSACTIONS_BY_HEIGHTS::entry());
+      COMMAND_RPC_GET_TRANSACTIONS_BY_HEIGHTS::entry &e = res.txs.back();
 
       crypto::hash tx_hash = *vhi++;
       e.tx_hash = *txhi++;
