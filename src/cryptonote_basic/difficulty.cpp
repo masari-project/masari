@@ -334,6 +334,9 @@ namespace cryptonote {
     if (high != 0) {
       return 0;
     }
+    if (low < weighted_timespans) {
+      return 1;
+    }
     return low / weighted_timespans;
   }
 
@@ -412,6 +415,11 @@ namespace cryptonote {
     // No limits should be employed, but this is correct way to employ a 20% symmetrical limit:
     // nextDifficulty=max(previous_Difficulty*0.8,min(previous_Difficulty/0.8, next_Difficulty));
     next_difficulty = static_cast<uint64_t>(nextDifficulty);
+
+    if (next_difficulty == 0) {
+      return 1;
+    }
+
     return next_difficulty;
   }
 }

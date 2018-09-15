@@ -40,20 +40,25 @@ bool gen_uncles::generate(std::vector<test_event_entry> &events) const
 {
   GENERATE_ACCOUNT(first_miner_account);
   MAKE_GENESIS_BLOCK(events, blk_0, first_miner_account, 0);
-  MAKE_NEXT_BLOCK(events, blk_1, blk_0, first_miner_account);
-  MAKE_NEXT_BLOCKV(events, blk_2, blk_1, first_miner_account, 7);
-  MAKE_NEXT_BLOCKV(events, blk_3, blk_2, first_miner_account, 8);
-  MAKE_NEXT_BLOCKV(events, blk_4, blk_3, first_miner_account, 8);
-  MAKE_NEXT_BLOCKV(events, blk_5, blk_4, first_miner_account, 8);
-  MAKE_NEXT_BLOCKV(events, blk_6a, blk_5, first_miner_account, 8);
-  MAKE_NEXT_BLOCKV(events, blk_6b, blk_5, first_miner_account, 8);
+  // TODO-TK: test difficulties hitting 0 on integer divisions, need to address impact in rounding up to 1
+  REWIND_BLOCKS_VN(events, blk_a, blk_0, first_miner_account, 1, 9);
+  REWIND_BLOCKS_VN(events, blk_b, blk_a, first_miner_account, 2, 10);
+  REWIND_BLOCKS_VN(events, blk_c, blk_b, first_miner_account, 3, 10);
+  REWIND_BLOCKS_VN(events, blk_d, blk_c, first_miner_account, 4, 10);
+  REWIND_BLOCKS_VN(events, blk_e, blk_d, first_miner_account, 5, 10);
+  REWIND_BLOCKS_VN(events, blk_f, blk_e, first_miner_account, 6, 10);
+  REWIND_BLOCKS_VN(events, blk_i, blk_f, first_miner_account, 7, 10);
+  REWIND_BLOCKS_VN(events, blk_j, blk_i, first_miner_account, 8, 10);
+
+  MAKE_NEXT_BLOCKV(events, blk_1a, blk_j, first_miner_account, 8);
+  MAKE_NEXT_BLOCKV(events, blk_1b, blk_j, first_miner_account, 8);
 
   // uncle referenced
   // work-in-progress
-  cryptonote::block blk_7;
-  blk_7.uncle = get_block_hash(blk_6b);
-  PUSH_NEXT_BLOCKV(events, blk_7, blk_6a, first_miner_account, 8);
+  cryptonote::block blk_2;
+  blk_2.uncle = get_block_hash(blk_1b);
+  PUSH_NEXT_BLOCKV(events, blk_2, blk_1a, first_miner_account, 8);
 
-  MAKE_NEXT_BLOCKV(events, blk_8, blk_7, first_miner_account, 8);
+  MAKE_NEXT_BLOCKV(events, blk_3, blk_2, first_miner_account, 8);
   return true;
 }

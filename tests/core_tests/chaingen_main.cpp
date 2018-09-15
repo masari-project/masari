@@ -223,6 +223,7 @@ int main(int argc, char* argv[])
     /* TODO-TK:
      * difficulty adjustment verification
      * permanent storage verification
+     * 60s emission rate difficulty adjustment verification
      */
     //GENERATE_AND_PLAY(gen_uncle_is_parent);
     //GENERATE_AND_PLAY(gen_uncle_hash_too_low);

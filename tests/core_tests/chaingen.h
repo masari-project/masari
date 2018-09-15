@@ -620,6 +620,18 @@ inline bool do_replay_file(const std::string& filename)
     BLK_NAME = _blk_last;                                                             \
   }
 
+#define REWIND_BLOCKS_VN(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, COUNT) \
+  cryptonote::block BLK_NAME;                                                           \
+  {                                                                                     \
+    cryptonote::block _blk_last = PREV_BLOCK;                                           \
+    for (size_t i = 0; i < COUNT; ++i)                                                  \
+    {                                                                                   \
+      MAKE_NEXT_BLOCKV(VEC_EVENTS, blk, _blk_last, MINER_ACC, MAJOR_VER);              \
+      _blk_last = blk;                                                                  \
+    }                                                                                   \
+    BLK_NAME = _blk_last;                                                               \
+  }
+
 #define REWIND_BLOCKS(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC) REWIND_BLOCKS_N(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW)
 
 #define MAKE_TX_MIX(VEC_EVENTS, TX_NAME, FROM, TO, AMOUNT, NMIX, HEAD)                       \

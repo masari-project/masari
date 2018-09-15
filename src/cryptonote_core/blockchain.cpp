@@ -3059,7 +3059,7 @@ bool Blockchain::check_block_timestamp(std::vector<uint64_t>& timestamps, const 
   uint64_t top_block_timestamp = timestamps.empty() ? b.timestamp : timestamps.back();
   if (hf_version > 5 && b.timestamp < top_block_timestamp - CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V6)
   {
-    MERROR_VER("Timestamp of block with id: " << get_block_hash(b) << ", " << b.timestamp << ", is less than top block timestamp - FTL " << top_block_timestamp - CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V6);
+    MERROR_VER("Timestamp " << b.timestamp << " of block id: " << get_block_hash(b) << ", is less than top block timestamp - FTL = " << top_block_timestamp - CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V6);
     return false;
   }
 
@@ -3537,8 +3537,6 @@ leave:
   if(m_db->height())
   {
     cumulative_difficulty += m_db->get_block_cumulative_difficulty(m_db->height() - 1);
-    if(uncle_included)
-      cumulative_difficulty += previous_diffic;
   }
 
   TIME_MEASURE_FINISH(block_processing_time);
