@@ -219,6 +219,16 @@ int main(int argc, char* argv[])
     GENERATE_AND_PLAY(gen_multisig_tx_invalid_33_1_2_no_threshold);
     GENERATE_AND_PLAY(gen_multisig_tx_invalid_33_1_3_no_threshold);
 
+    GENERATE_AND_PLAY(gen_uncles);
+    /* TODO-TK:
+     * difficulty adjustment verification
+     * permanent storage verification
+     */
+    //GENERATE_AND_PLAY(gen_uncle_is_parent);
+    //GENERATE_AND_PLAY(gen_uncle_hash_too_low);
+    //GENERATE_AND_PLAY(spend_uncle_original_miner_tx);
+    //GENERATE_AND_PLAY(spend_uncle_mined_txs);
+
     el::Level level = (failed_tests.empty() ? el::Level::Info : el::Level::Error);
     MLOG(level, "\nREPORT:");
     MLOG(level, "  Test run: " << tests_count);

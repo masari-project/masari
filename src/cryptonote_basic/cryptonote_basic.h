@@ -349,7 +349,7 @@ namespace cryptonote
 
     // hash cash
     mutable crypto::hash hash;
-    mutable crypto::hash uncle;
+    mutable crypto::hash uncle = crypto::null_hash;
 
     BEGIN_SERIALIZE_OBJECT()
       if (!typename Archive<W>::is_saving())

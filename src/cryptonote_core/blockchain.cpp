@@ -3056,7 +3056,7 @@ bool Blockchain::check_block_timestamp(std::vector<uint64_t>& timestamps, const 
   uint8_t hf_version = get_current_hard_fork_version();
   size_t blockchain_timestamp_check_window = hf_version < 2 ? BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW : BLOCKCHAIN_TIMESTAMP_CHECK_WINDOW_V2;
 
-  uint64_t top_block_timestamp = timestamps.back();
+  uint64_t top_block_timestamp = timestamps.empty() ? b.timestamp : timestamps.back();
   if (hf_version > 5 && b.timestamp < top_block_timestamp - CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V6)
   {
     MERROR_VER("Timestamp of block with id: " << get_block_hash(b) << ", " << b.timestamp << ", is less than top block timestamp - FTL " << top_block_timestamp - CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V6);
@@ -3224,12 +3224,17 @@ leave:
     if (is_uncle_block_included(bl))
     {
       bool orphan = false;
-      get_block_by_hash(bl.uncle, uncle, &orphan);
+      bool found = get_block_by_hash(bl.uncle, uncle, &orphan);
+      if (!found) {
+        MERROR_VER("Uncle block with hash " << bl.uncle << " for block " << bl.hash << " not found");
+        bvc.m_verifivation_failed = true;
+        goto leave;
+      }
 
       if (uncle.major_version != bl.major_version)
       {
         LOG_PRINT_L0("Uncle block failed major version check");
-        MERROR_VER("Block with id: " << id << std::endl << "has invalid uncle block major version: " << uncle.major_version << " which doesn't agree agree with sibling block version: " << bl.major_version);
+        MERROR_VER("Block with id: " << id << std::endl << "has invalid uncle block major version: " << uncle.major_version << " which doesn't agree with sibling block version: " << bl.major_version);
         bvc.m_verifivation_failed = true;
         goto leave;
       }

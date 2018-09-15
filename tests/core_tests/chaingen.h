@@ -586,6 +586,14 @@ inline bool do_replay_file(const std::string& filename)
   generator.construct_block(BLK_NAME, PREV_BLOCK, MINER_ACC);                         \
   VEC_EVENTS.push_back(BLK_NAME);
 
+#define PUSH_NEXT_BLOCKV(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER) \
+  generator.construct_block_manually(BLK_NAME, PREV_BLOCK, MINER_ACC, test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_hf_version, MAJOR_VER, MAJOR_VER, 0, crypto::hash(), 0, transaction(), std::vector<crypto::hash>(), 0, 0, MAJOR_VER);         \
+  VEC_EVENTS.push_back(BLK_NAME);
+
+#define MAKE_NEXT_BLOCKV(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER) \
+  cryptonote::block BLK_NAME;                                                         \
+  PUSH_NEXT_BLOCKV(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER);
+
 #define MAKE_NEXT_BLOCK_TX1(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, TX1)         \
   cryptonote::block BLK_NAME;                                                           \
   {                                                                                   \
