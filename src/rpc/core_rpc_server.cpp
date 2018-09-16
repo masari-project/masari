@@ -664,11 +664,6 @@ namespace cryptonote
         e.double_spend_seen = false;
       }
 
-      // fill up old style responses too, in case an old wallet asks
-      res.txs_as_hex.push_back(e.as_hex);
-      if (req.decode_as_json)
-        res.txs_as_json.push_back(e.as_json);
-
       // output indices too if not in pool
       if (pool_tx_hashes.find(tx_hash) == pool_tx_hashes.end())
       {
@@ -819,11 +814,6 @@ namespace cryptonote
         e.block_timestamp = m_core.get_blockchain_storage().get_db().get_block_timestamp(e.block_height);
         e.double_spend_seen = false;
       }
-
-      // fill up old style responses too, in case an old wallet asks
-      res.txs_as_hex.push_back(e.as_hex);
-      if (req.decode_as_json)
-        res.txs_as_json.push_back(e.as_json);
 
       // output indices too if not in pool
       if (pool_tx_hashes.find(tx_hash) == pool_tx_hashes.end())
