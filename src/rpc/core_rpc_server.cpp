@@ -1132,6 +1132,15 @@ namespace cryptonote
       return r;
 
     m_core.get_pool_transactions_and_spent_keys_info(res.transactions, res.spent_key_images, !request_has_rpc_origin || !m_restricted);
+    
+    if (req.json_only)
+    {
+      for(auto& tx: res.transactions)
+      {
+        tx.blob_size = 0;
+        tx.tx_blob = "";
+      }
+    }
     res.status = CORE_RPC_STATUS_OK;
     return true;
   }
