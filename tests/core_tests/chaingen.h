@@ -187,7 +187,8 @@ public:
     bf_tx_hashes = 1 << 5,
     bf_diffic    = 1 << 6,
     bf_max_outs  = 1 << 7,
-    bf_hf_version= 1 << 8
+    bf_hf_version= 1 << 8,
+    bf_uncle     = 1 << 9
   };
 
   void get_block_chain(std::vector<block_info>& blockchain, const crypto::hash& head, size_t n) const;
@@ -208,7 +209,7 @@ public:
     const cryptonote::account_base& miner_acc, int actual_params = bf_none, uint8_t major_ver = 0,
     uint8_t minor_ver = 0, uint64_t timestamp = 0, const crypto::hash& prev_id = crypto::hash(),
     const cryptonote::difficulty_type& diffic = 1, const cryptonote::transaction& miner_tx = cryptonote::transaction(),
-    const std::vector<crypto::hash>& tx_hashes = std::vector<crypto::hash>(), size_t txs_sizes = 0, size_t max_outs = 999, uint8_t hf_version = 1, uint64_t block_fees = 0);
+    const std::vector<crypto::hash>& tx_hashes = std::vector<crypto::hash>(), size_t txs_sizes = 0, size_t max_outs = 999, uint8_t hf_version = 1, uint64_t block_fees = 0, const cryptonote::block& uncle = cryptonote::block());
   bool construct_block_manually_tx(cryptonote::block& blk, const cryptonote::block& prev_block,
     const cryptonote::account_base& miner_acc, const std::vector<crypto::hash>& tx_hashes, size_t txs_size, uint64_t block_fees = 0);
 
@@ -593,6 +594,12 @@ inline bool do_replay_file(const std::string& filename)
 #define MAKE_NEXT_BLOCKV(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER) \
   cryptonote::block BLK_NAME;                                                         \
   PUSH_NEXT_BLOCKV(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER);
+
+#define MAKE_NEXT_BLOCKV_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE) \
+  cryptonote::block BLK_NAME;                                                         \
+  BLK_NAME.uncle = cryptonote::get_block_hash(UNCLE);                                                \
+  generator.construct_block_manually(BLK_NAME, PREV_BLOCK, MINER_ACC, test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_hf_version | test_generator::bf_uncle, MAJOR_VER, MAJOR_VER, 0, crypto::hash(), 0, transaction(), std::vector<crypto::hash>(), 0, 0, MAJOR_VER, 0, UNCLE); \
+  VEC_EVENTS.push_back(BLK_NAME);
 
 #define MAKE_NEXT_BLOCK_TX1(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, TX1)         \
   cryptonote::block BLK_NAME;                                                           \

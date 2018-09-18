@@ -74,16 +74,16 @@ namespace cryptonote
     LOG_PRINT_L2("destinations include " << num_stdaddresses << " standard addresses and " << num_subaddresses << " subaddresses");
   }
   //---------------------------------------------------------------
-  bool construct_miner_tx(size_t height, size_t median_size, uint64_t already_generated_coins, size_t current_block_size, uint64_t fee, std::string miner_address_str, transaction& tx, const blobdata& extra_nonce, size_t max_outs, uint8_t hard_fork_version, bool nephew_reward) {
+  bool construct_miner_tx(size_t height, size_t median_size, uint64_t already_generated_coins, size_t current_block_size, uint64_t fee, std::string miner_address_str, transaction& tx, const blobdata& extra_nonce, size_t max_outs, uint8_t hard_fork_version, bool uncle_included /*= false*/, uint64_t* ref_block_reward /*= 0*/) {
     tx.vin.clear();
     tx.vout.clear();
     tx.extra.clear();
 
     hw::device &hwdev = hw::get_device("default");
     keypair txkey = keypair::generate(hwdev);
-    
+
     cryptonote::address_parse_info info;
-    
+
     if(!get_account_address_from_str(info, cryptonote::MAINNET, miner_address_str))
     {
       if(!get_account_address_from_str(info, cryptonote::TESTNET, miner_address_str))
@@ -91,9 +91,9 @@ namespace cryptonote
         get_account_address_from_str(info, cryptonote::STAGENET, miner_address_str);
       }
     }
-	
+
     cryptonote::account_public_address miner_address = info.address;
-    
+
     if(info.is_subaddress)
     {
       txkey.pub = rct::rct2pk(hwdev.scalarmultKey(rct::pk2rct(miner_address.m_spend_public_key), rct::sk2rct(txkey.sec)));
@@ -112,13 +112,17 @@ namespace cryptonote
       LOG_PRINT_L0("Block is too big");
       return false;
     }
+    // TODO-TK: this is crappy, find a better way
+    if (ref_block_reward) {
+      *ref_block_reward = block_reward;
+    }
 
 #if defined(DEBUG_CREATE_BLOCK_TEMPLATE)
     LOG_PRINT_L1("Creating block template: reward " << block_reward <<
       ", fee " << fee);
 #endif
 
-    block_reward += nephew_reward ? (fee + block_reward / NEPHEW_REWARD_RATIO) : fee;
+    block_reward += uncle_included ? (fee + block_reward / NEPHEW_REWARD_RATIO) : fee;
 
     crypto::key_derivation derivation = AUTO_VAL_INIT(derivation);;
     crypto::public_key out_eph_public_key = AUTO_VAL_INIT(out_eph_public_key);
@@ -149,13 +153,8 @@ namespace cryptonote
     return true;
   }
   //---------------------------------------------------------------
-  bool construct_uncle_miner_tx(size_t height, uint64_t amount, crypto::public_key out_eph_public_key, crypto::public_key tx_pubkey, transaction& tx) {
-    tx.vin.clear();
-    tx.vout.clear();
-    tx.extra.clear();
-
-    add_tx_pub_key_to_extra(tx, tx_pubkey);
-
+  bool construct_uncle_miner_tx(size_t height, uint64_t amount, crypto::public_key out_eph_public_key, crypto::public_key, transaction& tx)
+  {
     txin_gen in;
     in.height = height;
 
@@ -167,13 +166,10 @@ namespace cryptonote
     out.target = tk;
     tx.vout.push_back(out);
 
-    tx.version = CURRENT_TRANSACTION_VERSION;
-
     //lock
-    tx.unlock_time = height + CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
     tx.vin.push_back(in);
-
     tx.invalidate_hashes();
+
     return true;
   }
   //---------------------------------------------------------------

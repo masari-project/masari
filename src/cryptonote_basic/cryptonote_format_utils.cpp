@@ -494,7 +494,7 @@ namespace cryptonote
   //---------------------------------------------------------------
   uint64_t get_block_height(const block& b)
   {
-    CHECK_AND_ASSERT_MES(b.miner_tx.vin.size() == 1, 0, "wrong miner tx in block: " << get_block_hash(b) << ", b.miner_tx.vin.size() != 1");
+    CHECK_AND_ASSERT_MES(b.miner_tx.vin.size() == (is_uncle_block_included(b) ? 2 : 1), 0, "wrong miner tx number in block: " << get_block_hash(b));
     CHECKED_GET_SPECIFIC_VARIANT(b.miner_tx.vin[0], const txin_gen, coinbase_in, 0);
     return coinbase_in.height;
   }

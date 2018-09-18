@@ -219,7 +219,7 @@ bool test_generator::construct_block_manually(block& blk, const block& prev_bloc
                                               const crypto::hash& prev_id/* = crypto::hash()*/, const difficulty_type& diffic/* = 1*/,
                                               const transaction& miner_tx/* = transaction()*/,
                                               const std::vector<crypto::hash>& tx_hashes/* = std::vector<crypto::hash>()*/,
-                                              size_t txs_sizes/* = 0*/, size_t max_outs/* = 0*/, uint8_t hf_version/* = 1*/, uint64_t block_fees/* = 0*/)
+                                              size_t txs_sizes/* = 0*/, size_t max_outs/* = 0*/, uint8_t hf_version/* = 1*/, uint64_t block_fees/* = 0*/, const cryptonote::block& uncle /*= &cryptonote::block()*/)
 {
   blk.major_version = actual_params & bf_major_ver ? major_ver : CURRENT_BLOCK_MAJOR_VERSION;
   blk.minor_version = actual_params & bf_minor_ver ? minor_ver : CURRENT_BLOCK_MINOR_VERSION;
@@ -229,6 +229,9 @@ bool test_generator::construct_block_manually(block& blk, const block& prev_bloc
   max_outs          = actual_params & bf_max_outs ? max_outs : 9999;
   hf_version        = actual_params & bf_hf_version ? hf_version : 1;
 
+  bool uncle_included = blk.uncle == uncle.hash;
+
+  uint64_t block_reward;
   size_t height = get_block_height(prev_block) + 1;
   uint64_t already_generated_coins = get_already_generated_coins(prev_block);
   std::vector<size_t> block_sizes;
@@ -241,8 +244,16 @@ bool test_generator::construct_block_manually(block& blk, const block& prev_bloc
   {
     size_t current_block_size = txs_sizes + get_object_blobsize(blk.miner_tx);
     // TODO: This will work, until size of constructed block is less then CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE
-    if (!construct_miner_tx(height, misc_utils::median(block_sizes), already_generated_coins, current_block_size, block_fees, miner_acc.get_public_address_str(MAINNET), blk.miner_tx, blobdata(), max_outs, hf_version))
+    if (!construct_miner_tx(height, misc_utils::median(block_sizes), already_generated_coins, current_block_size, block_fees, miner_acc.get_public_address_str(MAINNET), blk.miner_tx, blobdata(), max_outs, hf_version, uncle_included, &block_reward))
       return false;
+  }
+
+  if (uncle_included) {
+    crypto::public_key uncle_out = boost::get<txout_to_key>(uncle.miner_tx.vout[0].target).key;
+    crypto::public_key uncle_tx_pubkey = get_tx_pub_key_from_extra(uncle.miner_tx);
+    if (!construct_uncle_miner_tx(height, block_reward, uncle_out, uncle_tx_pubkey, blk.miner_tx)) {
+      return false;
+    }
   }
 
   //blk.tree_root_hash = get_tx_tree_hash(blk);

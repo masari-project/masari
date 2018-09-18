@@ -53,11 +53,7 @@ bool gen_uncles::generate(std::vector<test_event_entry> &events) const
   MAKE_NEXT_BLOCKV(events, blk_1a, blk_j, first_miner_account, 8);
   MAKE_NEXT_BLOCKV(events, blk_1b, blk_j, first_miner_account, 8);
 
-  // uncle referenced
-  // work-in-progress
-  cryptonote::block blk_2;
-  blk_2.uncle = get_block_hash(blk_1b);
-  PUSH_NEXT_BLOCKV(events, blk_2, blk_1a, first_miner_account, 8);
+  MAKE_NEXT_BLOCKV_UNCLE(events, blk_2, blk_1a, first_miner_account, 8, blk_1b);
 
   MAKE_NEXT_BLOCKV(events, blk_3, blk_2, first_miner_account, 8);
   return true;

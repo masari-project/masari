@@ -1069,16 +1069,23 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
 bool Blockchain::prevalidate_miner_transaction(const block& b, uint64_t height)
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
-  CHECK_AND_ASSERT_MES(b.miner_tx.vin.size() == 1, false, "coinbase transaction in the block has no inputs");
-  CHECK_AND_ASSERT_MES(b.miner_tx.vin[0].type() == typeid(txin_gen), false, "coinbase transaction in the block has the wrong type");
-  if(boost::get<txin_gen>(b.miner_tx.vin[0]).height != height)
+  bool uncle_included = is_uncle_block_included(b);
+  CHECK_AND_ASSERT_MES(b.miner_tx.vin.size() == (uncle_included ? 2 : 1), false, "coinbase transaction in the block has no inputs");
+  for (auto& vin : b.miner_tx.vin)
   {
-    MWARNING("The miner transaction in block has invalid height: " << boost::get<txin_gen>(b.miner_tx.vin[0]).height << ", expected: " << height);
-    return false;
+    CHECK_AND_ASSERT_MES(vin.type() == typeid(txin_gen), false, "coinbase transaction in the block has the wrong type");
+    if(boost::get<txin_gen>(vin).height != height)
+    {
+      MWARNING("The miner transaction in block has invalid height: " << boost::get<txin_gen>(vin).height << ", expected: " << height);
+      return false;
+    }
   }
   MDEBUG("Miner tx hash: " << get_transaction_hash(b.miner_tx));
   CHECK_AND_ASSERT_MES(b.miner_tx.unlock_time == height + CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW, false, "coinbase transaction transaction has the wrong unlock time=" << b.miner_tx.unlock_time << ", expected " << height + CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW);
 
+  if (uncle_included) {
+    MDEBUG("Uncle tx hash: " << b.uncle);
+  }
   //check outs overflow
   //NOTE: not entirely sure this is necessary, given that this function is
   //      designed simply to make sure the total amount for a transaction
@@ -1096,10 +1103,26 @@ bool Blockchain::prevalidate_miner_transaction(const block& b, uint64_t height)
 bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_block_size, uint64_t fee, uint64_t& base_reward, uint64_t already_generated_coins, bool &partial_block_reward, uint8_t version)
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
+
+  uint64_t miner_reward = b.miner_tx.vout[0].amount;
+  uint64_t uncle_reward = 0;
+  bool uncle_included = m_hardfork->get_current_version() > 7 && is_uncle_block_included(b);
+  if (uncle_included) {
+    uncle_reward = b.miner_tx.vout[1].amount;
+  }
+
   //validate reward
   uint64_t money_in_use = 0;
-  for (auto& o: b.miner_tx.vout)
+  for (auto& o: b.miner_tx.vout) {
     money_in_use += o.amount;
+  }
+
+  if (money_in_use != miner_reward + uncle_reward)
+  {
+    MERROR_VER("Unexpected number of coinbase transactions " << money_in_use << ", expected amount is " << miner_reward << " (miner_reward) + " << uncle_reward << " (uncle reward)");
+    return false;
+  }
+
   partial_block_reward = false;
 
   std::vector<size_t> last_blocks_sizes;
@@ -1109,23 +1132,30 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
     MERROR_VER("block size " << cumulative_block_size << " is bigger than allowed for this blockchain");
     return false;
   }
-  uint64_t max_nephew_reward = m_hardfork->get_current_version() > 7 && is_uncle_block_included(b) ? base_reward / NEPHEW_REWARD_RATIO : 0;
-  uint64_t max_reward = base_reward + fee + max_nephew_reward;
 
-  if(max_reward < money_in_use)
+  uint64_t max_uncle_reward = uncle_included ? base_reward / UNCLE_REWARD_RATIO : 0;
+  uint64_t max_nephew_reward = uncle_included ? base_reward / NEPHEW_REWARD_RATIO : 0;
+  uint64_t max_miner_reward = base_reward + fee + max_nephew_reward;
+  uint64_t max_block_reward = max_miner_reward + max_uncle_reward;
+
+  if(max_block_reward != money_in_use)
   {
-    MERROR_VER("coinbase transaction spend too much money (" << print_money(money_in_use) << "). Block reward is " << print_money(max_reward) << "(" << print_money(base_reward) << "+" << print_money(fee) << "+" << print_money(max_nephew_reward) << ")");
+    MDEBUG("coinbase transaction doesn't use full amount of block reward:  spent: " << money_in_use << ",  block reward " << max_block_reward << "(" << base_reward << "+" << fee << "+" << max_nephew_reward << "+" << max_uncle_reward << ")");
     return false;
   }
 
-  if (m_hardfork->get_current_version() >= 1)
+  if (b.miner_tx.vout[0].amount != max_miner_reward)
   {
-    if(base_reward + fee != money_in_use)
-    {
-      MDEBUG("coinbase transaction doesn't use full amount of block reward:  spent: " << money_in_use << ",  block reward " << base_reward + fee << "(" << base_reward << "+" << fee << ")");
-      return false;
-    }
+    MDEBUG("Miner isn't rewarded the correct amount, reported is " << b.miner_tx.vout[0].amount << " and expected is " << max_miner_reward);
+    return false;
   }
+
+  if (uncle_included && b.miner_tx.vout[1].amount != max_uncle_reward)
+  {
+    MDEBUG("Uncle isn't rewarded the correct amount, reported is " << b.miner_tx.vout[1].amount << " and expected is " << max_uncle_reward);
+    return false;
+  }
+
   return true;
 }
 //------------------------------------------------------------------
@@ -1208,19 +1238,20 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
       // if top block hash isn't lowest then reorg
       if(strcmp(top_block_hash.data, alt_block_hash.data) > 0) // TODO-TK: enforcing this needs a revisit to see which weight is heavier
       {
-         LOG_PRINT_L2("Attempting to reorganize for uncle block");
-         block old_top = pop_block_from_blockchain();
-         block_verification_context bvcontext;
-         if(!handle_block_to_main_chain(last_alt_block, bvcontext))
-           LOG_ERROR("Failed to add alternative block as top block");
+        LOG_PRINT_L2("Attempting to reorganize for uncle block");
+        block old_top = pop_block_from_blockchain();
+        block_verification_context bvcontext;
+        if(!handle_block_to_main_chain(last_alt_block, bvcontext)) {
+          LOG_ERROR("Failed to add alternative block as top block");
+        }
 
-         LOG_PRINT_L3("Reoganization for uncle block success");
+        LOG_PRINT_L3("Reoganization for uncle block success");
 
-         LOG_PRINT_L2("Setting uncle to nephew");
-         b.uncle = get_block_hash(old_top);
-         uncle = old_top;
-         uncle_out = boost::get<txout_to_key>(old_top.miner_tx.vout[0].target).key;
-         uncle_tx_pubkey = get_tx_pub_key_from_extra(old_top.miner_tx);
+        LOG_PRINT_L2("Setting uncle to nephew");
+        b.uncle = get_block_hash(old_top);
+        uncle = old_top;
+        uncle_out = boost::get<txout_to_key>(old_top.miner_tx.vout[0].target).key;
+        uncle_tx_pubkey = get_tx_pub_key_from_extra(old_top.miner_tx);
       }
       // if top block has lowest hash then the alternative block is the uncle
       else
@@ -1307,7 +1338,11 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
    */
   //make blocks coin-base tx looks close to real coinbase tx to get truthful blob size
   uint8_t hf_version = m_hardfork->get_current_version();
-  bool r = construct_miner_tx(height, median_size, already_generated_coins, txs_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version, uncle_included);
+  uint64_t block_reward;
+  bool r = construct_miner_tx(height, median_size, already_generated_coins, txs_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version, uncle_included, &block_reward);
+  if (uncle_included) {
+    construct_uncle_miner_tx(height, block_reward, uncle_out, uncle_tx_pubkey, b.miner_tx);
+  }
   CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, first chance");
   size_t cumulative_size = txs_size + get_object_blobsize(b.miner_tx);
 #if defined(DEBUG_CREATE_BLOCK_TEMPLATE)
@@ -1317,6 +1352,9 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
   for (size_t try_count = 0; try_count != 10; ++try_count)
   {
     r = construct_miner_tx(height, median_size, already_generated_coins, cumulative_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version, uncle_included);
+    if (uncle_included) {
+      construct_uncle_miner_tx(height, b.miner_tx.vout[0].amount, uncle_out, uncle_tx_pubkey, b.miner_tx);
+    }
 
     CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, second chance");
     size_t coinbase_blob_size = get_object_blobsize(b.miner_tx);
@@ -1359,10 +1397,6 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
     MDEBUG("Creating block template: miner tx size " << coinbase_blob_size <<
         ", cumulative size " << cumulative_size << " is now good");
 #endif
-
-    // TODO-TK: this needs to be part of nephew's coinbase (can't invalidate uncle hash)
-    if (uncle_tx_pubkey != null_pkey && uncle_out != null_pkey)
-      construct_uncle_miner_tx(height, b.miner_tx.vout[0].amount, uncle_out , uncle_tx_pubkey, uncle.miner_tx);
 
     return true;
   }
@@ -3214,14 +3248,14 @@ leave:
     goto leave;
   }
 
-  bool uncle_included = false;
+  bool uncle_included = is_uncle_block_included(bl);
   cryptonote::block uncle;
   difficulty_type previous_diffic;
   // only allow uncle blocks after version 7
   if (bl.major_version > 7)
   {
     // do some validation on the uncle block if it's included
-    if (is_uncle_block_included(bl))
+    if (uncle_included)
     {
       bool orphan = false;
       bool found = get_block_by_hash(bl.uncle, uncle, &orphan);
@@ -3260,7 +3294,6 @@ leave:
         bvc.m_verifivation_failed = true;
         goto leave;
       }
-      uncle_included = true;
     }
   }
 
@@ -3500,20 +3533,6 @@ leave:
     goto leave;
   }
 
-  // TODO-TK: this needs to be part of nephew's coinbase (can't invalidate uncle hash)
-  uint64_t uncle_reward_money = 0;
-  if(uncle_included)
-  {
-    for(auto& o: uncle.miner_tx.vout)
-      uncle_reward_money += o.amount;
-    if(uncle_reward_money > (base_reward / UNCLE_REWARD_RATIO))
-    {
-      MERROR_VER("Block with id: " << id << std::endl << " has an uncle with an invalid reward amount: " << uncle_reward_money << std::endl << "expected: " << base_reward / UNCLE_REWARD_RATIO);
-      bvc.m_verifivation_failed = true;
-      goto leave;
-    }
-  }
-
   TIME_MEASURE_FINISH(vmt);
   size_t block_size;
   difficulty_type cumulative_difficulty;
@@ -3526,13 +3545,7 @@ leave:
   // at MONEY_SUPPLY. already_generated_coins is only used to compute the block subsidy and MONEY_SUPPLY yields a
   // subsidy of 0 under the base formula and therefore the minimum subsidy >0 in the tail state.
 
-  if (m_hardfork->get_current_version() > 7 && uncle_included)
-  {
-    already_generated_coins = base_reward < (MONEY_SUPPLY-already_generated_coins) ? already_generated_coins + base_reward + uncle_reward_money + (base_reward / UNCLE_REWARD_RATIO): MONEY_SUPPLY;
-  } else
-  {
-    already_generated_coins = base_reward < (MONEY_SUPPLY-already_generated_coins) ? already_generated_coins + base_reward: MONEY_SUPPLY;
-  }
+  already_generated_coins = base_reward < (MONEY_SUPPLY-already_generated_coins) ? already_generated_coins + base_reward: MONEY_SUPPLY;
 
   if(m_db->height())
   {
@@ -3577,7 +3590,7 @@ leave:
   // do this after updating the hard fork state since the size limit may change due to fork
   update_next_cumulative_size_limit();
 
-  MINFO("+++++ BLOCK SUCCESSFULLY ADDED" << std::endl << "id:\t" << id << std::endl << "PoW:\t" << proof_of_work << std::endl << "HEIGHT " << new_height-1 << ", difficulty:\t" << current_diffic << std::endl << "block reward: " << print_money(fee_summary + base_reward) << "(" << print_money(base_reward) << " + " << print_money(fee_summary) << "), coinbase_blob_size: " << coinbase_blob_size << ", cumulative size: " << cumulative_block_size << ", " << block_processing_time << "(" << target_calculating_time << "/" << longhash_calculating_time << ")ms");
+  MINFO("+++++ BLOCK SUCCESSFULLY ADDED" << std::endl << "id:\t" << id << std::endl << "PoW:\t" << proof_of_work << std::endl << "HEIGHT " << new_height-1 << ", difficulty:\t" << current_diffic << std::endl << "block reward: " << print_money(fee_summary + base_reward) << "(" << print_money(base_reward) << " + " << print_money(fee_summary) << "), coinbase_blob_size: " << coinbase_blob_size << ", cumulative size: " << cumulative_block_size << ", " << block_processing_time << "(" << target_calculating_time << "/" << longhash_calculating_time << ")ms, uncle: " << bl.uncle);
   if(m_show_time_stats)
   {
     MINFO("Height: " << new_height << " blob: " << coinbase_blob_size << " cumm: "
