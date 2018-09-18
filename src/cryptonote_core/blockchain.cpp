@@ -1129,6 +1129,22 @@ bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
     return false;
   }
 
+  crypto::public_key nephew_uncle_out = boost::get<txout_to_key>(nephew.miner_tx.vout[1].target).key;
+  crypto::public_key uncle_out = boost::get<txout_to_key>(uncle.miner_tx.vout[0].target).key;
+  if (nephew_uncle_out != uncle_out)
+  {
+    MDEBUG("Nephew's uncle reward transaction is to " << nephew_uncle_out << " and not being rewarded to uncle out " << uncle_out);
+    return false;
+  }
+
+  crypto::public_key nephew_uncle_tx_pubkey = get_tx_pub_key_from_extra(nephew.miner_tx, 1);
+  crypto::public_key uncle_tx_pubkey = get_tx_pub_key_from_extra(uncle.miner_tx, 0);
+  if (nephew_uncle_tx_pubkey != uncle_tx_pubkey)
+  {
+    MDEBUG("Nephew's uncle tx public key " << nephew_uncle_tx_pubkey << " is not the same as uncle's tx public key " << uncle_tx_pubkey);
+    return false;
+  }
+
   // uncle validations passed
   return true;
 }

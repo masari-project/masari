@@ -153,8 +153,11 @@ namespace cryptonote
     return true;
   }
   //---------------------------------------------------------------
-  bool construct_uncle_miner_tx(size_t height, uint64_t amount, crypto::public_key out_eph_public_key, crypto::public_key, transaction& tx)
+  bool construct_uncle_miner_tx(size_t height, uint64_t amount, crypto::public_key out_eph_public_key, crypto::public_key tx_pubkey, transaction& tx)
   {
+
+    add_tx_pub_key_to_extra(tx, tx_pubkey);
+
     txin_gen in;
     in.height = height;
 
