@@ -1099,6 +1099,41 @@ bool Blockchain::prevalidate_miner_transaction(const block& b, uint64_t height)
   return true;
 }
 //------------------------------------------------------------------
+
+bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
+{
+  crypto::hash nephew_id = get_block_hash(nephew);
+  difficulty_type previous_diffic;
+
+  if (uncle.major_version != nephew.major_version)
+  {
+    MDEBUG("Nephew " << nephew_id << std::endl << "has invalid uncle block major version: " << uncle.major_version << " which doesn't agree with sibling block version: " << nephew.major_version);
+    return false;
+  }
+
+  // check that the uncle block is on top of the second to last block in the main chain
+  block previous_block = m_db->get_block_from_height(m_db->height() - 2);
+  crypto::hash previous_block_hash = get_block_hash(previous_block);
+  if (previous_block_hash != uncle.prev_id)
+  {
+    MDEBUG("Nephew " << nephew_id << std::endl << "has uncle block with invalid previous hash: " << uncle.prev_id << " Expected: " << previous_block_hash);
+    return false;
+  }
+
+  previous_diffic = get_difficulty_for_next_block(true);
+  crypto::hash uncle_proof_of_work = get_block_longhash(uncle);
+  // validate proof of work versus difficulty target
+  if(!check_hash(uncle_proof_of_work, previous_diffic))
+  {
+    MDEBUG("Nephew " << nephew_id << std::endl << " has an uncle that does not have enough proof of work: " << uncle_proof_of_work << std::endl << "unexpected difficulty: " << previous_diffic);
+    return false;
+  }
+
+  // uncle validations passed
+  return true;
+}
+
+//------------------------------------------------------------------
 // This function validates the miner transaction reward
 bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_block_size, uint64_t fee, uint64_t& base_reward, uint64_t already_generated_coins, bool &partial_block_reward, uint8_t version)
 {
@@ -1106,7 +1141,7 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
 
   uint64_t miner_reward = b.miner_tx.vout[0].amount;
   uint64_t uncle_reward = 0;
-  bool uncle_included = m_hardfork->get_current_version() > 7 && is_uncle_block_included(b);
+  bool uncle_included = is_uncle_block_included(b);
   if (uncle_included) {
     uncle_reward = b.miner_tx.vout[1].amount;
   }
@@ -3248,55 +3283,6 @@ leave:
     goto leave;
   }
 
-  bool uncle_included = is_uncle_block_included(bl);
-  cryptonote::block uncle;
-  difficulty_type previous_diffic;
-  // only allow uncle blocks after version 7
-  if (bl.major_version > 7)
-  {
-    // do some validation on the uncle block if it's included
-    if (uncle_included)
-    {
-      bool orphan = false;
-      bool found = get_block_by_hash(bl.uncle, uncle, &orphan);
-      if (!found) {
-        MERROR_VER("Uncle block with hash " << bl.uncle << " for block " << bl.hash << " not found");
-        bvc.m_verifivation_failed = true;
-        goto leave;
-      }
-
-      if (uncle.major_version != bl.major_version)
-      {
-        LOG_PRINT_L0("Uncle block failed major version check");
-        MERROR_VER("Block with id: " << id << std::endl << "has invalid uncle block major version: " << uncle.major_version << " which doesn't agree with sibling block version: " << bl.major_version);
-        bvc.m_verifivation_failed = true;
-        goto leave;
-      }
-      // check that the uncle block is on top of the second to last block in the main chain
-      block previous_block = m_db->get_block_from_height(m_db->height() - 2);
-      crypto::hash previous_block_hash = get_block_hash(previous_block);
-      if (previous_block_hash != uncle.prev_id)
-      {
-        LOG_PRINT_L0("Uncle block failed previous hash check");
-        MERROR_VER("Block with id: " << id << std::endl << "has uncle block with invalid previous hash: " << uncle.prev_id << " Expected: " << previous_block_hash);
-        bvc.m_verifivation_failed = true;
-        goto leave;
-      }
-      // TODO-TK: ensure uncle is part of main block's hash
-
-      previous_diffic = get_difficulty_for_next_block(true);
-      crypto::hash uncle_proof_of_work = get_block_longhash(uncle);
-      // validate proof of work versus difficulty target
-      if(!check_hash(uncle_proof_of_work, previous_diffic))
-      {
-        LOG_PRINT_L0("Uncle block failed PoW check");
-        MERROR_VER("Block with id: " << id << std::endl << " has an uncle that does not have enough proof of work: " << uncle_proof_of_work << std::endl << "unexpected difficulty: " << previous_diffic);
-        bvc.m_verifivation_failed = true;
-        goto leave;
-      }
-    }
-  }
-
   TIME_MEASURE_FINISH(t1);
   TIME_MEASURE_START(t2);
 
@@ -3531,6 +3517,26 @@ leave:
     bvc.m_verifivation_failed = true;
     return_tx_to_pool(txs);
     goto leave;
+  }
+
+  bool uncle_included = is_uncle_block_included(bl);
+  cryptonote::block uncle;
+  // only allow uncle blocks after version 7
+  if (uncle_included)
+  {
+    bool orphan = false;
+    bool found = get_block_by_hash(bl.uncle, uncle, &orphan);
+    if (!found) {
+      MERROR_VER("Uncle block with hash " << bl.uncle << " for block " << bl.hash << " not found");
+      bvc.m_verifivation_failed = true;
+      goto leave;
+    }
+
+    if (!validate_mined_uncle(bl, uncle)) {
+      MERROR_VER("Uncle block validation failed");
+      bvc.m_verifivation_failed = true;
+      goto leave;
+    }
   }
 
   TIME_MEASURE_FINISH(vmt);

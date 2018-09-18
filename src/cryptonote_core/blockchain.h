@@ -1200,6 +1200,18 @@ namespace cryptonote
     bool validate_miner_transaction(const block& b, size_t cumulative_block_size, uint64_t fee, uint64_t& base_reward, uint64_t already_generated_coins, bool &partial_block_reward, uint8_t version);
 
     /**
+     * @brief validate mined uncle
+     *
+     * This function checks that the uncle block mined is accurately represented.
+     *
+     * @param nephew the block containing the mined uncle
+     * @param uncle the uncle being mined
+     *
+     * @return false if anything is found wrong with the miner transaction, otherwise true
+     */
+    bool validate_mined_uncle(const block& nephew, const block& uncle);
+
+    /**
      * @brief reverts the blockchain to its previous state following a failed switch
      *
      * If Blockchain fails to switch to an alternate chain when it means
