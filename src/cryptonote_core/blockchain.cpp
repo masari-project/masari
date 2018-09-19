@@ -761,7 +761,7 @@ bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orph
 // last DIFFICULTY_BLOCKS_COUNT blocks and passes them to next_difficulty,
 // returning the result of that call.  Ignores the genesis block, and can use
 // less blocks than desired if there aren't enough.
-difficulty_type Blockchain::get_difficulty_for_next_block(bool uncle)
+difficulty_type Blockchain::get_difficulty_for_next_block()
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
@@ -787,12 +787,7 @@ difficulty_type Blockchain::get_difficulty_for_next_block(bool uncle)
   //    of doing 735 (DIFFICULTY_BLOCKS_COUNT).
   if (m_timestamps_and_difficulties_height != 0 && ((height - m_timestamps_and_difficulties_height) == 1) && m_timestamps.size() >= difficulty_blocks_count)
   {
-    // TODO-TK: what case is this height indexing logic for?
-    uint64_t index;
-    if (uncle)
-      index = height - 2;
-    else
-      index = height - 1;
+    uint64_t index = height - 1;
     m_timestamps.push_back(m_db->get_block_timestamp(index));
     m_difficulties.push_back(m_db->get_block_cumulative_difficulty(index));
 
@@ -1103,7 +1098,7 @@ bool Blockchain::prevalidate_miner_transaction(const block& b, uint64_t height)
 bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
 {
   crypto::hash nephew_id = get_block_hash(nephew);
-  difficulty_type previous_diffic;
+  difficulty_type grandparent_difficulty;
 
   if (uncle.major_version != nephew.major_version)
   {
@@ -1111,21 +1106,24 @@ bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
     return false;
   }
 
+  // TODO-TK: this could be invalid if we're not looking at the right chain
+  uint64_t grandparent_height = m_db->height() - 2;
+
   // check that the uncle block is on top of the second to last block in the main chain
-  block previous_block = m_db->get_block_from_height(m_db->height() - 2);
-  crypto::hash previous_block_hash = get_block_hash(previous_block);
-  if (previous_block_hash != uncle.prev_id)
+  block grandparent = m_db->get_block_from_height(grandparent_height);
+  crypto::hash grandparent_hash = get_block_hash(grandparent);
+  if (grandparent_hash != uncle.prev_id)
   {
-    MDEBUG("Nephew " << nephew_id << std::endl << "has uncle block with invalid previous hash: " << uncle.prev_id << " Expected: " << previous_block_hash);
+    MDEBUG("Nephew " << nephew_id << std::endl << "has uncle block with invalid parent hash: " << uncle.prev_id << " Expected: " << grandparent_hash);
     return false;
   }
 
-  previous_diffic = get_difficulty_for_next_block(true);
+  grandparent_difficulty = m_db->get_block_difficulty(grandparent_height);
   crypto::hash uncle_proof_of_work = get_block_longhash(uncle);
   // validate proof of work versus difficulty target
-  if(!check_hash(uncle_proof_of_work, previous_diffic))
+  if(!check_hash(uncle_proof_of_work, grandparent_difficulty))
   {
-    MDEBUG("Nephew " << nephew_id << std::endl << " has an uncle that does not have enough proof of work: " << uncle_proof_of_work << std::endl << "unexpected difficulty: " << previous_diffic);
+    MDEBUG("Nephew " << nephew_id << std::endl << " has an uncle that does not have enough proof of work: " << uncle_proof_of_work << std::endl << "unexpected difficulty: " << grandparent_difficulty);
     return false;
   }
 
