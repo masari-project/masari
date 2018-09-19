@@ -309,6 +309,16 @@ bool BlockchainDB::get_tx(const crypto::hash& h, cryptonote::transaction &tx) co
   return true;
 }
 
+difficulty_type BlockchainDB::get_block_cumulative_difficulty(const crypto::hash& id) const
+{
+    return get_block_cumulative_difficulty(get_block_height(id));
+}
+
+difficulty_type BlockchainDB::get_block_difficulty(const crypto::hash& id) const
+{
+  return get_block_difficulty(get_block_height(id));
+}
+
 transaction BlockchainDB::get_tx(const crypto::hash& h) const
 {
   transaction tx;

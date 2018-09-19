@@ -1085,8 +1085,8 @@ bool Blockchain::prevalidate_miner_transaction(const block& b, uint64_t height)
 
   return true;
 }
-//------------------------------------------------------------------
 
+//------------------------------------------------------------------
 bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
 {
   crypto::hash nephew_id = get_block_hash(nephew);
@@ -1601,7 +1601,7 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
     else
     {
       // passed-in block's previous block's cumulative difficulty, found on the main chain
-      bei.cumulative_difficulty = m_db->get_block_cumulative_difficulty(m_db->get_block_height(b.prev_id));
+      bei.cumulative_difficulty = m_db->get_block_cumulative_difficulty(b.prev_id);
     }
     bei.cumulative_difficulty += current_diff;
 
@@ -3521,8 +3521,16 @@ leave:
     goto leave;
   }
 
+  TIME_MEASURE_FINISH(vmt);
+
+  // populate various metadata about the block to be stored alongside it.
+  size_t block_size = cumulative_block_size;
+  difficulty_type cumulative_difficulty = current_diffic;
+
   bool uncle_included = is_uncle_block_included(bl);
   cryptonote::block uncle;
+  difficulty_type uncle_diffic = 0;
+
   // only allow uncle blocks after version 7
   if (uncle_included)
   {
@@ -3539,15 +3547,11 @@ leave:
       bvc.m_verifivation_failed = true;
       goto leave;
     }
+
+    uncle_diffic = m_db->get_block_difficulty(uncle.prev_id);
+    cumulative_difficulty += uncle_diffic;
   }
 
-  TIME_MEASURE_FINISH(vmt);
-  size_t block_size;
-  difficulty_type cumulative_difficulty;
-
-  // populate various metadata about the block to be stored alongside it.
-  block_size = cumulative_block_size;
-  cumulative_difficulty = current_diffic;
   // In the "tail" state when the minimum subsidy (implemented in get_block_reward) is in effect, the number of
   // coins will eventually exceed MONEY_SUPPLY and overflow a uint64. To prevent overflow, cap already_generated_coins
   // at MONEY_SUPPLY. already_generated_coins is only used to compute the block subsidy and MONEY_SUPPLY yields a
@@ -3598,7 +3602,7 @@ leave:
   // do this after updating the hard fork state since the size limit may change due to fork
   update_next_cumulative_size_limit();
 
-  MINFO("+++++ BLOCK SUCCESSFULLY ADDED" << std::endl << "id:\t" << id << std::endl << "PoW:\t" << proof_of_work << std::endl << "HEIGHT " << new_height-1 << ", difficulty:\t" << current_diffic << std::endl << "block reward: " << print_money(get_outs_money_amount(bl.miner_tx)) << "(" << print_money(base_reward) << " + " << print_money(fee_summary) << " + " << print_money(bl.miner_tx.vout[0].amount - base_reward - fee_summary) /* nephew reward */ << " + " << print_money(bl.miner_tx.vout[1].amount) /* uncle reward */ << "), coinbase_blob_size: " << coinbase_blob_size << ", cumulative size: " << cumulative_block_size << ", " << block_processing_time << "(" << target_calculating_time << "/" << longhash_calculating_time << ")ms, uncle: " << bl.uncle);
+  MINFO("+++++ BLOCK SUCCESSFULLY ADDED" << std::endl << "id:\t" << id << std::endl << "PoW:\t" << proof_of_work << std::endl << "HEIGHT " << new_height-1 << ", difficulty:\t" << current_diffic + uncle_diffic << " (" << current_diffic << "+" << uncle_diffic << ")" << std::endl << "block reward: " << print_money(get_outs_money_amount(bl.miner_tx)) << "(" << print_money(base_reward) << " + " << print_money(fee_summary) << " + " << print_money(bl.miner_tx.vout[0].amount - base_reward - fee_summary) /* nephew reward */ << " + " << print_money(bl.miner_tx.vout[1].amount) /* uncle reward */ << "), coinbase_blob_size: " << coinbase_blob_size << ", cumulative size: " << cumulative_block_size << ", " << block_processing_time << "(" << target_calculating_time << "/" << longhash_calculating_time << ")ms, uncle: " << bl.uncle);
   if(m_show_time_stats)
   {
     MINFO("Height: " << new_height << " blob: " << coinbase_blob_size << " cumm: "

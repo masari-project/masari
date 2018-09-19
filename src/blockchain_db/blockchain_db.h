@@ -926,6 +926,28 @@ public:
   virtual difficulty_type get_block_cumulative_difficulty(const uint64_t& height) const = 0;
 
   /**
+   * @brief fetch a block's cumulative difficulty by hash id (main chain)
+   *
+   * If the block does not exist, the subclass should throw BLOCK_DNE
+   *
+   * @param id the hash id of the block requested
+   *
+   * @return the cumulative difficulty
+   */
+  virtual difficulty_type get_block_cumulative_difficulty(const crypto::hash& id) const;
+
+  /**
+   * @brief fetch a block's difficulty by hash id (main chain)
+   *
+   * If the block does not exist, the subclass should throw BLOCK_DNE
+   *
+   * @param id the hash id of the block requested
+   *
+   * @return the cumulative difficulty
+   */
+  virtual difficulty_type get_block_difficulty(const crypto::hash& id) const;
+
+  /**
    * @brief fetch a block's difficulty
    *
    * The subclass should return the difficulty of the block with the
