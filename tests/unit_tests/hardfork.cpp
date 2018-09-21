@@ -62,9 +62,12 @@ public:
   virtual void drop_hard_fork_info() {}
   virtual bool block_exists(const crypto::hash& h, uint64_t *height) const { return false; }
   virtual blobdata get_block_blob_from_height(const uint64_t& height) const { return cryptonote::t_serializable_object_to_blob(get_block_from_height(height)); }
+  virtual blobdata get_uncle_blob_from_height(const uint64_t& height) const { return cryptonote::t_serializable_object_to_blob(get_uncle_from_height(height)); }
   virtual blobdata get_block_blob(const crypto::hash& h) const { return blobdata(); }
+  virtual blobdata get_uncle_blob(const crypto::hash& h) const { return blobdata(); }
   virtual bool get_tx_blob(const crypto::hash& h, cryptonote::blobdata &tx) const { return false; }
   virtual uint64_t get_block_height(const crypto::hash& h) const { return 0; }
+  virtual uint64_t get_uncle_height(const crypto::hash& h) const { return 0; }
   virtual block_header get_block_header(const crypto::hash& h) const { return block_header(); }
   virtual uint64_t get_block_timestamp(const uint64_t& height) const { return 0; }
   virtual uint64_t get_top_block_timestamp() const { return 0; }
@@ -124,6 +127,10 @@ public:
   virtual cryptonote::blobdata get_txpool_tx_blob(const crypto::hash& txid) const { return ""; }
   virtual bool for_all_txpool_txes(std::function<bool(const crypto::hash&, const txpool_tx_meta_t&, const cryptonote::blobdata*)>, bool include_blob = false, bool include_unrelayed_txes = false) const { return false; }
 
+  virtual void add_uncle(const block& uncle, const size_t& uncle_size, const difficulty_type& cumulative_difficulty,
+                         const uint64_t& coins_generated, const crypto::hash& uncle_hash, const uint64_t height) {
+    uncles.push_back(uncle);
+  }
   virtual void add_block( const block& blk
                         , const size_t& block_size
                         , const difficulty_type& cumulative_difficulty
@@ -134,6 +141,10 @@ public:
   }
   virtual block get_block_from_height(const uint64_t& height) const {
     return blocks.at(height);
+  }
+  // TODO-TK: vector height != uncle block height here, fix when testing for it
+  virtual block get_uncle_from_height(const uint64_t& height) const {
+    return uncles.at(height);
   }
   virtual void set_hard_fork_version(uint64_t height, uint8_t version) {
     if (versions.size() <= height) 
@@ -147,6 +158,7 @@ public:
 
 private:
   std::vector<block> blocks;
+  std::vector<block> uncles;
   std::deque<uint8_t> versions;
 };
 

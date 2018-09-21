@@ -1,3 +1,4 @@
+// Copyright (c) 2018, The Masari Project
 // Copyright (c) 2014-2018, The Monero Project
 // All rights reserved.
 //
@@ -46,6 +47,10 @@ typedef struct mdb_txn_cursors
   MDB_cursor *m_txc_block_heights;
   MDB_cursor *m_txc_block_info;
 
+  MDB_cursor *m_txc_uncles;
+  MDB_cursor *m_txc_uncle_heights;
+  MDB_cursor *m_txc_uncle_info;
+
   MDB_cursor *m_txc_output_txs;
   MDB_cursor *m_txc_output_amounts;
 
@@ -64,6 +69,9 @@ typedef struct mdb_txn_cursors
 #define m_cur_blocks	m_cursors->m_txc_blocks
 #define m_cur_block_heights	m_cursors->m_txc_block_heights
 #define m_cur_block_info	m_cursors->m_txc_block_info
+#define m_cur_uncles	m_cursors->m_txc_uncles
+#define m_cur_uncle_heights	m_cursors->m_txc_uncle_heights
+#define m_cur_uncle_info	m_cursors->m_txc_uncle_info
 #define m_cur_output_txs	m_cursors->m_txc_output_txs
 #define m_cur_output_amounts	m_cursors->m_txc_output_amounts
 #define m_cur_txs	m_cursors->m_txc_txs
@@ -80,6 +88,9 @@ typedef struct mdb_rflags
   bool m_rf_blocks;
   bool m_rf_block_heights;
   bool m_rf_block_info;
+  bool m_rf_uncles;
+  bool m_rf_uncle_heights;
+  bool m_rf_uncle_info;
   bool m_rf_output_txs;
   bool m_rf_output_amounts;
   bool m_rf_txs;
@@ -180,11 +191,17 @@ public:
 
   virtual bool block_exists(const crypto::hash& h, uint64_t *height = NULL) const;
 
+  virtual uint64_t get_uncle_height(const crypto::hash& h) const;
+
   virtual uint64_t get_block_height(const crypto::hash& h) const;
 
   virtual block_header get_block_header(const crypto::hash& h) const;
 
+  virtual cryptonote::blobdata get_uncle_blob(const crypto::hash& h) const;
+
   virtual cryptonote::blobdata get_block_blob(const crypto::hash& h) const;
+
+  virtual cryptonote::blobdata get_uncle_blob_from_height(const uint64_t& height) const;
 
   virtual cryptonote::blobdata get_block_blob_from_height(const uint64_t& height) const;
 
@@ -299,6 +316,9 @@ private:
   void check_and_resize_for_batch(uint64_t batch_num_blocks, uint64_t batch_bytes);
   uint64_t get_estimated_batch_size(uint64_t batch_num_blocks, uint64_t batch_bytes) const;
 
+  virtual void add_uncle(const block& uncle, const size_t& uncle_size, const difficulty_type& cumulative_difficulty,
+                         const uint64_t& coins_generated, const crypto::hash& uncle_hash, uint64_t height);
+
   virtual void add_block( const block& blk
                 , const size_t& block_size
                 , const difficulty_type& cumulative_difficulty
@@ -378,6 +398,10 @@ private:
   MDB_dbi m_blocks;
   MDB_dbi m_block_heights;
   MDB_dbi m_block_info;
+
+  MDB_dbi m_uncles;
+  MDB_dbi m_uncle_heights;
+  MDB_dbi m_uncle_info;
 
   MDB_dbi m_txs;
   MDB_dbi m_tx_indices;

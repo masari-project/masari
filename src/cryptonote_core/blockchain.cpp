@@ -734,6 +734,7 @@ bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orph
   // try to find block in alternative chain
   catch (const BLOCK_DNE& e)
   {
+    MDEBUG("Looking for block in alternative chains");
     blocks_ext_by_hash::const_iterator it_alt = m_alternative_chains.find(h);
     if (m_alternative_chains.end() != it_alt)
     {
@@ -1057,7 +1058,8 @@ bool Blockchain::prevalidate_miner_transaction(const block& b, uint64_t height)
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
   bool uncle_included = is_uncle_block_included(b);
-  CHECK_AND_ASSERT_MES(b.miner_tx.vin.size() == (uncle_included ? 2 : 1), false, "coinbase transaction in the block has no inputs");
+  size_t expected_vin_size = uncle_included ? 2 : 1;
+  CHECK_AND_ASSERT_MES(b.miner_tx.vin.size() == expected_vin_size, false, "coinbase transaction in the block has " << b.miner_tx.vin.size() << " inputs, expected " << expected_vin_size);
   for (auto& vin : b.miner_tx.vin)
   {
     CHECK_AND_ASSERT_MES(vin.type() == typeid(txin_gen), false, "coinbase transaction in the block has the wrong type");
@@ -3575,7 +3577,12 @@ leave:
   {
     try
     {
-      new_height = m_db->add_block(bl, block_size, cumulative_difficulty, already_generated_coins, txs);
+      if (uncle_included) {
+        uint64_t uncle_size = cryptonote::t_serializable_object_to_blob(uncle).size();
+        new_height = m_db->add_block(bl, block_size, uncle, uncle_size, cumulative_difficulty, already_generated_coins, txs);
+      } else {
+        new_height = m_db->add_block(bl, block_size, cumulative_difficulty, already_generated_coins, txs);
+      }
     }
     catch (const KEY_IMAGE_EXISTS& e)
     {

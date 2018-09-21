@@ -370,6 +370,25 @@ private:
                 ) = 0;
 
   /**
+   * @brief add the uncle and metadata to the db
+   *
+   * Similar description to add_block above
+   *
+   * @param uncle the uncle block to be added
+   * @param uncle_size the size of the uncle block (transactions and all)
+   * @param cumulative_difficulty the accumulated difficulty at height when this uncle was mined
+   * @param coins_generated the number of coins generated total after this uncle block was mined
+   * @param uncle_hash the hash of the uncle block
+   * @param height the height of where the uncle block was mined
+   */
+  virtual void add_uncle(const block& uncle,
+                         const size_t& uncle_size,
+                         const difficulty_type& cumulative_difficulty,
+                         const uint64_t& coins_generated,
+                         const crypto::hash& uncle_hash,
+                         const uint64_t height) = 0;
+
+  /**
    * @brief remove data about the top block
    *
    * The subclass implementing this will remove the block data from the top
@@ -786,6 +805,44 @@ public:
                             );
 
   /**
+   * @brief handles the addition of a new block to BlockchainDB <without a transaction>
+   *
+   * Mostly just a wrapper for the above add_block method
+   *
+   * @param blk the block to be added
+   * @param block_size the size of the block (transactions and all)
+   * @param cumulative_difficulty the accumulated difficulty after this block
+   * @param coins_generated the number of coins generated total after this block
+   * @param txs the transactions in the block
+   *
+   * @return the height of the chain post-addition
+   */
+  virtual uint64_t add_block_raw( const block& blk
+                            , const size_t& block_size
+                            , const difficulty_type& cumulative_difficulty
+                            , const uint64_t& coins_generated
+                            , const std::vector<transaction>& txs
+                            );
+
+  /**
+   * @brief handles the addition of a new uncle mined block to BlockchainDB
+   *
+   * Wraps around the add_block_raw method with the addition of storing uncle blocks
+   *
+   * @param nephew the nephew block to be added
+   * @param nephew_size the size of the block
+   * @param uncle the uncle block to be added
+   * @param uncle_size the size of the block
+   * @param cumulative_difficulty the accumulated difficulty after this block
+   * @param coins_generated the number of coins generated total after this block
+   * @param txs the transactions in the block
+   *
+   * @return the height of the chain post-addition
+   */
+  virtual uint64_t add_block(const block& nephew, const size_t& nephew_size, const block& uncle, const size_t& uncle_size,
+                             const difficulty_type& cumulative_difficulty, const uint64_t& coins_generated,
+                             const std::vector<transaction>& txs);
+  /**
    * @brief checks if a block exists
    *
    * @param h the hash of the requested block
@@ -807,6 +864,19 @@ public:
    * @return the block requested
    */
   virtual cryptonote::blobdata get_block_blob(const crypto::hash& h) const = 0;
+
+  /**
+   * @brief fetches the uncle block with the given hash
+   *
+   * The subclass should return the requested block.
+   *
+   * If the block does not exist, the subclass should throw BLOCK_DNE
+   *
+   * @param h the hash to look for
+   *
+   * @return the block requested
+   */
+  virtual cryptonote::blobdata get_uncle_blob(const crypto::hash& h) const = 0;
 
   /**
    * @brief fetches the block with the given hash
@@ -835,6 +905,19 @@ public:
   virtual uint64_t get_block_height(const crypto::hash& h) const = 0;
 
   /**
+   * @brief gets the height of the uncle block with a given hash
+   *
+   * The subclass should return the requested height.
+   *
+   * If the block does not exist, the subclass should throw BLOCK_DNE
+   *
+   * @param h the hash to look for
+   *
+   * @return the height
+   */
+  virtual uint64_t get_uncle_height(const crypto::hash& h) const = 0;
+
+  /**
    * @brief fetch a block header
    *
    * The subclass should return the block header from the block with
@@ -861,6 +944,20 @@ public:
    * @return the block blob
    */
   virtual cryptonote::blobdata get_block_blob_from_height(const uint64_t& height) const = 0;
+
+  /**
+   * @brief fetch an uncle block blob by mined height
+   *
+   * The subclass should return the uncle block at the given height.
+   *
+   * If the block does not exist, that is to say if the blockchain is not
+   * that high, then the subclass should throw BLOCK_DNE
+   *
+   * @param height the height to look for
+   *
+   * @return the uncle block blob
+   */
+  virtual cryptonote::blobdata get_uncle_blob_from_height(const uint64_t& height) const = 0;
 
   /**
    * @brief fetch a block by height

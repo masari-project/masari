@@ -228,6 +228,7 @@ int main(int argc, char* argv[])
      * ensure uncles are accounted for in max block size calculations
      * ensure emission rates are affected by uncle rewards
      * ensure correct public keys to uncles
+     * investigate possible migration related issues from uncle lmdb storage
      */
     //GENERATE_AND_PLAY(gen_uncle_is_parent);
     //GENERATE_AND_PLAY(gen_uncle_hash_too_low);
