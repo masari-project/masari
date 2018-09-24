@@ -310,6 +310,17 @@ block BlockchainDB::get_block_from_height(const uint64_t& height) const
   return b;
 }
 
+block BlockchainDB::get_uncle(const crypto::hash& h) const
+{
+  blobdata bd = get_uncle_blob(h);
+  block b;
+  if (!parse_and_validate_block_from_blob(bd, b)) {
+    throw DB_ERROR("Failed to parse uncle block from blob retrieved from the db");
+  }
+
+  return b;
+}
+
 block BlockchainDB::get_block(const crypto::hash& h) const
 {
   blobdata bd = get_block_blob(h);

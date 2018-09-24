@@ -717,6 +717,29 @@ crypto::hash Blockchain::get_block_id_by_height(uint64_t height) const
   }
   return null_hash;
 }
+
+//------------------------------------------------------------------
+bool Blockchain::get_uncle_by_hash(const crypto::hash &h, block &uncle) const
+{
+  LOG_PRINT_L3("Blockchain::" << __func__);
+  CRITICAL_REGION_LOCAL(m_blockchain_lock);
+  try
+  {
+    uncle = m_db->get_uncle(h);
+    return true;
+  }
+  catch (const BLOCK_DNE& e)
+  {
+    MDEBUG("Trying to find uncle in main and alternative chains");
+    bool orphan;
+    bool found = get_block_by_hash(h, uncle, &orphan);
+    if (found) {
+      return true;
+    }
+  }
+  return false;
+}
+
 //------------------------------------------------------------------
 bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orphan) const
 {
@@ -3536,8 +3559,7 @@ leave:
   // only allow uncle blocks after version 7
   if (uncle_included)
   {
-    bool orphan = false;
-    bool found = get_block_by_hash(bl.uncle, uncle, &orphan);
+    bool found = get_uncle_by_hash(bl.uncle, uncle);
     if (!found) {
       MERROR_VER("Uncle block with hash " << bl.uncle << " for block " << bl.hash << " not found");
       bvc.m_verifivation_failed = true;
@@ -3609,7 +3631,9 @@ leave:
   // do this after updating the hard fork state since the size limit may change due to fork
   update_next_cumulative_size_limit();
 
-  MINFO("+++++ BLOCK SUCCESSFULLY ADDED" << std::endl << "id:\t" << id << std::endl << "PoW:\t" << proof_of_work << std::endl << "HEIGHT " << new_height-1 << ", difficulty:\t" << current_diffic + uncle_diffic << " (" << current_diffic << "+" << uncle_diffic << ")" << std::endl << "block reward: " << print_money(get_outs_money_amount(bl.miner_tx)) << "(" << print_money(base_reward) << " + " << print_money(fee_summary) << " + " << print_money(bl.miner_tx.vout[0].amount - base_reward - fee_summary) /* nephew reward */ << " + " << print_money(bl.miner_tx.vout[1].amount) /* uncle reward */ << "), coinbase_blob_size: " << coinbase_blob_size << ", cumulative size: " << cumulative_block_size << ", " << block_processing_time << "(" << target_calculating_time << "/" << longhash_calculating_time << ")ms, uncle: " << bl.uncle);
+  uint64_t uncle_reward = uncle_included ? bl.miner_tx.vout[1].amount : 0;
+
+  MINFO("+++++ BLOCK SUCCESSFULLY ADDED" << std::endl << "id:\t" << id << std::endl << "PoW:\t" << proof_of_work << std::endl << "HEIGHT " << new_height-1 << ", difficulty:\t" << current_diffic + uncle_diffic << " (" << current_diffic << "+" << uncle_diffic << ")" << std::endl << "block reward: " << print_money(get_outs_money_amount(bl.miner_tx)) << "(" << print_money(base_reward) << " + " << print_money(fee_summary) << " + " << print_money(bl.miner_tx.vout[0].amount - base_reward - fee_summary) /* nephew reward */ << " + " << print_money(uncle_reward) /* uncle reward */ << "), coinbase_blob_size: " << coinbase_blob_size << ", cumulative size: " << cumulative_block_size << ", " << block_processing_time << "(" << target_calculating_time << "/" << longhash_calculating_time << ")ms, uncle: " << bl.uncle);
   if(m_show_time_stats)
   {
     MINFO("Height: " << new_height << " blob: " << coinbase_blob_size << " cumm: "

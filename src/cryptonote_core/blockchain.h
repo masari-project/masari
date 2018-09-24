@@ -208,6 +208,18 @@ namespace cryptonote
     bool get_block_by_hash(const crypto::hash &h, block &blk, bool *orphan = NULL) const;
 
     /**
+     * @brief gets the uncle with a given hash
+     *
+     * If not in db, uncle will be looked for in main chain and alt chains
+     *
+     * @param h the hash to look for
+     * @param uncle return-by-reference variable to put result block in
+     *
+     * @return true if the block was found, else false
+     */
+    bool get_uncle_by_hash(const crypto::hash &h, block &uncle) const;
+
+    /**
      * @brief performs some preprocessing on a group of incoming blocks to speed up verification
      *
      * @param blocks a list of incoming blocks

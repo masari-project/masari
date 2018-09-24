@@ -879,6 +879,19 @@ public:
   virtual cryptonote::blobdata get_uncle_blob(const crypto::hash& h) const = 0;
 
   /**
+   * @brief fetches the uncle with the given hash
+   *
+   * Returns the requested block.
+   *
+   * If the block does not exist, the subclass should throw BLOCK_DNE
+   *
+   * @param h the hash to look for
+   *
+   * @return the block requested
+   */
+  virtual block get_uncle(const crypto::hash& h) const;
+
+  /**
    * @brief fetches the block with the given hash
    *
    * Returns the requested block.

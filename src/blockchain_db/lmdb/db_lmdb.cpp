@@ -789,6 +789,8 @@ void BlockchainLMDB::remove_block()
   check_open();
   uint64_t m_height = height();
 
+  MDEBUG("Attempting to remove block at height " << m_height);
+
   if (m_height == 0)
     throw0(BLOCK_DNE ("Attempting to remove block from an empty blockchain"));
 
@@ -824,18 +826,23 @@ void BlockchainLMDB::remove_block()
   CURSOR(uncle_heights)
   CURSOR(uncles)
 
-  if ((result = mdb_cursor_get(m_cur_uncle_heights, (MDB_val *)&zerokval, &h, MDB_GET_BOTH)))
-      throw1(DB_ERROR(lmdb_error("Failed to locate uncle height by hash for removal: ", result).c_str()));
-  if ((result = mdb_cursor_del(m_cur_uncle_heights, 0)))
+  // Delete if uncle at given height exists
+  if (!(result = mdb_cursor_get(m_cur_uncle_heights, (MDB_val *)&zerokval, &h, MDB_GET_BOTH)))
+  {
+    if ((result = mdb_cursor_del(m_cur_uncle_heights, 0))) {
       throw1(DB_ERROR(lmdb_error("Failed to add removal of uncle height by hash to db transaction: ", result).c_str()));
-
-  if ((result = mdb_cursor_get(m_cur_uncles, &k, NULL, MDB_SET)))
+    }
+    if ((result = mdb_cursor_get(m_cur_uncles, &k, NULL, MDB_SET))) {
       throw1(DB_ERROR(lmdb_error("Failed to locate uncle for removal: ", result).c_str()));
-  if ((result = mdb_cursor_del(m_cur_uncles, 0)))
+    }
+    if ((result = mdb_cursor_del(m_cur_uncles, 0))) {
       throw1(DB_ERROR(lmdb_error("Failed to add removal of uncle to db transaction: ", result).c_str()));
-
-  if ((result = mdb_cursor_del(m_cur_uncle_info, 0)))
+    }
+    if ((result = mdb_cursor_del(m_cur_uncle_info, 0))) {
       throw1(DB_ERROR(lmdb_error("Failed to add removal of uncle info to db transaction: ", result).c_str()));
+    }
+  }
+
 }
 
 uint64_t BlockchainLMDB::add_transaction_data(const crypto::hash& blk_hash, const transaction& tx, const crypto::hash& tx_hash)
