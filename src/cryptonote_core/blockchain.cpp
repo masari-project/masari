@@ -1271,66 +1271,14 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
   size_t median_size;
   uint64_t already_generated_coins;
 
-  crypto::public_key uncle_out = null_pkey;
-  crypto::public_key uncle_tx_pubkey = null_pkey;
-  bool uncle_included = false;
-  cryptonote::block uncle;
-
   CRITICAL_REGION_BEGIN(m_blockchain_lock);
   height = m_db->height();
-
-  block top_block = m_db->get_block(m_db->top_block_hash());
 
   b.major_version = m_hardfork->get_current_version();
   b.minor_version = m_hardfork->get_ideal_version();
   b.prev_id = get_tail_id();
   b.timestamp = time(NULL);
-
-  std::list<block> alt_blocks;
-  get_alternative_blocks(alt_blocks);
-
-  if(alt_blocks.size() > 0 && m_hardfork->get_current_version() > 7)
-  {
-    block last_alt_block = alt_blocks.front();
-    // check that alternative block and top block are on top of the same block
-    if(last_alt_block.prev_id == top_block.prev_id)
-    {
-      crypto::hash top_block_hash = get_block_hash(top_block);
-      crypto::hash alt_block_hash = get_block_hash(last_alt_block);
-      // if top block hash isn't lowest then reorg
-      if(strcmp(top_block_hash.data, alt_block_hash.data) > 0) // TODO-TK: enforcing this needs a revisit to see which weight is heavier
-      {
-        LOG_PRINT_L2("Attempting to reorganize for uncle block");
-        block old_top = pop_block_from_blockchain();
-        block_verification_context bvcontext;
-        if(!handle_block_to_main_chain(last_alt_block, bvcontext)) {
-          LOG_ERROR("Failed to add alternative block as top block");
-        }
-
-        LOG_PRINT_L3("Reoganization for uncle block success");
-
-        LOG_PRINT_L2("Setting uncle to nephew");
-        b.uncle = get_block_hash(old_top);
-        uncle = old_top;
-        uncle_out = boost::get<txout_to_key>(old_top.miner_tx.vout[0].target).key;
-        uncle_tx_pubkey = get_tx_pub_key_from_extra(old_top.miner_tx);
-      }
-      // if top block has lowest hash then the alternative block is the uncle
-      else
-      {
-        LOG_PRINT_L2("Setting uncle to nephew");
-        b.uncle = alt_block_hash;
-        uncle_out = boost::get<txout_to_key>(last_alt_block.miner_tx.vout[0].target).key;
-        uncle_tx_pubkey = get_tx_pub_key_from_extra(last_alt_block.miner_tx);
-        uncle = last_alt_block;
-      }
-      uncle_included = true;
-    }
-    else
-    {
-      b.uncle = null_hash;
-    }
-  }
+  b.uncle = null_hash;
 
   uint64_t median_timestamp;
   if (!check_median_block_timestamp(b, median_timestamp)) {
@@ -1400,11 +1348,36 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
    */
   //make blocks coin-base tx looks close to real coinbase tx to get truthful blob size
   uint8_t hf_version = m_hardfork->get_current_version();
-  uint64_t block_reward;
-  bool r = construct_miner_tx(height, median_size, already_generated_coins, txs_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version, uncle_included, &block_reward);
-  if (uncle_included) {
-    construct_uncle_miner_tx(height, block_reward, uncle_out, uncle_tx_pubkey, b.miner_tx);
+  bool r = construct_miner_tx(height, median_size, already_generated_coins, txs_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version);
+  uint64_t block_reward = r ? get_block_reward(median_size, txs_size, already_generated_coins, block_reward, hf_version) : 0;
+
+  cryptonote::block uncle;
+  crypto::public_key uncle_out = null_pkey;
+  crypto::public_key uncle_tx_pubkey = null_pkey;
+  bool uncle_included = false;
+  if(m_hardfork->get_current_version() > 7)
+  {
+    block top_block = m_db->get_block(m_db->top_block_hash());
+    for (const auto& alt_it: m_alternative_chains)
+    {
+      block alt_bl = alt_it.second.bl;
+      // check if uncle candidate and top block have the same parent
+      if(alt_bl.prev_id == top_block.prev_id)
+      {
+        LOG_PRINT_L2("Setting block template's uncle");
+        b.uncle = get_block_hash(alt_bl);
+        uncle_included = true;
+        fee += block_reward / NEPHEW_REWARD_RATIO;
+
+        uncle = alt_bl;
+        uncle_out = boost::get<txout_to_key>(uncle.miner_tx.vout[0].target).key;
+        uncle_tx_pubkey = get_tx_pub_key_from_extra(uncle.miner_tx);
+        construct_uncle_miner_tx(height, block_reward, uncle_out, uncle_tx_pubkey, b.miner_tx);
+        break;
+      }
+    }
   }
+
   CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, first chance");
   size_t cumulative_size = txs_size + get_object_blobsize(b.miner_tx);
 #if defined(DEBUG_CREATE_BLOCK_TEMPLATE)
@@ -1413,7 +1386,7 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
 #endif
   for (size_t try_count = 0; try_count != 10; ++try_count)
   {
-    r = construct_miner_tx(height, median_size, already_generated_coins, cumulative_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version, uncle_included);
+    r = construct_miner_tx(height, median_size, already_generated_coins, cumulative_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version);
     if (uncle_included) {
       construct_uncle_miner_tx(height, b.miner_tx.vout[0].amount, uncle_out, uncle_tx_pubkey, b.miner_tx);
     }

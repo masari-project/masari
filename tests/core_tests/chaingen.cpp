@@ -229,22 +229,30 @@ bool test_generator::construct_block_manually(block& blk, const block& prev_bloc
   max_outs          = actual_params & bf_max_outs ? max_outs : 9999;
   hf_version        = actual_params & bf_hf_version ? hf_version : 1;
 
-  bool uncle_included = blk.uncle == uncle.hash;
-
-  uint64_t block_reward;
-  size_t height = get_block_height(prev_block) + 1;
   uint64_t already_generated_coins = get_already_generated_coins(prev_block);
   std::vector<size_t> block_sizes;
   get_last_n_block_sizes(block_sizes, get_block_hash(prev_block), CRYPTONOTE_REWARD_BLOCKS_WINDOW);
+
+  size_t height = get_block_height(prev_block) + 1;
+  bool uncle_included = blk.uncle == uncle.hash;
+  size_t median_size = misc_utils::median(block_sizes);
+  size_t current_block_size = txs_sizes + get_object_blobsize(blk.miner_tx);
+  uint64_t block_reward;
+  if(!get_block_reward(median_size, txs_sizes, already_generated_coins, block_reward, hf_version)) {
+    block_reward = 0;
+  }
+  if (uncle_included) {
+    block_fees += block_reward / NEPHEW_REWARD_RATIO;
+  }
+
   if (actual_params & bf_miner_tx)
   {
     blk.miner_tx = miner_tx;
   }
   else
   {
-    size_t current_block_size = txs_sizes + get_object_blobsize(blk.miner_tx);
     // TODO: This will work, until size of constructed block is less then CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE
-    if (!construct_miner_tx(height, misc_utils::median(block_sizes), already_generated_coins, current_block_size, block_fees, miner_acc.get_public_address_str(MAINNET), blk.miner_tx, blobdata(), max_outs, hf_version, uncle_included, &block_reward))
+    if (!construct_miner_tx(height, median_size, already_generated_coins, current_block_size, block_fees, miner_acc.get_public_address_str(MAINNET), blk.miner_tx, blobdata(), max_outs, hf_version))
       return false;
   }
 
