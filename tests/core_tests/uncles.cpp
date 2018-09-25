@@ -48,13 +48,48 @@ bool gen_uncles::generate(std::vector<test_event_entry> &events) const
   REWIND_BLOCKS_VN(events, blk_e, blk_d, first_miner_account, 5, 10);
   REWIND_BLOCKS_VN(events, blk_f, blk_e, first_miner_account, 6, 10);
   REWIND_BLOCKS_VN(events, blk_i, blk_f, first_miner_account, 7, 10);
-  REWIND_BLOCKS_VN(events, blk_j, blk_i, first_miner_account, 8, 10);
+  REWIND_BLOCKS_VN(events, blk_j, blk_i, first_miner_account, 8, 10);                  // 79
 
-  MAKE_NEXT_BLOCKV(events, blk_1a, blk_j, first_miner_account, 8);
-  MAKE_NEXT_BLOCKV(events, blk_1b, blk_j, first_miner_account, 8);
+  MAKE_NEXT_BLOCKV(events, blk_1a, blk_j, first_miner_account, 8);                     // 80
+  MAKE_NEXT_BLOCKV(events, blk_1b, blk_j, first_miner_account, 8);                     // 80
 
-  MAKE_NEXT_BLOCKV_UNCLE(events, blk_2, blk_1a, first_miner_account, 8, blk_1b);
+  // no reorg + nephew mining an uncle
+  MAKE_NEXT_BLOCKV_UNCLE(events, blk_2, blk_1a, first_miner_account, 8, blk_1b);       // 81
 
-  MAKE_NEXT_BLOCKV(events, blk_3, blk_2, first_miner_account, 8);
+  MAKE_NEXT_BLOCKV(events, blk_3a, blk_2, first_miner_account, 8);                     // 82
+  MAKE_NEXT_BLOCKV(events, blk_3b, blk_2, first_miner_account, 8);                     // 82
+
+  // reorg + nephew mining an uncle
+  MAKE_NEXT_BLOCKV_UNCLE(events, blk_4, blk_3b, first_miner_account, 8, blk_3a);       // 83
+
+  MAKE_NEXT_BLOCKV(events, blk_5a, blk_4, first_miner_account, 8);                     // 84
+  MAKE_NEXT_BLOCKV(events, blk_5b, blk_4, first_miner_account, 8);                     // 84
+
+  // no reorg + nephew mining an uncle
+  MAKE_NEXT_BLOCKV_UNCLE(events, blk_6a, blk_5a, first_miner_account, 8, blk_5b);      // 85
+  MAKE_NEXT_BLOCKV_UNCLE(events, blk_6b, blk_5a, first_miner_account, 8, blk_5b);      // 85
+
+  // reorg between two different nephews
+  MAKE_NEXT_BLOCKV(events, blk_7, blk_6b, first_miner_account, 8);                     // 86
+
+  // reorg between two different nephews + nephew mined as an uncle
+  MAKE_NEXT_BLOCKV(events, blk_8a, blk_7, first_miner_account, 8);                     // 87
+  MAKE_NEXT_BLOCKV(events, blk_8b, blk_7, first_miner_account, 8);                     // 87
+
+  MAKE_NEXT_BLOCKV_UNCLE(events, blk_9a, blk_8a, first_miner_account, 8, blk_8b);      // 88
+  MAKE_NEXT_BLOCKV_UNCLE(events, blk_9b, blk_8b, first_miner_account, 8, blk_8a);      // 88
+
+  MAKE_NEXT_BLOCKV_UNCLE(events, blk_10, blk_9b, first_miner_account, 8, blk_9a);      // 89
+
+  // no reorg between two different nephews + nephew mined as an uncle
+  MAKE_NEXT_BLOCKV(events, blk_11a, blk_10, first_miner_account, 8);                   // 90
+  MAKE_NEXT_BLOCKV(events, blk_11b, blk_10, first_miner_account, 8);                   // 90
+
+  MAKE_NEXT_BLOCKV_UNCLE(events, blk_12a, blk_11a, first_miner_account, 8, blk_11b);   // 91
+  MAKE_NEXT_BLOCKV_UNCLE(events, blk_12b, blk_11b, first_miner_account, 8, blk_11a);   // 91
+
+  MAKE_NEXT_BLOCKV_UNCLE(events, blk_13, blk_12a, first_miner_account, 8, blk_12b);    // 92
+
+  // TODO-TK: add tests when ready
   return true;
 }
