@@ -600,6 +600,7 @@ block Blockchain::pop_block_from_blockchain()
   update_next_cumulative_size_limit();
   m_tx_pool.on_blockchain_dec(m_db->height()-1, get_tail_id());
 
+  popped_block.hash = get_block_hash(popped_block);
   return popped_block;
 }
 //------------------------------------------------------------------
@@ -746,7 +747,7 @@ bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orph
   LOG_PRINT_L3("Blockchain::" << __func__);
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
 
-  // try to find block in main chain
+  MDEBUG("Looking for block in main chain");
   try
   {
     blk = m_db->get_block(h);
@@ -778,6 +779,7 @@ bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orph
     throw;
   }
 
+  MDEBUG("Unable to find block " << h);
   return false;
 }
 
@@ -933,18 +935,18 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
     return false;
   }
 
-  // pop blocks from the blockchain until the top block is the parent
-  // of the front block of the alt chain.
+  MDEBUG("Popping blocks from the blockchain until the top block is the parent of the alt chain's front block");
   std::list<block> disconnected_chain;
   while (m_db->top_block_hash() != alt_chain.front()->second.bl.prev_id)
   {
     block b = pop_block_from_blockchain();
+    MDEBUG("Popped block " << b.hash);
     disconnected_chain.push_front(b);
   }
 
   auto split_height = m_db->height();
 
-  //connecting new alternative chain
+  MDEBUG("Connecting new alternative chain.");
   for(auto alt_ch_iter = alt_chain.begin(); alt_ch_iter != alt_chain.end(); alt_ch_iter++)
   {
     auto ch_ent = *alt_ch_iter;
@@ -983,7 +985,7 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
   // if we're to keep the disconnected blocks, add them as alternates
   if(!discard_disconnected_chain)
   {
-    //pushing old chain as alternative chain
+    MDEBUG("Pushing old chain as alternative chain");
     for (auto& old_ch_ent : disconnected_chain)
     {
       block_verification_context bvc = boost::value_initialized<block_verification_context>();
@@ -997,7 +999,7 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
     }
   }
 
-  //removing alt_chain entries from alternative chains container
+  MDEBUG("Removing alt_chain entries from alternative chains container");
   for (auto ch_ent: alt_chain)
   {
     m_alternative_chains.erase(ch_ent);
@@ -1080,8 +1082,7 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
 bool Blockchain::prevalidate_miner_transaction(const block& b, uint64_t height)
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
-  bool uncle_included = is_uncle_block_included(b);
-  size_t expected_vin_size = uncle_included ? 2 : 1;
+  size_t expected_vin_size = is_uncle_block_included(b) ? 2 : 1;
   CHECK_AND_ASSERT_MES(b.miner_tx.vin.size() == expected_vin_size, false, "coinbase transaction in the block has " << b.miner_tx.vin.size() << " inputs, expected " << expected_vin_size);
   for (auto& vin : b.miner_tx.vin)
   {
@@ -1094,10 +1095,6 @@ bool Blockchain::prevalidate_miner_transaction(const block& b, uint64_t height)
   }
   MDEBUG("Miner tx hash: " << get_transaction_hash(b.miner_tx));
   CHECK_AND_ASSERT_MES(b.miner_tx.unlock_time == height + CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW, false, "coinbase transaction transaction has the wrong unlock time=" << b.miner_tx.unlock_time << ", expected " << height + CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW);
-
-  if (uncle_included) {
-    MDEBUG("Uncle tx hash: " << b.uncle);
-  }
   //check outs overflow
   //NOTE: not entirely sure this is necessary, given that this function is
   //      designed simply to make sure the total amount for a transaction
@@ -1115,7 +1112,6 @@ bool Blockchain::prevalidate_miner_transaction(const block& b, uint64_t height)
 bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
 {
   crypto::hash nephew_id = get_block_hash(nephew);
-  difficulty_type grandparent_difficulty;
 
   if (uncle.major_version != nephew.major_version)
   {
@@ -1125,6 +1121,7 @@ bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
 
   // TODO-TK: this could be invalid if we're not looking at the right chain
   uint64_t grandparent_height = m_db->height() - 2;
+  uint64_t parent_height = grandparent_height + 1;
 
   // check that the uncle block is on top of the second to last block in the main chain
   block grandparent = m_db->get_block_from_height(grandparent_height);
@@ -1135,12 +1132,12 @@ bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
     return false;
   }
 
-  grandparent_difficulty = m_db->get_block_difficulty(grandparent_height);
+  difficulty_type parent_difficulty = m_db->get_block_difficulty(parent_height);
   crypto::hash uncle_proof_of_work = get_block_longhash(uncle);
   // validate proof of work versus difficulty target
-  if(!check_hash(uncle_proof_of_work, grandparent_difficulty))
+  if(!check_hash(uncle_proof_of_work, parent_difficulty))
   {
-    MDEBUG("Nephew " << nephew_id << std::endl << " has an uncle that does not have enough proof of work: " << uncle_proof_of_work << std::endl << "unexpected difficulty: " << grandparent_difficulty);
+    MDEBUG("Nephew " << nephew_id << std::endl << " has an uncle " << uncle.hash << "that does not have enough proof of work " << uncle_proof_of_work << std::endl << " unexpected difficulty " << parent_difficulty << " at height " << parent_height);
     return false;
   }
 
@@ -1651,6 +1648,7 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
 
   return true;
 }
+
 //------------------------------------------------------------------
 bool Blockchain::get_blocks(uint64_t start_offset, size_t count, std::list<std::pair<cryptonote::blobdata,block>>& blocks, std::list<cryptonote::blobdata>& txs) const
 {
