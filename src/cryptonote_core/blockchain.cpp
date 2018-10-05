@@ -610,6 +610,7 @@ bool Blockchain::reset_and_set_genesis_block(const block& b)
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
   m_timestamps_and_difficulties_height = 0;
   m_alternative_chains.clear();
+  m_discarded_chain.clear();
   m_db->reset();
   m_hardfork->init();
 
@@ -731,12 +732,30 @@ bool Blockchain::get_uncle_by_hash(const crypto::hash &h, block &uncle) const
   }
   catch (const BLOCK_DNE& e)
   {
+    MDEBUG("Looking for block in temporarily discarded main chain");
+    blocks_ext_by_hash::const_iterator it_alt = m_discarded_chain.find(h);
+    if (m_discarded_chain.end() != it_alt)
+    {
+      uncle = it_alt->second.bl;
+      return true;
+    }
+
     MDEBUG("Trying to find uncle in main and alternative chains");
     bool orphan;
     bool found = get_block_by_hash(h, uncle, &orphan);
     if (found) {
       return true;
     }
+  }
+  catch (const std::exception& e)
+  {
+    MERROR(std::string("Something went wrong fetching uncle by hash: ") + e.what());
+    throw;
+  }
+  catch (...)
+  {
+    MERROR(std::string("Something went wrong fetching uncle hash by hash"));
+    throw;
   }
   return false;
 }
@@ -939,9 +958,17 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
   std::list<block> disconnected_chain;
   while (m_db->top_block_hash() != alt_chain.front()->second.bl.prev_id)
   {
+    uint64_t b_height = m_db->height();
     block b = pop_block_from_blockchain();
     MDEBUG("Popped block " << b.hash);
     disconnected_chain.push_front(b);
+
+    MDEBUG("Added block " << b.hash << " to temporary discarded chain container");
+    // TODO-TK: there's a different todo hinting at potential deprecation of bei, something worth looking into
+    block_extended_info bei = boost::value_initialized<block_extended_info>();
+    bei.bl = b;
+    bei.height = b_height;
+    m_discarded_chain.insert(blocks_ext_by_hash::value_type(b.hash, bei));
   }
 
   auto split_height = m_db->height();
@@ -1004,6 +1031,9 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
   {
     m_alternative_chains.erase(ch_ent);
   }
+
+  MDEBUG("Clearing discarded chain");
+  m_discarded_chain.clear();
 
   m_hardfork->reorganize_from_chain_height(split_height);
 
@@ -1600,6 +1630,25 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
     }
     bei.cumulative_difficulty += current_diff;
 
+    block uncle;
+    if (is_uncle_block_included(b))
+    {
+      bool r = get_uncle_by_hash(b.uncle, uncle);
+      if (!r)
+      {
+        MERROR_VER("Alternative Block " << b.hash << " includes non existing uncle " << b.uncle);
+        bvc.m_verifivation_failed = true;
+        return false;
+      }
+      if (!validate_mined_uncle(b, uncle)) {
+        MERROR_VER("Uncle block validation failed");
+        bvc.m_verifivation_failed = true;
+        return false;
+      }
+      // TODO-TK: potential reorg issues here
+      bei.cumulative_difficulty += m_db->get_block_difficulty(uncle.prev_id);
+    }
+
     // add block to alternate blocks storage,
     // as well as the current "alt chain" container
     auto i_res = m_alternative_chains.insert(blocks_ext_by_hash::value_type(id, bei));
@@ -1633,7 +1682,7 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
     }
     else
     {
-      MGINFO_BLUE("----- BLOCK ADDED AS ALTERNATIVE ON HEIGHT " << bei.height << std::endl << "id:\t" << id << std::endl << "PoW:\t" << proof_of_work << std::endl << "difficulty:\t" << current_diff);
+      MGINFO_BLUE("----- BLOCK ADDED AS ALTERNATIVE -----" << std::endl << "id:\t" << id << std::endl << "prev:\t" << b.prev_id << std::endl << "PoW:\t" << proof_of_work << std::endl << "height:\t" << bei.height << std::endl << "difficulty:\t" << current_diff << std::endl << "cumulative difficulty:\t" << bei.cumulative_difficulty << std::endl << "uncle:\t" << b.uncle);
       return true;
     }
   }
@@ -3604,7 +3653,7 @@ leave:
 
   uint64_t uncle_reward = uncle_included ? bl.miner_tx.vout[1].amount : 0;
 
-  MINFO("+++++ BLOCK SUCCESSFULLY ADDED" << std::endl << "id:\t" << id << std::endl << "PoW:\t" << proof_of_work << std::endl << "HEIGHT " << new_height-1 << ", difficulty:\t" << current_diffic + uncle_diffic << " (" << current_diffic << "+" << uncle_diffic << ")" << std::endl << "block reward: " << print_money(get_outs_money_amount(bl.miner_tx)) << "(" << print_money(base_reward) << " + " << print_money(fee_summary) << " + " << print_money(bl.miner_tx.vout[0].amount - base_reward - fee_summary) /* nephew reward */ << " + " << print_money(uncle_reward) /* uncle reward */ << "), coinbase_blob_size: " << coinbase_blob_size << ", cumulative size: " << cumulative_block_size << ", " << block_processing_time << "(" << target_calculating_time << "/" << longhash_calculating_time << ")ms, uncle: " << bl.uncle);
+  MINFO("+++++ BLOCK SUCCESSFULLY ADDED" << std::endl << "id:\t" << id << std::endl << "prev:\t" << bl.prev_id << std::endl << "PoW:\t" << proof_of_work << std::endl << "height:\t" << new_height-1 << std::endl << "difficulty:\t" << current_diffic + uncle_diffic << " (" << current_diffic << "+" << uncle_diffic << ")" << std::endl << "cumulative_difficulty:\t" << cumulative_difficulty << std::endl << "block reward:\t" << print_money(get_outs_money_amount(bl.miner_tx)) << "(" << print_money(base_reward) << " + " << print_money(fee_summary) << " + " << print_money(bl.miner_tx.vout[0].amount - base_reward - fee_summary) /* nephew reward */ << " + " << print_money(uncle_reward) /* uncle reward */ << ")" << std::endl << "coinbase_blob_size: " << coinbase_blob_size << ", cumulative size: " << cumulative_block_size << ", " << block_processing_time << "(" << target_calculating_time << "/" << longhash_calculating_time << ")ms" << std::endl << "uncle:\t" << bl.uncle);
   if(m_show_time_stats)
   {
     MINFO("Height: " << new_height << " blob: " << coinbase_blob_size << " cumm: "
