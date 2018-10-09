@@ -3071,7 +3071,7 @@ void BlockchainLMDB::block_txn_abort()
   }
 }
 
-uint64_t BlockchainLMDB::add_block(const block& blk, const size_t& block_size, const difficulty_type& cumulative_difficulty, const uint64_t& coins_generated,
+uint64_t BlockchainLMDB::add_block_raw(const block& blk, const size_t& block_size, const difficulty_type& cumulative_difficulty, const uint64_t& coins_generated,
     const std::vector<transaction>& txs)
 {
   LOG_PRINT_L3("BlockchainLMDB::" << __func__);
@@ -3090,7 +3090,7 @@ uint64_t BlockchainLMDB::add_block(const block& blk, const size_t& block_size, c
 
   try
   {
-    BlockchainDB::add_block(blk, block_size, cumulative_difficulty, coins_generated, txs);
+    BlockchainDB::add_block_raw(blk, block_size, cumulative_difficulty, coins_generated, txs);
   }
   catch (const DB_ERROR_TXN_START& e)
   {

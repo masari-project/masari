@@ -275,7 +275,7 @@ public:
   virtual bool for_all_outputs(std::function<bool(uint64_t amount, const crypto::hash &tx_hash, uint64_t height, size_t tx_idx)> f) const;
   virtual bool for_all_outputs(uint64_t amount, const std::function<bool(uint64_t height)> &f) const;
 
-  virtual uint64_t add_block( const block& blk
+  virtual uint64_t add_block_raw( const block& blk
                             , const size_t& block_size
                             , const difficulty_type& cumulative_difficulty
                             , const uint64_t& coins_generated
