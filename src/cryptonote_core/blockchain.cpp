@@ -1158,16 +1158,21 @@ bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
     return false;
   }
 
-  // TODO-TK: this could be invalid if we're not looking at the right chain
-  uint64_t grandparent_height = m_db->height() - 2;
-  uint64_t parent_height = grandparent_height + 1;
-
   // check that the uncle block is on top of the second to last block in the main chain
-  block grandparent = m_db->get_block_from_height(grandparent_height);
-  crypto::hash grandparent_hash = get_block_hash(grandparent);
-  if (grandparent_hash != uncle.prev_id)
+  block parent;
+  bool orphan;
+  bool r = get_block_by_hash(nephew.prev_id, parent, &orphan);
+  if (!r)
   {
-    MDEBUG("Nephew " << nephew_id << std::endl << "has uncle block with invalid parent hash: " << uncle.prev_id << " Expected: " << grandparent_hash);
+    MDEBUG("Unable to get nephew block's parent");
+    return false;
+  }
+  uint64_t parent_height = get_block_height(parent);
+
+
+  if (parent.prev_id != uncle.prev_id)
+  {
+    MDEBUG("Nephew " << nephew_id << std::endl << "has uncle block with invalid parent hash: " << uncle.prev_id << " Expected: " << parent.prev_id);
     return false;
   }
 
@@ -1176,7 +1181,7 @@ bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
   // validate proof of work versus difficulty target
   if(!check_hash(uncle_proof_of_work, parent_difficulty))
   {
-    MDEBUG("Nephew " << nephew_id << std::endl << " has an uncle " << uncle.hash << "that does not have enough proof of work " << uncle_proof_of_work << std::endl << " unexpected difficulty " << parent_difficulty << " at height " << parent_height);
+    MDEBUG("Nephew " << nephew_id << std::endl << " has an uncle " << uncle.hash << " that does not have enough proof of work " << uncle_proof_of_work << std::endl << " unexpected difficulty " << parent_difficulty << " at height " << parent_height);
     return false;
   }
 
