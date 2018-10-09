@@ -728,6 +728,8 @@ bool Blockchain::get_uncle_by_hash(const crypto::hash &h, block &uncle) const
   try
   {
     uncle = m_db->get_uncle(h);
+    // TODO-TK: third case doing this, should refactor out if goes out of get_x_by_hash functions
+    uncle.hash = get_block_hash(uncle);
     return true;
   }
   catch (const BLOCK_DNE& e)
@@ -770,6 +772,7 @@ bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orph
   try
   {
     blk = m_db->get_block(h);
+    blk.hash = get_block_hash(blk);
     if (orphan)
       *orphan = false;
     return true;
@@ -1037,7 +1040,7 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
 
   m_hardfork->reorganize_from_chain_height(split_height);
 
-  MGINFO_GREEN("REORGANIZE SUCCESS! on height: " << split_height << ", new blockchain size: " << m_db->height());
+  MGINFO_GREEN("REORGANIZE SUCCESS! on height: " << split_height << ", new blockchain size: " << m_db->height() << " top block " << m_db->top_block_hash());
   return true;
 }
 //------------------------------------------------------------------
@@ -1146,6 +1149,12 @@ bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
   if (uncle.major_version != nephew.major_version)
   {
     MDEBUG("Nephew " << nephew_id << std::endl << "has invalid uncle block major version: " << uncle.major_version << " which doesn't agree with sibling block version: " << nephew.major_version);
+    return false;
+  }
+
+  if (uncle.hash != nephew.uncle)
+  {
+    MDEBUG("Nephew " << nephew_id << std::endl << " has mismatched uncle " << nephew.uncle << ", expected: " << uncle.hash);
     return false;
   }
 
