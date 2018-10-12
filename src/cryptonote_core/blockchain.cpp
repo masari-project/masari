@@ -1170,22 +1170,22 @@ bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
     return false;
   }
   uint64_t parent_height = get_block_height(parent);
+  uint64_t uncle_height = get_block_height(uncle);
 
-
-  if (parent.prev_id != uncle.prev_id)
+  if (parent_height != uncle_height)
   {
-    MDEBUG("Nephew " << nephew_id << std::endl << "has uncle block with invalid parent hash: " << uncle.prev_id << " Expected: " << parent.prev_id);
+    MDEBUG("Parent " << parent.hash << " and uncle " << uncle.hash << " aren't at the same depth.");
     return false;
   }
 
-  difficulty_type parent_difficulty = m_db->get_block_difficulty(parent_height);
-  crypto::hash uncle_proof_of_work = get_block_longhash(uncle);
-  // validate proof of work versus difficulty target
-  if(!check_hash(uncle_proof_of_work, parent_difficulty))
+  // TODO-TK: needs a sanity check for allowing case when there's common ancestry (i.e. second uncle)
+  if (parent.prev_id != uncle.prev_id && parent.prev_id != uncle.uncle)
   {
-    MDEBUG("Nephew " << nephew_id << std::endl << " has an uncle " << uncle.hash << " that does not have enough proof of work " << uncle_proof_of_work << std::endl << " unexpected difficulty " << parent_difficulty << " at height " << parent_height);
+    MDEBUG("Nephew " << nephew_id << std::endl << "has uncle block at parent height " << parent_height << " with hash " << uncle.prev_id << " not in common ancestry: " << " Expected uncle or parent: " << parent.prev_id);
     return false;
   }
+
+  // TODO-TK: PoW check potentially not needed as uncle would've been verified by handle_alternative_block - to confirm
 
   crypto::public_key nephew_uncle_out = boost::get<txout_to_key>(nephew.miner_tx.vout[1].target).key;
   crypto::public_key uncle_out = boost::get<txout_to_key>(uncle.miner_tx.vout[0].target).key;
@@ -1405,7 +1405,7 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
     {
       block alt_bl = alt_it.second.bl;
       // check if uncle candidate and top block have the same parent
-      if(alt_bl.prev_id == top_block.prev_id)
+      if(alt_bl.prev_id == top_block.prev_id || alt_bl.uncle == top_block.prev_id)
       {
         LOG_PRINT_L2("Setting block template's uncle");
         b.uncle = get_block_hash(alt_bl);
