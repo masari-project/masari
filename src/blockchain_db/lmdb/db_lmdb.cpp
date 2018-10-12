@@ -680,6 +680,8 @@ void BlockchainLMDB::add_uncle(const block& uncle, const size_t& uncle_size, con
   mdb_txn_cursors *m_cursors = &m_wcursors;
   int result = 0;
 
+  MDEBUG("Adding uncle at height " << height);
+
   CURSOR(uncle_heights);
   blk_height uh = {uncle_hash, height};
   MDB_val_set(val_h, uh);
@@ -792,14 +794,18 @@ void BlockchainLMDB::remove_block()
   if (m_height == 0)
     throw0(BLOCK_DNE ("Attempting to remove block from an empty blockchain"));
 
+  uint64_t bl_height = m_height - 1;
+
   mdb_txn_cursors *m_cursors = &m_wcursors;
   CURSOR(block_info)
   CURSOR(block_heights)
   CURSOR(blocks)
-  MDB_val_copy<uint64_t> k(m_height - 1);
+  MDB_val_copy<uint64_t> k(bl_height);
   MDB_val h = k;
   if ((result = mdb_cursor_get(m_cur_block_info, (MDB_val *)&zerokval, &h, MDB_GET_BOTH)))
       throw1(BLOCK_DNE(lmdb_error("Attempting to remove block that's not in the db: ", result).c_str()));
+
+  MDEBUG("Removing block at height " << bl_height);
 
   // must use h now; deleting from m_block_info will invalidate it
   mdb_block_info *bi = (mdb_block_info *)h.mv_data;
@@ -819,14 +825,30 @@ void BlockchainLMDB::remove_block()
   if ((result = mdb_cursor_del(m_cur_block_info, 0)))
       throw1(DB_ERROR(lmdb_error("Failed to add removal of block info to db transaction: ", result).c_str()));
 
-  // TODO-TK: revisit this when being tested, is a c/p and could be implemented wrong
   CURSOR(uncle_info)
   CURSOR(uncle_heights)
   CURSOR(uncles)
 
-  // Delete if uncle at given height exists
-  if (!(result = mdb_cursor_get(m_cur_uncle_heights, (MDB_val *)&zerokval, &h, MDB_GET_BOTH)))
+  MDB_val hu = k;
+  result = mdb_cursor_get(m_cur_uncle_info, (MDB_val *)&zerokval, &hu, MDB_GET_BOTH);
+  if (result == MDB_NOTFOUND) {
+    MDEBUG("No uncle for removal exists at height " << bl_height);
+  }
+  else if (result) {
+    throw0(DB_ERROR("Error attempting to retrieve a uncle height from the db"));
+  }
+  else
   {
+    // TODO-TK: this requirement templated from above seems hacky
+    MDEBUG("Removing uncle at height " << bl_height);
+    mdb_block_info *bi = (mdb_block_info *)hu.mv_data;
+    blk_height uh = {bi->bi_hash, 0};
+    hu.mv_data = (void *)&uh;
+    hu.mv_size = sizeof(uh);
+
+    if ((result = mdb_cursor_get(m_cur_uncle_heights, (MDB_val *)&zerokval, &hu, MDB_GET_BOTH))) {
+      throw1(DB_ERROR(lmdb_error("Failed to locate uncle height entry for removal: ", result).c_str()));
+    }
     if ((result = mdb_cursor_del(m_cur_uncle_heights, 0))) {
       throw1(DB_ERROR(lmdb_error("Failed to add removal of uncle height by hash to db transaction: ", result).c_str()));
     }

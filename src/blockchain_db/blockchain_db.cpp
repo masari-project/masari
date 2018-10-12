@@ -194,7 +194,7 @@ uint64_t BlockchainDB::add_block(const block& nephew, const size_t& nephew_size,
 {
   block_txn_start(false);
   uint64_t new_height = add_block_raw(nephew, nephew_size, cumulative_difficulty, coins_generated, txs);
-  add_uncle(uncle, uncle_size, cumulative_difficulty, coins_generated, get_block_hash(uncle), new_height);
+  add_uncle(uncle, uncle_size, cumulative_difficulty, coins_generated, get_block_hash(uncle), new_height - 1);
   block_txn_stop();
 
   ++num_calls;
