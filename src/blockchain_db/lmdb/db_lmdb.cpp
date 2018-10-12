@@ -789,8 +789,6 @@ void BlockchainLMDB::remove_block()
   check_open();
   uint64_t m_height = height();
 
-  MDEBUG("Attempting to remove block at height " << m_height);
-
   if (m_height == 0)
     throw0(BLOCK_DNE ("Attempting to remove block from an empty blockchain"));
 
@@ -1038,10 +1036,11 @@ void BlockchainLMDB::remove_tx_outputs(const uint64_t tx_id, const transaction& 
       throw0(DB_ERROR("tx has outputs, but no output indices found"));
   }
 
-  bool is_pseudo_rct = tx.vin.size() == 1 && tx.vin[0].type() == typeid(txin_gen);
+  bool is_pseudo_rct = (tx.vin.size() == 1 && tx.vin[0].type() == typeid(txin_gen)) || (tx.vin.size() == 2 && tx.vin[0].type() == typeid(txin_gen) && tx.vin[1].type() == typeid(txin_gen));
   for (size_t i = tx.vout.size(); i-- > 0;)
   {
     uint64_t amount = is_pseudo_rct ? 0 : tx.vout[i].amount;
+    MTRACE("Removing output at index " << i << " with amount " << amount);
     remove_output(amount, amount_output_indices[i]);
   }
 }

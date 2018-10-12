@@ -551,6 +551,7 @@ block Blockchain::pop_block_from_blockchain()
   block popped_block;
   std::vector<transaction> popped_txs;
 
+  MDEBUG("Popping top block");
   try
   {
     m_db->pop_block(popped_block, popped_txs);
@@ -568,6 +569,7 @@ block Blockchain::pop_block_from_blockchain()
     throw;
   }
 
+  MDEBUG("Returning popped transactions to the transaction pool");
   // return transactions from popped block to the tx_pool
   for (transaction& tx : popped_txs)
   {
@@ -962,11 +964,11 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
   while (m_db->top_block_hash() != alt_chain.front()->second.bl.prev_id)
   {
     uint64_t b_height = m_db->height();
+    MTRACE("Popping block " << m_db->top_block_hash() << " at height " << b_height);
     block b = pop_block_from_blockchain();
-    MDEBUG("Popped block " << b.hash);
     disconnected_chain.push_front(b);
 
-    MDEBUG("Added block " << b.hash << " to temporary discarded chain container");
+    MTRACE("Adding block " << b.hash << " to temporary discarded chain container");
     // TODO-TK: there's a different todo hinting at potential deprecation of bei, something worth looking into
     block_extended_info bei = boost::value_initialized<block_extended_info>();
     bei.bl = b;

@@ -276,7 +276,9 @@ void BlockchainDB::pop_block(block& blk, std::vector<transaction>& txs)
     txs.push_back(get_tx(h));
     remove_transaction(h);
   }
-  remove_transaction(get_transaction_hash(blk.miner_tx));
+  crypto::hash tx_hash = get_transaction_hash(blk.miner_tx);
+  MDEBUG("Removing miner tx" << tx_hash);
+  remove_transaction(tx_hash);
 }
 
 bool BlockchainDB::is_open() const
