@@ -729,6 +729,7 @@ bool Blockchain::get_uncle_by_hash(const crypto::hash &h, block &uncle) const
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
   try
   {
+    MDEBUG("Looking for uncle " << h << " in main chain");
     uncle = m_db->get_uncle(h);
     // TODO-TK: third case doing this, should refactor out if goes out of get_x_by_hash functions
     uncle.hash = get_block_hash(uncle);
@@ -736,7 +737,7 @@ bool Blockchain::get_uncle_by_hash(const crypto::hash &h, block &uncle) const
   }
   catch (const BLOCK_DNE& e)
   {
-    MDEBUG("Looking for block in temporarily discarded main chain");
+    MDEBUG("Looking for uncle " << h << " in temporarily discarded main chain");
     blocks_ext_by_hash::const_iterator it_alt = m_discarded_chain.find(h);
     if (m_discarded_chain.end() != it_alt)
     {
@@ -744,7 +745,7 @@ bool Blockchain::get_uncle_by_hash(const crypto::hash &h, block &uncle) const
       return true;
     }
 
-    MDEBUG("Trying to find uncle in main and alternative chains");
+    MDEBUG("Trying to find uncle " << h << " in main and alternative chains");
     bool orphan;
     bool found = get_block_by_hash(h, uncle, &orphan);
     if (found) {
@@ -761,6 +762,7 @@ bool Blockchain::get_uncle_by_hash(const crypto::hash &h, block &uncle) const
     MERROR(std::string("Something went wrong fetching uncle hash by hash"));
     throw;
   }
+  MDEBUG("Unable to find uncle " << h);
   return false;
 }
 
@@ -770,7 +772,7 @@ bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orph
   LOG_PRINT_L3("Blockchain::" << __func__);
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
 
-  MDEBUG("Looking for block in main chain");
+  MDEBUG("Looking for block " << h << " in main chain");
   try
   {
     blk = m_db->get_block(h);
@@ -782,7 +784,7 @@ bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orph
   // try to find block in alternative chain
   catch (const BLOCK_DNE& e)
   {
-    MDEBUG("Looking for block in alternative chains");
+    MDEBUG("Looking for block " << h << " in alternative chains");
     blocks_ext_by_hash::const_iterator it_alt = m_alternative_chains.find(h);
     if (m_alternative_chains.end() != it_alt)
     {
@@ -946,6 +948,8 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
+
+  MDEBUG("Switching to alternative blockchain with top block " << alt_chain.back()->second.bl.hash);
 
   m_timestamps_and_difficulties_height = 0;
 
@@ -1160,7 +1164,8 @@ bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
     return false;
   }
 
-  // check that the uncle block is on top of the second to last block in the main chain
+  MDEBUG("Checking if parent is the same height as uncle and if they have a common ancestry");
+
   block parent;
   bool orphan;
   bool r = get_block_by_hash(nephew.prev_id, parent, &orphan);
@@ -1203,7 +1208,7 @@ bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
     return false;
   }
 
-  // uncle validations passed
+  MDEBUG("Uncle validations passed");
   return true;
 }
 
@@ -1400,14 +1405,14 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
   bool uncle_included = false;
   if(m_hardfork->get_current_version() > 7)
   {
+    MDEBUG("Iterating through alt chains to find a candidate uncle block");
     block top_block = m_db->get_block(m_db->top_block_hash());
     for (const auto& alt_it: m_alternative_chains)
     {
       block alt_bl = alt_it.second.bl;
-      // check if uncle candidate and top block have the same parent
       if(alt_bl.prev_id == top_block.prev_id || alt_bl.uncle == top_block.prev_id)
       {
-        LOG_PRINT_L2("Setting block template's uncle");
+        MDEBUG("Found uncle candidate with common ancestry to parent block");
         b.uncle = get_block_hash(alt_bl);
         uncle_included = true;
         fee += block_reward / NEPHEW_REWARD_RATIO;
@@ -1564,11 +1569,10 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
     // main chain -- that is, if we're adding on to an alternate chain
     if(alt_chain.size())
     {
-      // make sure alt chain doesn't somehow start past the end of the main chain
+      MDEBUG("Ensuring alt chain isn't somehow starting past the end of the main chain");
       CHECK_AND_ASSERT_MES(m_db->height() > alt_chain.front()->second.height, false, "main blockchain wrong height");
 
-      // make sure that the blockchain contains the block that should connect
-      // this alternate chain with it.
+      MDEBUG("Ensuring alt chain's starting block is within the main chain");
       if (!m_db->block_exists(alt_chain.front()->second.bl.prev_id))
       {
         MERROR("alternate chain does not appear to connect to main chain...");
@@ -1583,15 +1587,13 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
     // if block not associated with known alternate chain
     else
     {
-      // if block parent is not part of main chain or an alternate chain,
-      // we ignore it
+      MDEBUG("Ensuring that block is part of main chain or an alternative chain, otherwise ignore it");
       CHECK_AND_ASSERT_MES(parent_in_main, false, "internal error: broken imperative condition: parent_in_main");
 
       complete_timestamps_vector(m_db->get_block_height(b.prev_id), timestamps);
     }
 
-    // verify that the block's timestamp is within the acceptable range
-    // (not earlier than the median of the last X blocks)
+    MDEBUG("Verifying block timestamp is within the acceptable range");
     if(!check_block_timestamp(timestamps, b))
     {
       MERROR_VER("Block with id: " << id << std::endl << " for alternative chain, has invalid timestamp: " << b.timestamp);
@@ -1687,7 +1689,7 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
     else if(main_chain_cumulative_difficulty < bei.cumulative_difficulty) //check if difficulty bigger then in main chain
     {
       //do reorganize!
-      MGINFO_GREEN("###### REORGANIZE on height: " << alt_chain.front()->second.height << " of " << m_db->height() - 1 << " with cum_difficulty " << m_db->get_block_cumulative_difficulty(m_db->height() - 1) << std::endl << " alternative blockchain size: " << alt_chain.size() << " with cum_difficulty " << bei.cumulative_difficulty);
+      MGINFO_GREEN("###### REORGANIZE on height: " << alt_chain.front()->second.height << " of " << m_db->height() - 1 << " with cum_difficulty " << m_db->get_block_cumulative_difficulty(m_db->height() - 1) << std::endl << " alternative blockchain size: " << alt_chain.size() << " with cum_difficulty " << bei.cumulative_difficulty << " top block " << m_db->top_block_hash());
 
       bool r = switch_to_alternative_blockchain(alt_chain, false);
       if (r)
@@ -3723,10 +3725,9 @@ bool Blockchain::add_new_block(const block& bl_, block_verification_context& bvc
     return false;
   }
 
-  //check that block refers to chain tail
   if(!(bl.prev_id == get_tail_id()))
   {
-    //chain switching or wrong block
+    MDEBUG("Handling alternative block due to chain switching or wrong block");
     bvc.m_added_to_main_chain = false;
     m_db->block_txn_stop();
     bool r = handle_alternative_block(bl, id, bvc);
@@ -3736,6 +3737,7 @@ bool Blockchain::add_new_block(const block& bl_, block_verification_context& bvc
   }
 
   m_db->block_txn_stop();
+  MDEBUG("Handling block to main chain");
   return handle_block_to_main_chain(bl, id, bvc);
 }
 //------------------------------------------------------------------
