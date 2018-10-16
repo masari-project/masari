@@ -802,7 +802,7 @@ size_t get_difficulty_blocks_count(uint8_t version)
 difficulty_type get_next_difficulty(uint8_t version, std::vector<uint64_t> timestamps, std::vector<difficulty_type> cumulative_difficulties)
 {
   // FIXME: This will fail if fork activation heights are subject to voting
-  size_t target = version < 8 ? DIFFICULTY_TARGET : DIFFICULTY_TARGET_V2;
+  size_t target = DIFFICULTY_TARGET;
   // calculate the difficulty target for the block and return it
   if (version == 1) {
     return next_difficulty(timestamps, cumulative_difficulties, target);
@@ -813,7 +813,7 @@ difficulty_type get_next_difficulty(uint8_t version, std::vector<uint64_t> times
   } else if (version < 6) {
     return next_difficulty_v3(timestamps, cumulative_difficulties, target, true);
   } else {
-    return next_difficulty_v6(timestamps, cumulative_difficulties, target);
+    return next_difficulty_v6(timestamps, cumulative_difficulties, version);
   }
 }
 
