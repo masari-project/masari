@@ -1057,6 +1057,8 @@ public:
    */
   virtual difficulty_type get_block_difficulty(const crypto::hash& id) const;
 
+  virtual difficulty_type get_uncle_difficulty(const crypto::hash& id) const;
+
   /**
    * @brief fetch a block's difficulty
    *

@@ -723,58 +723,13 @@ crypto::hash Blockchain::get_block_id_by_height(uint64_t height) const
 }
 
 //------------------------------------------------------------------
-bool Blockchain::get_uncle_by_hash(const crypto::hash &h, block &uncle) const
+bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orphan, bool search_uncles) const
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
   try
   {
-    MDEBUG("Looking for uncle " << h << " in main chain");
-    uncle = m_db->get_uncle(h);
-    // TODO-TK: third case doing this, should refactor out if goes out of get_x_by_hash functions
-    uncle.hash = get_block_hash(uncle);
-    return true;
-  }
-  catch (const BLOCK_DNE& e)
-  {
-    MDEBUG("Looking for uncle " << h << " in temporarily discarded main chain");
-    blocks_ext_by_hash::const_iterator it_alt = m_discarded_chain.find(h);
-    if (m_discarded_chain.end() != it_alt)
-    {
-      uncle = it_alt->second.bl;
-      return true;
-    }
-
-    MDEBUG("Trying to find uncle " << h << " in main and alternative chains");
-    bool orphan;
-    bool found = get_block_by_hash(h, uncle, &orphan);
-    if (found) {
-      return true;
-    }
-  }
-  catch (const std::exception& e)
-  {
-    MERROR(std::string("Something went wrong fetching uncle by hash: ") + e.what());
-    throw;
-  }
-  catch (...)
-  {
-    MERROR(std::string("Something went wrong fetching uncle hash by hash"));
-    throw;
-  }
-  MDEBUG("Unable to find uncle " << h);
-  return false;
-}
-
-//------------------------------------------------------------------
-bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orphan) const
-{
-  LOG_PRINT_L3("Blockchain::" << __func__);
-  CRITICAL_REGION_LOCAL(m_blockchain_lock);
-
-  MDEBUG("Looking for block " << h << " in main chain");
-  try
-  {
+    MDEBUG("Looking for block " << h << " in main chain");
     blk = m_db->get_block(h);
     blk.hash = get_block_hash(blk);
     if (orphan)
@@ -784,6 +739,26 @@ bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orph
   // try to find block in alternative chain
   catch (const BLOCK_DNE& e)
   {
+    if (search_uncles)
+    {
+      try
+      {
+        MDEBUG("Looking for uncle " << h << " in main chain");
+        blk = m_db->get_uncle(h);
+        blk.hash = get_block_hash(blk);
+        return true;
+      }
+      catch (const BLOCK_DNE& e) {
+      }
+      MDEBUG("Looking for uncle " << h << " in temporarily discarded main chain");
+      blocks_ext_by_hash::const_iterator it_alt = m_discarded_chain.find(h);
+      if (m_discarded_chain.end() != it_alt)
+      {
+        blk = it_alt->second.bl;
+        return true;
+      }
+    }
+
     MDEBUG("Looking for block " << h << " in alternative chains");
     blocks_ext_by_hash::const_iterator it_alt = m_alternative_chains.find(h);
     if (m_alternative_chains.end() != it_alt)
@@ -1052,7 +1027,7 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
 //------------------------------------------------------------------
 // This function calculates the difficulty target for the block being added to
 // an alternate chain.
-difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std::list<blocks_ext_by_hash::iterator>& alt_chain, block_extended_info& bei) const
+difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std::list<blocks_ext_by_hash::iterator>& alt_chain, const uint64_t b_height) const
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
   std::vector<uint64_t> timestamps;
@@ -1067,7 +1042,7 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
     CRITICAL_REGION_LOCAL(m_blockchain_lock);
 
     // Figure out start and stop offsets for main chain blocks
-    size_t main_chain_stop_offset = alt_chain.size() ? alt_chain.front()->second.height : bei.height;
+    size_t main_chain_stop_offset = alt_chain.size() ? alt_chain.front()->second.height : b_height;
     size_t main_chain_count = difficulty_blocks_count - std::min(static_cast<size_t>(difficulty_blocks_count), alt_chain.size());
     main_chain_count = std::min(main_chain_count, main_chain_stop_offset);
     size_t main_chain_start_offset = main_chain_stop_offset - main_chain_count;
@@ -1614,8 +1589,8 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
       return false;
     }
 
-    // Check the block's hash against the difficulty target for its alt chain
-    difficulty_type current_diff = get_next_difficulty_for_alternative_chain(alt_chain, bei);
+    MDEBUG("Checking the block's hash against the difficulty target for its alt chain");
+    difficulty_type current_diff = get_next_difficulty_for_alternative_chain(alt_chain, bei.height);
     CHECK_AND_ASSERT_MES(current_diff, false, "!!!!!!! DIFFICULTY OVERHEAD !!!!!!!");
     crypto::hash proof_of_work = null_hash;
     get_block_longhash(bei.bl, proof_of_work, bei.height);
@@ -1651,7 +1626,7 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
     block uncle;
     if (is_uncle_block_included(b))
     {
-      bool r = get_uncle_by_hash(b.uncle, uncle);
+      bool r = get_block_by_hash(b.uncle, uncle, NULL, true);
       if (!r)
       {
         MERROR_VER("Alternative Block " << b.hash << " includes non existing uncle " << b.uncle);
@@ -1663,8 +1638,15 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
         bvc.m_verifivation_failed = true;
         return false;
       }
-      // TODO-TK: potential reorg issues here
-      bei.cumulative_difficulty += m_db->get_block_difficulty(uncle.prev_id);
+      difficulty_type uncle_diffic;
+      r = get_block_difficulty(uncle.prev_id, uncle_diffic);
+      if (!r)
+      {
+        MERROR_VER("Unable to get uncle block difficulty");
+        bvc.m_verifivation_failed = true;
+        return false;
+      }
+      bei.cumulative_difficulty += uncle_diffic;
     }
 
     // add block to alternate blocks storage,
@@ -2206,6 +2188,72 @@ uint64_t Blockchain::block_difficulty(uint64_t i) const
   }
   return 0;
 }
+
+bool Blockchain::build_alt_chain(const crypto::hash h, std::list<blocks_ext_by_hash::iterator> &alt_chain)
+{
+  LOG_PRINT_L3("Blockchain::" << __func__);
+  if (m_db->block_exists(h))
+  {
+    MWARNING("Block " << h << "doesn't exist in an alt chain");
+    return false;
+  }
+  auto it_bl = m_alternative_chains.find(h);
+  if (it_bl != m_alternative_chains.end())
+  {
+    MERROR("Block " << h << " not found in set of alternative chains");
+    return false;
+  }
+  blocks_ext_by_hash::iterator alt_it = it_bl;
+  bool parent_in_main = m_db->block_exists(it_bl->second.bl.prev_id);
+  if (parent_in_main)
+  {
+    alt_chain.push_front(alt_it);
+  }
+  else
+  {
+    while(alt_it != m_alternative_chains.end())
+    {
+      alt_chain.push_front(alt_it);
+      alt_it = m_alternative_chains.find(alt_it->second.bl.prev_id);
+    }
+  }
+  return true;
+}
+
+difficulty_type Blockchain::get_block_difficulty(const crypto::hash h, difficulty_type &difficulty)
+{
+  LOG_PRINT_L3("Blockchain::" << __func__);
+
+  MDEBUG("Getting difficulty for block " << h);
+  bool block_in_main = m_db->block_exists(h);
+  if (block_in_main) {
+    MDEBUG("Found block in main");
+    difficulty = m_db->get_block_difficulty(h);
+    return true;
+  }
+
+  // TODO-TK: consider merging this stuff in (potentially similar to get_block_by_hash)
+  block bl;
+  bool r = get_block_by_hash(h, bl, NULL, true);
+  if (r)
+  {
+    MDEBUG("Found block in main as uncle");
+    difficulty = m_db->get_uncle_difficulty(bl.hash);
+    return true;
+  }
+
+  MDEBUG("Block " << h << " in alt chain and block_in_main = " << block_in_main);
+  std::list<blocks_ext_by_hash::iterator> alt_chain;
+  r = build_alt_chain(h, alt_chain);
+  if (!r) {
+    MERROR("Unable to build alt chain for block " << h);
+    return false;
+  }
+
+  difficulty = get_next_difficulty_for_alternative_chain(alt_chain, alt_chain.back()->second.height);
+  return true;
+}
+
 //------------------------------------------------------------------
 //TODO: return type should be void, throw on exception
 //       alternatively, return true only if no blocks missed
@@ -3597,7 +3645,7 @@ leave:
   // only allow uncle blocks after version 7
   if (uncle_included)
   {
-    bool found = get_uncle_by_hash(bl.uncle, uncle);
+    bool found = get_block_by_hash(bl.uncle, uncle, NULL, true);
     if (!found) {
       MERROR_VER("Uncle block with hash " << bl.uncle << " for block " << bl.hash << " not found");
       bvc.m_verifivation_failed = true;
@@ -3610,7 +3658,14 @@ leave:
       goto leave;
     }
 
-    uncle_diffic = m_db->get_block_difficulty(uncle.prev_id);
+    difficulty_type uncle_diffic;
+    bool r = get_block_difficulty(uncle.prev_id, uncle_diffic);
+    if (!r)
+    {
+      MERROR_VER("Unable to get uncle's block difficulty");
+      bvc.m_verifivation_failed = true;
+      goto leave;
+    }
     cumulative_difficulty += uncle_diffic;
   }
 
@@ -3727,7 +3782,7 @@ bool Blockchain::add_new_block(const block& bl_, block_verification_context& bvc
 
   if(!(bl.prev_id == get_tail_id()))
   {
-    MDEBUG("Handling alternative block due to chain switching or wrong block");
+    MDEBUG("Handling alternative block " << bl.hash << " due to chain switching or wrong block");
     bvc.m_added_to_main_chain = false;
     m_db->block_txn_stop();
     bool r = handle_alternative_block(bl, id, bvc);
@@ -3737,7 +3792,7 @@ bool Blockchain::add_new_block(const block& bl_, block_verification_context& bvc
   }
 
   m_db->block_txn_stop();
-  MDEBUG("Handling block to main chain");
+  MDEBUG("Handling block " << bl.hash << " to main chain");
   return handle_block_to_main_chain(bl, id, bvc);
 }
 //------------------------------------------------------------------

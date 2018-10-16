@@ -205,19 +205,7 @@ namespace cryptonote
      *
      * @return true if the block was found, else false
      */
-    bool get_block_by_hash(const crypto::hash &h, block &blk, bool *orphan = NULL) const;
-
-    /**
-     * @brief gets the uncle with a given hash
-     *
-     * If not in db, uncle will be looked for in main chain and alt chains
-     *
-     * @param h the hash to look for
-     * @param uncle return-by-reference variable to put result block in
-     *
-     * @return true if the block was found, else false
-     */
-    bool get_uncle_by_hash(const crypto::hash &h, block &uncle) const;
+    bool get_block_by_hash(const crypto::hash &h, block &blk, bool *orphan = NULL, bool search_uncles = false) const;
 
     /**
      * @brief performs some preprocessing on a group of incoming blocks to speed up verification
@@ -666,6 +654,17 @@ namespace cryptonote
      * @return the difficulty
      */
     uint64_t block_difficulty(uint64_t i) const;
+
+    /**
+     * @brief gets the difficulty of the block given a hash
+     *
+     * Handles blocks from alternative chains
+     *
+     * @param h the hash
+     *
+     * @return the difficulty
+     */
+    uint64_t get_block_difficulty(const crypto::hash h, difficulty_type &difficulty);
 
     /**
      * @brief gets blocks based on a list of block hashes
@@ -1182,7 +1181,7 @@ namespace cryptonote
      *
      * @return the difficulty requirement
      */
-    difficulty_type get_next_difficulty_for_alternative_chain(const std::list<blocks_ext_by_hash::iterator>& alt_chain, block_extended_info& bei) const;
+    difficulty_type get_next_difficulty_for_alternative_chain(const std::list<blocks_ext_by_hash::iterator>& alt_chain, const uint64_t b_height) const;
 
     /**
      * @brief sanity checks a miner transaction before validating an entire block
@@ -1417,5 +1416,15 @@ namespace cryptonote
      * that implicit data.
      */
     bool expand_transaction_2(transaction &tx, const crypto::hash &tx_prefix_hash, const std::vector<std::vector<rct::ctkey>> &pubkeys);
+
+    /**
+     * @brief builds an alternative chain for a requested alt block
+     *
+     * @param h the hash
+     * @param alt_chain the altchain list in which to store it at
+     *
+     * @return if built successfully
+     */
+    bool build_alt_chain(const crypto::hash h, std::list<blocks_ext_by_hash::iterator> &alt_chain);
   };
 }  // namespace cryptonote
