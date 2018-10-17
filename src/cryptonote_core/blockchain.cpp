@@ -1193,18 +1193,9 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
 
-  uint64_t miner_reward = b.miner_tx.vout[0].amount;
-  uint64_t uncle_reward = 0;
-  bool uncle_included = is_uncle_block_included(b);
-  if (uncle_included) {
-    uncle_reward = b.miner_tx.vout[1].amount;
-  }
-
-  //validate reward
-  uint64_t money_in_use = get_outs_money_amount(b.miner_tx);
-  if (money_in_use != miner_reward + uncle_reward)
+  if (!b.miner_tx.vout.size())
   {
-    MERROR_VER("Unexpected number of coinbase transactions " << money_in_use << ", expected amount is " << miner_reward << " (miner_reward) + " << uncle_reward << " (uncle reward)");
+    MERROR_VER("Miner transaction cannot be empty");
     return false;
   }
 
@@ -1218,20 +1209,16 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
     return false;
   }
 
+  bool uncle_included = is_uncle_block_included(b);
   uint64_t max_uncle_reward = uncle_included ? base_reward / UNCLE_REWARD_RATIO : 0;
   uint64_t max_nephew_reward = uncle_included ? base_reward / NEPHEW_REWARD_RATIO : 0;
   uint64_t max_miner_reward = base_reward + fee + max_nephew_reward;
   uint64_t max_block_reward = max_miner_reward + max_uncle_reward;
+  uint64_t money_in_use = get_outs_money_amount(b.miner_tx);
 
   if(max_block_reward != money_in_use)
   {
     MDEBUG("coinbase transaction doesn't use full amount of block reward:  spent: " << money_in_use << ",  block reward " << max_block_reward << "(" << base_reward << "+" << fee << "+" << max_nephew_reward << "+" << max_uncle_reward << ")");
-    return false;
-  }
-
-  if (b.miner_tx.vout[0].amount != max_miner_reward)
-  {
-    MDEBUG("Miner isn't rewarded the correct amount, reported is " << b.miner_tx.vout[0].amount << " and expected is " << max_miner_reward);
     return false;
   }
 
