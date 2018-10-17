@@ -154,9 +154,6 @@ namespace cryptonote
 
     add_tx_pub_key_to_extra(tx, tx_pubkey);
 
-    txin_gen in;
-    in.height = height;
-
     txout_to_key tk;
     tk.key = out_eph_public_key;
 
@@ -166,7 +163,6 @@ namespace cryptonote
     tx.vout.push_back(out);
 
     //lock
-    tx.vin.push_back(in);
     tx.invalidate_hashes();
 
     return true;

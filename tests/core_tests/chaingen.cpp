@@ -234,7 +234,7 @@ bool test_generator::construct_block_manually(block& blk, const block& prev_bloc
   get_last_n_block_sizes(block_sizes, get_block_hash(prev_block), CRYPTONOTE_REWARD_BLOCKS_WINDOW);
 
   size_t height = get_block_height(prev_block) + 1;
-  bool uncle_included = blk.uncle == uncle.hash;
+  bool uncle_included = is_uncle_block_included(blk);
   size_t median_size = misc_utils::median(block_sizes);
   size_t current_block_size = txs_sizes + get_object_blobsize(blk.miner_tx);
   uint64_t block_reward;

@@ -1096,16 +1096,12 @@ difficulty_type Blockchain::get_next_difficulty_for_alternative_chain(const std:
 bool Blockchain::prevalidate_miner_transaction(const block& b, uint64_t height)
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
-  size_t expected_vin_size = is_uncle_block_included(b) ? 2 : 1;
-  CHECK_AND_ASSERT_MES(b.miner_tx.vin.size() == expected_vin_size, false, "coinbase transaction in the block has " << b.miner_tx.vin.size() << " inputs, expected " << expected_vin_size);
-  for (auto& vin : b.miner_tx.vin)
+  CHECK_AND_ASSERT_MES(b.miner_tx.vin.size() == 1, false, "coinbase transaction in the block has no inputs");
+  CHECK_AND_ASSERT_MES(b.miner_tx.vin[0].type() == typeid(txin_gen), false, "coinbase transaction in the block has the wrong type");
+  if(boost::get<txin_gen>(b.miner_tx.vin[0]).height != height)
   {
-    CHECK_AND_ASSERT_MES(vin.type() == typeid(txin_gen), false, "coinbase transaction in the block has the wrong type");
-    if(boost::get<txin_gen>(vin).height != height)
-    {
-      MWARNING("The miner transaction in block has invalid height: " << boost::get<txin_gen>(vin).height << ", expected: " << height);
-      return false;
-    }
+    MWARNING("The miner transaction in block has invalid height: " << boost::get<txin_gen>(b.miner_tx.vin[0]).height << ", expected: " << height);
+    return false;
   }
   MDEBUG("Miner tx hash: " << get_transaction_hash(b.miner_tx));
   CHECK_AND_ASSERT_MES(b.miner_tx.unlock_time == height + CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW, false, "coinbase transaction transaction has the wrong unlock time=" << b.miner_tx.unlock_time << ", expected " << height + CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW);
