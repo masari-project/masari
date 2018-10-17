@@ -1154,6 +1154,12 @@ bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
     return false;
   }
 
+  if (nephew.prev_id == nephew.uncle)
+  {
+    MDEBUG("Block is not allowed to reference a parent as an uncle");
+    return false;
+  }
+
   // TODO-TK: needs a sanity check for allowing case when there's common ancestry (i.e. second uncle)
   if (parent.prev_id != uncle.prev_id && parent.prev_id != uncle.uncle)
   {
