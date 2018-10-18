@@ -1161,9 +1161,9 @@ bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
   }
 
   // TODO-TK: needs a sanity check for allowing case when there's common ancestry (i.e. second uncle)
-  if (parent.prev_id != uncle.prev_id && parent.prev_id != uncle.uncle)
+  if (parent.prev_id != uncle.prev_id && (parent.prev_id != uncle.uncle || parent.uncle != uncle.prev_id))
   {
-    MDEBUG("Nephew " << nephew_id << std::endl << "has uncle block at parent height " << parent_height << " with hash " << uncle.prev_id << " not in common ancestry: " << " Expected uncle or parent: " << parent.prev_id);
+    MDEBUG("Nephew " << nephew_id << std::endl << "has uncle block at parent height " << parent_height << " with no common (uncle parent " << uncle.prev_id << " == grandparent " << parent.prev_id << ") or extended ancestry (grandparent " << parent.prev_id << " == uncle's uncle " << uncle.uncle << " and parent's uncle " << parent.uncle << " == uncle's parent " << uncle.prev_id << ")");
     return false;
   }
 
@@ -1374,7 +1374,8 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
     for (const auto& alt_it: m_alternative_chains)
     {
       block alt_bl = alt_it.second.bl;
-      if(alt_bl.prev_id == top_block.prev_id || alt_bl.uncle == top_block.prev_id)
+
+      if(alt_bl.prev_id == top_block.prev_id || (alt_bl.uncle == top_block.prev_id && alt_bl.prev_id == top_block.uncle))
       {
         MDEBUG("Found uncle candidate with common ancestry to parent block");
         b.uncle = get_block_hash(alt_bl);
