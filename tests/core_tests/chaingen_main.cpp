@@ -220,17 +220,14 @@ int main(int argc, char* argv[])
     GENERATE_AND_PLAY(gen_multisig_tx_invalid_33_1_2_no_threshold);
     GENERATE_AND_PLAY(gen_multisig_tx_invalid_33_1_3_no_threshold);
 
-    GENERATE_AND_PLAY(gen_uncles);
-    /* TODO-TK:
-     * difficulty adjustment verification
-     * permanent storage verification
-     * 60s emission rate difficulty adjustment verification
-     * ensure uncles are accounted for in max block size calculations
-     * ensure emission rates are affected by uncle rewards
-     * ensure correct public keys to uncles
-     * investigate possible migration related issues from uncle lmdb storage
-     */
-    //GENERATE_AND_PLAY(gen_uncle_is_parent);
+    GENERATE_AND_PLAY(gen_uncle);
+    GENERATE_AND_PLAY(gen_uncle_reorg);
+    GENERATE_AND_PLAY(gen_uncle_alt_nephews);
+    GENERATE_AND_PLAY(gen_uncle_reorg_alt_nephews);
+    GENERATE_AND_PLAY(gen_uncle_alt_nephews_as_uncle);
+    GENERATE_AND_PLAY(gen_uncle_reorg_alt_nephews_as_uncle);
+    GENERATE_AND_PLAY(gen_uncle_is_parent);
+    GENERATE_AND_PLAY(gen_uncle_wrong_height);
     //GENERATE_AND_PLAY(gen_uncle_hash_too_low);
     //GENERATE_AND_PLAY(spend_uncle_original_miner_tx);
     //GENERATE_AND_PLAY(spend_uncle_mined_txs);

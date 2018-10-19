@@ -36,60 +36,119 @@ using namespace cryptonote;
 
 
 //-----------------------------------------------------------------------------------------------------
-bool gen_uncles::generate(std::vector<test_event_entry> &events) const
+bool gen_uncles_base::generate_with(std::vector<test_event_entry> &events, const std::function<void(std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)> &add_blocks) const
 {
   GENERATE_ACCOUNT(first_miner_account);
-  MAKE_GENESIS_BLOCK(events, blk_0, first_miner_account, 0);
-  // TODO-TK: test difficulties hitting 0 on integer divisions, need to address impact in rounding up to 1
-  REWIND_BLOCKS_VN(events, blk_a, blk_0, first_miner_account, 1, 9);
-  REWIND_BLOCKS_VN(events, blk_b, blk_a, first_miner_account, 2, 10);
-  REWIND_BLOCKS_VN(events, blk_c, blk_b, first_miner_account, 3, 10);
-  REWIND_BLOCKS_VN(events, blk_d, blk_c, first_miner_account, 4, 10);
-  REWIND_BLOCKS_VN(events, blk_e, blk_d, first_miner_account, 5, 10);
-  REWIND_BLOCKS_VN(events, blk_f, blk_e, first_miner_account, 6, 10);
-  REWIND_BLOCKS_VN(events, blk_i, blk_f, first_miner_account, 7, 10);
-  REWIND_BLOCKS_VN(events, blk_j, blk_i, first_miner_account, 8, 10);                  // 79
+  MAKE_GENESIS_BLOCK(events, blk_a, first_miner_account, 0);
+  REWIND_BLOCKS_VN(events, blk_b, blk_a, first_miner_account, 2, 1);
+  REWIND_BLOCKS_VN(events, blk_c, blk_b, first_miner_account, 3, 1);
+  REWIND_BLOCKS_VN(events, blk_d, blk_c, first_miner_account, 4, 1);
+  REWIND_BLOCKS_VN(events, blk_e, blk_d, first_miner_account, 5, 1);
+  REWIND_BLOCKS_VN(events, blk_f, blk_e, first_miner_account, 6, 1);
+  REWIND_BLOCKS_VN(events, blk_g, blk_f, first_miner_account, 7, 1);
+  REWIND_BLOCKS_VN(events, blk_h, blk_g, first_miner_account, 8, 1);
 
-  MAKE_NEXT_BLOCKV(events, blk_1a, blk_j, first_miner_account, 8);                     // 80
-  MAKE_NEXT_BLOCKV(events, blk_1b, blk_j, first_miner_account, 8);                     // 80
+  MAKE_NEXT_BLOCKV(events, blk_0a, blk_h, first_miner_account, 8);
+  MAKE_NEXT_BLOCKV(events, blk_0b, blk_h, first_miner_account, 8);
 
-  // no reorg + nephew mining an uncle
-  MAKE_NEXT_BLOCKV_UNCLE(events, blk_2, blk_1a, first_miner_account, 8, blk_1b);       // 81
+  add_blocks(events, blk_0a, blk_0b, first_miner_account, generator);
 
-  MAKE_NEXT_BLOCKV(events, blk_3a, blk_2, first_miner_account, 8);                     // 82
-  MAKE_NEXT_BLOCKV(events, blk_3b, blk_2, first_miner_account, 8);                     // 82
-
-  // reorg + nephew mining an uncle
-  MAKE_NEXT_BLOCKV_UNCLE(events, blk_4, blk_3b, first_miner_account, 8, blk_3a);       // 83
-
-  MAKE_NEXT_BLOCKV(events, blk_5a, blk_4, first_miner_account, 8);                     // 84
-  MAKE_NEXT_BLOCKV(events, blk_5b, blk_4, first_miner_account, 8);                     // 84
-
-  // no reorg + nephew mining an uncle
-  MAKE_NEXT_BLOCKV_UNCLE(events, blk_6a, blk_5a, first_miner_account, 8, blk_5b);      // 85
-  MAKE_NEXT_BLOCKV_UNCLE(events, blk_6b, blk_5a, first_miner_account, 8, blk_5b);      // 85
-
-  // reorg between two different nephews
-  MAKE_NEXT_BLOCKV(events, blk_7, blk_6b, first_miner_account, 8);                     // 86
-
-  // reorg between two different nephews + nephew mined as an uncle
-  MAKE_NEXT_BLOCKV(events, blk_8a, blk_7, first_miner_account, 8);                     // 87
-  MAKE_NEXT_BLOCKV(events, blk_8b, blk_7, first_miner_account, 8);                     // 87
-
-  MAKE_NEXT_BLOCKV_UNCLE(events, blk_9a, blk_8a, first_miner_account, 8, blk_8b);      // 88
-  MAKE_NEXT_BLOCKV_UNCLE(events, blk_9b, blk_8b, first_miner_account, 8, blk_8a);      // 88
-
-  MAKE_NEXT_BLOCKV_UNCLE(events, blk_10, blk_9b, first_miner_account, 8, blk_9a);      // 89
-
-  // no reorg between two different nephews + nephew mined as an uncle
-  MAKE_NEXT_BLOCKV(events, blk_11a, blk_10, first_miner_account, 8);                   // 90
-  MAKE_NEXT_BLOCKV(events, blk_11b, blk_10, first_miner_account, 8);                   // 90
-
-  MAKE_NEXT_BLOCKV_UNCLE(events, blk_12a, blk_11a, first_miner_account, 8, blk_11b);   // 91
-  MAKE_NEXT_BLOCKV_UNCLE(events, blk_12b, blk_11b, first_miner_account, 8, blk_11a);   // 91
-
-  MAKE_NEXT_BLOCKV_UNCLE(events, blk_13, blk_12a, first_miner_account, 8, blk_12b);    // 92
-
-  // TODO-TK: add tests when ready
   return true;
+}
+
+// valid
+//--------------------------------------------------------------------------
+
+bool gen_uncle::generate(std::vector<test_event_entry>& events) const
+{
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+    MAKE_NEXT_BLOCKV_UNCLE(events, nephew, top_bl, original_miner, 8, alt_bl);
+  };
+  return generate_with(events, modifier);
+}
+
+bool gen_uncle_reorg::generate(std::vector<test_event_entry>& events) const
+{
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+    MAKE_NEXT_BLOCKV_UNCLE(events, nephew, alt_bl, original_miner, 8, top_bl);
+  };
+  return generate_with(events, modifier);
+}
+
+bool gen_uncle_alt_nephews::generate(std::vector<test_event_entry>& events) const
+{
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+    MAKE_NEXT_BLOCKV_UNCLE(events, nephew, alt_bl, original_miner, 8, top_bl);
+    // no reorg + nephew mining an uncle
+    MAKE_NEXT_BLOCKV_UNCLE(events, nephew0, top_bl, original_miner, 8, alt_bl);
+    MAKE_NEXT_BLOCKV_UNCLE(events, nephew1, top_bl, original_miner, 8, alt_bl);
+
+    // no reorg between two different nephews
+    MAKE_NEXT_BLOCKV(events, new_top, nephew0, original_miner, 8);
+  };
+  return generate_with(events, modifier);
+}
+
+bool gen_uncle_reorg_alt_nephews::generate(std::vector<test_event_entry>& events) const
+{
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+    MAKE_NEXT_BLOCKV_UNCLE(events, nephew, alt_bl, original_miner, 8, top_bl);
+    // no reorg + nephew mining an uncle
+    MAKE_NEXT_BLOCKV_UNCLE(events, nephew0, top_bl, original_miner, 8, alt_bl);
+    MAKE_NEXT_BLOCKV_UNCLE(events, nephew1, top_bl, original_miner, 8, alt_bl);
+
+    // reorg between two different nephews
+    MAKE_NEXT_BLOCKV(events, new_top, nephew1, original_miner, 8);
+  };
+  return generate_with(events, modifier);
+}
+
+bool gen_uncle_alt_nephews_as_uncle::generate(std::vector<test_event_entry>& events) const
+{
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+    MAKE_NEXT_BLOCKV_UNCLE(events, nephew, alt_bl, original_miner, 8, top_bl);
+    // no reorg + nephew mining an uncle
+    MAKE_NEXT_BLOCKV_UNCLE(events, nephew0, top_bl, original_miner, 8, alt_bl);
+    MAKE_NEXT_BLOCKV_UNCLE(events, nephew1, top_bl, original_miner, 8, alt_bl);
+
+    // no reorg between two different nephews and mine alt as an uncle
+    MAKE_NEXT_BLOCKV_UNCLE(events, new_top, nephew0, original_miner, 8, nephew1);
+  };
+  return generate_with(events, modifier);
+}
+
+bool gen_uncle_reorg_alt_nephews_as_uncle::generate(std::vector<test_event_entry>& events) const
+{
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+    MAKE_NEXT_BLOCKV_UNCLE(events, nephew, alt_bl, original_miner, 8, top_bl);
+    // no reorg + nephew mining an uncle
+    MAKE_NEXT_BLOCKV_UNCLE(events, nephew0, top_bl, original_miner, 8, alt_bl);
+    MAKE_NEXT_BLOCKV_UNCLE(events, nephew1, top_bl, original_miner, 8, alt_bl);
+
+    // reorg between two different nephews and mine the other as an uncle
+    MAKE_NEXT_BLOCKV_UNCLE(events, new_top, nephew1, original_miner, 8, nephew0);
+  };
+  return generate_with(events, modifier);
+}
+
+// invalid
+//--------------------------------------------------------------------------
+
+bool gen_uncle_is_parent::generate(std::vector<test_event_entry>& events) const
+{
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+    DO_CALLBACK(events, "mark_invalid_block");
+    MAKE_NEXT_BLOCKV_UNCLE(events, nephew, top_bl, original_miner, 8, top_bl);
+  };
+  return generate_with(events, modifier);
+}
+
+bool gen_uncle_wrong_height::generate(std::vector<test_event_entry>& events) const
+{
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+    MAKE_NEXT_BLOCKV(events, new_bl, top_bl, original_miner, 8);
+    DO_CALLBACK(events, "mark_invalid_block");
+    MAKE_NEXT_BLOCKV_UNCLE(events, nephew, new_bl, original_miner, 8, alt_bl);
+  };
+  return generate_with(events, modifier);
 }
