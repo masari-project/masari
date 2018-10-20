@@ -228,6 +228,7 @@ int main(int argc, char* argv[])
     GENERATE_AND_PLAY(gen_uncle_reorg_alt_nephews_as_uncle);
     GENERATE_AND_PLAY(gen_uncle_is_parent);
     GENERATE_AND_PLAY(gen_uncle_wrong_height);
+    GENERATE_AND_PLAY(gen_uncle_wrong_version);
     //GENERATE_AND_PLAY(gen_uncle_hash_too_low);
     //GENERATE_AND_PLAY(spend_uncle_original_miner_tx);
     //GENERATE_AND_PLAY(spend_uncle_mined_txs);

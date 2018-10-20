@@ -1247,6 +1247,11 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
   }
 
   bool uncle_included = is_uncle_block_included(b);
+  if (uncle_included && b.major_version < 8)
+  {
+    MERROR_VER("Uncle transactions aren't allowed when hf < 8");
+    return false;
+  }
   uint64_t max_uncle_reward = uncle_included ? base_reward / UNCLE_REWARD_RATIO : 0;
   uint64_t max_nephew_reward = uncle_included ? base_reward / NEPHEW_REWARD_RATIO : 0;
   uint64_t max_miner_reward = base_reward + fee + max_nephew_reward;
@@ -1649,9 +1654,18 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
     }
     bei.cumulative_difficulty += current_diff;
 
+    bool uncle_included = is_uncle_block_included(b);
     block uncle;
-    if (is_uncle_block_included(b))
+    difficulty_type uncle_diffic = 0;
+    if (uncle_included)
     {
+      if (b.major_version < 8)
+      {
+        MERROR_VER("Uncle mining detected with hf < v8");
+        bvc.m_verifivation_failed = true;
+        return false;
+      }
+
       bool r = get_block_by_hash(b.uncle, uncle, NULL, true);
       if (!r)
       {
@@ -1664,7 +1678,6 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
         bvc.m_verifivation_failed = true;
         return false;
       }
-      difficulty_type uncle_diffic;
       r = get_block_difficulty(uncle.prev_id, uncle_diffic);
       if (!r)
       {
@@ -1708,7 +1721,7 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
     }
     else
     {
-      MGINFO_BLUE("----- BLOCK ADDED AS ALTERNATIVE -----" << std::endl << "id:\t" << id << std::endl << "prev:\t" << b.prev_id << std::endl << "PoW:\t" << proof_of_work << std::endl << "height:\t" << bei.height << std::endl << "difficulty:\t" << current_diff << std::endl << "cumulative difficulty:\t" << bei.cumulative_difficulty << std::endl << "uncle:\t" << b.uncle);
+      MGINFO_BLUE("----- BLOCK ADDED AS ALTERNATIVE -----" << std::endl << "id:\t" << id << std::endl << "prev:\t" << b.prev_id << std::endl << "PoW:\t" << proof_of_work << std::endl << "height:\t" << bei.height << std::endl << "version:\t" << std::to_string(b.major_version) << std::endl << "difficulty:\t" << current_diff + uncle_diffic << " (" << current_diff << "+" << uncle_diffic << ")" << std::endl << "cumulative difficulty:\t" << bei.cumulative_difficulty << std::endl << "block reward:\t" << print_money(get_outs_money_amount(b.miner_tx)) << std::endl << "uncle:\t" << b.uncle);
       return true;
     }
   }
@@ -3667,10 +3680,15 @@ leave:
   bool uncle_included = is_uncle_block_included(bl);
   cryptonote::block uncle;
   difficulty_type uncle_diffic = 0;
-
-  // only allow uncle blocks after version 7
   if (uncle_included)
   {
+    if (bl.major_version < 8)
+    {
+      MERROR_VER("Uncle mining detected with hf < v8");
+      bvc.m_verifivation_failed = true;
+      goto leave;
+    }
+
     bool found = get_block_by_hash(bl.uncle, uncle, NULL, true);
     if (!found) {
       MERROR_VER("Uncle block with hash " << bl.uncle << " for block " << bl.hash << " not found");
@@ -3752,7 +3770,7 @@ leave:
 
   uint64_t uncle_reward = uncle_included ? bl.miner_tx.vout[1].amount : 0;
 
-  MINFO("+++++ BLOCK SUCCESSFULLY ADDED" << std::endl << "id:\t" << id << std::endl << "prev:\t" << bl.prev_id << std::endl << "PoW:\t" << proof_of_work << std::endl << "height:\t" << new_height-1 << std::endl << "difficulty:\t" << current_diffic + uncle_diffic << " (" << current_diffic << "+" << uncle_diffic << ")" << std::endl << "cumulative_difficulty:\t" << cumulative_difficulty << std::endl << "block reward:\t" << print_money(get_outs_money_amount(bl.miner_tx)) << "(" << print_money(base_reward) << " + " << print_money(fee_summary) << " + " << print_money(bl.miner_tx.vout[0].amount - base_reward - fee_summary) /* nephew reward */ << " + " << print_money(uncle_reward) /* uncle reward */ << ")" << std::endl << "coinbase_blob_size: " << coinbase_blob_size << ", cumulative size: " << cumulative_block_size << ", " << block_processing_time << "(" << target_calculating_time << "/" << longhash_calculating_time << ")ms" << std::endl << "uncle:\t" << bl.uncle);
+  MINFO("+++++ BLOCK SUCCESSFULLY ADDED" << std::endl << "id:\t" << id << std::endl << "prev:\t" << bl.prev_id << std::endl << "PoW:\t" << proof_of_work << std::endl << "height:\t" << new_height-1 << std::endl << "version:\t" << std::to_string(bl.major_version) << std::endl << "difficulty:\t" << current_diffic + uncle_diffic << " (" << current_diffic << "+" << uncle_diffic << ")" << std::endl << "cumulative_difficulty:\t" << cumulative_difficulty << std::endl << "block reward:\t" << print_money(get_outs_money_amount(bl.miner_tx)) << "(" << print_money(base_reward) << " + " << print_money(fee_summary) << " + " << print_money(bl.miner_tx.vout[0].amount - base_reward - fee_summary) /* nephew reward */ << " + " << print_money(uncle_reward) /* uncle reward */ << ")" << std::endl << "coinbase_blob_size: " << coinbase_blob_size << ", cumulative size: " << cumulative_block_size << ", " << block_processing_time << "(" << target_calculating_time << "/" << longhash_calculating_time << ")ms" << std::endl << "uncle:\t" << bl.uncle);
   if(m_show_time_stats)
   {
     MINFO("Height: " << new_height << " blob: " << coinbase_blob_size << " cumm: "

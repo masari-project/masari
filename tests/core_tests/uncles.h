@@ -58,7 +58,7 @@ private:
 
 template<>
 struct get_test_options<gen_uncles_base> {
-  const std::pair<uint8_t, uint64_t> hard_forks[9] = {std::make_pair(1, 0), std::make_pair(2, 1), std::make_pair(3, 2), std::make_pair(4, 3),std::make_pair(5, 4), std::make_pair(6, 5), std::make_pair(7, 6), std::make_pair(8, 7), std::make_pair(0, 0)};
+  const std::pair<uint8_t, uint64_t> hard_forks[9] = {std::make_pair(1, 0), std::make_pair(2, 2), std::make_pair(3, 3), std::make_pair(4, 4),std::make_pair(5, 5), std::make_pair(6, 6), std::make_pair(7, 7), std::make_pair(8, 10), std::make_pair(0, 0)};
   const cryptonote::test_options test_options = {
     hard_forks
   };
@@ -117,6 +117,12 @@ struct gen_uncle_wrong_height : public gen_uncles_base
   bool generate(std::vector<test_event_entry>& events) const;
 };
 template<> struct get_test_options<gen_uncle_wrong_height>: public get_test_options<gen_uncles_base> {};
+
+struct gen_uncle_wrong_version : public gen_uncles_base
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+template<> struct get_test_options<gen_uncle_wrong_version>: public get_test_options<gen_uncles_base> {};
 
 struct gen_uncle_hash_too_low : public gen_uncles_base
 {

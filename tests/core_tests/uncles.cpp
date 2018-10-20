@@ -34,22 +34,26 @@ using namespace std;
 using namespace epee;
 using namespace cryptonote;
 
+// TODO-TK: hacky reuse - look for something better
+#define CHAIN_BASE \
+  GENERATE_ACCOUNT(first_miner_account); \
+  MAKE_GENESIS_BLOCK(events, blk_a, first_miner_account, 0); \
+  REWIND_BLOCKS_VN(events, blk_b, blk_a, first_miner_account, 1, 1); \
+  REWIND_BLOCKS_VN(events, blk_c, blk_b, first_miner_account, 2, 1); \
+  REWIND_BLOCKS_VN(events, blk_d, blk_c, first_miner_account, 3, 1); \
+  REWIND_BLOCKS_VN(events, blk_e, blk_d, first_miner_account, 4, 1); \
+  REWIND_BLOCKS_VN(events, blk_f, blk_e, first_miner_account, 5, 1); \
+  REWIND_BLOCKS_VN(events, blk_g, blk_f, first_miner_account, 6, 1);
 
 //-----------------------------------------------------------------------------------------------------
 bool gen_uncles_base::generate_with(std::vector<test_event_entry> &events, const std::function<void(std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)> &add_blocks) const
 {
-  GENERATE_ACCOUNT(first_miner_account);
-  MAKE_GENESIS_BLOCK(events, blk_a, first_miner_account, 0);
-  REWIND_BLOCKS_VN(events, blk_b, blk_a, first_miner_account, 2, 1);
-  REWIND_BLOCKS_VN(events, blk_c, blk_b, first_miner_account, 3, 1);
-  REWIND_BLOCKS_VN(events, blk_d, blk_c, first_miner_account, 4, 1);
-  REWIND_BLOCKS_VN(events, blk_e, blk_d, first_miner_account, 5, 1);
-  REWIND_BLOCKS_VN(events, blk_f, blk_e, first_miner_account, 6, 1);
-  REWIND_BLOCKS_VN(events, blk_g, blk_f, first_miner_account, 7, 1);
-  REWIND_BLOCKS_VN(events, blk_h, blk_g, first_miner_account, 8, 1);
+  CHAIN_BASE;
+  REWIND_BLOCKS_VN(events, blk_h, blk_g, first_miner_account, 7, 3);
+  REWIND_BLOCKS_VN(events, blk_i, blk_h, first_miner_account, 8, 1);
 
-  MAKE_NEXT_BLOCKV(events, blk_0a, blk_h, first_miner_account, 8);
-  MAKE_NEXT_BLOCKV(events, blk_0b, blk_h, first_miner_account, 8);
+  MAKE_NEXT_BLOCKV(events, blk_0a, blk_i, first_miner_account, 8);
+  MAKE_NEXT_BLOCKV(events, blk_0b, blk_i, first_miner_account, 8);
 
   add_blocks(events, blk_0a, blk_0b, first_miner_account, generator);
 
@@ -151,4 +155,16 @@ bool gen_uncle_wrong_height::generate(std::vector<test_event_entry>& events) con
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew, new_bl, original_miner, 8, alt_bl);
   };
   return generate_with(events, modifier);
+}
+
+// TODO-TK: tx affected but bl.uncle is getting lost somewhere (potentially serialization)
+bool gen_uncle_wrong_version::generate(std::vector<test_event_entry>& events) const
+{
+  CHAIN_BASE;
+  REWIND_BLOCKS_VN(events, blk_h, blk_g, first_miner_account, 7, 1);
+  MAKE_NEXT_BLOCKV(events, blk_0a, blk_h, first_miner_account, 7);
+  MAKE_NEXT_BLOCKV(events, blk_0b, blk_h, first_miner_account, 7);
+  DO_CALLBACK(events, "mark_invalid_block");
+  MAKE_NEXT_BLOCKV_UNCLE(events, blk_1, blk_0a, first_miner_account, 7, blk_0b);
+  return true;
 }
