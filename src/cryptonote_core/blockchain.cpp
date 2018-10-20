@@ -1160,13 +1160,13 @@ bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
 
   if (uncle.major_version != nephew.major_version)
   {
-    MDEBUG("Nephew " << nephew_id << std::endl << "has invalid uncle block major version: " << uncle.major_version << " which doesn't agree with sibling block version: " << nephew.major_version);
+    MERROR_VER("Nephew " << nephew_id << std::endl << "has invalid uncle block major version: " << uncle.major_version << " which doesn't agree with sibling block version: " << nephew.major_version);
     return false;
   }
 
   if (uncle.hash != nephew.uncle)
   {
-    MDEBUG("Nephew " << nephew_id << std::endl << " has mismatched uncle " << nephew.uncle << ", expected: " << uncle.hash);
+    MERROR_VER("Nephew " << nephew_id << std::endl << " has mismatched uncle " << nephew.uncle << ", expected: " << uncle.hash);
     return false;
   }
 
@@ -1177,7 +1177,7 @@ bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
   bool r = get_block_by_hash(nephew.prev_id, parent, &orphan);
   if (!r)
   {
-    MDEBUG("Unable to get nephew block's parent");
+    MERROR_VER("Unable to get nephew block's parent");
     return false;
   }
   uint64_t parent_height = get_block_height(parent);
@@ -1185,20 +1185,20 @@ bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
 
   if (parent_height != uncle_height)
   {
-    MDEBUG("Parent " << parent.hash << " and uncle " << uncle.hash << " aren't at the same depth.");
+    MERROR_VER("Parent " << parent.hash << " and uncle " << uncle.hash << " aren't at the same depth.");
     return false;
   }
 
   if (nephew.prev_id == nephew.uncle)
   {
-    MDEBUG("Block is not allowed to reference a parent as an uncle");
+    MERROR_VER("Block is not allowed to reference a parent as an uncle");
     return false;
   }
 
   // TODO-TK: needs a sanity check for allowing case when there's common ancestry (i.e. second uncle)
   if (parent.prev_id != uncle.prev_id && (parent.prev_id != uncle.uncle || parent.uncle != uncle.prev_id))
   {
-    MDEBUG("Nephew " << nephew_id << std::endl << "has uncle block at parent height " << parent_height << " with no common (uncle parent " << uncle.prev_id << " == grandparent " << parent.prev_id << ") or extended ancestry (grandparent " << parent.prev_id << " == uncle's uncle " << uncle.uncle << " and parent's uncle " << parent.uncle << " == uncle's parent " << uncle.prev_id << ")");
+    MERROR_VER("Nephew " << nephew_id << std::endl << "has uncle block at parent height " << parent_height << " with no common (uncle parent " << uncle.prev_id << " == grandparent " << parent.prev_id << ") or extended ancestry (grandparent " << parent.prev_id << " == uncle's uncle " << uncle.uncle << " and parent's uncle " << parent.uncle << " == uncle's parent " << uncle.prev_id << ")");
     return false;
   }
 
@@ -1208,7 +1208,7 @@ bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
   crypto::public_key uncle_out = boost::get<txout_to_key>(uncle.miner_tx.vout[0].target).key;
   if (nephew_uncle_out != uncle_out)
   {
-    MDEBUG("Nephew's uncle reward transaction is to " << nephew_uncle_out << " and not being rewarded to uncle out " << uncle_out);
+    MERROR_VER("Nephew's uncle reward transaction is to " << nephew_uncle_out << " and not being rewarded to uncle out " << uncle_out);
     return false;
   }
 
@@ -1216,7 +1216,7 @@ bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
   crypto::public_key uncle_tx_pubkey = get_tx_pub_key_from_extra(uncle.miner_tx, 0);
   if (nephew_uncle_tx_pubkey != uncle_tx_pubkey)
   {
-    MDEBUG("Nephew's uncle tx public key " << nephew_uncle_tx_pubkey << " is not the same as uncle's tx public key " << uncle_tx_pubkey);
+    MERROR_VER("Nephew's uncle tx public key " << nephew_uncle_tx_pubkey << " is not the same as uncle's tx public key " << uncle_tx_pubkey);
     return false;
   }
 
@@ -1255,13 +1255,13 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
 
   if(max_block_reward != money_in_use)
   {
-    MDEBUG("coinbase transaction doesn't use full amount of block reward:  spent: " << money_in_use << ",  block reward " << max_block_reward << "(" << base_reward << "+" << fee << "+" << max_nephew_reward << "+" << max_uncle_reward << ")");
+    MERROR_VER("coinbase transaction doesn't use full amount of block reward:  spent: " << money_in_use << ",  max block reward " << max_block_reward << "(" << base_reward << "+" << fee << "+" << max_nephew_reward << "+" << max_uncle_reward << ")");
     return false;
   }
 
   if (uncle_included && b.miner_tx.vout[1].amount != max_uncle_reward)
   {
-    MDEBUG("Uncle isn't rewarded the correct amount, reported is " << b.miner_tx.vout[1].amount << " and expected is " << max_uncle_reward);
+    MERROR_VER("Uncle isn't rewarded the correct amount, reported is " << b.miner_tx.vout[1].amount << " and expected is " << max_uncle_reward);
     return false;
   }
 
@@ -1542,7 +1542,7 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
   // this is a cheap test
   if (!m_hardfork->check_for_height(b, block_height))
   {
-    LOG_PRINT_L1("Block with id: " << id << std::endl << "has old version for height " << block_height);
+    LOG_PRINT_L1("Block with id: " << id << std::endl << "has old version " << std::to_string(b.major_version) << " for height " << block_height);
     bvc.m_verifivation_failed = true;
     return false;
   }
