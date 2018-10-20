@@ -722,6 +722,30 @@ crypto::hash Blockchain::get_block_id_by_height(uint64_t height) const
   return null_hash;
 }
 
+bool Blockchain::get_uncle_from_height(uint64_t height, block &uncle)
+{
+  try
+  {
+    uncle = m_db->get_uncle_from_height(height);
+    return true;
+  }
+  catch (const BLOCK_DNE& e)
+  {
+    MDEBUG("No uncle at height " << height << " exists in database");
+    return false;
+  }
+  catch (const std::exception& e)
+  {
+    MDEBUG(std::string("Something went wrong fetching uncle by height: ") + e.what());
+    return false;
+  }
+  catch (...)
+  {
+    MDEBUG(std::string("Something went wrong fetching uncle by height"));
+    return false;
+  }
+}
+
 //------------------------------------------------------------------
 bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orphan, bool search_uncles) const
 {
@@ -748,7 +772,7 @@ bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orph
         blk.hash = get_block_hash(blk);
         return true;
       }
-      catch (const BLOCK_DNE& e) {
+      catch (...) {
       }
       MDEBUG("Looking for uncle " << h << " in temporarily discarded main chain");
       blocks_ext_by_hash::const_iterator it_alt = m_discarded_chain.find(h);
@@ -943,7 +967,18 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
   while (m_db->top_block_hash() != alt_chain.front()->second.bl.prev_id)
   {
     uint64_t b_height = m_db->height();
-    MTRACE("Popping block " << m_db->top_block_hash() << " at height " << b_height);
+    block uncle;
+    bool r = get_uncle_from_height(b_height - 1, uncle);
+    if (r)
+    {
+      MTRACE("Adding uncle " << get_block_hash(uncle) << " to temporary discarded chain container");
+      block_extended_info uei = boost::value_initialized<block_extended_info>();
+      uei.bl = uncle;
+      uei.height = b_height;
+      m_discarded_chain.insert(blocks_ext_by_hash::value_type(uncle.hash, uei));
+    }
+
+    MTRACE("Popping block " << " at height " << b_height);
     block b = pop_block_from_blockchain();
     disconnected_chain.push_front(b);
 

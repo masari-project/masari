@@ -302,6 +302,16 @@ void BlockchainDB::remove_transaction(const crypto::hash& tx_hash)
   remove_transaction_data(tx_hash, tx);
 }
 
+block BlockchainDB::get_uncle_from_height(const uint64_t& height) const
+{
+  blobdata bd = get_uncle_blob_from_height(height);
+  block b;
+  if (!parse_and_validate_block_from_blob(bd, b))
+    throw DB_ERROR("Failed to parse uncle from blob retrieved from the db");
+
+  return b;
+}
+
 block BlockchainDB::get_block_from_height(const uint64_t& height) const
 {
   blobdata bd = get_block_blob_from_height(height);

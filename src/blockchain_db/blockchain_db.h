@@ -973,6 +973,17 @@ public:
   virtual cryptonote::blobdata get_uncle_blob_from_height(const uint64_t& height) const = 0;
 
   /**
+   * @brief fetch an uncle by height
+   *
+   * If the block does not exist, should throw a BLOCK_DNE exception
+   *
+   * @param height the height to look for
+   *
+   * @return the uncle block
+   */
+  block get_uncle_from_height(const uint64_t& height) const;
+
+  /**
    * @brief fetch a block by height
    *
    * If the block does not exist, that is to say if the blockchain is not

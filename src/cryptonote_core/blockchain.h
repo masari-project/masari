@@ -197,6 +197,16 @@ namespace cryptonote
     crypto::hash get_block_id_by_height(uint64_t height) const;
 
     /**
+     * @brief gets uncle at a given height
+     *
+     * @param height hte height to fetch from
+     * @param uncle return-by-reference variable
+     *
+     * @return true if uncle found else false
+     */
+    bool get_uncle_from_height(uint64_t height, block &uncle);
+
+    /**
      * @brief gets the block with a given hash
      *
      * @param h the hash to look for
