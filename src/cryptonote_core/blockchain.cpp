@@ -1415,7 +1415,6 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
         MDEBUG("Found uncle candidate with common ancestry to parent block");
         b.uncle = get_block_hash(alt_bl);
         uncle_included = true;
-        fee += block_reward / NEPHEW_REWARD_RATIO;
 
         uncle = alt_bl;
         uncle_out = boost::get<txout_to_key>(uncle.miner_tx.vout[0].target).key;
@@ -1434,9 +1433,11 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
 #endif
   for (size_t try_count = 0; try_count != 10; ++try_count)
   {
-    r = construct_miner_tx(height, median_size, already_generated_coins, cumulative_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version);
+    r = construct_miner_tx(height, median_size, already_generated_coins, cumulative_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version, uncle_included);
     if (uncle_included) {
-      construct_uncle_miner_tx(height, b.miner_tx.vout[0].amount, uncle_out, uncle_tx_pubkey, b.miner_tx);
+      uint64_t base_reward;
+      get_block_reward(median_size, cumulative_size, already_generated_coins, base_reward, hf_version);
+      construct_uncle_miner_tx(height, base_reward, uncle_out, uncle_tx_pubkey, b.miner_tx);
     }
 
     CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, second chance");
