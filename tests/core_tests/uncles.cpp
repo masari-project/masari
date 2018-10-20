@@ -38,18 +38,18 @@ using namespace cryptonote;
 #define CHAIN_BASE \
   GENERATE_ACCOUNT(first_miner_account); \
   MAKE_GENESIS_BLOCK(events, blk_a, first_miner_account, 0); \
-  REWIND_BLOCKS_VN(events, blk_b, blk_a, first_miner_account, 1, 1); \
-  REWIND_BLOCKS_VN(events, blk_c, blk_b, first_miner_account, 2, 1); \
-  REWIND_BLOCKS_VN(events, blk_d, blk_c, first_miner_account, 3, 1); \
-  REWIND_BLOCKS_VN(events, blk_e, blk_d, first_miner_account, 4, 1); \
-  REWIND_BLOCKS_VN(events, blk_f, blk_e, first_miner_account, 5, 1); \
-  REWIND_BLOCKS_VN(events, blk_g, blk_f, first_miner_account, 6, 1);
+  REWIND_BLOCKS_VN(events, blk_b, blk_a, first_miner_account, 1, 9); \
+  REWIND_BLOCKS_VN(events, blk_c, blk_b, first_miner_account, 2, 10); \
+  REWIND_BLOCKS_VN(events, blk_d, blk_c, first_miner_account, 3, 10); \
+  REWIND_BLOCKS_VN(events, blk_e, blk_d, first_miner_account, 4, 10); \
+  REWIND_BLOCKS_VN(events, blk_f, blk_e, first_miner_account, 5, 10); \
+  REWIND_BLOCKS_VN(events, blk_g, blk_f, first_miner_account, 6, 10);
 
 //-----------------------------------------------------------------------------------------------------
 bool gen_uncles_base::generate_with(std::vector<test_event_entry> &events, const std::function<void(std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)> &add_blocks) const
 {
   CHAIN_BASE;
-  REWIND_BLOCKS_VN(events, blk_h, blk_g, first_miner_account, 7, 3);
+  REWIND_BLOCKS_VN(events, blk_h, blk_g, first_miner_account, 7, 10);
   REWIND_BLOCKS_VN(events, blk_i, blk_h, first_miner_account, 8, 1);
 
   MAKE_NEXT_BLOCKV(events, blk_0a, blk_i, first_miner_account, 8);

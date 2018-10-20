@@ -58,7 +58,7 @@ private:
 
 template<>
 struct get_test_options<gen_uncles_base> {
-  const std::pair<uint8_t, uint64_t> hard_forks[9] = {std::make_pair(1, 0), std::make_pair(2, 2), std::make_pair(3, 3), std::make_pair(4, 4),std::make_pair(5, 5), std::make_pair(6, 6), std::make_pair(7, 7), std::make_pair(8, 10), std::make_pair(0, 0)};
+  const std::pair<uint8_t, uint64_t> hard_forks[9] = {std::make_pair(1, 0), std::make_pair(2, 10), std::make_pair(3, 20), std::make_pair(4, 30),std::make_pair(5, 40), std::make_pair(6, 50), std::make_pair(7, 60), std::make_pair(8, 70), std::make_pair(0, 0)};
   const cryptonote::test_options test_options = {
     hard_forks
   };
