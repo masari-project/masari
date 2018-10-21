@@ -1293,6 +1293,34 @@ namespace cryptonote
     };
 
   };
+  
+  struct COMMAND_RPC_GET_UNCLE_BLOCK
+  {
+    struct request
+    {
+      std::string hash;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(hash)
+      END_KV_SERIALIZE_MAP()
+    };
+
+    struct response
+    {
+      std::string status;
+      std::string blob;
+      std::string json;
+      bool untrusted;
+      
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(status)
+        KV_SERIALIZE(blob)
+        KV_SERIALIZE(json)
+        KV_SERIALIZE(untrusted)
+      END_KV_SERIALIZE_MAP()
+    };
+
+  };
 
   struct peer {
     uint64_t id;

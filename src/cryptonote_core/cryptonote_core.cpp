@@ -1332,6 +1332,11 @@ namespace cryptonote
     return m_blockchain_storage.get_block_by_hash(h, blk, orphan);
   }
   //-----------------------------------------------------------------------------------------------
+  block core::get_uncle_by_hash(const crypto::hash &h) const
+  {
+    return m_blockchain_storage.get_db().get_uncle(h);
+  }
+  //-----------------------------------------------------------------------------------------------
   std::string core::print_pool(bool short_format) const
   {
     return m_mempool.print_pool(short_format);

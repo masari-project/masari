@@ -368,6 +368,13 @@ namespace cryptonote
       */
      bool get_block_by_hash(const crypto::hash &h, block &blk, bool *orphan = NULL) const;
 
+      /**
+      * @copydoc BlockchainDB::get_uncle
+      *
+      * @note see BlockchainDB::get_uncle
+      */
+     block get_uncle_by_hash(const crypto::hash &h) const;
+
      /**
       * @copydoc Blockchain::get_alternative_blocks
       *

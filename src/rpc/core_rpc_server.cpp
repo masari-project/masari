@@ -1528,6 +1528,34 @@ namespace cryptonote
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
+  bool core_rpc_server::on_get_uncle_block(const COMMAND_RPC_GET_UNCLE_BLOCK::request& req, COMMAND_RPC_GET_UNCLE_BLOCK::response& res, epee::json_rpc::error& error_resp)
+  {
+    PERF_TIMER(on_get_uncle_block);
+    bool r;
+    if (use_bootstrap_daemon_if_necessary<COMMAND_RPC_GET_UNCLE_BLOCK>(invoke_http_mode::JON_RPC, "get_uncle_block", req, res, r))
+      return r;
+
+    crypto::hash block_hash;
+    if (!req.hash.empty())
+    {
+      bool hash_parsed = parse_hash256(req.hash, block_hash);
+      if(!hash_parsed)
+      {
+        error_resp.code = CORE_RPC_ERROR_CODE_WRONG_PARAM;
+        error_resp.message = "Failed to parse hex representation of block hash. Hex = " + req.hash + '.';
+        return false;
+      }
+    }
+    
+    block uncle = m_core.get_uncle_by_hash(block_hash);
+    
+    res.blob = string_tools::buff_to_hex_nodelimer(t_serializable_object_to_blob(uncle));
+    res.json = obj_to_json_str(uncle);
+    res.status = CORE_RPC_STATUS_OK;
+    
+    return true;
+  }
+  //------------------------------------------------------------------------------------------------------------------------------
   bool core_rpc_server::on_get_connections(const COMMAND_RPC_GET_CONNECTIONS::request& req, COMMAND_RPC_GET_CONNECTIONS::response& res, epee::json_rpc::error& error_resp)
   {
     PERF_TIMER(on_get_connections);
