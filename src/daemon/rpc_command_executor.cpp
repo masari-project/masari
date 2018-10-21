@@ -711,6 +711,36 @@ bool t_rpc_command_executor::print_block_by_height(uint64_t height) {
   return true;
 }
 
+bool t_rpc_command_executor::print_uncle_block(crypto::hash uncle_hash) {
+  cryptonote::COMMAND_RPC_GET_UNCLE_BLOCK::request req;
+  cryptonote::COMMAND_RPC_GET_UNCLE_BLOCK::response res;
+  epee::json_rpc::error error_resp;
+
+  req.hash = epee::string_tools::pod_to_hex(uncle_hash);
+
+  std::string fail_message = "Unsuccessful";
+
+  if (m_is_rpc)
+  {
+    if (!m_rpc_client->json_rpc_request(req, res, "get_uncle_block", fail_message.c_str()))
+    {
+      return true;
+    }
+  }
+  else
+  {
+    if (!m_rpc_server->on_get_uncle_block(req, res, error_resp) || res.status != CORE_RPC_STATUS_OK)
+    {
+      tools::fail_msg_writer() << make_error(fail_message, res.status);
+      return true;
+    }
+  }
+
+  tools::success_msg_writer() << res.json << ENDL;
+
+  return true;
+}
+
 bool t_rpc_command_executor::print_transaction(crypto::hash transaction_hash,
   bool include_hex,
   bool include_json) {

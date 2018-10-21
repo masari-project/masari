@@ -186,6 +186,24 @@ bool t_command_parser_executor::print_block(const std::vector<std::string>& args
   return false;
 }
 
+bool t_command_parser_executor::print_uncle_block(const std::vector<std::string>& args)
+{
+  if (args.empty())
+  {
+    std::cout << "expected: print_uncle_block (<uncle_block_hash>)" << std::endl;
+    return false;
+  }
+  
+  const std::string& arg = args.front();
+  crypto::hash uncle_hash;
+  if (parse_hash256(arg, uncle_hash))
+  {
+    return m_executor.print_uncle_block(uncle_hash);
+  }
+  
+  return false;
+}
+
 bool t_command_parser_executor::print_transaction(const std::vector<std::string>& args)
 {
   bool include_hex = false;
