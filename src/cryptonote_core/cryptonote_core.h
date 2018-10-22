@@ -739,6 +739,13 @@ namespace cryptonote
      std::pair<uint64_t, uint64_t> get_coinbase_tx_sum(const uint64_t start_offset, const size_t count);
      
      /**
+      * @copydoc BlockchainDB::get_already_generated_coins
+      *
+      * @note BlockchainDB::get_already_generated_coins
+      */
+     uint64_t get_generated_coins(uint64_t height) const;
+     
+     /**
       * @brief get the network type we're on
       *
       * @return which network are we on?

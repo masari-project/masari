@@ -1018,6 +1018,31 @@ namespace cryptonote
       END_KV_SERIALIZE_MAP()
     };
   };
+  
+  //-----------------------------------------------
+  struct COMMAND_RPC_GET_GENERATED_COINS
+  {
+    struct request
+    {
+      uint64_t height;
+      
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE_OPT(height, (uint64_t)0)
+      END_KV_SERIALIZE_MAP()
+    };
+
+
+    struct response
+    {
+      uint64_t amount;
+      std::string status;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(amount)
+        KV_SERIALIZE(status)
+      END_KV_SERIALIZE_MAP()
+    };
+  };
 
   //-----------------------------------------------
   struct COMMAND_RPC_MINING_STATUS

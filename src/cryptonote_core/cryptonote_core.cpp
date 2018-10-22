@@ -945,6 +945,11 @@ namespace cryptonote
     return std::pair<uint64_t, uint64_t>(emission_amount, total_fee_amount);
   }
   //-----------------------------------------------------------------------------------------------
+  uint64_t core::get_generated_coins(uint64_t height) const
+  {
+    return m_blockchain_storage.get_db().get_block_already_generated_coins(height);
+  }
+  //-----------------------------------------------------------------------------------------------
   bool core::check_tx_inputs_keyimages_diff(const transaction& tx) const
   {
     std::unordered_set<crypto::key_image> ki;
