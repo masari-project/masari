@@ -1332,9 +1332,18 @@ namespace cryptonote
     return m_blockchain_storage.get_block_by_hash(h, blk, orphan);
   }
   //-----------------------------------------------------------------------------------------------
-  block core::get_uncle_by_hash(const crypto::hash &h) const
+  bool core::get_uncle_by_hash(const crypto::hash &h, block &uncle) const
   {
-    return m_blockchain_storage.get_db().get_uncle(h);
+    try 
+    {
+      uncle = m_blockchain_storage.get_db().get_uncle(h);
+      return true;
+    }
+    catch (const BLOCK_DNE& e)
+    {
+      MDEBUG("No uncle block with hash " << h << " exists in the database");
+      return false;
+    }
   }
   //-----------------------------------------------------------------------------------------------
   std::string core::print_pool(bool short_format) const

@@ -1547,7 +1547,13 @@ namespace cryptonote
       }
     }
     
-    block uncle = m_core.get_uncle_by_hash(block_hash);
+    block uncle;
+    if(!m_core.get_uncle_by_hash(block_hash, uncle))
+    {
+      error_resp.code = CORE_RPC_ERROR_CODE_WRONG_PARAM;
+      error_resp.message = "No uncle block with hash " + req.hash + " found";
+      return false;
+    }
     
     res.blob = string_tools::buff_to_hex_nodelimer(t_serializable_object_to_blob(uncle));
     res.json = obj_to_json_str(uncle);
