@@ -2255,12 +2255,21 @@ bool Blockchain::build_alt_chain(const crypto::hash h, std::list<blocks_ext_by_h
     MWARNING("Block " << h << "doesn't exist in an alt chain");
     return false;
   }
-  auto it_bl = m_alternative_chains.find(h);
-  if (it_bl != m_alternative_chains.end())
+
+  blocks_ext_by_hash alt_chains_container;
+  if (m_alternative_chains.find(h) != m_alternative_chains.end())
   {
-    MERROR("Block " << h << " not found in set of alternative chains");
+    MDEBUG("Block " << h << " found in set of alternative chains");
+    alt_chains_container = m_alternative_chains;
+  } else if (m_discarded_chain.find(h) != m_discarded_chain.end()){
+    MDEBUG("Block " << h << " found in temporarily discarded chain");
+    alt_chains_container = m_alternative_chains;
+  } else {
+    MERROR("Block " << h << " not found in set of alternative chains or temporarily discarded chain");
     return false;
   }
+
+  auto it_bl = alt_chains_container.find(h);
   blocks_ext_by_hash::iterator alt_it = it_bl;
   bool parent_in_main = m_db->block_exists(it_bl->second.bl.prev_id);
   if (parent_in_main)
@@ -2269,10 +2278,10 @@ bool Blockchain::build_alt_chain(const crypto::hash h, std::list<blocks_ext_by_h
   }
   else
   {
-    while(alt_it != m_alternative_chains.end())
+    while(alt_it != alt_chains_container.end())
     {
       alt_chain.push_front(alt_it);
-      alt_it = m_alternative_chains.find(alt_it->second.bl.prev_id);
+      alt_it = alt_chains_container.find(alt_it->second.bl.prev_id);
     }
   }
   return true;
@@ -2290,19 +2299,17 @@ difficulty_type Blockchain::get_block_difficulty(const crypto::hash h, difficult
     return true;
   }
 
-  // TODO-TK: consider merging this stuff in (potentially similar to get_block_by_hash)
-  block bl;
-  bool r = get_block_by_hash(h, bl, NULL, true);
-  if (r)
+  bool uncle_in_main = m_db->uncle_exists(h);
+  if (uncle_in_main)
   {
-    MDEBUG("Found block in main as uncle");
-    difficulty = m_db->get_uncle_difficulty(bl.hash);
+    MDEBUG("Found uncle in main");
+    difficulty = m_db->get_uncle_difficulty(h);
     return true;
   }
 
-  MDEBUG("Block " << h << " in alt chain and block_in_main = " << block_in_main);
+  MDEBUG("Block not found in main chain - looking for block difficulty in alt chains");
   std::list<blocks_ext_by_hash::iterator> alt_chain;
-  r = build_alt_chain(h, alt_chain);
+  bool r = build_alt_chain(h, alt_chain);
   if (!r) {
     MERROR("Unable to build alt chain for block " << h);
     return false;

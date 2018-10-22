@@ -854,6 +854,16 @@ public:
   virtual bool block_exists(const crypto::hash& h, uint64_t *height = NULL) const = 0;
 
   /**
+   * @brief checks if uncle exists
+   *
+   * @param h the hash of the requested uncle
+   * @param height if non NULL, returns the uncle's height if found
+   *
+   * @return true if the uncle exists, otherwise false
+   */
+  virtual bool uncle_exists(const crypto::hash& h, uint64_t *height = NULL) const = 0;
+
+  /**
    * @brief fetches the block with the given hash
    *
    * The subclass should return the requested block.

@@ -61,6 +61,7 @@ public:
   virtual void block_txn_stop() {}
   virtual void block_txn_abort() {}
   virtual void drop_hard_fork_info() {}
+  virtual bool uncle_exists(const crypto::hash& h, uint64_t *height) const { return false; }
   virtual bool block_exists(const crypto::hash& h, uint64_t *height) const { return false; }
   virtual blobdata get_block_blob_from_height(const uint64_t& height) const { return cryptonote::t_serializable_object_to_blob(get_block_from_height(height)); }
   virtual blobdata get_uncle_blob_from_height(const uint64_t& height) const { return cryptonote::t_serializable_object_to_blob(get_uncle_from_height(height)); }

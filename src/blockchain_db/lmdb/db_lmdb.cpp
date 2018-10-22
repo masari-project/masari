@@ -1845,6 +1845,37 @@ bool BlockchainLMDB::for_all_txpool_txes(std::function<bool(const crypto::hash&,
   return ret;
 }
 
+bool BlockchainLMDB::uncle_exists(const crypto::hash& h, uint64_t *height) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__);
+  check_open();
+
+  TXN_PREFIX_RDONLY();
+  RCURSOR(uncle_heights);
+
+  bool ret = false;
+  MDB_val_set(key, h);
+  auto get_result = mdb_cursor_get(m_cur_uncle_heights, (MDB_val *)&zerokval, &key, MDB_GET_BOTH);
+  if (get_result == MDB_NOTFOUND)
+  {
+    LOG_PRINT_L3("Uncle with hash " << epee::string_tools::pod_to_hex(h) << " not found in db");
+  }
+  else if (get_result)
+    throw0(DB_ERROR(lmdb_error("DB error attempting to fetch uncle index from hash", get_result).c_str()));
+  else
+  {
+    if (height)
+    {
+      const blk_height *bhp = (const blk_height *)key.mv_data;
+      *height = bhp->bh_height;
+    }
+    ret = true;
+  }
+
+  TXN_POSTFIX_RDONLY();
+  return ret;
+}
+
 bool BlockchainLMDB::block_exists(const crypto::hash& h, uint64_t *height) const
 {
   LOG_PRINT_L3("BlockchainLMDB::" << __func__);
