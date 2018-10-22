@@ -1232,9 +1232,19 @@ namespace cryptonote
      * @param nephew the block containing the mined uncle
      * @param uncle the uncle being mined
      *
+     * @return false if anything is found wrong with the mined uncle, otherwise true
+     */
+    bool validate_uncle_block(const block& nephew, const block& uncle);
+
+    /**
+     * @brief validate mined uncle's reward
+     *
+     * @param nephew the block containing the mined uncle
+     * @param uncle the uncle being mined
+     *
      * @return false if anything is found wrong with the miner transaction, otherwise true
      */
-    bool validate_mined_uncle(const block& nephew, const block& uncle);
+    bool validate_uncle_reward(const block& nephew, const block& uncle);
 
     /**
      * @brief reverts the blockchain to its previous state following a failed switch

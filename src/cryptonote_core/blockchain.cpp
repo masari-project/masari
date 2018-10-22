@@ -1153,8 +1153,29 @@ bool Blockchain::prevalidate_miner_transaction(const block& b, uint64_t height)
   return true;
 }
 
+bool Blockchain::validate_uncle_reward(const block& nephew, const block& uncle)
+{
+  crypto::public_key nephew_uncle_out = boost::get<txout_to_key>(nephew.miner_tx.vout[1].target).key;
+  crypto::public_key uncle_out = boost::get<txout_to_key>(uncle.miner_tx.vout[0].target).key;
+  if (nephew_uncle_out != uncle_out)
+  {
+    MERROR_VER("Nephew's uncle reward transaction is to " << nephew_uncle_out << " and not being rewarded to uncle out " << uncle_out);
+    return false;
+  }
+
+  crypto::public_key nephew_uncle_tx_pubkey = get_tx_pub_key_from_extra(nephew.miner_tx, 1);
+  crypto::public_key uncle_tx_pubkey = get_tx_pub_key_from_extra(uncle.miner_tx, 0);
+  if (nephew_uncle_tx_pubkey != uncle_tx_pubkey)
+  {
+    MERROR_VER("Nephew's uncle tx public key " << nephew_uncle_tx_pubkey << " is not the same as uncle's tx public key " << uncle_tx_pubkey);
+    return false;
+  }
+
+  MDEBUG("Uncle reward validations passed");
+  return true;
+}
 //------------------------------------------------------------------
-bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
+bool Blockchain::validate_uncle_block(const block& nephew, const block& uncle)
 {
   crypto::hash nephew_id = get_block_hash(nephew);
 
@@ -1195,28 +1216,9 @@ bool Blockchain::validate_mined_uncle(const block& nephew, const block& uncle)
     return false;
   }
 
-  // TODO-TK: needs a sanity check for allowing case when there's common ancestry (i.e. second uncle)
   if (parent.prev_id != uncle.prev_id && (parent.prev_id != uncle.uncle || parent.uncle != uncle.prev_id))
   {
     MERROR_VER("Nephew " << nephew_id << std::endl << "has uncle block at parent height " << parent_height << " with no common (uncle parent " << uncle.prev_id << " == grandparent " << parent.prev_id << ") or extended ancestry (grandparent " << parent.prev_id << " == uncle's uncle " << uncle.uncle << " and parent's uncle " << parent.uncle << " == uncle's parent " << uncle.prev_id << ")");
-    return false;
-  }
-
-  // TODO-TK: PoW check potentially not needed as uncle would've been verified by handle_alternative_block - to confirm
-
-  crypto::public_key nephew_uncle_out = boost::get<txout_to_key>(nephew.miner_tx.vout[1].target).key;
-  crypto::public_key uncle_out = boost::get<txout_to_key>(uncle.miner_tx.vout[0].target).key;
-  if (nephew_uncle_out != uncle_out)
-  {
-    MERROR_VER("Nephew's uncle reward transaction is to " << nephew_uncle_out << " and not being rewarded to uncle out " << uncle_out);
-    return false;
-  }
-
-  crypto::public_key nephew_uncle_tx_pubkey = get_tx_pub_key_from_extra(nephew.miner_tx, 1);
-  crypto::public_key uncle_tx_pubkey = get_tx_pub_key_from_extra(uncle.miner_tx, 0);
-  if (nephew_uncle_tx_pubkey != uncle_tx_pubkey)
-  {
-    MERROR_VER("Nephew's uncle tx public key " << nephew_uncle_tx_pubkey << " is not the same as uncle's tx public key " << uncle_tx_pubkey);
     return false;
   }
 
@@ -1419,6 +1421,13 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
       {
         MDEBUG("Found uncle candidate with common ancestry to parent block");
         b.uncle = get_block_hash(alt_bl);
+        bool ur = validate_uncle_block(b, alt_bl);
+        if (!ur) {
+          MWARNING("Mining uncle candidate failed validations");
+          b.uncle = null_hash;
+          continue;
+        }
+
         uncle_included = true;
 
         uncle = alt_bl;
@@ -1673,15 +1682,25 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
         bvc.m_verifivation_failed = true;
         return false;
       }
-      if (!validate_mined_uncle(b, uncle)) {
-        MERROR_VER("Uncle block validation failed");
-        bvc.m_verifivation_failed = true;
-        return false;
-      }
+
       r = get_block_difficulty(uncle.prev_id, uncle_diffic);
       if (!r)
       {
         MERROR_VER("Unable to get uncle block difficulty");
+        bvc.m_verifivation_failed = true;
+        return false;
+      }
+
+      if (!validate_uncle_block(b, uncle))
+      {
+        MERROR_VER("Uncle block validation failed");
+        bvc.m_verifivation_failed = true;
+        return false;
+      }
+
+      if (!validate_uncle_reward(b, uncle))
+      {
+        MERROR_VER("Uncle block reward validation failed");
         bvc.m_verifivation_failed = true;
         return false;
       }
@@ -3696,12 +3715,6 @@ leave:
       goto leave;
     }
 
-    if (!validate_mined_uncle(bl, uncle)) {
-      MERROR_VER("Uncle block validation failed");
-      bvc.m_verifivation_failed = true;
-      goto leave;
-    }
-
     difficulty_type uncle_diffic;
     bool r = get_block_difficulty(uncle.prev_id, uncle_diffic);
     if (!r)
@@ -3710,6 +3723,21 @@ leave:
       bvc.m_verifivation_failed = true;
       goto leave;
     }
+
+    if (!validate_uncle_block(bl, uncle))
+    {
+      MERROR_VER("Uncle block validation failed");
+      bvc.m_verifivation_failed = true;
+      goto leave;
+    }
+
+    if (!validate_uncle_reward(bl, uncle))
+    {
+      MERROR_VER("Uncle block reward validation failed");
+      bvc.m_verifivation_failed = true;
+      goto leave;
+    }
+
     cumulative_difficulty += uncle_diffic;
   }
 
