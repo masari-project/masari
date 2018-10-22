@@ -168,3 +168,14 @@ bool gen_uncle_wrong_version::generate(std::vector<test_event_entry>& events) co
   MAKE_NEXT_BLOCKV_UNCLE(events, blk_1, blk_0a, first_miner_account, 7, blk_0b);
   return true;
 }
+
+bool gen_uncle_bad_ancestry::generate(std::vector<test_event_entry>& events) const
+{
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+    MAKE_NEXT_BLOCKV(events, bl_i0, top_bl, original_miner, 8);
+    MAKE_NEXT_BLOCKV(events, bl_j0, alt_bl, original_miner, 8);
+    DO_CALLBACK(events, "mark_invalid_block");
+    MAKE_NEXT_BLOCKV_UNCLE(events, bl_i1, bl_i0, original_miner, 8, bl_j0);
+  };
+  return generate_with(events, modifier);
+}
