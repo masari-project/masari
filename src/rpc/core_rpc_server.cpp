@@ -1054,6 +1054,23 @@ namespace cryptonote
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
+  bool core_rpc_server::on_get_generated_coins(const COMMAND_RPC_GET_GENERATED_COINS::request& req, COMMAND_RPC_GET_GENERATED_COINS::response& res)
+  {
+    PERF_TIMER(on_get_generated_coins);
+    
+    uint64_t height = req.height;
+    
+    if(height == 0)
+    {
+      height = m_core.get_current_blockchain_height() - 1;
+    }
+    
+    res.amount = m_core.get_generated_coins(height);
+    
+    res.status = CORE_RPC_STATUS_OK;
+    return true;
+  }
+  //------------------------------------------------------------------------------------------------------------------------------
   bool core_rpc_server::on_save_bc(const COMMAND_RPC_SAVE_BC::request& req, COMMAND_RPC_SAVE_BC::response& res)
   {
     PERF_TIMER(on_save_bc);
