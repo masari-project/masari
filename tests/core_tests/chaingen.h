@@ -587,19 +587,25 @@ inline bool do_replay_file(const std::string& filename)
   generator.construct_block(BLK_NAME, PREV_BLOCK, MINER_ACC);                         \
   VEC_EVENTS.push_back(BLK_NAME);
 
-#define PUSH_NEXT_BLOCKV(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER) \
-  generator.construct_block_manually(BLK_NAME, PREV_BLOCK, MINER_ACC, test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_hf_version, MAJOR_VER, MAJOR_VER, 0, crypto::hash(), 0, transaction(), std::vector<crypto::hash>(), 0, 0, MAJOR_VER);         \
+#define PUSH_NEXT_BLOCKVD(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, DIFFICULTY) \
+  generator.construct_block_manually(BLK_NAME, PREV_BLOCK, MINER_ACC, test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_hf_version | test_generator::bf_diffic, MAJOR_VER, MAJOR_VER, 0, crypto::hash(), DIFFICULTY, transaction(), std::vector<crypto::hash>(), 0, 0, MAJOR_VER);         \
   VEC_EVENTS.push_back(BLK_NAME);
+
+#define MAKE_NEXT_BLOCKVD(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, DIFFICULTY) \
+  cryptonote::block BLK_NAME;                                                         \
+  PUSH_NEXT_BLOCKVD(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, DIFFICULTY);
 
 #define MAKE_NEXT_BLOCKV(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER) \
-  cryptonote::block BLK_NAME;                                                         \
-  PUSH_NEXT_BLOCKV(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER);
+  MAKE_NEXT_BLOCKVD(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, 1);
 
-#define MAKE_NEXT_BLOCKV_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE) \
+#define MAKE_NEXT_BLOCKVD_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE, DIFFICULTY) \
   cryptonote::block BLK_NAME;                                                         \
   BLK_NAME.uncle = cryptonote::get_block_hash(UNCLE);                                                \
-  generator.construct_block_manually(BLK_NAME, PREV_BLOCK, MINER_ACC, test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_hf_version | test_generator::bf_uncle, MAJOR_VER, MAJOR_VER, 0, crypto::hash(), 0, transaction(), std::vector<crypto::hash>(), 0, 0, MAJOR_VER, 0, UNCLE); \
+  generator.construct_block_manually(BLK_NAME, PREV_BLOCK, MINER_ACC, test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_hf_version | test_generator::bf_uncle | test_generator::bf_diffic, MAJOR_VER, MAJOR_VER, 0, crypto::hash(), 0, transaction(), std::vector<crypto::hash>(), DIFFICULTY, 0, MAJOR_VER, 0, UNCLE); \
   VEC_EVENTS.push_back(BLK_NAME);
+
+#define MAKE_NEXT_BLOCKV_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE) \
+  MAKE_NEXT_BLOCKVD_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE, 1);
 
 #define MAKE_NEXT_BLOCK_TX1(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, TX1)         \
   cryptonote::block BLK_NAME;                                                           \
@@ -627,17 +633,20 @@ inline bool do_replay_file(const std::string& filename)
     BLK_NAME = _blk_last;                                                             \
   }
 
-#define REWIND_BLOCKS_VN(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, COUNT) \
+#define REWIND_BLOCKS_VDN(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, COUNT, DIFFICULTY) \
   cryptonote::block BLK_NAME;                                                           \
   {                                                                                     \
     cryptonote::block _blk_last = PREV_BLOCK;                                           \
     for (size_t i = 0; i < COUNT; ++i)                                                  \
     {                                                                                   \
-      MAKE_NEXT_BLOCKV(VEC_EVENTS, blk, _blk_last, MINER_ACC, MAJOR_VER);              \
+      MAKE_NEXT_BLOCKVD(VEC_EVENTS, blk, _blk_last, MINER_ACC, MAJOR_VER, DIFFICULTY);  \
       _blk_last = blk;                                                                  \
     }                                                                                   \
     BLK_NAME = _blk_last;                                                               \
   }
+
+#define REWIND_BLOCKS_VN(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, COUNT) \
+  REWIND_BLOCKS_VDN(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, COUNT, 1)
 
 #define REWIND_BLOCKS(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC) REWIND_BLOCKS_N(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW)
 
