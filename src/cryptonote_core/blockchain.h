@@ -666,6 +666,15 @@ namespace cryptonote
     uint64_t block_difficulty(uint64_t i) const;
 
     /**
+     * @brief gets the supplemental difficulty added to a nephew block
+     *
+     * @param current_diffic current nephew's difficulty
+     *
+     * @return the additional difficulty
+     */
+    difficulty_type get_added_nephew_difficulty(difficulty_type current_diffic);
+
+    /**
      * @brief gets the difficulty of the block given a hash
      *
      * Handles blocks from alternative chains
