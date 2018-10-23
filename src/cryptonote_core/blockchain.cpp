@@ -1676,6 +1676,14 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
         return false;
       }
 
+      r = get_block_difficulty(uncle.prev_id, uncle_diffic);
+      if (!r)
+      {
+        MERROR_VER("Unable to get uncle block difficulty");
+        bvc.m_verifivation_failed = true;
+        return false;
+      }
+
       if (!validate_uncle_block(b, uncle))
       {
         MERROR_VER("Uncle block validation failed");
@@ -2237,6 +2245,78 @@ difficulty_type Blockchain::get_added_nephew_difficulty(difficulty_type current_
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
   return current_diffic / UNCLE_DIFFICULTY_RATIO;
+}
+
+bool Blockchain::build_alt_chain(const crypto::hash h, std::list<blocks_ext_by_hash::iterator> &alt_chain)
+{
+  LOG_PRINT_L3("Blockchain::" << __func__);
+  if (m_db->block_exists(h))
+  {
+    MWARNING("Block " << h << "doesn't exist in an alt chain");
+    return false;
+  }
+
+  blocks_ext_by_hash alt_chains_container;
+  if (m_alternative_chains.find(h) != m_alternative_chains.end())
+  {
+    MDEBUG("Block " << h << " found in set of alternative chains");
+    alt_chains_container = m_alternative_chains;
+  } else if (m_discarded_chain.find(h) != m_discarded_chain.end()){
+    MDEBUG("Block " << h << " found in temporarily discarded chain");
+    alt_chains_container = m_alternative_chains;
+  } else {
+    MERROR("Block " << h << " not found in set of alternative chains or temporarily discarded chain");
+    return false;
+  }
+
+  auto it_bl = alt_chains_container.find(h);
+  blocks_ext_by_hash::iterator alt_it = it_bl;
+  bool parent_in_main = m_db->block_exists(it_bl->second.bl.prev_id);
+  if (parent_in_main)
+  {
+    alt_chain.push_front(alt_it);
+  }
+  else
+  {
+    while(alt_it != alt_chains_container.end())
+    {
+      alt_chain.push_front(alt_it);
+      alt_it = alt_chains_container.find(alt_it->second.bl.prev_id);
+    }
+  }
+  return true;
+}
+
+difficulty_type Blockchain::get_block_difficulty(const crypto::hash h, difficulty_type &difficulty)
+{
+  LOG_PRINT_L3("Blockchain::" << __func__);
+
+  MDEBUG("Getting difficulty for block " << h);
+  bool block_in_main = m_db->block_exists(h);
+  if (block_in_main) {
+    MDEBUG("Found block in main");
+    difficulty = m_db->get_block_difficulty(h);
+    return true;
+  }
+
+  bool uncle_in_main = m_db->uncle_exists(h);
+  if (uncle_in_main)
+  {
+    MDEBUG("Found uncle in main");
+    difficulty = m_db->get_uncle_difficulty(h);
+    return true;
+  }
+
+  MDEBUG("Block not found in main chain - looking for block difficulty in alt chains");
+  std::list<blocks_ext_by_hash::iterator> alt_chain;
+  bool r = build_alt_chain(h, alt_chain);
+  if (!r) {
+    MERROR("Unable to build alt chain for block " << h);
+    return false;
+  }
+
+  difficulty = get_next_difficulty_for_alternative_chain(alt_chain, alt_chain.back()->second.height);
+  return true;
 }
 
 //------------------------------------------------------------------
@@ -3638,6 +3718,15 @@ leave:
     bool found = get_block_by_hash(bl.uncle, uncle, NULL, true);
     if (!found) {
       MERROR_VER("Uncle block with hash " << bl.uncle << " for block " << bl.hash << " not found");
+      bvc.m_verifivation_failed = true;
+      goto leave;
+    }
+
+    difficulty_type uncle_diffic;
+    bool r = get_block_difficulty(uncle.prev_id, uncle_diffic);
+    if (!r)
+    {
+      MERROR_VER("Unable to get uncle's block difficulty");
       bvc.m_verifivation_failed = true;
       goto leave;
     }
