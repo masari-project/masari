@@ -775,10 +775,10 @@ bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orph
       catch (...) {
       }
       MDEBUG("Looking for uncle " << h << " in temporarily discarded main chain");
-      blocks_ext_by_hash::const_iterator it_alt = m_discarded_chain.find(h);
+      blocks_by_hash::const_iterator it_alt = m_discarded_chain.find(h);
       if (m_discarded_chain.end() != it_alt)
       {
-        blk = it_alt->second.bl;
+        blk = it_alt->second;
         return true;
       }
     }
@@ -972,10 +972,7 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
     if (r)
     {
       MTRACE("Adding uncle " << get_block_hash(uncle) << " to temporary discarded chain container");
-      block_extended_info uei = boost::value_initialized<block_extended_info>();
-      uei.bl = uncle;
-      uei.height = b_height;
-      m_discarded_chain.insert(blocks_ext_by_hash::value_type(uncle.hash, uei));
+      m_discarded_chain.insert(blocks_by_hash::value_type(uncle.hash, uncle));
     }
 
     MTRACE("Popping block " << " at height " << b_height);
@@ -983,11 +980,7 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
     disconnected_chain.push_front(b);
 
     MTRACE("Adding block " << b.hash << " to temporary discarded chain container");
-    // TODO-TK: there's a different todo hinting at potential deprecation of bei, something worth looking into
-    block_extended_info bei = boost::value_initialized<block_extended_info>();
-    bei.bl = b;
-    bei.height = b_height;
-    m_discarded_chain.insert(blocks_ext_by_hash::value_type(b.hash, bei));
+    m_discarded_chain.insert(blocks_by_hash::value_type(b.hash, b));
   }
 
   auto split_height = m_db->height();
