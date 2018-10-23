@@ -2422,12 +2422,12 @@ bool simple_wallet::ask_wallet_create_if_needed()
   bool wallet_file_exists;
 
   do{
-      LOG_PRINT_L3("User asked to specify wallet file name.");
+      LOG_PRINT_L3("User asked to specify wallet name.");
       wallet_path = input_line(
-        tr(m_restoring ? "Specify a new wallet file name for your restored wallet (e.g., MyWallet).\n"
-        "Wallet file name (or Ctrl-C to quit): " :
-        "Specify wallet file name (e.g., MyWallet). If the wallet doesn't exist, it will be created.\n"
-        "Wallet file name (or Ctrl-C to quit): ")
+        tr(m_restoring ? "Specify a new wallet name for your restored wallet (e.g., MyWallet).\n"
+        "Wallet name (or Ctrl-C to quit): " :
+        "Specify wallet name (e.g., MyWallet). If the wallet doesn't exist, it will be created.\n"
+        "Wallet name (or Ctrl-C to quit): ")
       );
       if(std::cin.eof())
       {
@@ -6756,7 +6756,9 @@ bool simple_wallet::wallet_info(const std::vector<std::string> &args)
   {
     description = "<Not set>"; 
   }
-  message_writer() << tr("Filename: ") << m_wallet->get_wallet_file();
+  std::string wallet_file_name = m_wallet->get_wallet_file();
+  message_writer() << tr("Wallet name: ") << string_tools::cut_off_extension(wallet_file_name);
+  message_writer() << tr("File name: ") << wallet_file_name;
   message_writer() << tr("Description: ") << description;
   message_writer() << tr("Address: ") << m_wallet->get_account().get_public_address_str(m_wallet->nettype());
   std::string type;
