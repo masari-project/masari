@@ -675,17 +675,6 @@ namespace cryptonote
     difficulty_type get_added_nephew_difficulty(difficulty_type current_diffic);
 
     /**
-     * @brief gets the difficulty of the block given a hash
-     *
-     * Handles blocks from alternative chains
-     *
-     * @param h the hash
-     *
-     * @return the difficulty
-     */
-    uint64_t get_block_difficulty(const crypto::hash h, difficulty_type &difficulty);
-
-    /**
      * @brief gets blocks based on a list of block hashes
      *
      * @tparam t_ids_container a standard-iterable container
@@ -1445,15 +1434,5 @@ namespace cryptonote
      * that implicit data.
      */
     bool expand_transaction_2(transaction &tx, const crypto::hash &tx_prefix_hash, const std::vector<std::vector<rct::ctkey>> &pubkeys);
-
-    /**
-     * @brief builds an alternative chain for a requested alt block
-     *
-     * @param h the hash
-     * @param alt_chain the altchain list in which to store it at
-     *
-     * @return if built successfully
-     */
-    bool build_alt_chain(const crypto::hash h, std::list<blocks_ext_by_hash::iterator> &alt_chain);
   };
 }  // namespace cryptonote
