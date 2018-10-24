@@ -1822,7 +1822,7 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
         bvc.m_verifivation_failed = true;
         return false;
       }
-      bei.cumulative_weight += uncle_weight;
+      bei.cumulative_weight += uncle_diffic;
     }
 
     // add block to alternate blocks storage,
@@ -3879,7 +3879,7 @@ leave:
       goto leave;
     }
 
-    cumulative_weight += uncle_weight;
+    cumulative_weight += uncle_diffic;
   }
 
   // In the "tail" state when the minimum subsidy (implemented in get_block_reward) is in effect, the number of
@@ -3906,12 +3906,10 @@ leave:
   {
     try
     {
+      new_height = m_db->add_block(bl, block_size, cumulative_difficulty, cumulative_weight, already_generated_coins, txs);
       if (uncle_included) {
-        new_height = m_db->add_block(bl, block_size, cumulative_difficulty, cumulative_weight, already_generated_coins, txs);
         uint64_t uncle_size = cryptonote::t_serializable_object_to_blob(uncle).size();
         m_db->add_uncle(uncle, uncle_size, uncle_cumulative_difficulty, uncle_cumulative_weight, already_generated_coins, get_block_hash(uncle), new_height - 2);
-      } else {
-        new_height = m_db->add_block(bl, block_size, cumulative_difficulty, cumulative_weight, already_generated_coins, txs);
       }
     }
     catch (const KEY_IMAGE_EXISTS& e)
