@@ -360,12 +360,14 @@ private:
    * @param blk the block to be added
    * @param block_size the size of the block (transactions and all)
    * @param cumulative_difficulty the accumulated difficulty after this block
+   * @param cumulative_weight the accumulated weight including uncles after this block
    * @param coins_generated the number of coins generated total after this block
    * @param blk_hash the hash of the block
    */
   virtual void add_block( const block& blk
                 , const size_t& block_size
                 , const difficulty_type& cumulative_difficulty
+                , const difficulty_type& cumulative_weight
                 , const uint64_t& coins_generated
                 , const crypto::hash& blk_hash
                 ) = 0;
@@ -378,6 +380,7 @@ private:
    * @param uncle the uncle block to be added
    * @param uncle_size the size of the uncle block (transactions and all)
    * @param cumulative_difficulty the accumulated difficulty at height when this uncle was mined
+   * @param cumulative_weight the accumulated weight at height when this uncle was mined
    * @param coins_generated the number of coins generated total after this uncle block was mined
    * @param uncle_hash the hash of the uncle block
    * @param height the height of where the uncle block was mined
@@ -385,6 +388,7 @@ private:
   virtual void add_uncle(const block& uncle,
                          const size_t& uncle_size,
                          const difficulty_type& cumulative_difficulty,
+                         const difficulty_type& cumulative_weight,
                          const uint64_t& coins_generated,
                          const crypto::hash& uncle_hash,
                          const uint64_t height) = 0;
@@ -801,6 +805,7 @@ public:
   virtual uint64_t add_block( const block& blk
                             , const size_t& block_size
                             , const difficulty_type& cumulative_difficulty
+                            , const difficulty_type& cumulative_weight
                             , const uint64_t& coins_generated
                             , const std::vector<transaction>& txs
                             );
@@ -821,6 +826,7 @@ public:
   virtual uint64_t add_block_raw( const block& blk
                             , const size_t& block_size
                             , const difficulty_type& cumulative_difficulty
+                            , const difficulty_type& cumulative_weight
                             , const uint64_t& coins_generated
                             , const std::vector<transaction>& txs
                             );
@@ -841,8 +847,8 @@ public:
    * @return the height of the chain post-addition
    */
   virtual uint64_t add_block(const block& nephew, const size_t& nephew_size, const block& uncle, const size_t& uncle_size,
-                             const difficulty_type& cumulative_difficulty, const uint64_t& coins_generated,
-                             const std::vector<transaction>& txs);
+                             const difficulty_type& cumulative_difficulty, const difficulty_type& cumulative_weight,
+                             const uint64_t& coins_generated, const std::vector<transaction>& txs);
   /**
    * @brief checks if a block exists
    *
@@ -1044,6 +1050,20 @@ public:
   virtual size_t get_block_size(const uint64_t& height) const = 0;
 
   /**
+   * @brief fetch a block's cumulative weight
+   *
+   * The subclass should return the cumulative weight of the block with the
+   * given height.
+   *
+   * If the block does not exist, the subclass should throw BLOCK_DNE
+   *
+   * @param height the height requested
+   *
+   * @return the cumulative difficulty
+   */
+  virtual difficulty_type get_block_cumulative_weight(const uint64_t& height) const = 0;
+
+  /**
    * @brief fetch a block's cumulative difficulty
    *
    * The subclass should return the cumulative difficulty of the block with the
@@ -1056,6 +1076,17 @@ public:
    * @return the cumulative difficulty
    */
   virtual difficulty_type get_block_cumulative_difficulty(const uint64_t& height) const = 0;
+
+  /**
+   * @brief fetch a block's cumulative weight by hash id (main chain)
+   *
+   * If the block does not exist, the subclass should throw BLOCK_DNE
+   *
+   * @param id the hash id of the block requested
+   *
+   * @return the cumulative weight
+   */
+  virtual difficulty_type get_block_cumulative_weight(const crypto::hash& id) const;
 
   /**
    * @brief fetch a block's cumulative difficulty by hash id (main chain)

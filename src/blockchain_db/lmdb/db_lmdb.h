@@ -82,6 +82,17 @@ typedef struct mdb_txn_cursors
 #define m_cur_txpool_blob	m_cursors->m_txc_txpool_blob
 #define m_cur_hf_versions	m_cursors->m_txc_hf_versions
 
+typedef struct mdb_block_info
+{
+  uint64_t bi_height;
+  uint64_t bi_timestamp;
+  uint64_t bi_coins;
+  uint64_t bi_size; // a size_t really but we need 32-bit compat
+  difficulty_type bi_diff;
+  crypto::hash bi_hash;
+  difficulty_type bi_weight;
+} mdb_block_info;
+
 typedef struct mdb_rflags
 {
   bool m_rf_txn;
@@ -213,7 +224,11 @@ public:
 
   virtual size_t get_block_size(const uint64_t& height) const;
 
+  virtual difficulty_type get_block_cumulative_weight(const uint64_t& height) const;
+
   virtual difficulty_type get_block_cumulative_difficulty(const uint64_t& height) const;
+
+  virtual mdb_block_info get_block_info(const uint64_t& height) const;
 
   virtual difficulty_type get_block_difficulty(const uint64_t& height) const;
 
@@ -280,6 +295,7 @@ public:
   virtual uint64_t add_block_raw( const block& blk
                             , const size_t& block_size
                             , const difficulty_type& cumulative_difficulty
+                            , const difficulty_type& cumulative_weight
                             , const uint64_t& coins_generated
                             , const std::vector<transaction>& txs
                             );
@@ -319,11 +335,12 @@ private:
   uint64_t get_estimated_batch_size(uint64_t batch_num_blocks, uint64_t batch_bytes) const;
 
   virtual void add_uncle(const block& uncle, const size_t& uncle_size, const difficulty_type& cumulative_difficulty,
-                         const uint64_t& coins_generated, const crypto::hash& uncle_hash, uint64_t height);
+                         const difficulty_type& cumulative_weight, const uint64_t& coins_generated, const crypto::hash& uncle_hash, uint64_t height);
 
   virtual void add_block( const block& blk
                 , const size_t& block_size
                 , const difficulty_type& cumulative_difficulty
+                , const difficulty_type& cumulative_weight
                 , const uint64_t& coins_generated
                 , const crypto::hash& block_hash
                 );

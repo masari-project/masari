@@ -189,12 +189,12 @@ void BlockchainDB::add_transaction(const crypto::hash& blk_hash, const transacti
 }
 
 uint64_t BlockchainDB::add_block(const block& nephew, const size_t& nephew_size, const block& uncle, const size_t& uncle_size,
-                                 const difficulty_type& cumulative_difficulty, const uint64_t& coins_generated,
-                                 const std::vector<transaction>& txs)
+                                 const difficulty_type& cumulative_difficulty, const difficulty_type& cumulative_weight,
+                                 const uint64_t& coins_generated, const std::vector<transaction>& txs)
 {
   block_txn_start(false);
-  uint64_t new_height = add_block_raw(nephew, nephew_size, cumulative_difficulty, coins_generated, txs);
-  add_uncle(uncle, uncle_size, cumulative_difficulty, coins_generated, get_block_hash(uncle), new_height - 1);
+  uint64_t new_height = add_block_raw(nephew, nephew_size, cumulative_difficulty, cumulative_weight, coins_generated, txs);
+  add_uncle(uncle, uncle_size, cumulative_difficulty, cumulative_weight, coins_generated, get_block_hash(uncle), new_height - 1);
   block_txn_stop();
 
   ++num_calls;
@@ -204,6 +204,7 @@ uint64_t BlockchainDB::add_block(const block& nephew, const size_t& nephew_size,
 uint64_t BlockchainDB::add_block_raw( const block& blk
                                 , const size_t& block_size
                                 , const difficulty_type& cumulative_difficulty
+                                , const difficulty_type& cumulative_weight
                                 , const uint64_t& coins_generated
                                 , const std::vector<transaction>& txs
                                 )
@@ -236,7 +237,7 @@ uint64_t BlockchainDB::add_block_raw( const block& blk
 
   // call out to subclass implementation to add the block & metadata
   time1 = epee::misc_utils::get_tick_count();
-  add_block(blk, block_size, cumulative_difficulty, coins_generated, blk_hash);
+  add_block(blk, block_size, cumulative_difficulty, cumulative_weight, coins_generated, blk_hash);
   TIME_MEASURE_FINISH(time1);
   time_add_block1 += time1;
 
@@ -250,12 +251,13 @@ uint64_t BlockchainDB::add_block_raw( const block& blk
 uint64_t BlockchainDB::add_block( const block& blk
                                 , const size_t& block_size
                                 , const difficulty_type& cumulative_difficulty
+                                , const difficulty_type& cumulative_weight
                                 , const uint64_t& coins_generated
                                 , const std::vector<transaction>& txs
                                 )
 {
   block_txn_start(false);
-  uint64_t new_height = add_block_raw(blk, block_size, cumulative_difficulty, coins_generated, txs);
+  uint64_t new_height = add_block_raw(blk, block_size, cumulative_difficulty, cumulative_weight, coins_generated, txs);
   block_txn_stop();
   return new_height;
 }
@@ -352,6 +354,11 @@ bool BlockchainDB::get_tx(const crypto::hash& h, cryptonote::transaction &tx) co
     throw DB_ERROR("Failed to parse transaction from blob retrieved from the db");
 
   return true;
+}
+
+difficulty_type BlockchainDB::get_block_cumulative_weight(const crypto::hash& id) const
+{
+    return get_block_cumulative_weight(get_block_height(id));
 }
 
 difficulty_type BlockchainDB::get_block_cumulative_difficulty(const crypto::hash& id) const

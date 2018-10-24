@@ -56,7 +56,6 @@
 
 #define UNCLE_REWARD_RATIO                              2
 #define NEPHEW_REWARD_RATIO                             20
-#define UNCLE_DIFFICULTY_RATIO                          NEPHEW_REWARD_RATIO
 
 #define CRYPTONOTE_REWARD_BLOCKS_WINDOW                 100
 #define CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1    300000

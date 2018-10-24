@@ -98,6 +98,7 @@ namespace cryptonote
       uint64_t height; //!< the height of the block in the blockchain
       size_t block_cumulative_size; //!< the size (in bytes) of the block
       difficulty_type cumulative_difficulty; //!< the accumulated difficulty after that block
+      difficulty_type cumulative_weight; //!< the accumulated weight after that block
       uint64_t already_generated_coins; //!< the total coins minted after that block
     };
 
@@ -1240,10 +1241,26 @@ namespace cryptonote
      *
      * @param nephew the block containing the mined uncle
      * @param uncle the uncle being mined
+     * @param uncle_diffic uncle block difficulty at height
      *
      * @return false if anything is found wrong with the mined uncle, otherwise true
      */
-    bool validate_uncle_block(const block& nephew, const block& uncle);
+    bool validate_uncle_block(const block& nephew, const block& uncle, const difficulty_type uncle_diffic);
+
+    /**
+     * @brief wrapper for the same method without uncle_diffic - same definition as validate_uncle_block above
+     */
+    bool validate_uncle_block(const block& nephew, const block& uncle)
+    {
+      difficulty_type uncle_diffic;
+      bool r = get_block_difficulty(uncle.prev_id, uncle_diffic);
+      if (!r)
+      {
+        MERROR("Unable to get uncle block difficulty");
+        return false;
+      }
+      return validate_uncle_block(nephew, uncle, uncle_diffic);
+    }
 
     /**
      * @brief validate mined uncle's reward
