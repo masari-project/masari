@@ -1199,6 +1199,37 @@ public:
    */
   virtual void pop_block(block& blk, std::vector<transaction>& txs);
 
+  /**
+   * @brief gets uncle info at a given height
+   *
+   * @param height requested height
+   * @param difficulty return-by-reference difficulty
+   * @param weight return-by-reference weight
+   * @param cumulative_difficulty return-by-reference cumulative difficulty
+   * @param cumulative_weight return-by-reference cumulative weight
+   */
+  virtual void get_uncle_height_info(const uint64_t& height, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const = 0;
+
+  /**
+   * @brief gets uncle info given a hash, wrapper for above get_uncle_height_info method
+   */
+  virtual void get_uncle_height_info(const crypto::hash& h, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const = 0;
+
+  /**
+   * @brief gets block info at a given height
+   *
+   * @param height requested height
+   * @param difficulty return-by-reference difficulty
+   * @param weight return-by-reference weight
+   * @param cumulative_difficulty return-by-reference cumulative difficulty
+   * @param cumulative_weight return-by-reference cumulative weight
+   */
+  virtual void get_height_info(const uint64_t& height, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const = 0;
+
+  /**
+   * @brief gets block info given a hash, wrapper for above get_uncle_height_info method
+   */
+  virtual void get_height_info(const crypto::hash& h, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const = 0;
 
   /**
    * @brief check if a transaction with a given hash exists

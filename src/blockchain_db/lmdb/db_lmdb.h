@@ -228,6 +228,16 @@ public:
 
   virtual difficulty_type get_block_cumulative_difficulty(const uint64_t& height) const;
 
+  virtual void get_uncle_height_info(const uint64_t& height, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const;
+
+  virtual void get_height_info(const uint64_t& height, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const;
+
+  virtual void get_uncle_height_info(const crypto::hash& h, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const;
+
+  virtual void get_height_info(const crypto::hash& h, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const;
+
+  virtual mdb_block_info get_uncle_info(const uint64_t& height) const;
+
   virtual mdb_block_info get_block_info(const uint64_t& height) const;
 
   virtual difficulty_type get_block_difficulty(const uint64_t& height) const;

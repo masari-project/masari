@@ -681,10 +681,14 @@ namespace cryptonote
      * Handles blocks from alternative chains
      *
      * @param h the hash
+     * @param difficulty return-by-reference difficulty
+     * @param weight return-by-reference weight
+     * @param cumulative_difficulty return-by-reference cumulative difficulty
+     * @param cumulative_weight return-by-reference cumulative weight
      *
-     * @return the difficulty
+     * @return if fetch was successful
      */
-    uint64_t get_block_difficulty(const crypto::hash h, difficulty_type &difficulty);
+    bool get_block_info(const crypto::hash h, difficulty_type &difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight);
 
     /**
      * @brief gets blocks based on a list of block hashes
@@ -1047,7 +1051,7 @@ namespace cryptonote
 
     // used for uncle references when an ex-main chain contains an uncle in the new one
     // TODO-TK: this is a bit hacky but avoids recursive-ish dependencies
-    blocks_ext_by_hash m_discarded_chain; // crypto::hash -> block_extended_info
+    blocks_ext_by_hash m_disconnected_chain; // crypto::hash -> block_extended_info
 
     // some invalid blocks
     blocks_ext_by_hash m_invalid_blocks;     // crypto::hash -> block_extended_info
@@ -1141,6 +1145,63 @@ namespace cryptonote
      * @return false if the reorganization fails, otherwise true
      */
     bool switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::iterator>& alt_chain, bool discard_disconnected_chain);
+
+    /**
+     * @brief pops block with block info
+     *
+     * @param bl return-by-reference block popped from top of chain
+     * @param height return-by-reference height of block
+     * @param difficulty return-by-reference difficulty of block
+     * @param weight return-by-reference weight of block
+     * @param cumulative_difficulty return-by-reference cumulative difficulty of block
+     * @param cumulative_weight return-by-reference cumulative weight of block
+     */
+    void pop_top_block_from_blockchain(block& bl, uint64_t& height, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight);
+
+    /**
+     * @brief wrapper for above pop_top_block_from_blockchain method, for when we don't need individual difficulty or weight
+     */
+    void pop_top_block_from_blockchain(block& bl, uint64_t& height, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight);
+
+    /**
+     * @brief gets block info at a given height
+     *
+     * @param height requested height
+     * @param difficulty return-by-reference difficulty
+     * @param weight return-by-reference weight
+     * @param cumulative_difficulty return-by-reference cumulative difficulty
+     * @param cumulative_weight return-by-reference cumulative weight
+     */
+    void get_height_info(const uint64_t& height,
+                         difficulty_type& difficulty,
+                         difficulty_type& weight,
+                         difficulty_type& cumulative_difficulty,
+                         difficulty_type& cumulative_weight);
+
+    /**
+     * @brief wrapper for above get_height_info method, for when we don't need individual difficulty or weight
+     */
+    void get_height_info(const uint64_t& height, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight);
+
+    /**
+     * @brief gets uncle info at a given height
+     *
+     * @param height requested height
+     * @param difficulty return-by-reference difficulty
+     * @param weight return-by-reference weight
+     * @param cumulative_difficulty return-by-reference cumulative difficulty
+     * @param cumulative_weight return-by-reference cumulative weight
+     */
+    void get_uncle_height_info(const uint64_t& height,
+                               difficulty_type& difficulty,
+                               difficulty_type& weight,
+                               difficulty_type& cumulative_difficulty,
+                               difficulty_type& cumulative_weight);
+
+    /**
+     * @brief wrapper for above get_uncle_height_info method, for when we don't need individual difficulty or weight
+     */
+    void get_uncle_height_info(const uint64_t& height, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight);
 
     /**
      * @brief removes the most recent block from the blockchain
@@ -1253,7 +1314,10 @@ namespace cryptonote
     bool validate_uncle_block(const block& nephew, const block& uncle)
     {
       difficulty_type uncle_diffic;
-      bool r = get_block_difficulty(uncle.prev_id, uncle_diffic);
+      difficulty_type uncle_weight;
+      difficulty_type uncle_cumulative_difficulty;
+      difficulty_type uncle_cumulative_weight;
+      bool r = get_block_info(uncle.prev_id, uncle_diffic, uncle_weight, uncle_cumulative_difficulty, uncle_cumulative_weight);
       if (!r)
       {
         MERROR("Unable to get uncle block difficulty");
@@ -1471,6 +1535,6 @@ namespace cryptonote
      *
      * @return if built successfully
      */
-    bool build_alt_chain(const crypto::hash h, std::list<blocks_ext_by_hash::iterator> &alt_chain);
+    bool get_alt_height_info(const crypto::hash h, difficulty_type &difficulty, difficulty_type &weight, difficulty_type &cumulative_difficulty, difficulty_type &cumulative_weight);
   };
 }  // namespace cryptonote

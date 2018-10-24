@@ -826,10 +826,11 @@ void BlockchainLMDB::remove_block()
   CURSOR(uncle_heights)
   CURSOR(uncles)
 
-  MDB_val hu = k;
+  MDB_val_copy<uint64_t> uk(bl_height - 1);
+  MDB_val hu = uk;
   result = mdb_cursor_get(m_cur_uncle_info, (MDB_val *)&zerokval, &hu, MDB_GET_BOTH);
   if (result == MDB_NOTFOUND) {
-    MDEBUG("No uncle for removal exists at height " << bl_height);
+    MDEBUG("No uncle for removal exists at height " << bl_height - 1);
   }
   else if (result) {
     throw0(DB_ERROR("Error attempting to retrieve a uncle height from the db"));
@@ -837,7 +838,7 @@ void BlockchainLMDB::remove_block()
   else
   {
     // TODO-TK: this requirement templated from above seems hacky
-    MDEBUG("Removing uncle at height " << bl_height);
+    MDEBUG("Removing uncle at height " << bl_height - 1);
     mdb_block_info *bi = (mdb_block_info *)hu.mv_data;
     blk_height uh = {bi->bi_hash, 0};
     hu.mv_data = (void *)&uh;
@@ -849,7 +850,7 @@ void BlockchainLMDB::remove_block()
     if ((result = mdb_cursor_del(m_cur_uncle_heights, 0))) {
       throw1(DB_ERROR(lmdb_error("Failed to add removal of uncle height by hash to db transaction: ", result).c_str()));
     }
-    if ((result = mdb_cursor_get(m_cur_uncles, &k, NULL, MDB_SET))) {
+    if ((result = mdb_cursor_get(m_cur_uncles, &uk, NULL, MDB_SET))) {
       throw1(DB_ERROR(lmdb_error("Failed to locate uncle for removal: ", result).c_str()));
     }
     if ((result = mdb_cursor_del(m_cur_uncles, 0))) {
@@ -2102,6 +2103,82 @@ difficulty_type BlockchainLMDB::get_block_cumulative_difficulty(const uint64_t& 
   return ret;
 }
 
+void BlockchainLMDB::get_uncle_height_info(const uint64_t& height, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__ << "  height: " << height);
+  mdb_block_info ui = get_uncle_info(height);
+
+  if (height != 0)
+  {
+    mdb_block_info bi_prev = get_block_info(height - 1); // TODO-TK: uncle to be stored at parentt height or at nephew's?
+    difficulty = ui.bi_diff - bi_prev.bi_diff;
+    weight = ui.bi_weight - bi_prev.bi_weight;
+  }
+  else
+  {
+    difficulty = ui.bi_diff;
+    weight = ui.bi_weight;
+  }
+  cumulative_difficulty = ui.bi_diff;
+  cumulative_weight = ui.bi_weight;
+}
+
+void BlockchainLMDB::get_height_info(const uint64_t& height, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__ << "  height: " << height);
+  mdb_block_info bi = get_block_info(height);
+
+  if (height != 0)
+  {
+    mdb_block_info bi_prev = get_block_info(height - 1);
+    difficulty = bi.bi_diff - bi_prev.bi_diff;
+    weight = bi.bi_weight - bi_prev.bi_weight;
+  }
+  else
+  {
+    difficulty = bi.bi_diff;
+    weight = bi.bi_weight;
+  }
+  cumulative_difficulty = bi.bi_diff;
+  cumulative_weight = bi.bi_weight;
+}
+
+void BlockchainLMDB::get_uncle_height_info(const crypto::hash& h, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__ << "  hash: " << h);
+  get_uncle_height_info(get_uncle_height(h), difficulty, weight, cumulative_difficulty, cumulative_weight);
+}
+
+void BlockchainLMDB::get_height_info(const crypto::hash& h, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__ << "  hash: " << h);
+  get_height_info(get_block_height(h), difficulty, weight, cumulative_difficulty, cumulative_weight);
+}
+
+mdb_block_info BlockchainLMDB::get_uncle_info(const uint64_t& height) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__ << "  height: " << height);
+  check_open();
+
+  TXN_PREFIX_RDONLY();
+  RCURSOR(uncle_info);
+
+  MDB_val_set(result, height);
+  auto get_result = mdb_cursor_get(m_cur_uncle_info, (MDB_val *)&zerokval, &result, MDB_GET_BOTH);
+  if (get_result == MDB_NOTFOUND)
+  {
+    throw0(BLOCK_DNE(std::string("Attempt to get uncle info from height ").append(boost::lexical_cast<std::string>(height)).append(" failed -- difficulty not in db").c_str()));
+  }
+  else if (get_result)
+    throw0(DB_ERROR("Error attempting to retrieve uncle info from the db"));
+
+  // TODO-TK: concerns of a dangling pointer (though rest of the code seems to trust it)
+  mdb_block_info bi = *((mdb_block_info *)result.mv_data);
+
+  TXN_POSTFIX_RDONLY();
+  return bi;
+}
+
 mdb_block_info BlockchainLMDB::get_block_info(const uint64_t& height) const
 {
   LOG_PRINT_L3("BlockchainLMDB::" << __func__ << "  height: " << height);
@@ -2114,10 +2191,10 @@ mdb_block_info BlockchainLMDB::get_block_info(const uint64_t& height) const
   auto get_result = mdb_cursor_get(m_cur_block_info, (MDB_val *)&zerokval, &result, MDB_GET_BOTH);
   if (get_result == MDB_NOTFOUND)
   {
-    throw0(BLOCK_DNE(std::string("Attempt to get cumulative difficulty from height ").append(boost::lexical_cast<std::string>(height)).append(" failed -- difficulty not in db").c_str()));
+    throw0(BLOCK_DNE(std::string("Attempt to get block info from height ").append(boost::lexical_cast<std::string>(height)).append(" failed -- difficulty not in db").c_str()));
   }
   else if (get_result)
-    throw0(DB_ERROR("Error attempting to retrieve a cumulative difficulty from the db"));
+    throw0(DB_ERROR("Error attempting to retrieve block info from the db"));
 
   // TODO-TK: concerns of a dangling pointer (though rest of the code seems to trust it)
   mdb_block_info bi = *((mdb_block_info *)result.mv_data);

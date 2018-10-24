@@ -537,6 +537,110 @@ bool Blockchain::deinit()
   m_db = NULL;
   return true;
 }
+
+void Blockchain::pop_top_block_from_blockchain(block& bl,
+                                               uint64_t& height,
+                                               difficulty_type& cumulative_difficulty,
+                                               difficulty_type& cumulative_weight)
+{
+  difficulty_type difficulty;
+  difficulty_type weight;
+  pop_top_block_from_blockchain(bl, height, difficulty, weight, cumulative_difficulty, cumulative_weight);
+}
+
+void Blockchain::pop_top_block_from_blockchain(block& bl,
+                                               uint64_t& height,
+                                               difficulty_type& difficulty,
+                                               difficulty_type& weight,
+                                               difficulty_type& cumulative_difficulty,
+                                               difficulty_type& cumulative_weight)
+{
+  try
+  {
+    uint64_t height = m_db->height() - 1;
+    m_db->get_height_info(height, difficulty, weight, cumulative_difficulty, cumulative_weight);
+    bl = pop_block_from_blockchain();
+  }
+  // anything that could cause this to throw is likely catastrophic,
+  // so we re-throw
+  catch (const std::exception& e)
+  {
+    LOG_ERROR("Error popping block from blockchain: " << e.what());
+    throw;
+  }
+  catch (...)
+  {
+    LOG_ERROR("Error popping block from blockchain, throwing!");
+    throw;
+  }
+}
+
+void Blockchain::get_height_info(const uint64_t& height,
+                                 difficulty_type& cumulative_difficulty,
+                                 difficulty_type& cumulative_weight)
+{
+  difficulty_type difficulty;
+  difficulty_type weight;
+  get_height_info(height, difficulty, weight, cumulative_difficulty, cumulative_weight);
+}
+
+void Blockchain::get_height_info(const uint64_t& height,
+                                 difficulty_type& difficulty,
+                                 difficulty_type& weight,
+                                 difficulty_type& cumulative_difficulty,
+                                 difficulty_type& cumulative_weight)
+{
+  try
+  {
+    m_db->get_height_info(height, difficulty, weight, cumulative_difficulty, cumulative_weight);
+  }
+  // anything that could cause this to throw is likely catastrophic,
+  // so we re-throw
+  catch (const std::exception& e)
+  {
+    LOG_ERROR("Error getting uncle info from blockchain: " << e.what());
+    throw;
+  }
+  catch (...)
+  {
+    LOG_ERROR("Error getting uncle from blockchain, throwing!");
+    throw;
+  }
+}
+
+void Blockchain::get_uncle_height_info(const uint64_t& height,
+                                       difficulty_type& cumulative_difficulty,
+                                       difficulty_type& cumulative_weight)
+{
+  difficulty_type difficulty;
+  difficulty_type weight;
+  get_uncle_height_info(height, difficulty, weight, cumulative_difficulty, cumulative_weight);
+}
+
+void Blockchain::get_uncle_height_info(const uint64_t& height,
+                                       difficulty_type& difficulty,
+                                       difficulty_type& weight,
+                                       difficulty_type& cumulative_difficulty,
+                                       difficulty_type& cumulative_weight)
+{
+  try
+  {
+    m_db->get_uncle_height_info(height, difficulty, weight, cumulative_difficulty, cumulative_weight);
+  }
+  // anything that could cause this to throw is likely catastrophic,
+  // so we re-throw
+  catch (const std::exception& e)
+  {
+    LOG_ERROR("Error getting uncle info from blockchain: " << e.what());
+    throw;
+  }
+  catch (...)
+  {
+    LOG_ERROR("Error getting uncle info from blockchain, throwing!");
+    throw;
+  }
+}
+
 //------------------------------------------------------------------
 // This function tells BlockchainDB to remove the top block from the
 // blockchain and then returns all transactions (except the miner tx, of course)
@@ -612,7 +716,7 @@ bool Blockchain::reset_and_set_genesis_block(const block& b)
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
   m_timestamps_and_difficulties_height = 0;
   m_alternative_chains.clear();
-  m_discarded_chain.clear();
+  m_disconnected_chain.clear();
   m_db->reset();
   m_hardfork->init();
 
@@ -775,8 +879,8 @@ bool Blockchain::get_block_by_hash(const crypto::hash &h, block &blk, bool *orph
       catch (...) {
       }
       MDEBUG("Looking for uncle " << h << " in temporarily discarded main chain");
-      blocks_ext_by_hash::const_iterator it_alt = m_discarded_chain.find(h);
-      if (m_discarded_chain.end() != it_alt)
+      blocks_ext_by_hash::const_iterator it_alt = m_disconnected_chain.find(h);
+      if (m_disconnected_chain.end() != it_alt)
       {
         blk = it_alt->second.bl;
         return true;
@@ -968,26 +1072,25 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
   {
     uint64_t b_height = m_db->height();
     block uncle;
-    bool r = get_uncle_from_height(b_height - 1, uncle);
+    bool r = get_uncle_from_height(b_height - 2, uncle);
     if (r)
     {
-      MTRACE("Adding uncle " << get_block_hash(uncle) << " to temporary discarded chain container");
       block_extended_info uei = boost::value_initialized<block_extended_info>();
       uei.bl = uncle;
-      uei.height = b_height;
-      m_discarded_chain.insert(blocks_ext_by_hash::value_type(uncle.hash, uei));
+      uei.height = b_height - 2;
+      get_uncle_height_info(b_height - 2, uei.cumulative_difficulty, uei.cumulative_weight);
+
+      MTRACE("Adding uncle " << get_block_hash(uncle) << " to temporary discarded chain container");
+      m_disconnected_chain.insert(blocks_ext_by_hash::value_type(uncle.hash, uei));
     }
 
-    MTRACE("Popping block " << " at height " << b_height);
-    block b = pop_block_from_blockchain();
-    disconnected_chain.push_front(b);
-
-    MTRACE("Adding block " << b.hash << " to temporary discarded chain container");
-    // TODO-TK: there's a different todo hinting at potential deprecation of bei, something worth looking into
     block_extended_info bei = boost::value_initialized<block_extended_info>();
-    bei.bl = b;
-    bei.height = b_height;
-    m_discarded_chain.insert(blocks_ext_by_hash::value_type(b.hash, bei));
+    MTRACE("Popping block at height " << b_height);
+    pop_top_block_from_blockchain(bei.bl, bei.height, bei.cumulative_difficulty, bei.cumulative_weight);
+    disconnected_chain.push_front(bei.bl);
+
+    MTRACE("Adding block " << bei.bl.hash << " to temporary discarded chain container");
+    m_disconnected_chain.insert(blocks_ext_by_hash::value_type(bei.bl.hash, bei));
   }
 
   auto split_height = m_db->height();
@@ -999,6 +1102,7 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
     block_verification_context bvc = boost::value_initialized<block_verification_context>();
 
     // add block to main chain
+    // TODO-TK: need to handle uncles in rollbacks
     bool r = handle_block_to_main_chain(ch_ent->second.bl, bvc);
 
     // if adding block to main chain failed, rollback to previous state and
@@ -1052,7 +1156,7 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
   }
 
   MDEBUG("Clearing discarded chain");
-  m_discarded_chain.clear();
+  m_disconnected_chain.clear();
 
   m_hardfork->reorganize_from_chain_height(split_height);
 
@@ -1225,7 +1329,7 @@ bool Blockchain::validate_uncle_block(const block& nephew, const block& uncle, c
   crypto::hash uncle_pow = get_block_longhash(uncle);
   if(!check_hash(uncle_pow, uncle_diffic))
   {
-    MERROR_VER("Uncle proof of work for height is invalid");
+    MERROR_VER("Uncle proof of work on difficulty " << uncle_diffic << " for height " << uncle_height << " is invalid");
     return false;
   }
 
@@ -1677,6 +1781,9 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
     bool uncle_included = is_uncle_block_included(b);
     block uncle;
     difficulty_type uncle_diffic = 0;
+    difficulty_type uncle_weight = 0;
+    difficulty_type uncle_cumulative_difficulty = 0;
+    difficulty_type uncle_cumulative_weight = 0;
     if (uncle_included)
     {
       if (b.major_version < 8)
@@ -1694,7 +1801,7 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
         return false;
       }
 
-      r = get_block_difficulty(uncle.prev_id, uncle_diffic);
+      r = get_block_info(uncle.prev_id, uncle_diffic, uncle_weight, uncle_cumulative_difficulty, uncle_cumulative_weight);
       if (!r)
       {
         MERROR_VER("Unable to get uncle block difficulty");
@@ -1715,7 +1822,7 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
         bvc.m_verifivation_failed = true;
         return false;
       }
-      bei.cumulative_weight += uncle_diffic;
+      bei.cumulative_weight += uncle_weight;
     }
 
     // add block to alternate blocks storage,
@@ -2258,7 +2365,7 @@ uint64_t Blockchain::block_difficulty(uint64_t i) const
   return 0;
 }
 
-bool Blockchain::build_alt_chain(const crypto::hash h, std::list<blocks_ext_by_hash::iterator> &alt_chain)
+bool Blockchain::get_alt_height_info(const crypto::hash h, difficulty_type &difficulty, difficulty_type &weight, difficulty_type &cumulative_difficulty, difficulty_type &cumulative_weight)
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
   if (m_db->block_exists(h))
@@ -2267,46 +2374,60 @@ bool Blockchain::build_alt_chain(const crypto::hash h, std::list<blocks_ext_by_h
     return false;
   }
 
+  blocks_ext_by_hash::const_iterator it_bl;
   blocks_ext_by_hash alt_chains_container;
-  if (m_alternative_chains.find(h) != m_alternative_chains.end())
+  if ((it_bl = m_alternative_chains.find(h)) != m_alternative_chains.end())
   {
     MDEBUG("Block " << h << " found in set of alternative chains");
     alt_chains_container = m_alternative_chains;
-  } else if (m_discarded_chain.find(h) != m_discarded_chain.end()){
+  } else if ((it_bl = m_disconnected_chain.find(h)) != m_disconnected_chain.end()){
     MDEBUG("Block " << h << " found in temporarily discarded chain");
-    alt_chains_container = m_alternative_chains;
+    alt_chains_container = m_disconnected_chain;
   } else {
     MERROR("Block " << h << " not found in set of alternative chains or temporarily discarded chain");
     return false;
   }
 
-  auto it_bl = alt_chains_container.find(h);
-  blocks_ext_by_hash::iterator alt_it = it_bl;
+  cumulative_difficulty = it_bl->second.cumulative_difficulty;
+  cumulative_weight = it_bl->second.cumulative_weight;
+
   bool parent_in_main = m_db->block_exists(it_bl->second.bl.prev_id);
   if (parent_in_main)
   {
-    alt_chain.push_front(alt_it);
+    difficulty_type parent_difficulty = 0;
+    difficulty_type parent_weight = 0;
+    difficulty_type parent_cumulative_difficulty = 0;
+    difficulty_type parent_cumulative_weight = 0;
+    get_height_info(it_bl->second.height, parent_difficulty, parent_weight, parent_cumulative_weight, parent_cumulative_weight);
+
+    difficulty = cumulative_difficulty - parent_cumulative_difficulty;
+    weight = cumulative_weight - parent_cumulative_weight;
   }
   else
   {
-    while(alt_it != alt_chains_container.end())
+    it_bl = alt_chains_container.find(it_bl->second.bl.prev_id);
+    if (it_bl != alt_chains_container.end())
     {
-      alt_chain.push_front(alt_it);
-      alt_it = alt_chains_container.find(alt_it->second.bl.prev_id);
+      MERROR("Parent block expected to be in alt chain");
+      return false;
     }
+
+    difficulty = cumulative_difficulty - it_bl->second.cumulative_difficulty;
+    weight = cumulative_weight - it_bl->second.cumulative_weight;
   }
   return true;
 }
 
-difficulty_type Blockchain::get_block_difficulty(const crypto::hash h, difficulty_type &difficulty)
+bool Blockchain::get_block_info(const crypto::hash h, difficulty_type &difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type &cumulative_weight)
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
 
-  MDEBUG("Getting difficulty for block " << h);
+  MDEBUG("Getting block info for " << h);
   bool block_in_main = m_db->block_exists(h);
-  if (block_in_main) {
+  if (block_in_main)
+  {
     MDEBUG("Found block in main");
-    difficulty = m_db->get_block_difficulty(h);
+    m_db->get_height_info(m_db->get_block_height(h), difficulty, weight, cumulative_difficulty, cumulative_weight);
     return true;
   }
 
@@ -2314,19 +2435,18 @@ difficulty_type Blockchain::get_block_difficulty(const crypto::hash h, difficult
   if (uncle_in_main)
   {
     MDEBUG("Found uncle in main");
-    difficulty = m_db->get_uncle_difficulty(h);
+    m_db->get_uncle_height_info(m_db->get_uncle_height(h), difficulty, weight, cumulative_difficulty, cumulative_weight);
     return true;
   }
 
   MDEBUG("Block not found in main chain - looking for block difficulty in alt chains");
-  std::list<blocks_ext_by_hash::iterator> alt_chain;
-  bool r = build_alt_chain(h, alt_chain);
-  if (!r) {
-    MERROR("Unable to build alt chain for block " << h);
+  bool r = get_alt_height_info(h, difficulty, weight, cumulative_difficulty, cumulative_weight);
+  if (!r)
+  {
+    MERROR("Something wrong happened when getting alt height info");
     return false;
   }
 
-  difficulty = get_next_difficulty_for_alternative_chain(alt_chain, alt_chain.back()->second.height);
   return true;
 }
 
@@ -3718,6 +3838,9 @@ leave:
   bool uncle_included = is_uncle_block_included(bl);
   cryptonote::block uncle;
   difficulty_type uncle_diffic = 0;
+  difficulty_type uncle_weight = 0;
+  difficulty_type uncle_cumulative_difficulty = 0;
+  difficulty_type uncle_cumulative_weight = 0;
   if (uncle_included)
   {
     if (bl.major_version < 8)
@@ -3734,8 +3857,7 @@ leave:
       goto leave;
     }
 
-    difficulty_type uncle_diffic = 0;
-    bool r = get_block_difficulty(uncle.prev_id, uncle_diffic);
+    bool r = get_block_info(uncle.prev_id, uncle_diffic, uncle_weight, uncle_cumulative_difficulty, uncle_cumulative_weight);
     if (!r)
     {
       MERROR_VER("Unable to get uncle's block difficulty");
@@ -3757,7 +3879,7 @@ leave:
       goto leave;
     }
 
-    cumulative_weight += uncle_diffic;
+    cumulative_weight += uncle_weight;
   }
 
   // In the "tail" state when the minimum subsidy (implemented in get_block_reward) is in effect, the number of
@@ -3787,7 +3909,7 @@ leave:
       if (uncle_included) {
         new_height = m_db->add_block(bl, block_size, cumulative_difficulty, cumulative_weight, already_generated_coins, txs);
         uint64_t uncle_size = cryptonote::t_serializable_object_to_blob(uncle).size();
-        m_db->add_uncle(uncle, uncle_size, cumulative_difficulty, cumulative_weight, already_generated_coins, get_block_hash(uncle), new_height - 1);
+        m_db->add_uncle(uncle, uncle_size, uncle_cumulative_difficulty, uncle_cumulative_weight, already_generated_coins, get_block_hash(uncle), new_height - 2);
       } else {
         new_height = m_db->add_block(bl, block_size, cumulative_difficulty, cumulative_weight, already_generated_coins, txs);
       }

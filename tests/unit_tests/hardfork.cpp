@@ -63,6 +63,10 @@ public:
   virtual void drop_hard_fork_info() {}
   virtual bool uncle_exists(const crypto::hash& h, uint64_t *height) const { return false; }
   virtual bool block_exists(const crypto::hash& h, uint64_t *height) const { return false; }
+  virtual void get_uncle_height_info(const uint64_t& height, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const {difficulty = 0; weight = 0; cumulative_difficulty = 0; cumulative_weight = 0;}
+  virtual void get_height_info(const uint64_t& height, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const {difficulty = 0; weight = 0; cumulative_difficulty = 0; cumulative_weight = 0;}
+  virtual void get_uncle_height_info(const crypto::hash& h, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const {difficulty = 0; weight = 0; cumulative_difficulty = 0; cumulative_weight = 0;}
+  virtual void get_height_info(const crypto::hash& h, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const {difficulty = 0; weight = 0; cumulative_difficulty = 0; cumulative_weight = 0;}
   virtual blobdata get_block_blob_from_height(const uint64_t& height) const { return cryptonote::t_serializable_object_to_blob(get_block_from_height(height)); }
   virtual blobdata get_uncle_blob_from_height(const uint64_t& height) const { return cryptonote::t_serializable_object_to_blob(get_uncle_from_height(height)); }
   virtual blobdata get_block_blob(const crypto::hash& h) const { return blobdata(); }
