@@ -1047,7 +1047,7 @@ namespace cryptonote
 
     // used for uncle references when an ex-main chain contains an uncle in the new one
     // TODO-TK: this is a bit hacky but avoids recursive-ish dependencies
-    blocks_by_hash m_discarded_chain; // crypto::hash -> block
+    blocks_ext_by_hash m_discarded_chain; // crypto::hash -> block_extended_info
 
     // some invalid blocks
     blocks_ext_by_hash m_invalid_blocks;     // crypto::hash -> block_extended_info
