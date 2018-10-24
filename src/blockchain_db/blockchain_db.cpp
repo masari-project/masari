@@ -188,20 +188,7 @@ void BlockchainDB::add_transaction(const crypto::hash& blk_hash, const transacti
   add_tx_amount_output_indices(tx_id, amount_output_indices);
 }
 
-uint64_t BlockchainDB::add_block(const block& nephew, const size_t& nephew_size, const block& uncle, const size_t& uncle_size,
-                                 const difficulty_type& cumulative_difficulty, const difficulty_type& cumulative_weight,
-                                 const uint64_t& coins_generated, const std::vector<transaction>& txs)
-{
-  block_txn_start(false);
-  uint64_t new_height = add_block_raw(nephew, nephew_size, cumulative_difficulty, cumulative_weight, coins_generated, txs);
-  add_uncle(uncle, uncle_size, cumulative_difficulty, cumulative_weight, coins_generated, get_block_hash(uncle), new_height - 1);
-  block_txn_stop();
-
-  ++num_calls;
-  return new_height;
-}
-
-uint64_t BlockchainDB::add_block_raw( const block& blk
+uint64_t BlockchainDB::add_block( const block& blk
                                 , const size_t& block_size
                                 , const difficulty_type& cumulative_difficulty
                                 , const difficulty_type& cumulative_weight
@@ -212,6 +199,8 @@ uint64_t BlockchainDB::add_block_raw( const block& blk
   // sanity
   if (blk.tx_hashes.size() != txs.size())
     throw std::runtime_error("Inconsistent tx/hashes sizes");
+
+  block_txn_start(false);
 
   TIME_MEASURE_START(time1);
   crypto::hash blk_hash = get_block_hash(blk);
@@ -243,23 +232,11 @@ uint64_t BlockchainDB::add_block_raw( const block& blk
 
   m_hardfork->add(blk, prev_height);
 
+  block_txn_stop();
+
   ++num_calls;
 
   return prev_height;
-}
-
-uint64_t BlockchainDB::add_block( const block& blk
-                                , const size_t& block_size
-                                , const difficulty_type& cumulative_difficulty
-                                , const difficulty_type& cumulative_weight
-                                , const uint64_t& coins_generated
-                                , const std::vector<transaction>& txs
-                                )
-{
-  block_txn_start(false);
-  uint64_t new_height = add_block_raw(blk, block_size, cumulative_difficulty, cumulative_weight, coins_generated, txs);
-  block_txn_stop();
-  return new_height;
 }
 
 void BlockchainDB::set_hard_fork(HardFork* hf)

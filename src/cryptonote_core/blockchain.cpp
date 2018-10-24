@@ -3785,8 +3785,9 @@ leave:
     try
     {
       if (uncle_included) {
+        new_height = m_db->add_block(bl, block_size, cumulative_difficulty, cumulative_weight, already_generated_coins, txs);
         uint64_t uncle_size = cryptonote::t_serializable_object_to_blob(uncle).size();
-        new_height = m_db->add_block(bl, block_size, uncle, uncle_size, cumulative_difficulty, cumulative_weight, already_generated_coins, txs);
+        m_db->add_uncle(uncle, uncle_size, cumulative_difficulty, cumulative_weight, already_generated_coins, get_block_hash(uncle), new_height - 1);
       } else {
         new_height = m_db->add_block(bl, block_size, cumulative_difficulty, cumulative_weight, already_generated_coins, txs);
       }

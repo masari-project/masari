@@ -292,13 +292,21 @@ public:
   virtual bool for_all_outputs(std::function<bool(uint64_t amount, const crypto::hash &tx_hash, uint64_t height, size_t tx_idx)> f) const;
   virtual bool for_all_outputs(uint64_t amount, const std::function<bool(uint64_t height)> &f) const;
 
-  virtual uint64_t add_block_raw( const block& blk
+  virtual uint64_t add_block( const block& blk
                             , const size_t& block_size
                             , const difficulty_type& cumulative_difficulty
                             , const difficulty_type& cumulative_weight
                             , const uint64_t& coins_generated
                             , const std::vector<transaction>& txs
                             );
+
+  virtual void add_uncle(const block& uncle,
+                         const size_t& uncle_size,
+                         const difficulty_type& cumulative_difficulty,
+                         const difficulty_type& cumulative_weight,
+                         const uint64_t& coins_generated,
+                         const crypto::hash& uncle_hash,
+                         uint64_t height);
 
   virtual void set_batch_transactions(bool batch_transactions);
   virtual bool batch_start(uint64_t batch_num_blocks=0, uint64_t batch_bytes=0);
@@ -333,9 +341,6 @@ private:
   bool need_resize(uint64_t threshold_size=0) const;
   void check_and_resize_for_batch(uint64_t batch_num_blocks, uint64_t batch_bytes);
   uint64_t get_estimated_batch_size(uint64_t batch_num_blocks, uint64_t batch_bytes) const;
-
-  virtual void add_uncle(const block& uncle, const size_t& uncle_size, const difficulty_type& cumulative_difficulty,
-                         const difficulty_type& cumulative_weight, const uint64_t& coins_generated, const crypto::hash& uncle_hash, uint64_t height);
 
   virtual void add_block( const block& blk
                 , const size_t& block_size

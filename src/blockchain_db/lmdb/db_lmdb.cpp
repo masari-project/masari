@@ -667,6 +667,8 @@ void BlockchainLMDB::add_uncle(const block& uncle, const size_t& uncle_size, con
 {
   LOG_PRINT_L3("BlockchainLMDB::" << __func__);
 
+  block_txn_start(false);
+
   check_open();
   mdb_txn_cursors *m_cursors = &m_wcursors;
   int result = 0;
@@ -710,6 +712,8 @@ void BlockchainLMDB::add_uncle(const block& uncle, const size_t& uncle_size, con
 
   m_cum_size += uncle_size;
   m_cum_count++;
+
+  block_txn_stop();
 }
 
 void BlockchainLMDB::add_block(const block& blk, const size_t& block_size, const difficulty_type& cumulative_difficulty,
@@ -3133,7 +3137,7 @@ void BlockchainLMDB::block_txn_abort()
   }
 }
 
-uint64_t BlockchainLMDB::add_block_raw(const block& blk, const size_t& block_size, const difficulty_type& cumulative_difficulty,
+uint64_t BlockchainLMDB::add_block(const block& blk, const size_t& block_size, const difficulty_type& cumulative_difficulty,
 				       const difficulty_type& cumulative_weight, const uint64_t& coins_generated,
                                        const std::vector<transaction>& txs)
 {
@@ -3153,7 +3157,7 @@ uint64_t BlockchainLMDB::add_block_raw(const block& blk, const size_t& block_siz
 
   try
   {
-    BlockchainDB::add_block_raw(blk, block_size, cumulative_difficulty, cumulative_weight, coins_generated, txs);
+    BlockchainDB::add_block(blk, block_size, cumulative_difficulty, cumulative_weight, coins_generated, txs);
   }
   catch (const DB_ERROR_TXN_START& e)
   {

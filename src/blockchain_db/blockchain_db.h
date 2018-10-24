@@ -373,27 +373,6 @@ private:
                 ) = 0;
 
   /**
-   * @brief add the uncle and metadata to the db
-   *
-   * Similar description to add_block above
-   *
-   * @param uncle the uncle block to be added
-   * @param uncle_size the size of the uncle block (transactions and all)
-   * @param cumulative_difficulty the accumulated difficulty at height when this uncle was mined
-   * @param cumulative_weight the accumulated weight at height when this uncle was mined
-   * @param coins_generated the number of coins generated total after this uncle block was mined
-   * @param uncle_hash the hash of the uncle block
-   * @param height the height of where the uncle block was mined
-   */
-  virtual void add_uncle(const block& uncle,
-                         const size_t& uncle_size,
-                         const difficulty_type& cumulative_difficulty,
-                         const difficulty_type& cumulative_weight,
-                         const uint64_t& coins_generated,
-                         const crypto::hash& uncle_hash,
-                         const uint64_t height) = 0;
-
-  /**
    * @brief remove data about the top block
    *
    * The subclass implementing this will remove the block data from the top
@@ -811,44 +790,26 @@ public:
                             );
 
   /**
-   * @brief handles the addition of a new block to BlockchainDB <without a transaction>
+   * @brief add the uncle and metadata to the db
    *
-   * Mostly just a wrapper for the above add_block method
+   * Similar description to add_block above
    *
-   * @param blk the block to be added
-   * @param block_size the size of the block (transactions and all)
-   * @param cumulative_difficulty the accumulated difficulty after this block
-   * @param coins_generated the number of coins generated total after this block
-   * @param txs the transactions in the block
-   *
-   * @return the height of the chain post-addition
-   */
-  virtual uint64_t add_block_raw( const block& blk
-                            , const size_t& block_size
-                            , const difficulty_type& cumulative_difficulty
-                            , const difficulty_type& cumulative_weight
-                            , const uint64_t& coins_generated
-                            , const std::vector<transaction>& txs
-                            );
-
-  /**
-   * @brief handles the addition of a new uncle mined block to BlockchainDB
-   *
-   * Wraps around the add_block_raw method with the addition of storing uncle blocks
-   *
-   * @param nephew the nephew block to be added
-   * @param nephew_size the size of the block
    * @param uncle the uncle block to be added
-   * @param uncle_size the size of the block
-   * @param cumulative_difficulty the accumulated difficulty after this block
-   * @param coins_generated the number of coins generated total after this block
-   * @param txs the transactions in the block
-   *
-   * @return the height of the chain post-addition
+   * @param uncle_size the size of the uncle block (transactions and all)
+   * @param cumulative_difficulty the accumulated difficulty at height when this uncle was mined
+   * @param cumulative_weight the accumulated weight at height when this uncle was mined
+   * @param coins_generated the number of coins generated total after this uncle block was mined
+   * @param uncle_hash the hash of the uncle block
+   * @param height the height of where the uncle block was mined
    */
-  virtual uint64_t add_block(const block& nephew, const size_t& nephew_size, const block& uncle, const size_t& uncle_size,
-                             const difficulty_type& cumulative_difficulty, const difficulty_type& cumulative_weight,
-                             const uint64_t& coins_generated, const std::vector<transaction>& txs);
+  virtual void add_uncle(const block& uncle,
+                         const size_t& uncle_size,
+                         const difficulty_type& cumulative_difficulty,
+                         const difficulty_type& cumulative_weight,
+                         const uint64_t& coins_generated,
+                         const crypto::hash& uncle_hash,
+                         const uint64_t height) = 0;
+
   /**
    * @brief checks if a block exists
    *
