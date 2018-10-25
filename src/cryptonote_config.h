@@ -54,9 +54,6 @@
 #define EMISSION_SPEED_FACTOR_PER_MINUTE                (20)
 #define FINAL_SUBSIDY_PER_MINUTE                        ((uint64_t)300000000000) // 3 * pow(10, 11)
 
-#define UNCLE_REWARD_RATIO                              2
-#define NEPHEW_REWARD_RATIO                             20
-
 #define CRYPTONOTE_REWARD_BLOCKS_WINDOW                 100
 #define CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1    300000
 #define CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V2    CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE_V1
@@ -76,6 +73,10 @@
 #define DIFFICULTY_LAG                                  15  // !!!
 #define DIFFICULTY_CUT                                  60  // timestamps to cut after sorting
 #define DIFFICULTY_BLOCKS_COUNT                         DIFFICULTY_WINDOW + DIFFICULTY_LAG
+
+#define UNCLE_DIFFICULTY_TARGET                         DIFFICULTY_TARGET_V8/2
+#define UNCLE_REWARD_RATIO                              2
+#define NEPHEW_REWARD_RATIO                             20
 
 #define CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT              60*60*2
 #define CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V2           60*24

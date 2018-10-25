@@ -1320,6 +1320,13 @@ bool Blockchain::validate_uncle_block(const block& nephew, const block& uncle, c
     return false;
   }
 
+  uint64_t absdiff = parent.timestamp > uncle.timestamp ? parent.timestamp - uncle.timestamp : uncle.timestamp - parent.timestamp;
+  if (absdiff > UNCLE_DIFFICULTY_TARGET)
+  {
+    MERROR_VER("Uncle timestamp " << uncle.timestamp << " is too far from parent's " << parent.timestamp << " to be considered");
+    return false;
+  }
+
   if (parent.prev_id != uncle.prev_id && (parent.prev_id != uncle.uncle || parent.uncle != uncle.prev_id))
   {
     MERROR_VER("Nephew " << nephew_id << std::endl << "has uncle block at parent height " << parent_height << " with no common (uncle parent " << uncle.prev_id << " == grandparent " << parent.prev_id << ") or extended ancestry (grandparent " << parent.prev_id << " == uncle's uncle " << uncle.uncle << " and parent's uncle " << parent.uncle << " == uncle's parent " << uncle.prev_id << ")");

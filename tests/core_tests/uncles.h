@@ -130,6 +130,12 @@ struct gen_uncle_bad_ancestry : public gen_uncles_base
 };
 template<> struct get_test_options<gen_uncle_bad_ancestry>: public get_test_options<gen_uncles_base> {};
 
+struct gen_uncle_bad_timestamp : public gen_uncles_base
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+template<> struct get_test_options<gen_uncle_bad_timestamp>: public get_test_options<gen_uncles_base> {};
+
 struct gen_uncle_hash_too_low : public gen_uncles_base
 {
   bool generate(std::vector<test_event_entry>& events) const;
