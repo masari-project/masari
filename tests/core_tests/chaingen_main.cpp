@@ -233,6 +233,7 @@ int main(int argc, char* argv[])
     GENERATE_AND_PLAY(gen_uncle_bad_timestamp);
     GENERATE_AND_PLAY(gen_uncle_too_far_extended_ancestry);
     GENERATE_AND_PLAY(gen_uncle_wrong_out);
+    GENERATE_AND_PLAY(gen_uncle_overflow_amount);
     //GENERATE_AND_PLAY(gen_uncle_hash_too_low);
     //GENERATE_AND_PLAY(spend_uncle_original_miner_tx);
     //GENERATE_AND_PLAY(spend_uncle_mined_txs);

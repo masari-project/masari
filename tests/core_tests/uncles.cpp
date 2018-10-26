@@ -223,3 +223,17 @@ bool gen_uncle_wrong_out::generate(std::vector<test_event_entry>& events) const
   };
   return generate_with(events, modifier);
 }
+
+bool gen_uncle_overflow_amount::generate(std::vector<test_event_entry>& events) const
+{
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+    cryptonote::block nephew;
+    nephew.uncle = cryptonote::get_block_hash(alt_bl);
+
+    uint64_t max_uint = -1; //18446744073709551615UL
+    generator.construct_block_manually(nephew, top_bl, original_miner, test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_hf_version | test_generator::bf_timestamp | test_generator::bf_uncle | test_generator::bf_ul_reward, 8, 8, 8840, crypto::hash(), 1, transaction(), std::vector<crypto::hash>(), 0, 0, 8, 0, alt_bl, 0, max_uint);
+    DO_CALLBACK(events, "mark_invalid_block");
+    events.push_back(nephew);
+  };
+  return generate_with(events, modifier);
+}

@@ -219,7 +219,9 @@ bool test_generator::construct_block_manually(block& blk, const block& prev_bloc
                                               const crypto::hash& prev_id/* = crypto::hash()*/, const difficulty_type& diffic/* = 1*/,
                                               const transaction& miner_tx/* = transaction()*/,
                                               const std::vector<crypto::hash>& tx_hashes/* = std::vector<crypto::hash>()*/,
-                                              size_t txs_sizes/* = 0*/, size_t max_outs/* = 0*/, uint8_t hf_version/* = 1*/, uint64_t block_fees/* = 0*/, const cryptonote::block& uncle /*= &cryptonote::block()*/)
+                                              size_t txs_sizes/* = 0*/, size_t max_outs/* = 0*/, uint8_t hf_version/* = 1*/,
+                                              uint64_t block_fees/* = 0*/, const cryptonote::block& uncle /*= &cryptonote::block()*/,
+                                              uint64_t block_reward /*= 0 */, uint64_t uncle_reward /*= 0 */)
 {
   blk.major_version = actual_params & bf_major_ver ? major_ver : CURRENT_BLOCK_MAJOR_VERSION;
   blk.minor_version = actual_params & bf_minor_ver ? minor_ver : CURRENT_BLOCK_MINOR_VERSION;
@@ -237,12 +239,9 @@ bool test_generator::construct_block_manually(block& blk, const block& prev_bloc
   bool uncle_included = is_uncle_block_included(blk);
   size_t median_size = misc_utils::median(block_sizes);
   size_t current_block_size = txs_sizes + get_object_blobsize(blk.miner_tx);
-  uint64_t block_reward;
-  if(!get_block_reward(median_size, txs_sizes, already_generated_coins, block_reward, hf_version)) {
+
+  if (!(actual_params & bf_bl_reward) && !get_block_reward(median_size, txs_sizes, already_generated_coins, block_reward, hf_version)) {
     block_reward = 0;
-  }
-  if (uncle_included) {
-    block_fees += block_reward / NEPHEW_REWARD_RATIO;
   }
 
   if (actual_params & bf_miner_tx)
@@ -252,14 +251,15 @@ bool test_generator::construct_block_manually(block& blk, const block& prev_bloc
   else
   {
     // TODO: This will work, until size of constructed block is less then CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE
-    if (!construct_miner_tx(height, median_size, already_generated_coins, current_block_size, block_fees, miner_acc.get_public_address_str(MAINNET), blk.miner_tx, blobdata(), max_outs, hf_version))
+    if (!construct_miner_tx(height, median_size, already_generated_coins, current_block_size, block_fees, miner_acc.get_public_address_str(MAINNET), blk.miner_tx, blobdata(), max_outs, hf_version, uncle_included))
       return false;
   }
 
   if (uncle_included) {
     crypto::public_key uncle_out = boost::get<txout_to_key>(uncle.miner_tx.vout[0].target).key;
     crypto::public_key uncle_tx_pubkey = get_tx_pub_key_from_extra(uncle.miner_tx);
-    if (!construct_uncle_miner_tx(height, block_reward, uncle_out, uncle_tx_pubkey, blk.miner_tx)) {
+    uncle_reward = actual_params & bf_ul_reward ? uncle_reward : block_reward;
+    if (!construct_uncle_miner_tx(height, uncle_reward, uncle_out, uncle_tx_pubkey, blk.miner_tx)) {
       return false;
     }
   }
