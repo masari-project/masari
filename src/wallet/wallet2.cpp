@@ -3097,7 +3097,7 @@ crypto::secret_key wallet2::generate(const std::string& wallet_, const epee::wip
  {
    // -1 month for fluctuations in block time and machine date/time setup.
    // avg seconds per block
-   const int seconds_per_block = DIFFICULTY_TARGET;
+   const int seconds_per_block = DIFFICULTY_TARGET_V8;
    // ~num blocks per month
    const uint64_t blocks_per_month = 60*60*24*30/seconds_per_block;
 
@@ -9097,6 +9097,7 @@ uint64_t wallet2::get_daemon_blockchain_target_height(string &err)
 uint64_t wallet2::get_approximate_blockchain_height() const
 {
   const time_t init_time = 1504387246;
+  // TODO-TK: update with when a fork height is determined
   uint64_t approx_blockchain_height = (time(NULL) - init_time) / DIFFICULTY_TARGET;
   LOG_PRINT_L2("Calculated blockchain height: " << approx_blockchain_height);
   return approx_blockchain_height;

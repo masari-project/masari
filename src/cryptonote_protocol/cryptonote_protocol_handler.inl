@@ -301,12 +301,18 @@ namespace cryptonote
     Nz. */
     m_core.set_target_blockchain_height((hshd.current_height));
     int64_t diff = static_cast<int64_t>(hshd.current_height) - static_cast<int64_t>(m_core.get_current_blockchain_height());
-    uint64_t max_block_height = std::max(hshd.current_height,m_core.get_current_blockchain_height());
+    uint64_t abs_diff = std::abs(diff);
+    uint64_t max_block_height = std::max(hshd.current_height, m_core.get_current_blockchain_height());
+    // TODO-TK: fill in when we have correct fork heights
+    uint64_t last_block_v7 = m_core.get_nettype() == TESTNET ? (uint64_t)-1 : m_core.get_nettype() == MAINNET ? (uint64_t)-1 : (uint64_t)-1;
+    uint64_t diff_v8 = max_block_height > last_block_v7 ? std::min(abs_diff, max_block_height - last_block_v7) : 0;
+
     MCLOG(is_inital ? el::Level::Info : el::Level::Debug, "global", context <<  "Sync data returned a new top block candidate: " << m_core.get_current_blockchain_height() << " -> " << hshd.current_height
-      << " [Your node is " << std::abs(diff) << " blocks (" << (abs(diff)  / (24 * 60 * 60 / DIFFICULTY_TARGET))  << " days) "
+      << " [Your node is " << abs_diff << " blocks (" << ((abs_diff - diff_v8) / (24 * 60 * 60 / DIFFICULTY_TARGET)) + (diff_v8 / (24 * 60 * 60 / DIFFICULTY_TARGET_V8)) << " days) "
       << (0 <= diff ? std::string("behind") : std::string("ahead"))
       << "] " << ENDL << "SYNCHRONIZATION started");
-      m_core.safesyncmode(false);
+      if (hshd.current_height >= m_core.get_current_blockchain_height() + 5) // don't switch to unsafe mode just for a few blocks
+        m_core.safesyncmode(false);
     }
     LOG_PRINT_L1("Remote blockchain height: " << hshd.current_height << ", id: " << hshd.top_id);
     context.m_state = cryptonote_connection_context::state_synchronizing;
