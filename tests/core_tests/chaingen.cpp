@@ -221,7 +221,7 @@ bool test_generator::construct_block_manually(block& blk, const block& prev_bloc
                                               const std::vector<crypto::hash>& tx_hashes/* = std::vector<crypto::hash>()*/,
                                               size_t txs_sizes/* = 0*/, size_t max_outs/* = 0*/, uint8_t hf_version/* = 1*/,
                                               uint64_t block_fees/* = 0*/, const cryptonote::block& uncle /*= &cryptonote::block()*/,
-                                              uint64_t block_reward /*= 0 */, uint64_t uncle_reward /*= 0 */)
+                                              uint64_t block_reward /*= 0 */, uint64_t uncle_reward /*= 0 */, uint64_t uncle_reward_ratio /*= UNCLE_REWARD_RATIO */)
 {
   blk.major_version = actual_params & bf_major_ver ? major_ver : CURRENT_BLOCK_MAJOR_VERSION;
   blk.minor_version = actual_params & bf_minor_ver ? minor_ver : CURRENT_BLOCK_MINOR_VERSION;
@@ -255,13 +255,14 @@ bool test_generator::construct_block_manually(block& blk, const block& prev_bloc
       return false;
   }
 
-  if (uncle_included) {
+  if (!(actual_params & bf_miner_tx) && uncle_included) {
     crypto::public_key uncle_out = boost::get<txout_to_key>(uncle.miner_tx.vout[0].target).key;
     crypto::public_key uncle_tx_pubkey = get_tx_pub_key_from_extra(uncle.miner_tx);
     uncle_reward = actual_params & bf_ul_reward ? uncle_reward : block_reward;
     if (!construct_uncle_miner_tx(height, uncle_reward, uncle_out, uncle_tx_pubkey, blk.miner_tx)) {
       return false;
     }
+    blk.miner_tx.vout.back().amount = uncle_reward / uncle_reward_ratio;
   }
 
   //blk.tree_root_hash = get_tx_tree_hash(blk);

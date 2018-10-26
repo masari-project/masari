@@ -211,7 +211,7 @@ public:
     const cryptonote::account_base& miner_acc, int actual_params = bf_none, uint8_t major_ver = 0,
     uint8_t minor_ver = 0, uint64_t timestamp = 0, const crypto::hash& prev_id = crypto::hash(),
     const cryptonote::difficulty_type& diffic = 1, const cryptonote::transaction& miner_tx = cryptonote::transaction(),
-    const std::vector<crypto::hash>& tx_hashes = std::vector<crypto::hash>(), size_t txs_sizes = 0, size_t max_outs = 999, uint8_t hf_version = 1, uint64_t block_fees = 0, const cryptonote::block& uncle = cryptonote::block(), uint64_t block_reward = 0, uint64_t uncle_reward = 0);
+    const std::vector<crypto::hash>& tx_hashes = std::vector<crypto::hash>(), size_t txs_sizes = 0, size_t max_outs = 999, uint8_t hf_version = 1, uint64_t block_fees = 0, const cryptonote::block& uncle = cryptonote::block(), uint64_t block_reward = 0, uint64_t uncle_reward = 0, uint64_t uncle_reward_ratio = UNCLE_REWARD_RATIO);
   bool construct_block_manually_tx(cryptonote::block& blk, const cryptonote::block& prev_block,
     const cryptonote::account_base& miner_acc, const std::vector<crypto::hash>& tx_hashes, size_t txs_size, uint64_t block_fees = 0);
 
