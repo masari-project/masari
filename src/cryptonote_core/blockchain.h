@@ -1302,29 +1302,10 @@ namespace cryptonote
      *
      * @param nephew the block containing the mined uncle
      * @param uncle the uncle being mined
-     * @param uncle_diffic uncle block difficulty at height
      *
      * @return false if anything is found wrong with the mined uncle, otherwise true
      */
-    bool validate_uncle_block(const block& nephew, const block& uncle, const difficulty_type uncle_diffic);
-
-    /**
-     * @brief wrapper for the same method without uncle_diffic - same definition as validate_uncle_block above
-     */
-    bool validate_uncle_block(const block& nephew, const block& uncle)
-    {
-      difficulty_type uncle_diffic;
-      difficulty_type uncle_weight;
-      difficulty_type uncle_cumulative_difficulty;
-      difficulty_type uncle_cumulative_weight;
-      bool r = get_block_info(uncle.prev_id, uncle_diffic, uncle_weight, uncle_cumulative_difficulty, uncle_cumulative_weight);
-      if (!r)
-      {
-        MERROR("Unable to get uncle block difficulty");
-        return false;
-      }
-      return validate_uncle_block(nephew, uncle, uncle_diffic);
-    }
+    bool validate_uncle_block(const block& nephew, const block& uncle);
 
     /**
      * @brief validate mined uncle's reward

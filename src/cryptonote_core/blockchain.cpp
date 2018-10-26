@@ -1283,7 +1283,7 @@ bool Blockchain::validate_uncle_reward(const block& nephew, const block& uncle)
   return true;
 }
 //------------------------------------------------------------------
-bool Blockchain::validate_uncle_block(const block& nephew, const block& uncle, const difficulty_type uncle_diffic)
+bool Blockchain::validate_uncle_block(const block& nephew, const block& uncle)
 {
   crypto::hash nephew_id = get_block_hash(nephew);
 
@@ -1293,7 +1293,7 @@ bool Blockchain::validate_uncle_block(const block& nephew, const block& uncle, c
     return false;
   }
 
-  if (uncle.hash != nephew.uncle)
+  if (get_block_hash(uncle) != nephew.uncle)
   {
     MERROR_VER("Nephew " << nephew_id << std::endl << " has mismatched uncle " << nephew.uncle << ", expected: " << uncle.hash);
     return false;
@@ -1303,7 +1303,7 @@ bool Blockchain::validate_uncle_block(const block& nephew, const block& uncle, c
 
   block parent;
   bool orphan;
-  bool r = get_block_by_hash(nephew.prev_id, parent, &orphan);
+  bool r = get_block_by_hash(nephew.prev_id, parent, NULL, true);
   if (!r)
   {
     MERROR_VER("Unable to get nephew block's parent");
@@ -1337,11 +1337,46 @@ bool Blockchain::validate_uncle_block(const block& nephew, const block& uncle, c
     return false;
   }
 
-  crypto::hash uncle_pow = get_block_longhash(uncle);
-  if(!check_hash(uncle_pow, uncle_diffic))
+  difficulty_type uncleparent_diffic;
+  difficulty_type uncleparent_weight;
+  difficulty_type uncleparent_cumulative_difficulty;
+  difficulty_type uncleparent_cumulative_weight;
+  r = get_block_info(uncle.prev_id, uncleparent_diffic, uncleparent_weight, uncleparent_cumulative_difficulty, uncleparent_cumulative_weight);
+  if (!r)
   {
-    MERROR_VER("Uncle proof of work on difficulty " << uncle_diffic << " for height " << uncle_height << " is invalid");
+    MERROR("Unable to get uncle block info");
     return false;
+  }
+
+  crypto::hash uncle_pow = get_block_longhash(uncle);
+  if(!check_hash(uncle_pow, uncleparent_diffic))
+  {
+    MERROR_VER("Uncle proof of work on difficulty " << uncleparent_diffic << " for height " << uncle_height << " is invalid");
+    return false;
+  }
+
+  if (parent.prev_id == uncle.uncle && parent.uncle == uncle.prev_id)
+  {
+    block grandparent;
+    block uncleparent;
+    r = get_block_by_hash(parent.prev_id, grandparent, NULL, true);
+    if (!r)
+    {
+      MERROR_VER("Unable to get grandparent block");
+      return false;
+    }
+    r = get_block_by_hash(uncle.prev_id, uncleparent, NULL, true);
+    if (!r)
+    {
+      MERROR_VER("Unable to get uncleparent block");
+      return false;
+    }
+
+    if (grandparent.prev_id != uncleparent.prev_id)
+    {
+      MERROR_VER("Extended ancestory further than 2nd uncles are not allowed (grandparent's parent " << grandparent.prev_id << " != uncleparent's parent " << uncleparent.prev_id << ")");
+      return false;
+    }
   }
 
   MDEBUG("Uncle validations passed");
