@@ -209,3 +209,17 @@ bool gen_uncle_too_far_extended_ancestry::generate(std::vector<test_event_entry>
   };
   return generate_with(events, modifier);
 }
+
+bool gen_uncle_wrong_out::generate(std::vector<test_event_entry>& events) const
+{
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+    MAKE_NEXT_BLOCKV_UNCLE(events, blk_i0, top_bl, original_miner, 8, alt_bl);
+    MAKE_NEXT_BLOCKV(events, blk_j0, top_bl, original_miner, 8);
+    MAKE_NEXT_BLOCKV(events, blk_k0, top_bl, original_miner, 8);
+    DO_CALLBACK(events, "mark_invalid_block");
+    cryptonote::block blk_i1;
+    blk_i1.uncle = cryptonote::get_block_hash(blk_k0);
+    PUSH_NEXT_BLOCKV_UNCLE(events, blk_i1, blk_i0, original_miner, 8, blk_j0);
+  };
+  return generate_with(events, modifier);
+}

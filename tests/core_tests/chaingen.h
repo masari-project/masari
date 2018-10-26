@@ -598,11 +598,17 @@ inline bool do_replay_file(const std::string& filename)
 #define MAKE_NEXT_BLOCKV(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER) \
   MAKE_NEXT_BLOCKVD(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, 1);
 
+#define PUSH_NEXT_BLOCKVD_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE, DIFFICULTY) \
+  generator.construct_block_manually(BLK_NAME, PREV_BLOCK, MINER_ACC, test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_hf_version | test_generator::bf_uncle | test_generator::bf_diffic, MAJOR_VER, MAJOR_VER, 0, crypto::hash(), 0, transaction(), std::vector<crypto::hash>(), DIFFICULTY, 0, MAJOR_VER, 0, UNCLE); \
+  VEC_EVENTS.push_back(BLK_NAME);
+
+#define PUSH_NEXT_BLOCKV_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE) \
+  PUSH_NEXT_BLOCKVD_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE, 1);
+
 #define MAKE_NEXT_BLOCKVD_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE, DIFFICULTY) \
   cryptonote::block BLK_NAME;                                                         \
   BLK_NAME.uncle = cryptonote::get_block_hash(UNCLE);                                                \
-  generator.construct_block_manually(BLK_NAME, PREV_BLOCK, MINER_ACC, test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_hf_version | test_generator::bf_uncle | test_generator::bf_diffic, MAJOR_VER, MAJOR_VER, 0, crypto::hash(), 0, transaction(), std::vector<crypto::hash>(), DIFFICULTY, 0, MAJOR_VER, 0, UNCLE); \
-  VEC_EVENTS.push_back(BLK_NAME);
+  PUSH_NEXT_BLOCKVD_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE, DIFFICULTY);
 
 #define MAKE_NEXT_BLOCKV_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE) \
   MAKE_NEXT_BLOCKVD_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE, 1);
