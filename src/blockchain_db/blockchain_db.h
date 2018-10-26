@@ -1232,6 +1232,33 @@ public:
   virtual void get_height_info(const crypto::hash& h, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const = 0;
 
   /**
+   * @brief helper method for getting top block height info
+   *
+   * @param cumulative_difficulty return-by-reference cumulative weight of top block
+   * @param cumulative_weight return-by-reference cumulative weight of top block
+   *
+   */
+  void top_height_info(difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const
+  {
+    difficulty_type difficulty;
+    difficulty_type weight;
+    get_height_info(height() - 1, difficulty, weight, cumulative_difficulty, cumulative_weight);
+  }
+
+  /**
+   * @brief get block info from a given hash
+   *
+   * @param cumulative_difficulty return-by-reference block's cumulative difficulty
+   * @param cumulative_weight return-by-reference block's cumulative weight
+   */
+  virtual void get_block_info(const crypto::hash& h, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const
+  {
+    difficulty_type difficulty;
+    difficulty_type weight;
+    get_height_info(h, difficulty, weight, cumulative_difficulty, cumulative_weight);
+  }
+
+  /**
    * @brief check if a transaction with a given hash exists
    *
    * The subclass should check if a transaction is stored which has the

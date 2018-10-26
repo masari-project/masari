@@ -1160,7 +1160,11 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
 
   m_hardfork->reorganize_from_chain_height(split_height);
 
-  MGINFO_GREEN("REORGANIZE SUCCESS! on height: " << split_height << ", new blockchain size: " << m_db->height() << " top block " << m_db->top_block_hash());
+  difficulty_type top_cumulative_difficulty;
+  difficulty_type top_cumulative_weight;
+  m_db->top_height_info(top_cumulative_difficulty, top_cumulative_weight);
+
+  MGINFO_GREEN("REORGANIZE SUCCESS! on height: " << split_height << ", new blockchain size: " << m_db->height() << " top block " << m_db->top_block_hash() << " cumulative difficulty " << top_cumulative_difficulty);
   return true;
 }
 //------------------------------------------------------------------
@@ -1766,11 +1770,10 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
       return false;
     }
 
-    // FIXME:
-    // this brings up an interesting point: consider allowing to get block
-    // difficulty both by height OR by hash, not just height.
-    difficulty_type main_chain_cumulative_difficulty = m_db->get_block_cumulative_difficulty(m_db->height() - 1);
-    difficulty_type main_chain_cumulative_weight = m_db->get_block_cumulative_weight(m_db->height() - 1);
+    difficulty_type main_chain_cumulative_difficulty;
+    difficulty_type main_chain_cumulative_weight;
+    m_db->top_height_info(main_chain_cumulative_difficulty, main_chain_cumulative_weight);
+
     if (alt_chain.size())
     {
       bei.cumulative_difficulty = it_prev->second.cumulative_difficulty;
@@ -1779,8 +1782,7 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
     else
     {
       // passed-in block's previous block's cumulative difficulty, found on the main chain
-      bei.cumulative_difficulty = m_db->get_block_cumulative_difficulty(b.prev_id);
-      bei.cumulative_weight = m_db->get_block_cumulative_weight(b.prev_id);
+      m_db->get_block_info(b.prev_id, bei.cumulative_difficulty, bei.cumulative_weight);
     }
     bei.cumulative_difficulty += current_diff;
     bei.cumulative_weight += current_diff;
@@ -1808,7 +1810,7 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
         return false;
       }
 
-      r = get_block_info(uncle.prev_id, uncle_diffic, uncle_weight, uncle_cumulative_difficulty, uncle_cumulative_weight);
+      r = get_block_info(uncle.hash, uncle_diffic, uncle_weight, uncle_cumulative_difficulty, uncle_cumulative_weight);
       if (!r)
       {
         MERROR_VER("Unable to get uncle block difficulty");
@@ -1816,7 +1818,7 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
         return false;
       }
 
-      if (!validate_uncle_block(b, uncle, uncle_diffic))
+      if (!validate_uncle_block(b, uncle))
       {
         MERROR_VER("Uncle block validation failed");
         bvc.m_verifivation_failed = true;
@@ -1853,8 +1855,7 @@ bool Blockchain::handle_alternative_block(const block& b, const crypto::hash& id
     }
     else if(main_chain_cumulative_weight < bei.cumulative_weight) //check if weight bigger than in main chain (includes uncle weights)
     {
-      //do reorganize!
-      MGINFO_GREEN("###### REORGANIZE on height: " << alt_chain.front()->second.height << " of " << m_db->height() - 1 << " with cum_difficulty " << m_db->get_block_cumulative_difficulty(m_db->height() - 1) << std::endl << " alternative blockchain size: " << alt_chain.size() << " with cum_difficulty " << bei.cumulative_difficulty << " cumulative_weight " << bei.cumulative_weight << " top block " << m_db->top_block_hash());
+      MGINFO_GREEN("###### REORGANIZE ######" << std::endl << "from main " << m_db->top_block_hash() << " at height: " << m_db->height() - 1 << std::endl << "to alt " << get_block_hash(bei.bl) << " at height " << alt_chain.front()->second.height << std::endl << "main cumulative_difficulty:\t" <<  main_chain_cumulative_difficulty << std::endl << "main cumulative_weight:\t" << main_chain_cumulative_weight<< std::endl << "alt cumulative_difficulty:\t" << bei.cumulative_difficulty << std::endl << "alt cumulative_weight:\t" << bei.cumulative_weight << std::endl << "alt blockchain size:\t" << alt_chain.size());
 
       bool r = switch_to_alternative_blockchain(alt_chain, false);
       if (r)
@@ -2405,7 +2406,7 @@ bool Blockchain::get_alt_height_info(const crypto::hash h, difficulty_type &diff
     difficulty_type parent_weight = 0;
     difficulty_type parent_cumulative_difficulty = 0;
     difficulty_type parent_cumulative_weight = 0;
-    get_height_info(it_bl->second.height, parent_difficulty, parent_weight, parent_cumulative_weight, parent_cumulative_weight);
+    m_db->get_height_info(it_bl->second.bl.prev_id, parent_difficulty, parent_weight, parent_cumulative_difficulty, parent_cumulative_weight);
 
     difficulty = cumulative_difficulty - parent_cumulative_difficulty;
     weight = cumulative_weight - parent_cumulative_weight;
@@ -2413,9 +2414,9 @@ bool Blockchain::get_alt_height_info(const crypto::hash h, difficulty_type &diff
   else
   {
     it_bl = alt_chains_container.find(it_bl->second.bl.prev_id);
-    if (it_bl != alt_chains_container.end())
+    if (it_bl == alt_chains_container.end())
     {
-      MERROR("Parent block expected to be in alt chain");
+      MERROR("Parent " << it_bl->second.bl.prev_id << " block expected to be in alt chain");
       return false;
     }
 
@@ -3864,7 +3865,7 @@ leave:
       goto leave;
     }
 
-    bool r = get_block_info(uncle.prev_id, uncle_diffic, uncle_weight, uncle_cumulative_difficulty, uncle_cumulative_weight);
+    bool r = get_block_info(uncle.hash, uncle_diffic, uncle_weight, uncle_cumulative_difficulty, uncle_cumulative_weight);
     if (!r)
     {
       MERROR_VER("Unable to get uncle's block difficulty");
@@ -3872,7 +3873,7 @@ leave:
       goto leave;
     }
 
-    if (!validate_uncle_block(bl, uncle, uncle_diffic))
+    if (!validate_uncle_block(bl, uncle))
     {
       MERROR_VER("Uncle block validation failed");
       bvc.m_verifivation_failed = true;
@@ -3898,8 +3899,12 @@ leave:
 
   if(m_db->height())
   {
-    cumulative_difficulty += m_db->get_block_cumulative_difficulty(m_db->height() - 1);
-    cumulative_weight += m_db->get_block_cumulative_weight(m_db->height() - 1);
+    difficulty_type prev_cumulative_difficulty;
+    difficulty_type prev_cumulative_weight;
+    m_db->top_height_info(prev_cumulative_difficulty, prev_cumulative_weight);
+
+    cumulative_difficulty += prev_cumulative_difficulty;
+    cumulative_weight += prev_cumulative_weight;
   }
 
   TIME_MEASURE_FINISH(block_processing_time);
