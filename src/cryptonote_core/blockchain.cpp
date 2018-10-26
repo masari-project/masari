@@ -1324,6 +1324,12 @@ bool Blockchain::validate_uncle_block(const block& nephew, const block& uncle)
     return false;
   }
 
+  if (nephew.uncle != get_block_hash(uncle))
+  {
+    MERROR_VER("Proposed uncle isn't referenced in nephew");
+    return false;
+  }
+
   uint64_t absdiff = parent.timestamp > uncle.timestamp ? parent.timestamp - uncle.timestamp : uncle.timestamp - parent.timestamp;
   if (absdiff > UNCLE_DIFFICULTY_TARGET)
   {
