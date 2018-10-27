@@ -1164,7 +1164,7 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
   difficulty_type top_cumulative_weight;
   m_db->top_height_info(top_cumulative_difficulty, top_cumulative_weight);
 
-  MGINFO_GREEN("REORGANIZE SUCCESS! on height: " << split_height << ", new blockchain size: " << m_db->height() << " top block " << m_db->top_block_hash() << " cumulative difficulty " << top_cumulative_difficulty);
+  MGINFO_GREEN("REORGANIZE SUCCESS! on height: " << split_height << ", new blockchain size: " << m_db->height() << " top block " << m_db->top_block_hash() << " cumulative difficulty " << top_cumulative_difficulty << " cumulative weight " << top_cumulative_weight);
   return true;
 }
 //------------------------------------------------------------------
