@@ -1695,7 +1695,7 @@ bool t_rpc_command_executor::alt_chain_info()
   {
     uint64_t start_height = (chain.height - chain.length + 1);
     tools::msg_writer() << chain.length << " blocks long, from height " << start_height << " (" << (ires.height - start_height - 1)
-        << " deep), diff " << chain.difficulty << ": " << chain.block_hash;
+        << " deep), diff " << chain.difficulty << ", weight " << chain.weight << ": " << chain.block_hash;
   }
   return true;
 }
