@@ -1608,6 +1608,7 @@ namespace cryptonote
     res.testnet = m_nettype == TESTNET;
     res.stagenet = m_nettype == STAGENET;
     res.cumulative_difficulty = m_core.get_blockchain_storage().get_db().get_block_cumulative_difficulty(res.height - 1);
+    res.cumulative_weight = m_core.get_blockchain_storage().get_db().get_block_cumulative_weight(res.height - 1);
     res.block_size_limit = m_core.get_blockchain_storage().get_current_cumulative_blocksize_limit();
     res.block_size_median = m_core.get_blockchain_storage().get_current_cumulative_blocksize_median();
     res.status = CORE_RPC_STATUS_OK;

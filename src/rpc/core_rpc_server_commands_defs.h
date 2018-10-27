@@ -955,6 +955,7 @@ namespace cryptonote
       bool stagenet;
       std::string top_block_hash;
       uint64_t cumulative_difficulty;
+      uint64_t cumulative_weight;
       uint64_t block_size_limit;
       uint64_t block_size_median;
       uint64_t start_time;
@@ -984,6 +985,7 @@ namespace cryptonote
         KV_SERIALIZE(stagenet)
         KV_SERIALIZE(top_block_hash)
         KV_SERIALIZE(cumulative_difficulty)
+        KV_SERIALIZE(cumulative_weight)
         KV_SERIALIZE(block_size_limit)
         KV_SERIALIZE(block_size_median)
         KV_SERIALIZE(start_time)
