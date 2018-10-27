@@ -1254,6 +1254,22 @@ namespace cryptonote
     return m_blockchain_storage.get_db().get_block_cumulative_difficulty(height);
   }
   //-----------------------------------------------------------------------------------------------
+  difficulty_type core::get_block_weight(uint64_t height) const
+  {
+    difficulty_type weight = 0;
+    weight = m_blockchain_storage.block_difficulty(height);
+    
+    block blk;
+    bool orphan;
+    get_block_by_hash(get_block_id_by_height(height), blk, &orphan);
+    if(is_uncle_block_included(blk))
+    {
+      difficulty_type uncle_diff = m_blockchain_storage.get_db().get_uncle_difficulty(blk.uncle);
+      weight += uncle_diff;
+    }
+    return weight;
+  }
+  //-----------------------------------------------------------------------------------------------
   size_t core::get_pool_transactions_count() const
   {
     return m_mempool.get_transactions_count();

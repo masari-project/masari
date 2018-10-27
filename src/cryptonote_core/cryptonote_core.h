@@ -555,6 +555,11 @@ namespace cryptonote
       * @note see Blockchain::get_block_cumulative_difficulty
       */
      difficulty_type get_block_cumulative_difficulty(uint64_t height) const;
+     
+     /**
+      * @brief get a single block's weight
+      */
+     difficulty_type get_block_weight(uint64_t height) const;
 
      /**
       * @copydoc Blockchain::get_random_outs_for_amounts
