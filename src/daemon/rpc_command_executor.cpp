@@ -75,6 +75,7 @@ namespace {
       << "depth: " << boost::lexical_cast<std::string>(header.depth) << std::endl
       << "hash: " << header.hash << std::endl
       << "difficulty: " << boost::lexical_cast<std::string>(header.difficulty) << std::endl
+      << "weight: " << boost::lexical_cast<std::string>(header.weight) << std::endl
       << "reward: " << boost::lexical_cast<std::string>(header.reward);
   }
 
