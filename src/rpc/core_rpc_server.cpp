@@ -830,6 +830,14 @@ namespace cryptonote
   {
     PERF_TIMER(on_start_mining);
     CHECK_CORE_READY();
+    cryptonote::miner &miner= m_core.get_miner();
+    if(miner.is_mining())
+    {
+      res.status = "Already mining";
+      LOG_PRINT_L0(res.status);
+      return true;
+    }
+    
     cryptonote::address_parse_info info;
     if(!get_account_address_from_str(info, m_nettype, req.miner_address))
     {
@@ -858,7 +866,7 @@ namespace cryptonote
     boost::thread::attributes attrs;
     attrs.set_stack_size(THREAD_STACK_SIZE);
 
-    if(!m_core.get_miner().start(req.miner_address, static_cast<size_t>(req.threads_count), attrs, req.do_background_mining, req.ignore_battery))
+    if(!miner.start(req.miner_address, static_cast<size_t>(req.threads_count), attrs, req.do_background_mining, req.ignore_battery))
     {
       res.status = "Failed, mining not started";
       LOG_PRINT_L0(res.status);
@@ -871,7 +879,14 @@ namespace cryptonote
   bool core_rpc_server::on_stop_mining(const COMMAND_RPC_STOP_MINING::request& req, COMMAND_RPC_STOP_MINING::response& res)
   {
     PERF_TIMER(on_stop_mining);
-    if(!m_core.get_miner().stop())
+    cryptonote::miner &miner= m_core.get_miner();
+    if(!miner.is_mining())
+    {
+      res.status = "Mining never started";
+      LOG_PRINT_L0(res.status);
+      return true;
+    }
+    if(!miner.stop())
     {
       res.status = "Failed, mining not stopped";
       LOG_PRINT_L0(res.status);
