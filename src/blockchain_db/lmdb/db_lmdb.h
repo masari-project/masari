@@ -82,14 +82,22 @@ typedef struct mdb_txn_cursors
 #define m_cur_txpool_blob	m_cursors->m_txc_txpool_blob
 #define m_cur_hf_versions	m_cursors->m_txc_hf_versions
 
+#define block_info_v1 \
+  uint64_t bi_height; \
+  uint64_t bi_timestamp; \
+  uint64_t bi_coins; \
+  uint64_t bi_size; \
+  difficulty_type bi_diff; \
+  crypto::hash bi_hash;
+
+typedef struct mdb_block_info_v1
+{
+  block_info_v1;
+} mdb_block_info_v1;
+
 typedef struct mdb_block_info
 {
-  uint64_t bi_height;
-  uint64_t bi_timestamp;
-  uint64_t bi_coins;
-  uint64_t bi_size; // a size_t really but we need 32-bit compat
-  difficulty_type bi_diff;
-  crypto::hash bi_hash;
+  block_info_v1;
   difficulty_type bi_weight;
 } mdb_block_info;
 
@@ -421,8 +429,14 @@ private:
   // migrate from older DB version to current
   void migrate(const uint32_t oldversion);
 
+  void update_version(const uint32_t version);
+
   // migrate from DB version 0 to 1
   void migrate_0_1();
+
+  void migrate_1_2();
+
+  void recreate_table(MDB_dbi table, const std::string table_name, const std::function<MDB_val(MDB_val &v)> &modify_payload);
 
   void cleanup_batch();
 

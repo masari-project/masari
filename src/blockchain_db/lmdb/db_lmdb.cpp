@@ -55,7 +55,7 @@ using namespace crypto;
 
 // Increase when the DB changes in a non backward compatible way, and there
 // is no automatic conversion, so that a full resync is needed.
-#define VERSION 1
+#define VERSION 2
 
 namespace
 {
@@ -1357,22 +1357,23 @@ void BlockchainLMDB::open(const std::string& filename, const int db_flags)
   MDB_val_copy<const char*> k("version");
   MDB_val v;
   auto get_result = mdb_get(txn, m_properties, &k, &v);
+  uint32_t db_version = *(const uint32_t*)v.mv_data;
   if(get_result == MDB_SUCCESS)
   {
-    if (*(const uint32_t*)v.mv_data > VERSION)
+    if (db_version > VERSION)
     {
       MWARNING("Existing lmdb database was made by a later version. We don't know how it will change yet.");
       compatible = false;
     }
 #if VERSION > 0
-    else if (*(const uint32_t*)v.mv_data < VERSION)
+    else if (db_version < VERSION)
     {
       // Note that there was a schema change within version 0 as well.
       // See commit e5d2680094ee15889934fe28901e4e133cda56f2 2015/07/10
       // We don't handle the old format previous to that commit.
       txn.commit();
       m_open = true;
-      migrate(*(const uint32_t *)v.mv_data);
+      migrate(db_version);
       return;
     }
 #endif
@@ -2165,7 +2166,7 @@ mdb_block_info BlockchainLMDB::get_block_info(const uint64_t& height) const
   auto get_result = mdb_cursor_get(m_cur_block_info, (MDB_val *)&zerokval, &result, MDB_GET_BOTH);
   if (get_result == MDB_NOTFOUND)
   {
-    throw0(BLOCK_DNE(std::string("Attempt to get block info from height ").append(boost::lexical_cast<std::string>(height)).append(" failed -- difficulty not in db").c_str()));
+    throw0(BLOCK_DNE(std::string("Attempt to get block info from height ").append(boost::lexical_cast<std::string>(height)).c_str()));
   }
   else if (get_result)
     throw0(DB_ERROR("Error attempting to retrieve block info from the db"));
@@ -4027,7 +4028,16 @@ void BlockchainLMDB::migrate_0_1()
     txn.commit();
   } while(0);
 
-  uint32_t version = 1;
+  update_version(1);
+}
+
+void BlockchainLMDB::update_version(const uint32_t version)
+{
+  MDEBUG("Updating db version to " << version);
+  int result;
+  MDB_val k, v;
+  mdb_txn_safe txn(false);
+
   v.mv_data = (void *)&version;
   v.mv_size = sizeof(version);
   MDB_val_copy<const char *> vk("version");
@@ -4040,11 +4050,146 @@ void BlockchainLMDB::migrate_0_1()
   txn.commit();
 }
 
+void BlockchainLMDB::migrate_1_2()
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__);
+  MLOG_YELLOW(el::Level::Info, "Migrating blockchain from DB version 1 to 2 - this may take a while:");
+
+  auto modify_payload = [](MDB_val &v)
+  {
+    mdb_block_info_v1 bi_old = *((mdb_block_info_v1 *)v.mv_data);
+    mdb_block_info bi;
+    bi.bi_height = bi_old.bi_height;
+    bi.bi_timestamp = bi_old.bi_timestamp;
+    bi.bi_coins = bi_old.bi_coins;
+    bi.bi_size = bi_old.bi_size;
+    bi.bi_diff = bi_old.bi_diff;
+    bi.bi_hash = bi_old.bi_hash;
+    bi.bi_weight = bi_old.bi_diff; // cumulative difficulty is the same as cumulative weight for all blocks pre-v8
+    MDB_val_set(nv, bi);
+    return nv;
+  };
+
+  recreate_table(m_block_info, "block_info", modify_payload);
+  update_version(2);
+}
+
+void BlockchainLMDB::recreate_table(MDB_dbi table, const std::string table_name, const std::function<MDB_val(MDB_val &v)> &modify_payload)
+{
+  int result;
+
+  mdb_txn_safe txn(false);
+  result = mdb_txn_begin(m_env, NULL, 0, txn);
+  if (result) {
+    throw0(DB_ERROR(lmdb_error("Failed to create a transaction for the db: ", result).c_str()));
+  }
+
+  MDB_stat db_stats;
+  if ((result = mdb_stat(txn, m_blocks, &db_stats))) {
+    throw0(DB_ERROR(lmdb_error("Failed to query m_blocks: ", result).c_str()));
+  }
+
+  unsigned int flags;
+  result = mdb_dbi_flags(txn, table, &flags);
+  if (result) { throw0(DB_ERROR(lmdb_error("Failed to retrieve table flags: ", result).c_str())); }
+
+  lmdb_db_open(txn, table_name.c_str(), flags, table, "Failed to open db handle");
+
+  MDB_dbi new_table;
+  std::string new_table_name = table_name;
+  new_table_name[new_table_name.length() - 1]--;
+
+  lmdb_db_open(txn, new_table_name.c_str(), flags | MDB_CREATE, new_table, "Failed to open db handle");
+  mdb_set_dupsort(txn, new_table, compare_uint64);
+
+  int i = 0;
+  MDB_val k, v;
+  MDB_cursor *c_old, *c_cur;
+
+  while(true) {
+
+    if (!(i % 1000)) {
+      if (i) {
+        MINFO("Committing batch at index " << i);
+        txn.commit();
+        result = mdb_txn_begin(m_env, NULL, 0, txn);
+        if (result)
+          throw0(DB_ERROR(lmdb_error("Failed to create a transaction for the db: ", result).c_str()));
+      }
+      result = mdb_cursor_open(txn, new_table, &c_cur);
+      if (result) { throw0(DB_ERROR(lmdb_error("Failed to open cursor for new table: ", result).c_str())); }
+      result = mdb_cursor_open(txn, table, &c_old);
+      if (result) { throw0(DB_ERROR(lmdb_error("Failed to open cursor for old table: ", result).c_str())) ;}
+
+      if (!i) {
+        MDB_stat db_stat;
+        result = mdb_stat(txn, table, &db_stats);
+        if (result)
+          throw0(DB_ERROR(lmdb_error("Failed to query old table: ", result).c_str()));
+        i = db_stats.ms_entries;
+      }
+    }
+
+    result = mdb_cursor_get(c_old, &k, &v, MDB_NEXT);
+    if (result == MDB_NOTFOUND) {
+      txn.commit();
+      break;
+    }
+    else if (result) {
+      throw0(DB_ERROR(lmdb_error("Failed to get record from old table: ", result).c_str()));
+    }
+
+    MDB_val nv = modify_payload(v);
+    result = mdb_cursor_put(c_cur, (MDB_val *)&zerokval, &nv, MDB_APPENDDUP);
+    if (result) {
+      throw0(DB_ERROR(lmdb_error("Failed to put record into new table: ", result).c_str()));
+    }
+
+    result = mdb_cursor_del(c_old, 0);
+    if (result) {
+      throw0(DB_ERROR(lmdb_error("Failed to delete record from old table: ", result).c_str()));
+    }
+
+    i++;
+  }
+
+  result = mdb_txn_begin(m_env, NULL, 0, txn);
+  if (result) {
+    throw0(DB_ERROR(lmdb_error("Failed to create transaction for the db: ", result).c_str()));
+  }
+  result = mdb_drop(txn, table, 1);
+  if (result) {
+    throw0(DB_ERROR(lmdb_error("Failed to delete old table: ", result).c_str()));
+  }
+
+  char *ptr;
+  k.mv_data = (void *)new_table_name.c_str();
+  k.mv_size = new_table_name.length();
+
+  result = mdb_cursor_open(txn, 1, &c_old);
+  if (result)
+    throw0(DB_ERROR(lmdb_error("Failed to open cursor: ", result).c_str()));
+  result = mdb_cursor_get(c_old, &k, NULL, MDB_SET_KEY);
+  if (result)
+    throw0(DB_ERROR(lmdb_error("Failed to get DB record: ", result).c_str()));
+  ptr = (char *)k.mv_data;
+  ptr[new_table_name.length() - 1]++;
+
+  mdb_dbi_close(m_env, table);
+
+  lmdb_db_open(txn, table_name.c_str(), flags | MDB_CREATE, table, "Failed to open db handle for newly revised table");
+  mdb_set_dupsort(txn, table, compare_uint64);
+
+  txn.commit();
+}
+
 void BlockchainLMDB::migrate(const uint32_t oldversion)
 {
   switch(oldversion) {
   case 0:
     migrate_0_1(); /* FALLTHRU */
+  case 1:
+    migrate_1_2();
   default:
     ;
   }
