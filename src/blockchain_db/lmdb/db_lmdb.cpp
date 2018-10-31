@@ -4139,7 +4139,18 @@ void BlockchainLMDB::recreate_table(MDB_dbi table, const std::string table_name,
       throw0(DB_ERROR(lmdb_error("Failed to get record from old table: ", result).c_str()));
     }
 
-    MDB_val nv = modify_payload(v);
+    // TODO-TK: something goes wrong with the data when using a lambda expression, hardcoded v1->v2 migration to fix later
+    //MDB_val nv = modify_payload(v);
+    mdb_block_info_v1 bi_old = *((mdb_block_info_v1 *)v.mv_data);
+    mdb_block_info bi;
+    bi.bi_height = bi_old.bi_height;
+    bi.bi_timestamp = bi_old.bi_timestamp;
+    bi.bi_coins = bi_old.bi_coins;
+    bi.bi_size = bi_old.bi_size;
+    bi.bi_diff = bi_old.bi_diff;
+    bi.bi_hash = bi_old.bi_hash;
+    bi.bi_weight = bi_old.bi_diff; // cumulative difficulty is the same as cumulative weight for all blocks pre-v8
+    MDB_val_set(nv, bi);
     result = mdb_cursor_put(c_cur, (MDB_val *)&zerokval, &nv, MDB_APPENDDUP);
     if (result) {
       throw0(DB_ERROR(lmdb_error("Failed to put record into new table: ", result).c_str()));
