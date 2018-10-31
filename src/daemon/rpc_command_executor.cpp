@@ -669,7 +669,7 @@ bool t_rpc_command_executor::print_block_by_hash(crypto::hash block_hash) {
   {
     if (!m_rpc_server->on_get_block(req, res, error_resp) || res.status != CORE_RPC_STATUS_OK)
     {
-      tools::fail_msg_writer() << make_error(fail_message, res.status);
+      tools::fail_msg_writer() << make_error(fail_message, error_resp.message);
       return true;
     }
   }
@@ -700,7 +700,7 @@ bool t_rpc_command_executor::print_block_by_height(uint64_t height) {
   {
     if (!m_rpc_server->on_get_block(req, res, error_resp) || res.status != CORE_RPC_STATUS_OK)
     {
-      tools::fail_msg_writer() << make_error(fail_message, res.status);
+      tools::fail_msg_writer() << make_error(fail_message, error_resp.message);
       return true;
     }
   }
