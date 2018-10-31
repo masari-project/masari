@@ -154,6 +154,12 @@ struct gen_uncle_overflow_amount : public gen_uncles_base
 };
 template<> struct get_test_options<gen_uncle_overflow_amount>: public get_test_options<gen_uncles_base> {};
 
+struct gen_uncle_wrong_amount : public gen_uncles_base
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+template<> struct get_test_options<gen_uncle_wrong_amount>: public get_test_options<gen_uncles_base> {};
+
 struct gen_uncle_hash_too_low : public gen_uncles_base
 {
   bool generate(std::vector<test_event_entry>& events) const;

@@ -91,7 +91,7 @@ t_command_server::t_command_server(
   m_command_lookup.set_handler(
       "print_uncle_block"
     , std::bind(&t_command_parser_executor::print_uncle_block, &m_parser, p::_1)
-    , "print_block <uncle_block_hash>"
+    , "print_uncle_block <uncle_block_hash>"
     , "Print an uncle block."
     );
   m_command_lookup.set_handler(
