@@ -1976,7 +1976,7 @@ block_header BlockchainLMDB::get_block_header(const crypto::hash& h) const
 
 cryptonote::blobdata BlockchainLMDB::get_uncle_blob_from_height(const uint64_t& height) const
 {
-  LOG_PRINT_L3("BlockchainLMDB::" << __func__);
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__ << " height " << height);
   check_open();
 
   TXN_PREFIX_RDONLY();
@@ -2002,7 +2002,7 @@ cryptonote::blobdata BlockchainLMDB::get_uncle_blob_from_height(const uint64_t& 
 
 cryptonote::blobdata BlockchainLMDB::get_block_blob_from_height(const uint64_t& height) const
 {
-  LOG_PRINT_L3("BlockchainLMDB::" << __func__);
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__ << " height = " << height);
   check_open();
 
   TXN_PREFIX_RDONLY();
