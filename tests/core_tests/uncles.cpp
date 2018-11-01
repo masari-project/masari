@@ -46,7 +46,7 @@ using namespace cryptonote;
   REWIND_BLOCKS_VDN(events, blk_g, blk_f, first_miner_account, 6, 10, DIFFICULTY);
 
 //-----------------------------------------------------------------------------------------------------
-bool gen_uncles_base::generate_with(std::vector<test_event_entry> &events, const std::function<void(std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)> &add_blocks, const uint64_t &difficulty /*= 1*/) const
+bool gen_uncles_base::generate_with(std::vector<test_event_entry> &events, const std::function<bool(std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)> &add_blocks, const uint64_t &difficulty /*= 1*/) const
 {
   CHAIN_BASE(difficulty);
   REWIND_BLOCKS_VDN(events, blk_h, blk_g, first_miner_account, 7, 10, difficulty);
@@ -55,7 +55,10 @@ bool gen_uncles_base::generate_with(std::vector<test_event_entry> &events, const
   MAKE_NEXT_BLOCKVD(events, blk_0a, blk_i, first_miner_account, 8, difficulty);
   MAKE_NEXT_BLOCKVD(events, blk_0b, blk_i, first_miner_account, 8, difficulty);
 
-  add_blocks(events, blk_0a, blk_0b, first_miner_account, generator);
+  bool r = add_blocks(events, blk_0a, blk_0b, first_miner_account, generator);
+  if (!r) {
+    return false;
+  }
 
   return true;
 }
@@ -65,23 +68,28 @@ bool gen_uncles_base::generate_with(std::vector<test_event_entry> &events, const
 
 bool gen_uncle::generate(std::vector<test_event_entry>& events) const
 {
-  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)
+  {
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew, top_bl, original_miner, 8, alt_bl);
+    return true;
   };
   return generate_with(events, modifier);
 }
 
 bool gen_uncle_reorg::generate(std::vector<test_event_entry>& events) const
 {
-  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)
+  {
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew, alt_bl, original_miner, 8, top_bl);
+    return true;
   };
   return generate_with(events, modifier);
 }
 
 bool gen_uncle_alt_nephews::generate(std::vector<test_event_entry>& events) const
 {
-  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)
+  {
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew, alt_bl, original_miner, 8, top_bl);
     // no reorg + nephew mining an uncle
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew0, top_bl, original_miner, 8, alt_bl);
@@ -89,13 +97,15 @@ bool gen_uncle_alt_nephews::generate(std::vector<test_event_entry>& events) cons
 
     // no reorg between two different nephews
     MAKE_NEXT_BLOCKV(events, new_top, nephew0, original_miner, 8);
+    return true;
   };
   return generate_with(events, modifier);
 }
 
 bool gen_uncle_reorg_alt_nephews::generate(std::vector<test_event_entry>& events) const
 {
-  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)
+  {
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew, alt_bl, original_miner, 8, top_bl);
     // no reorg + nephew mining an uncle
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew0, top_bl, original_miner, 8, alt_bl);
@@ -103,13 +113,15 @@ bool gen_uncle_reorg_alt_nephews::generate(std::vector<test_event_entry>& events
 
     // reorg between two different nephews
     MAKE_NEXT_BLOCKV(events, new_top, nephew1, original_miner, 8);
+    return true;
   };
   return generate_with(events, modifier);
 }
 
 bool gen_uncle_alt_nephews_as_uncle::generate(std::vector<test_event_entry>& events) const
 {
-  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)
+  {
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew, alt_bl, original_miner, 8, top_bl);
     // no reorg + nephew mining an uncle
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew0, top_bl, original_miner, 8, alt_bl);
@@ -117,13 +129,15 @@ bool gen_uncle_alt_nephews_as_uncle::generate(std::vector<test_event_entry>& eve
 
     // no reorg between two different nephews and mine alt as an uncle
     MAKE_NEXT_BLOCKV_UNCLE(events, new_top, nephew0, original_miner, 8, nephew1);
+    return true;
   };
   return generate_with(events, modifier);
 }
 
 bool gen_uncle_reorg_alt_nephews_as_uncle::generate(std::vector<test_event_entry>& events) const
 {
-  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)
+  {
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew, alt_bl, original_miner, 8, top_bl);
     // no reorg + nephew mining an uncle
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew0, top_bl, original_miner, 8, alt_bl);
@@ -131,6 +145,7 @@ bool gen_uncle_reorg_alt_nephews_as_uncle::generate(std::vector<test_event_entry
 
     // reorg between two different nephews and mine the other as an uncle
     MAKE_NEXT_BLOCKV_UNCLE(events, new_top, nephew1, original_miner, 8, nephew0);
+    return true;
   };
   return generate_with(events, modifier);
 }
@@ -140,19 +155,40 @@ bool gen_uncle_reorg_alt_nephews_as_uncle::generate(std::vector<test_event_entry
 
 bool gen_uncle_is_parent::generate(std::vector<test_event_entry>& events) const
 {
-  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)
+  {
     DO_CALLBACK(events, "mark_invalid_block");
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew, top_bl, original_miner, 8, top_bl);
+    return true;
+  };
+  return generate_with(events, modifier);
+}
+
+bool gen_uncle_wrong_uncle::generate(std::vector<test_event_entry>& events) const
+{
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)
+  {
+    MAKE_NEXT_BLOCKV_UNCLE(events, nephew, top_bl, original_miner, 8, alt_bl);
+
+    crypto::hash h_original = get_block_hash(nephew);
+
+    nephew.uncle = crypto::null_hash;
+    nephew.invalidate_hashes();
+    crypto::hash h_modified = get_block_hash(nephew);
+
+    return h_original != h_modified;
   };
   return generate_with(events, modifier);
 }
 
 bool gen_uncle_wrong_height::generate(std::vector<test_event_entry>& events) const
 {
-  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)
+  {
     MAKE_NEXT_BLOCKV(events, new_bl, top_bl, original_miner, 8);
     DO_CALLBACK(events, "mark_invalid_block");
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew, new_bl, original_miner, 8, alt_bl);
+    return true;
   };
   return generate_with(events, modifier);
 }
@@ -171,18 +207,21 @@ bool gen_uncle_wrong_version::generate(std::vector<test_event_entry>& events) co
 
 bool gen_uncle_bad_ancestry::generate(std::vector<test_event_entry>& events) const
 {
-  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)
+  {
     MAKE_NEXT_BLOCKV(events, bl_i0, top_bl, original_miner, 8);
     MAKE_NEXT_BLOCKV(events, bl_j0, alt_bl, original_miner, 8);
     DO_CALLBACK(events, "mark_invalid_block");
     MAKE_NEXT_BLOCKV_UNCLE(events, bl_i1, bl_i0, original_miner, 8, bl_j0);
+    return true;
   };
   return generate_with(events, modifier);
 }
 
 bool gen_uncle_bad_timestamp::generate(std::vector<test_event_entry>& events) const
 {
-  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)
+  {
     MAKE_NEXT_BLOCKV_UNCLE(events, bl_new, top_bl, original_miner, 8, alt_bl);
     MAKE_NEXT_BLOCKV(events, bl_i0, bl_new, original_miner, 8);
 
@@ -192,13 +231,15 @@ bool gen_uncle_bad_timestamp::generate(std::vector<test_event_entry>& events) co
 
     DO_CALLBACK(events, "mark_invalid_block");
     MAKE_NEXT_BLOCKV_UNCLE(events, bl_i1, bl_i0, original_miner, 8, bl_timewarped);
+    return true;
   };
   return generate_with(events, modifier, 1);
 }
 
 bool gen_uncle_too_far_extended_ancestry::generate(std::vector<test_event_entry>& events) const
 {
-  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)
+  {
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew_i0, top_bl, original_miner, 8, alt_bl);
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew_j0, alt_bl, original_miner, 8, top_bl);
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew_i1, nephew_i0, original_miner, 8, nephew_j0);
@@ -206,13 +247,15 @@ bool gen_uncle_too_far_extended_ancestry::generate(std::vector<test_event_entry>
 
     DO_CALLBACK(events, "mark_invalid_block");
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew_i2, nephew_i1, original_miner, 8, nephew_j1);
+    return true;
   };
   return generate_with(events, modifier);
 }
 
 bool gen_uncle_wrong_out::generate(std::vector<test_event_entry>& events) const
 {
-  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)
+  {
     MAKE_NEXT_BLOCKV_UNCLE(events, blk_i0, top_bl, original_miner, 8, alt_bl);
     MAKE_NEXT_BLOCKV(events, blk_j0, top_bl, original_miner, 8);
     MAKE_NEXT_BLOCKV(events, blk_k0, top_bl, original_miner, 8);
@@ -220,26 +263,30 @@ bool gen_uncle_wrong_out::generate(std::vector<test_event_entry>& events) const
     cryptonote::block blk_i1;
     blk_i1.uncle = cryptonote::get_block_hash(blk_k0);
     PUSH_NEXT_BLOCKV_UNCLE(events, blk_i1, blk_i0, original_miner, 8, blk_j0);
+    return true;
   };
   return generate_with(events, modifier);
 }
 
 bool gen_uncle_wrong_amount::generate(std::vector<test_event_entry>& events) const
 {
-  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)
+  {
     cryptonote::block nephew;
     nephew.uncle = cryptonote::get_block_hash(alt_bl);
 
     generator.construct_block_manually(nephew, top_bl, original_miner, test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_hf_version | test_generator::bf_timestamp | test_generator::bf_uncle, 8, 8, 8840, crypto::hash(), 1, transaction(), std::vector<crypto::hash>(), 0, 0, 8, 0, alt_bl, 0, 0, 1);
     DO_CALLBACK(events, "mark_invalid_block");
     events.push_back(nephew);
+    return true;
   };
   return generate_with(events, modifier);
 }
 
 bool gen_uncle_overflow_amount::generate(std::vector<test_event_entry>& events) const
 {
-  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator) {
+  auto modifier = [](std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)
+  {
     cryptonote::block nephew;
     nephew.uncle = cryptonote::get_block_hash(alt_bl);
 
@@ -247,6 +294,7 @@ bool gen_uncle_overflow_amount::generate(std::vector<test_event_entry>& events) 
     generator.construct_block_manually(nephew, top_bl, original_miner, test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_hf_version | test_generator::bf_timestamp | test_generator::bf_uncle | test_generator::bf_ul_reward, 8, 8, 8840, crypto::hash(), 1, transaction(), std::vector<crypto::hash>(), 0, 0, 8, 0, alt_bl, 0, max_uint, 1);
     DO_CALLBACK(events, "mark_invalid_block");
     events.push_back(nephew);
+    return true;
   };
   return generate_with(events, modifier);
 }

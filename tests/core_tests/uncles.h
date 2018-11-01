@@ -37,7 +37,7 @@ struct gen_uncles_base : public test_chain_unit_base
   {
     REGISTER_CALLBACK_METHOD(gen_uncles_base, mark_invalid_block);
   }
-  bool generate_with(std::vector<test_event_entry> &events, const std::function<void(std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)> &add_blocks, const uint64_t &difficulty = 1) const;
+  bool generate_with(std::vector<test_event_entry> &events, const std::function<bool(std::vector<test_event_entry> &events, const cryptonote::block &top_bl, const cryptonote::block &alt_bl, const cryptonote::account_base &original_miner, test_generator &generator)> &add_blocks, const uint64_t &difficulty = 1) const;
 
   bool check_block_verification_context(const cryptonote::block_verification_context& bvc, size_t event_idx, const cryptonote::block& /*block*/)
   {
@@ -111,6 +111,12 @@ struct gen_uncle_is_parent : public gen_uncles_base
   bool generate(std::vector<test_event_entry>& events) const;
 };
 template<> struct get_test_options<gen_uncle_is_parent>: public get_test_options<gen_uncles_base> {};
+
+struct gen_uncle_wrong_uncle : public gen_uncles_base
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+template<> struct get_test_options<gen_uncle_wrong_uncle>: public get_test_options<gen_uncles_base> {};
 
 struct gen_uncle_wrong_height : public gen_uncles_base
 {

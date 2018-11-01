@@ -720,7 +720,6 @@ block Blockchain::pop_block_from_blockchain()
   update_next_cumulative_size_limit();
   m_tx_pool.on_blockchain_dec(m_db->height()-1, get_tail_id());
 
-  popped_block.hash = get_block_hash(popped_block);
   return popped_block;
 }
 //------------------------------------------------------------------
@@ -1072,7 +1071,7 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
   LOG_PRINT_L3("Blockchain::" << __func__);
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
 
-  MDEBUG("Switching to alternative blockchain with top block " << alt_chain.back()->second.bl.hash);
+  MDEBUG("Switching to alternative blockchain with top block " << get_block_hash(alt_chain.back()->second.bl));
 
   m_timestamps_and_difficulties_height = 0;
 
@@ -1107,10 +1106,11 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
     block_extended_info bei = boost::value_initialized<block_extended_info>();
     MTRACE("Popping block at height " << b_height);
     pop_top_block_from_blockchain(bei.bl, bei.height, bei.cumulative_difficulty, bei.cumulative_weight);
+    hash bl_hash = get_block_hash(bei.bl);
     disconnected_chain.push_front(bei.bl);
 
-    MTRACE("Adding block " << bei.bl.hash << " to temporary discarded chain container");
-    m_disconnected_chain.insert(blocks_ext_by_hash::value_type(bei.bl.hash, bei));
+    MTRACE("Adding block " << bl_hash << " to temporary discarded chain container");
+    m_disconnected_chain.insert(blocks_ext_by_hash::value_type(bl_hash, bei));
   }
 
   auto split_height = m_db->height();
@@ -1310,6 +1310,7 @@ bool Blockchain::validate_uncle_block(const block& nephew, const block& uncle)
   LOG_PRINT_L3("Blockchain::" << __func__);
 
   crypto::hash nephew_id = get_block_hash(nephew);
+  crypto::hash uncle_id = get_block_hash(uncle);
 
   if (uncle.major_version != nephew.major_version)
   {
@@ -1317,9 +1318,9 @@ bool Blockchain::validate_uncle_block(const block& nephew, const block& uncle)
     return false;
   }
 
-  if (get_block_hash(uncle) != nephew.uncle)
+  if (uncle_id != nephew.uncle)
   {
-    MERROR_VER("Nephew " << nephew_id << std::endl << " has mismatched uncle " << nephew.uncle << ", expected: " << uncle.hash);
+    MERROR_VER("Nephew " << nephew_id << std::endl << " has mismatched uncle " << nephew.uncle << ", expected: " << uncle_id);
     return false;
   }
 
@@ -1338,7 +1339,7 @@ bool Blockchain::validate_uncle_block(const block& nephew, const block& uncle)
 
   if (parent_height != uncle_height)
   {
-    MERROR_VER("Parent " << parent.hash << " and uncle " << uncle.hash << " aren't at the same depth.");
+    MERROR_VER("Parent " << parent.hash << " and uncle " << uncle_id << " aren't at the same depth.");
     return false;
   }
 
@@ -1348,7 +1349,7 @@ bool Blockchain::validate_uncle_block(const block& nephew, const block& uncle)
     return false;
   }
 
-  if (nephew.uncle != get_block_hash(uncle))
+  if (nephew.uncle != uncle_id)
   {
     MERROR_VER("Proposed uncle isn't referenced in nephew");
     return false;
@@ -1409,7 +1410,7 @@ bool Blockchain::validate_uncle_block(const block& nephew, const block& uncle)
     }
   }
 
-  MDEBUG("Uncle validations passed");
+  MDEBUG("Uncle " << uncle_id << " validations passed");
   return true;
 }
 
@@ -1606,8 +1607,8 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
 
       if(alt_bl.prev_id == top_block.prev_id || (alt_bl.uncle == top_block.prev_id && alt_bl.prev_id == top_block.uncle))
       {
-        MDEBUG("Found uncle candidate with common ancestry to parent block");
         b.uncle = get_block_hash(alt_bl);
+        MDEBUG("Found uncle candidate " << b.uncle << " with common ancestry to parent block");
         bool ur = validate_uncle_block(b, alt_bl);
         if (!ur) {
           MWARNING("Mining uncle candidate failed validations");
@@ -1683,6 +1684,7 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
         ", cumulative size " << cumulative_size << " is now good");
 #endif
 
+    b.invalidate_hashes();
     return true;
   }
   LOG_ERROR("Failed to create_block_template with " << 10 << " tries");
@@ -3957,7 +3959,7 @@ leave:
 
     bool found = get_block_by_hash(bl.uncle, uncle, NULL, true);
     if (!found) {
-      MERROR_VER("Uncle block with hash " << bl.uncle << " for block " << bl.hash << " not found");
+      MERROR_VER("Uncle block with hash " << bl.uncle << " for block " << get_block_hash(bl) << " not found");
       bvc.m_verifivation_failed = true;
       goto leave;
     }
@@ -4106,7 +4108,7 @@ bool Blockchain::add_new_block(const block& bl_, block_verification_context& bvc
 
   if(!(bl.prev_id == get_tail_id()))
   {
-    MDEBUG("Handling alternative block " << bl.hash << " due to chain switching or wrong block");
+    MDEBUG("Handling alternative block " << id << " due to chain switching or wrong block");
     bvc.m_added_to_main_chain = false;
     m_db->block_txn_stop();
     bool r = handle_alternative_block(bl, id, bvc);
@@ -4116,7 +4118,7 @@ bool Blockchain::add_new_block(const block& bl_, block_verification_context& bvc
   }
 
   m_db->block_txn_stop();
-  MDEBUG("Handling block " << bl.hash << " to main chain");
+  MDEBUG("Handling block " << id << " to main chain");
   return handle_block_to_main_chain(bl, id, bvc);
 }
 //------------------------------------------------------------------

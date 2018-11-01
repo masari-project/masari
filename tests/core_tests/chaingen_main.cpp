@@ -227,6 +227,7 @@ int main(int argc, char* argv[])
     GENERATE_AND_PLAY(gen_uncle_alt_nephews_as_uncle);
     GENERATE_AND_PLAY(gen_uncle_reorg_alt_nephews_as_uncle);
     GENERATE_AND_PLAY(gen_uncle_is_parent);
+    GENERATE_AND_PLAY(gen_uncle_wrong_uncle);
     GENERATE_AND_PLAY(gen_uncle_wrong_height);
     GENERATE_AND_PLAY(gen_uncle_wrong_version);
     GENERATE_AND_PLAY(gen_uncle_bad_ancestry);
