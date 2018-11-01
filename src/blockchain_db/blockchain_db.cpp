@@ -281,45 +281,33 @@ void BlockchainDB::remove_transaction(const crypto::hash& tx_hash)
   remove_transaction_data(tx_hash, tx);
 }
 
-block BlockchainDB::get_uncle_from_height(const uint64_t& height) const
+static block get_block_from_blob(const blobdata& bd, const std::string& type)
 {
-  blobdata bd = get_uncle_blob_from_height(height);
   block b;
   if (!parse_and_validate_block_from_blob(bd, b))
-    throw DB_ERROR("Failed to parse uncle from blob retrieved from the db");
+    throw DB_ERROR(("Failed to parse " + type + " from blob retrieved from the db").c_str());
 
   return b;
+}
+
+block BlockchainDB::get_uncle_from_height(const uint64_t& height) const
+{
+  return get_block_from_blob(get_uncle_blob_from_height(height), "uncle");
 }
 
 block BlockchainDB::get_block_from_height(const uint64_t& height) const
 {
-  blobdata bd = get_block_blob_from_height(height);
-  block b;
-  if (!parse_and_validate_block_from_blob(bd, b))
-    throw DB_ERROR("Failed to parse block from blob retrieved from the db");
-
-  return b;
+  return get_block_from_blob(get_block_blob_from_height(height), "block");
 }
 
 block BlockchainDB::get_uncle(const crypto::hash& h) const
 {
-  blobdata bd = get_uncle_blob(h);
-  block b;
-  if (!parse_and_validate_block_from_blob(bd, b)) {
-    throw DB_ERROR("Failed to parse uncle block from blob retrieved from the db");
-  }
-
-  return b;
+  return get_block_from_blob(get_uncle_blob(h), "uncle");
 }
 
 block BlockchainDB::get_block(const crypto::hash& h) const
 {
-  blobdata bd = get_block_blob(h);
-  block b;
-  if (!parse_and_validate_block_from_blob(bd, b))
-    throw DB_ERROR("Failed to parse block from blob retrieved from the db");
-
-  return b;
+  return get_block_from_blob(get_block_blob(h), "block");
 }
 
 bool BlockchainDB::get_tx(const crypto::hash& h, cryptonote::transaction &tx) const
