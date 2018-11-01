@@ -304,7 +304,7 @@ namespace cryptonote
     uint64_t abs_diff = std::abs(diff);
     uint64_t max_block_height = std::max(hshd.current_height, m_core.get_current_blockchain_height());
     // TODO-TK: fill in when we have correct fork heights
-    uint64_t last_block_v7 = m_core.get_nettype() == TESTNET ? (uint64_t)-1 : m_core.get_nettype() == MAINNET ? (uint64_t)-1 : (uint64_t)-1;
+    uint64_t last_block_v7 = m_core.get_nettype() == TESTNET ? 94280 : m_core.get_nettype() == MAINNET ? (uint64_t)-1 : (uint64_t)-1;
     uint64_t diff_v8 = max_block_height > last_block_v7 ? std::min(abs_diff, max_block_height - last_block_v7) : 0;
 
     MCLOG(is_inital ? el::Level::Info : el::Level::Debug, "global", context <<  "Sync data returned a new top block candidate: " << m_core.get_current_blockchain_height() << " -> " << hshd.current_height
