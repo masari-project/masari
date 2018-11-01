@@ -698,12 +698,13 @@ namespace cryptonote
      * @tparam t_missed_container a standard-iterable container
      * @param block_ids a container of block hashes for which to get the corresponding blocks
      * @param blocks return-by-reference a container to store result blocks in
+     * @param uncles return-by-reference a container to store result uncles for blocks being fetched
      * @param missed_bs return-by-reference a container to store missed blocks in
      *
      * @return false if an unexpected exception occurs, else true
      */
     template<class t_ids_container, class t_blocks_container, class t_missed_container>
-    bool get_blocks(const t_ids_container& block_ids, t_blocks_container& blocks, t_missed_container& missed_bs) const;
+    bool get_blocks(const t_ids_container& block_ids, t_blocks_container& blocks, t_blocks_container& uncles, t_missed_container& missed_bs) const;
 
     /**
      * @brief gets transactions based on a list of transaction hashes

@@ -181,11 +181,13 @@ namespace cryptonote
       std::list<block_complete_entry>  blocks;
       std::list<crypto::hash>               missed_ids;
       uint64_t                         current_blockchain_height;
+      std::list<block_complete_entry>  uncles;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(txs)
         KV_SERIALIZE(blocks)
         KV_SERIALIZE_CONTAINER_POD_AS_BLOB(missed_ids)
+        KV_SERIALIZE(uncles)
         KV_SERIALIZE(current_blockchain_height)
       END_KV_SERIALIZE_MAP()
     };

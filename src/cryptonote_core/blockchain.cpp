@@ -2005,7 +2005,15 @@ bool Blockchain::handle_get_objects(NOTIFY_REQUEST_GET_OBJECTS::request& arg, NO
   m_db->block_txn_start(true);
   rsp.current_blockchain_height = get_current_blockchain_height();
   std::list<std::pair<cryptonote::blobdata,block>> blocks;
-  get_blocks(arg.blocks, blocks, rsp.missed_ids);
+  std::list<std::pair<cryptonote::blobdata,block>> uncles;
+  get_blocks(arg.blocks, blocks, uncles, rsp.missed_ids);
+
+  for (const auto& ub : uncles)
+  {
+    rsp.uncles.push_back(block_complete_entry());
+    block_complete_entry& e = rsp.uncles.back();
+    e.block = ub.first;
+  }
 
   for (const auto& bl: blocks)
   {
@@ -2539,7 +2547,7 @@ bool Blockchain::get_block_info(const crypto::hash h, difficulty_type &difficult
 //TODO: return type should be void, throw on exception
 //       alternatively, return true only if no blocks missed
 template<class t_ids_container, class t_blocks_container, class t_missed_container>
-bool Blockchain::get_blocks(const t_ids_container& block_ids, t_blocks_container& blocks, t_missed_container& missed_bs) const
+bool Blockchain::get_blocks(const t_ids_container& block_ids, t_blocks_container& blocks, t_blocks_container& uncles, t_missed_container& missed_bs) const
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
   CRITICAL_REGION_LOCAL(m_blockchain_lock);
@@ -2548,11 +2556,22 @@ bool Blockchain::get_blocks(const t_ids_container& block_ids, t_blocks_container
   {
     try
     {
+      MTRACE("Fetching block " << block_hash);
       blocks.push_back(std::make_pair(m_db->get_block_blob(block_hash), block()));
       if (!parse_and_validate_block_from_blob(blocks.back().first, blocks.back().second))
       {
         LOG_ERROR("Invalid block");
         return false;
+      }
+      if (is_uncle_block_included(blocks.back().second) && blocks.back().second.major_version > 7)
+      {
+        MTRACE("Fetching uncle " << blocks.back().second.uncle);
+        uncles.push_back(std::make_pair(m_db->get_uncle_blob(blocks.back().second.uncle), block()));
+        if (!parse_and_validate_block_from_blob(uncles.back().first, uncles.back().second))
+        {
+          LOG_ERROR("Invalid uncle");
+          return false;
+        }
       }
     }
     catch (const BLOCK_DNE& e)
