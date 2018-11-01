@@ -368,6 +368,13 @@ namespace cryptonote
       */
      bool get_block_by_hash(const crypto::hash &h, block &blk, bool *orphan = NULL) const;
 
+      /**
+      * @copydoc fetch an uncle block from the DB
+      *
+      * @note returns false if block DNE
+      */
+      bool get_uncle_by_hash(const crypto::hash &h, block &uncle) const;
+
      /**
       * @copydoc Blockchain::get_alternative_blocks
       *
@@ -548,6 +555,11 @@ namespace cryptonote
       * @note see Blockchain::get_block_cumulative_difficulty
       */
      difficulty_type get_block_cumulative_difficulty(uint64_t height) const;
+     
+     /**
+      * @brief get a single block's weight
+      */
+     difficulty_type get_block_weight(uint64_t height) const;
 
      /**
       * @copydoc Blockchain::get_random_outs_for_amounts

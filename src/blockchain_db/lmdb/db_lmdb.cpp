@@ -55,7 +55,7 @@ using namespace crypto;
 
 // Increase when the DB changes in a non backward compatible way, and there
 // is no automatic conversion, so that a full resync is needed.
-#define VERSION 1
+#define VERSION 2
 
 namespace
 {
@@ -165,6 +165,10 @@ int compare_string(const MDB_val *a, const MDB_val *b)
  * block_heights    block hash   block height
  * block_info       block ID     {block metadata}
  *
+ * uncles           uncle ID     uncle blob
+ * uncle_heights    uncle hash   uncle height
+ * uncle_info       uncle ID     {uncle metadata}
+ *
  * txs              txn ID       txn blob
  * tx_indices       txn hash     {txn ID, metadata}
  * tx_outputs       txn ID       [txn amount output indices]
@@ -188,6 +192,10 @@ int compare_string(const MDB_val *a, const MDB_val *b)
 const char* const LMDB_BLOCKS = "blocks";
 const char* const LMDB_BLOCK_HEIGHTS = "block_heights";
 const char* const LMDB_BLOCK_INFO = "block_info";
+
+const char* const LMDB_UNCLES = "uncles";
+const char* const LMDB_UNCLE_HEIGHTS = "uncle_heights";
+const char* const LMDB_UNCLE_INFO = "uncle_info";
 
 const char* const LMDB_TXS = "txs";
 const char* const LMDB_TX_INDICES = "tx_indices";
@@ -246,16 +254,6 @@ inline void lmdb_db_open(MDB_txn* txn, const char* name, int flags, MDB_dbi& dbi
 
 namespace cryptonote
 {
-
-typedef struct mdb_block_info
-{
-  uint64_t bi_height;
-  uint64_t bi_timestamp;
-  uint64_t bi_coins;
-  uint64_t bi_size; // a size_t really but we need 32-bit compat
-  difficulty_type bi_diff;
-  crypto::hash bi_hash;
-} mdb_block_info;
 
 typedef struct blk_height {
     crypto::hash bh_hash;
@@ -663,8 +661,63 @@ estim:
   return threshold_size;
 }
 
-void BlockchainLMDB::add_block(const block& blk, const size_t& block_size, const difficulty_type& cumulative_difficulty, const uint64_t& coins_generated,
-    const crypto::hash& blk_hash)
+void BlockchainLMDB::add_uncle(const block& uncle, const size_t& uncle_size, const difficulty_type& cumulative_difficulty,
+                               const difficulty_type& cumulative_weight, const uint64_t& coins_generated,
+                               const crypto::hash& uncle_hash, uint64_t height)
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__);
+
+  block_txn_start(false);
+
+  check_open();
+  mdb_txn_cursors *m_cursors = &m_wcursors;
+  int result = 0;
+
+  MDEBUG("Adding uncle at height " << height);
+
+  CURSOR(uncle_heights);
+  blk_height uh = {uncle_hash, height};
+  MDB_val_set(val_h, uh);
+  if (mdb_cursor_get(m_cur_uncle_heights, (MDB_val *)&zerokval, &val_h, MDB_GET_BOTH) == 0) {
+    throw1(BLOCK_EXISTS("Attempting to add uncle that's already in the db"));
+  }
+  result = mdb_cursor_put(m_cur_uncle_heights, (MDB_val *)&zerokval, &val_h, 0);
+  if (result) {
+    throw0(DB_ERROR(lmdb_error("Failed to add uncle height by hash to db transaction: ", result).c_str()));
+  }
+
+  CURSOR(uncles);
+  MDB_val_copy<blobdata> blob(block_to_blob(uncle));
+  MDB_val_set(key, height);
+  result = mdb_cursor_put(m_cur_uncles, &key, &blob, MDB_APPEND);
+  if (result) {
+    throw0(DB_ERROR(lmdb_error("Failed to add uncle blob to db transaction: ", result).c_str()));
+  }
+
+  // TODO-TK: Don't think this is really needed for uncles but is in place until persistence issue is resolved
+  CURSOR(uncle_info);
+  mdb_block_info ui;
+  ui.bi_height = height;
+  ui.bi_timestamp = uncle.timestamp;
+  ui.bi_coins = coins_generated;
+  ui.bi_size = uncle_size;
+  ui.bi_diff = cumulative_difficulty;
+  ui.bi_hash = uncle_hash;
+  ui.bi_weight = cumulative_weight;
+
+  MDB_val_set(val, ui);
+  result = mdb_cursor_put(m_cur_uncle_info, (MDB_val *)&zerokval, &val, MDB_APPENDDUP);
+  if (result)
+    throw0(DB_ERROR(lmdb_error("Failed to add uncle info to db transaction: ", result).c_str()));
+
+  m_cum_size += uncle_size;
+  m_cum_count++;
+
+  block_txn_stop();
+}
+
+void BlockchainLMDB::add_block(const block& blk, const size_t& block_size, const difficulty_type& cumulative_difficulty,
+                               const difficulty_type& cumulative_weight, const uint64_t& coins_generated, const crypto::hash& blk_hash)
 {
   LOG_PRINT_L3("BlockchainLMDB::" << __func__);
   check_open();
@@ -712,6 +765,7 @@ void BlockchainLMDB::add_block(const block& blk, const size_t& block_size, const
   bi.bi_size = block_size;
   bi.bi_diff = cumulative_difficulty;
   bi.bi_hash = blk_hash;
+  bi.bi_weight = cumulative_weight;
 
   MDB_val_set(val, bi);
   result = mdb_cursor_put(m_cur_block_info, (MDB_val *)&zerokval, &val, MDB_APPENDDUP);
@@ -737,14 +791,18 @@ void BlockchainLMDB::remove_block()
   if (m_height == 0)
     throw0(BLOCK_DNE ("Attempting to remove block from an empty blockchain"));
 
+  uint64_t bl_height = m_height - 1;
+
   mdb_txn_cursors *m_cursors = &m_wcursors;
   CURSOR(block_info)
   CURSOR(block_heights)
   CURSOR(blocks)
-  MDB_val_copy<uint64_t> k(m_height - 1);
+  MDB_val_copy<uint64_t> k(bl_height);
   MDB_val h = k;
   if ((result = mdb_cursor_get(m_cur_block_info, (MDB_val *)&zerokval, &h, MDB_GET_BOTH)))
       throw1(BLOCK_DNE(lmdb_error("Attempting to remove block that's not in the db: ", result).c_str()));
+
+  MDEBUG("Removing block at height " << bl_height);
 
   // must use h now; deleting from m_block_info will invalidate it
   mdb_block_info *bi = (mdb_block_info *)h.mv_data;
@@ -763,6 +821,46 @@ void BlockchainLMDB::remove_block()
 
   if ((result = mdb_cursor_del(m_cur_block_info, 0)))
       throw1(DB_ERROR(lmdb_error("Failed to add removal of block info to db transaction: ", result).c_str()));
+
+  CURSOR(uncle_info)
+  CURSOR(uncle_heights)
+  CURSOR(uncles)
+
+  MDB_val_copy<uint64_t> uk(bl_height - 1);
+  MDB_val hu = uk;
+  result = mdb_cursor_get(m_cur_uncle_info, (MDB_val *)&zerokval, &hu, MDB_GET_BOTH);
+  if (result == MDB_NOTFOUND) {
+    MDEBUG("No uncle for removal exists at height " << bl_height - 1);
+  }
+  else if (result) {
+    throw0(DB_ERROR("Error attempting to retrieve a uncle height from the db"));
+  }
+  else
+  {
+    // TODO-TK: this requirement templated from above seems hacky
+    MDEBUG("Removing uncle at height " << bl_height - 1);
+    mdb_block_info *bi = (mdb_block_info *)hu.mv_data;
+    blk_height uh = {bi->bi_hash, 0};
+    hu.mv_data = (void *)&uh;
+    hu.mv_size = sizeof(uh);
+
+    if ((result = mdb_cursor_get(m_cur_uncle_heights, (MDB_val *)&zerokval, &hu, MDB_GET_BOTH))) {
+      throw1(DB_ERROR(lmdb_error("Failed to locate uncle height entry for removal: ", result).c_str()));
+    }
+    if ((result = mdb_cursor_del(m_cur_uncle_heights, 0))) {
+      throw1(DB_ERROR(lmdb_error("Failed to add removal of uncle height by hash to db transaction: ", result).c_str()));
+    }
+    if ((result = mdb_cursor_get(m_cur_uncles, &uk, NULL, MDB_SET))) {
+      throw1(DB_ERROR(lmdb_error("Failed to locate uncle for removal: ", result).c_str()));
+    }
+    if ((result = mdb_cursor_del(m_cur_uncles, 0))) {
+      throw1(DB_ERROR(lmdb_error("Failed to add removal of uncle to db transaction: ", result).c_str()));
+    }
+    if ((result = mdb_cursor_del(m_cur_uncle_info, 0))) {
+      throw1(DB_ERROR(lmdb_error("Failed to add removal of uncle info to db transaction: ", result).c_str()));
+    }
+  }
+
 }
 
 uint64_t BlockchainLMDB::add_transaction_data(const crypto::hash& blk_hash, const transaction& tx, const crypto::hash& tx_hash)
@@ -962,6 +1060,7 @@ void BlockchainLMDB::remove_tx_outputs(const uint64_t tx_id, const transaction& 
   for (size_t i = tx.vout.size(); i-- > 0;)
   {
     uint64_t amount = is_pseudo_rct ? 0 : tx.vout[i].amount;
+    MTRACE("Removing output at index " << i << " with amount " << amount);
     remove_output(amount, amount_output_indices[i]);
   }
 }
@@ -1199,6 +1298,10 @@ void BlockchainLMDB::open(const std::string& filename, const int db_flags)
   lmdb_db_open(txn, LMDB_BLOCK_INFO, MDB_INTEGERKEY | MDB_CREATE | MDB_DUPSORT | MDB_DUPFIXED, m_block_info, "Failed to open db handle for m_block_info");
   lmdb_db_open(txn, LMDB_BLOCK_HEIGHTS, MDB_INTEGERKEY | MDB_CREATE | MDB_DUPSORT | MDB_DUPFIXED, m_block_heights, "Failed to open db handle for m_block_heights");
 
+  lmdb_db_open(txn, LMDB_UNCLES, MDB_INTEGERKEY | MDB_CREATE, m_uncles, "Failed to open db handle for m_uncles");
+  lmdb_db_open(txn, LMDB_UNCLE_INFO, MDB_INTEGERKEY | MDB_CREATE | MDB_DUPSORT | MDB_DUPFIXED, m_uncle_info, "Failed to open db handle for m_uncle_info");
+  lmdb_db_open(txn, LMDB_UNCLE_HEIGHTS, MDB_INTEGERKEY | MDB_CREATE | MDB_DUPSORT | MDB_DUPFIXED, m_uncle_heights, "Failed to open db handle for m_uncle_heights");
+
   lmdb_db_open(txn, LMDB_TXS, MDB_INTEGERKEY | MDB_CREATE, m_txs, "Failed to open db handle for m_txs");
   lmdb_db_open(txn, LMDB_TX_INDICES, MDB_INTEGERKEY | MDB_CREATE | MDB_DUPSORT | MDB_DUPFIXED, m_tx_indices, "Failed to open db handle for m_tx_indices");
   lmdb_db_open(txn, LMDB_TX_OUTPUTS, MDB_INTEGERKEY | MDB_CREATE, m_tx_outputs, "Failed to open db handle for m_tx_outputs");
@@ -1227,6 +1330,9 @@ void BlockchainLMDB::open(const std::string& filename, const int db_flags)
   mdb_set_dupsort(txn, m_output_amounts, compare_uint64);
   mdb_set_dupsort(txn, m_output_txs, compare_uint64);
   mdb_set_dupsort(txn, m_block_info, compare_uint64);
+
+  mdb_set_dupsort(txn, m_uncle_heights, compare_hash32);
+  mdb_set_dupsort(txn, m_uncle_info, compare_uint64);
 
   mdb_set_compare(txn, m_txpool_meta, compare_hash32);
   mdb_set_compare(txn, m_txpool_blob, compare_hash32);
@@ -1266,7 +1372,7 @@ void BlockchainLMDB::open(const std::string& filename, const int db_flags)
       // We don't handle the old format previous to that commit.
       txn.commit();
       m_open = true;
-      migrate(*(const uint32_t *)v.mv_data);
+      migrate(*(const uint32_t*)v.mv_data);
       return;
     }
 #endif
@@ -1365,6 +1471,12 @@ void BlockchainLMDB::reset()
     throw0(DB_ERROR(lmdb_error("Failed to drop m_block_info: ", result).c_str()));
   if (auto result = mdb_drop(txn, m_block_heights, 0))
     throw0(DB_ERROR(lmdb_error("Failed to drop m_block_heights: ", result).c_str()));
+  if (auto result = mdb_drop(txn, m_uncles, 0))
+    throw0(DB_ERROR(lmdb_error("Failed to drop m_uncles: ", result).c_str()));
+  if (auto result = mdb_drop(txn, m_uncle_info, 0))
+    throw0(DB_ERROR(lmdb_error("Failed to drop m_uncle_info: ", result).c_str()));
+  if (auto result = mdb_drop(txn, m_uncle_heights, 0))
+    throw0(DB_ERROR(lmdb_error("Failed to drop m_uncle_heights: ", result).c_str()));
   if (auto result = mdb_drop(txn, m_txs, 0))
     throw0(DB_ERROR(lmdb_error("Failed to drop m_txs: ", result).c_str()));
   if (auto result = mdb_drop(txn, m_tx_indices, 0))
@@ -1731,6 +1843,37 @@ bool BlockchainLMDB::for_all_txpool_txes(std::function<bool(const crypto::hash&,
   return ret;
 }
 
+bool BlockchainLMDB::uncle_exists(const crypto::hash& h, uint64_t *height) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__);
+  check_open();
+
+  TXN_PREFIX_RDONLY();
+  RCURSOR(uncle_heights);
+
+  bool ret = false;
+  MDB_val_set(key, h);
+  auto get_result = mdb_cursor_get(m_cur_uncle_heights, (MDB_val *)&zerokval, &key, MDB_GET_BOTH);
+  if (get_result == MDB_NOTFOUND)
+  {
+    LOG_PRINT_L3("Uncle with hash " << epee::string_tools::pod_to_hex(h) << " not found in db");
+  }
+  else if (get_result)
+    throw0(DB_ERROR(lmdb_error("DB error attempting to fetch uncle index from hash", get_result).c_str()));
+  else
+  {
+    if (height)
+    {
+      const blk_height *bhp = (const blk_height *)key.mv_data;
+      *height = bhp->bh_height;
+    }
+    ret = true;
+  }
+
+  TXN_POSTFIX_RDONLY();
+  return ret;
+}
+
 bool BlockchainLMDB::block_exists(const crypto::hash& h, uint64_t *height) const
 {
   LOG_PRINT_L3("BlockchainLMDB::" << __func__);
@@ -1762,12 +1905,43 @@ bool BlockchainLMDB::block_exists(const crypto::hash& h, uint64_t *height) const
   return ret;
 }
 
+cryptonote::blobdata BlockchainLMDB::get_uncle_blob(const crypto::hash& h) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__);
+  check_open();
+
+  return get_uncle_blob_from_height(get_uncle_height(h));
+}
+
 cryptonote::blobdata BlockchainLMDB::get_block_blob(const crypto::hash& h) const
 {
   LOG_PRINT_L3("BlockchainLMDB::" << __func__);
   check_open();
 
   return get_block_blob_from_height(get_block_height(h));
+}
+
+uint64_t BlockchainLMDB::get_uncle_height(const crypto::hash& h) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__);
+  check_open();
+
+  TXN_PREFIX_RDONLY();
+  RCURSOR(uncle_heights);
+
+  MDB_val_set(key, h);
+  auto get_result = mdb_cursor_get(m_cur_uncle_heights, (MDB_val *)&zerokval, &key, MDB_GET_BOTH);
+  if (get_result == MDB_NOTFOUND) {
+    throw1(BLOCK_DNE("Attempted to retrieve non-existent uncle height"));
+  }
+  else if (get_result) {
+    throw0(DB_ERROR("Error attempting to retrieve a uncle height from the db"));
+  }
+
+  blk_height *bhp = (blk_height *)key.mv_data;
+  uint64_t ret = bhp->bh_height;
+  TXN_POSTFIX_RDONLY();
+  return ret;
 }
 
 uint64_t BlockchainLMDB::get_block_height(const crypto::hash& h) const
@@ -1800,9 +1974,35 @@ block_header BlockchainLMDB::get_block_header(const crypto::hash& h) const
   return get_block(h);
 }
 
+cryptonote::blobdata BlockchainLMDB::get_uncle_blob_from_height(const uint64_t& height) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__ << " height " << height);
+  check_open();
+
+  TXN_PREFIX_RDONLY();
+  RCURSOR(uncles);
+
+  MDB_val_copy<uint64_t> key(height);
+  MDB_val result;
+  auto get_result = mdb_cursor_get(m_cur_uncles, &key, &result, MDB_SET);
+  if (get_result == MDB_NOTFOUND) {
+    throw0(BLOCK_DNE(std::string("Attempt to get uncle from height ").append(boost::lexical_cast<std::string>(height)).append(" failed -- block not in db").c_str()));
+  }
+  else if (get_result) {
+    throw0(DB_ERROR("Error attempting to retrieve a uncle from the db"));
+  }
+
+  blobdata bd;
+  bd.assign(reinterpret_cast<char*>(result.mv_data), result.mv_size);
+
+  TXN_POSTFIX_RDONLY();
+
+  return bd;
+}
+
 cryptonote::blobdata BlockchainLMDB::get_block_blob_from_height(const uint64_t& height) const
 {
-  LOG_PRINT_L3("BlockchainLMDB::" << __func__);
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__ << " height = " << height);
   check_open();
 
   TXN_PREFIX_RDONLY();
@@ -1832,20 +2032,9 @@ uint64_t BlockchainLMDB::get_block_timestamp(const uint64_t& height) const
   check_open();
 
   TXN_PREFIX_RDONLY();
-  RCURSOR(block_info);
-
-  MDB_val_set(result, height);
-  auto get_result = mdb_cursor_get(m_cur_block_info, (MDB_val *)&zerokval, &result, MDB_GET_BOTH);
-  if (get_result == MDB_NOTFOUND)
-  {
-    throw0(BLOCK_DNE(std::string("Attempt to get timestamp from height ").append(boost::lexical_cast<std::string>(height)).append(" failed -- timestamp not in db").c_str()));
-  }
-  else if (get_result)
-    throw0(DB_ERROR("Error attempting to retrieve a timestamp from the db"));
-
-  mdb_block_info *bi = (mdb_block_info *)result.mv_data;
-  uint64_t ret = bi->bi_timestamp;
+  mdb_block_info bi = get_block_info(height);
   TXN_POSTFIX_RDONLY();
+  uint64_t ret = bi.bi_timestamp;
   return ret;
 }
 
@@ -1868,26 +2057,103 @@ size_t BlockchainLMDB::get_block_size(const uint64_t& height) const
 {
   LOG_PRINT_L3("BlockchainLMDB::" << __func__);
   check_open();
+  mdb_block_info bi = get_block_info(height);
+  return bi.bi_size;
+}
 
-  TXN_PREFIX_RDONLY();
-  RCURSOR(block_info);
-
-  MDB_val_set(result, height);
-  auto get_result = mdb_cursor_get(m_cur_block_info, (MDB_val *)&zerokval, &result, MDB_GET_BOTH);
-  if (get_result == MDB_NOTFOUND)
-  {
-    throw0(BLOCK_DNE(std::string("Attempt to get block size from height ").append(boost::lexical_cast<std::string>(height)).append(" failed -- block size not in db").c_str()));
-  }
-  else if (get_result)
-    throw0(DB_ERROR("Error attempting to retrieve a block size from the db"));
-
-  mdb_block_info *bi = (mdb_block_info *)result.mv_data;
-  size_t ret = bi->bi_size;
-  TXN_POSTFIX_RDONLY();
+difficulty_type BlockchainLMDB::get_block_cumulative_weight(const uint64_t& height) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__ << "  height: " << height);
+  mdb_block_info bi = get_block_info(height);
+  difficulty_type ret = bi.bi_weight;
   return ret;
 }
 
 difficulty_type BlockchainLMDB::get_block_cumulative_difficulty(const uint64_t& height) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__ << "  height: " << height);
+  mdb_block_info bi = get_block_info(height);
+  difficulty_type ret = bi.bi_diff;
+  return ret;
+}
+
+void BlockchainLMDB::get_uncle_height_info(const uint64_t& height, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__ << "  height: " << height);
+  mdb_block_info ui = get_uncle_info(height);
+
+  if (height != 0)
+  {
+    mdb_block_info bi_prev = get_block_info(height - 1); // TODO-TK: uncle to be stored at parentt height or at nephew's?
+    difficulty = ui.bi_diff - bi_prev.bi_diff;
+    weight = ui.bi_weight - bi_prev.bi_weight;
+  }
+  else
+  {
+    difficulty = ui.bi_diff;
+    weight = ui.bi_weight;
+  }
+  cumulative_difficulty = ui.bi_diff;
+  cumulative_weight = ui.bi_weight;
+}
+
+void BlockchainLMDB::get_height_info(const uint64_t& height, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__ << "  height: " << height);
+  mdb_block_info bi = get_block_info(height);
+
+  if (height != 0)
+  {
+    mdb_block_info bi_prev = get_block_info(height - 1);
+    difficulty = bi.bi_diff - bi_prev.bi_diff;
+    weight = bi.bi_weight - bi_prev.bi_weight;
+  }
+  else
+  {
+    difficulty = bi.bi_diff;
+    weight = bi.bi_weight;
+  }
+  cumulative_difficulty = bi.bi_diff;
+  cumulative_weight = bi.bi_weight;
+}
+
+void BlockchainLMDB::get_uncle_height_info(const crypto::hash& h, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__ << "  hash: " << h);
+  get_uncle_height_info(get_uncle_height(h), difficulty, weight, cumulative_difficulty, cumulative_weight);
+}
+
+void BlockchainLMDB::get_height_info(const crypto::hash& h, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__ << "  hash: " << h);
+  get_height_info(get_block_height(h), difficulty, weight, cumulative_difficulty, cumulative_weight);
+}
+
+mdb_block_info BlockchainLMDB::get_uncle_info(const uint64_t& height) const
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__ << "  height: " << height);
+  check_open();
+
+  TXN_PREFIX_RDONLY();
+  RCURSOR(uncle_info);
+
+  MDB_val_set(result, height);
+  auto get_result = mdb_cursor_get(m_cur_uncle_info, (MDB_val *)&zerokval, &result, MDB_GET_BOTH);
+  if (get_result == MDB_NOTFOUND)
+  {
+    throw0(BLOCK_DNE(std::string("Attempt to get uncle info from height ").append(boost::lexical_cast<std::string>(height)).append(" failed -- difficulty not in db").c_str()));
+  }
+  else if (get_result)
+    throw0(DB_ERROR("Error attempting to retrieve uncle info from the db"));
+
+  // TODO-TK: concerns of a dangling pointer (though rest of the code seems to trust it)
+  mdb_block_info bi = *((mdb_block_info *)result.mv_data);
+
+  TXN_POSTFIX_RDONLY();
+  return bi;
+}
+
+mdb_block_info BlockchainLMDB::get_block_info(const uint64_t& height) const
 {
   LOG_PRINT_L3("BlockchainLMDB::" << __func__ << "  height: " << height);
   check_open();
@@ -1899,15 +2165,16 @@ difficulty_type BlockchainLMDB::get_block_cumulative_difficulty(const uint64_t& 
   auto get_result = mdb_cursor_get(m_cur_block_info, (MDB_val *)&zerokval, &result, MDB_GET_BOTH);
   if (get_result == MDB_NOTFOUND)
   {
-    throw0(BLOCK_DNE(std::string("Attempt to get cumulative difficulty from height ").append(boost::lexical_cast<std::string>(height)).append(" failed -- difficulty not in db").c_str()));
+    throw0(BLOCK_DNE(std::string("Attempt to get block info from height ").append(boost::lexical_cast<std::string>(height)).c_str()));
   }
   else if (get_result)
-    throw0(DB_ERROR("Error attempting to retrieve a cumulative difficulty from the db"));
+    throw0(DB_ERROR("Error attempting to retrieve block info from the db"));
 
-  mdb_block_info *bi = (mdb_block_info *)result.mv_data;
-  difficulty_type ret = bi->bi_diff;
+  // TODO-TK: concerns of a dangling pointer (though rest of the code seems to trust it)
+  mdb_block_info bi = *((mdb_block_info *)result.mv_data);
+
   TXN_POSTFIX_RDONLY();
-  return ret;
+  return bi;
 }
 
 difficulty_type BlockchainLMDB::get_block_difficulty(const uint64_t& height) const
@@ -1930,47 +2197,15 @@ difficulty_type BlockchainLMDB::get_block_difficulty(const uint64_t& height) con
 uint64_t BlockchainLMDB::get_block_already_generated_coins(const uint64_t& height) const
 {
   LOG_PRINT_L3("BlockchainLMDB::" << __func__);
-  check_open();
-
-  TXN_PREFIX_RDONLY();
-  RCURSOR(block_info);
-
-  MDB_val_set(result, height);
-  auto get_result = mdb_cursor_get(m_cur_block_info, (MDB_val *)&zerokval, &result, MDB_GET_BOTH);
-  if (get_result == MDB_NOTFOUND)
-  {
-    throw0(BLOCK_DNE(std::string("Attempt to get generated coins from height ").append(boost::lexical_cast<std::string>(height)).append(" failed -- block size not in db").c_str()));
-  }
-  else if (get_result)
-    throw0(DB_ERROR("Error attempting to retrieve a total generated coins from the db"));
-
-  mdb_block_info *bi = (mdb_block_info *)result.mv_data;
-  uint64_t ret = bi->bi_coins;
-  TXN_POSTFIX_RDONLY();
-  return ret;
+  mdb_block_info bi = get_block_info(height);
+  return bi.bi_coins;
 }
 
 crypto::hash BlockchainLMDB::get_block_hash_from_height(const uint64_t& height) const
 {
   LOG_PRINT_L3("BlockchainLMDB::" << __func__);
-  check_open();
-
-  TXN_PREFIX_RDONLY();
-  RCURSOR(block_info);
-
-  MDB_val_set(result, height);
-  auto get_result = mdb_cursor_get(m_cur_block_info, (MDB_val *)&zerokval, &result, MDB_GET_BOTH);
-  if (get_result == MDB_NOTFOUND)
-  {
-    throw0(BLOCK_DNE(std::string("Attempt to get hash from height ").append(boost::lexical_cast<std::string>(height)).append(" failed -- hash not in db").c_str()));
-  }
-  else if (get_result)
-    throw0(DB_ERROR(lmdb_error("Error attempting to retrieve a block hash from the db: ", get_result).c_str()));
-
-  mdb_block_info *bi = (mdb_block_info *)result.mv_data;
-  crypto::hash ret = bi->bi_hash;
-  TXN_POSTFIX_RDONLY();
-  return ret;
+  mdb_block_info bi = get_block_info(height);
+  return bi.bi_hash;
 }
 
 std::vector<block> BlockchainLMDB::get_blocks_range(const uint64_t& h1, const uint64_t& h2) const
@@ -2921,8 +3156,9 @@ void BlockchainLMDB::block_txn_abort()
   }
 }
 
-uint64_t BlockchainLMDB::add_block(const block& blk, const size_t& block_size, const difficulty_type& cumulative_difficulty, const uint64_t& coins_generated,
-    const std::vector<transaction>& txs)
+uint64_t BlockchainLMDB::add_block(const block& blk, const size_t& block_size, const difficulty_type& cumulative_difficulty,
+				       const difficulty_type& cumulative_weight, const uint64_t& coins_generated,
+                                       const std::vector<transaction>& txs)
 {
   LOG_PRINT_L3("BlockchainLMDB::" << __func__);
   check_open();
@@ -2940,7 +3176,7 @@ uint64_t BlockchainLMDB::add_block(const block& blk, const size_t& block_size, c
 
   try
   {
-    BlockchainDB::add_block(blk, block_size, cumulative_difficulty, coins_generated, txs);
+    BlockchainDB::add_block(blk, block_size, cumulative_difficulty, cumulative_weight, coins_generated, txs);
   }
   catch (const DB_ERROR_TXN_START& e)
   {
@@ -3791,7 +4027,16 @@ void BlockchainLMDB::migrate_0_1()
     txn.commit();
   } while(0);
 
-  uint32_t version = 1;
+  update_version(1);
+}
+
+void BlockchainLMDB::update_version(const uint32_t version)
+{
+  MDEBUG("Updating db version to " << version);
+  int result;
+  MDB_val k, v;
+  mdb_txn_safe txn(false);
+
   v.mv_data = (void *)&version;
   v.mv_size = sizeof(version);
   MDB_val_copy<const char *> vk("version");
@@ -3804,11 +4049,157 @@ void BlockchainLMDB::migrate_0_1()
   txn.commit();
 }
 
+void BlockchainLMDB::migrate_1_2()
+{
+  LOG_PRINT_L3("BlockchainLMDB::" << __func__);
+  MLOG_YELLOW(el::Level::Info, "Migrating blockchain from DB version 1 to 2 - this may take a while:");
+
+  auto modify_payload = [](MDB_val &v)
+  {
+    mdb_block_info_v1 bi_old = *((mdb_block_info_v1 *)v.mv_data);
+    mdb_block_info bi;
+    bi.bi_height = bi_old.bi_height;
+    bi.bi_timestamp = bi_old.bi_timestamp;
+    bi.bi_coins = bi_old.bi_coins;
+    bi.bi_size = bi_old.bi_size;
+    bi.bi_diff = bi_old.bi_diff;
+    bi.bi_hash = bi_old.bi_hash;
+    bi.bi_weight = bi_old.bi_diff; // cumulative difficulty is the same as cumulative weight for all blocks pre-v8
+    MDB_val_set(nv, bi);
+    return nv;
+  };
+
+  recreate_table(m_block_info, "block_info", modify_payload);
+  update_version(2);
+}
+
+void BlockchainLMDB::recreate_table(MDB_dbi table, const std::string table_name, const std::function<MDB_val(MDB_val &v)> &modify_payload)
+{
+  int result;
+
+  mdb_txn_safe txn(false);
+  result = mdb_txn_begin(m_env, NULL, 0, txn);
+  if (result) {
+    throw0(DB_ERROR(lmdb_error("Failed to create a transaction for the db: ", result).c_str()));
+  }
+
+  MDB_stat db_stats;
+  if ((result = mdb_stat(txn, m_blocks, &db_stats))) {
+    throw0(DB_ERROR(lmdb_error("Failed to query m_blocks: ", result).c_str()));
+  }
+
+  unsigned int flags;
+  result = mdb_dbi_flags(txn, table, &flags);
+  if (result) { throw0(DB_ERROR(lmdb_error("Failed to retrieve table flags: ", result).c_str())); }
+
+  lmdb_db_open(txn, table_name.c_str(), flags, table, "Failed to open db handle");
+
+  MDB_dbi new_table;
+  std::string new_table_name = table_name;
+  new_table_name[new_table_name.length() - 1]--;
+
+  lmdb_db_open(txn, new_table_name.c_str(), flags | MDB_CREATE, new_table, "Failed to open db handle");
+  mdb_set_dupsort(txn, new_table, compare_uint64);
+
+  int i = 0;
+  MDB_val k, v;
+  MDB_cursor *c_old, *c_cur;
+
+  while(true) {
+
+    if (!(i % 1000)) {
+      if (i) {
+        MINFO("Committing batch at index " << i);
+        txn.commit();
+        result = mdb_txn_begin(m_env, NULL, 0, txn);
+        if (result)
+          throw0(DB_ERROR(lmdb_error("Failed to create a transaction for the db: ", result).c_str()));
+      }
+      result = mdb_cursor_open(txn, new_table, &c_cur);
+      if (result) { throw0(DB_ERROR(lmdb_error("Failed to open cursor for new table: ", result).c_str())); }
+      result = mdb_cursor_open(txn, table, &c_old);
+      if (result) { throw0(DB_ERROR(lmdb_error("Failed to open cursor for old table: ", result).c_str())) ;}
+
+      if (!i) {
+        MDB_stat db_stat;
+        result = mdb_stat(txn, table, &db_stats);
+        if (result)
+          throw0(DB_ERROR(lmdb_error("Failed to query old table: ", result).c_str()));
+        i = db_stats.ms_entries;
+      }
+    }
+
+    result = mdb_cursor_get(c_old, &k, &v, MDB_NEXT);
+    if (result == MDB_NOTFOUND) {
+      txn.commit();
+      break;
+    }
+    else if (result) {
+      throw0(DB_ERROR(lmdb_error("Failed to get record from old table: ", result).c_str()));
+    }
+
+    // TODO-TK: something goes wrong with the data when using a lambda expression, hardcoded v1->v2 migration to fix later
+    //MDB_val nv = modify_payload(v);
+    mdb_block_info_v1 bi_old = *((mdb_block_info_v1 *)v.mv_data);
+    mdb_block_info bi;
+    bi.bi_height = bi_old.bi_height;
+    bi.bi_timestamp = bi_old.bi_timestamp;
+    bi.bi_coins = bi_old.bi_coins;
+    bi.bi_size = bi_old.bi_size;
+    bi.bi_diff = bi_old.bi_diff;
+    bi.bi_hash = bi_old.bi_hash;
+    bi.bi_weight = bi_old.bi_diff; // cumulative difficulty is the same as cumulative weight for all blocks pre-v8
+    MDB_val_set(nv, bi);
+    result = mdb_cursor_put(c_cur, (MDB_val *)&zerokval, &nv, MDB_APPENDDUP);
+    if (result) {
+      throw0(DB_ERROR(lmdb_error("Failed to put record into new table: ", result).c_str()));
+    }
+
+    result = mdb_cursor_del(c_old, 0);
+    if (result) {
+      throw0(DB_ERROR(lmdb_error("Failed to delete record from old table: ", result).c_str()));
+    }
+
+    i++;
+  }
+
+  result = mdb_txn_begin(m_env, NULL, 0, txn);
+  if (result) {
+    throw0(DB_ERROR(lmdb_error("Failed to create transaction for the db: ", result).c_str()));
+  }
+  result = mdb_drop(txn, table, 1);
+  if (result) {
+    throw0(DB_ERROR(lmdb_error("Failed to delete old table: ", result).c_str()));
+  }
+
+  char *ptr;
+  k.mv_data = (void *)new_table_name.c_str();
+  k.mv_size = new_table_name.length();
+
+  result = mdb_cursor_open(txn, 1, &c_old);
+  if (result)
+    throw0(DB_ERROR(lmdb_error("Failed to open cursor: ", result).c_str()));
+  result = mdb_cursor_get(c_old, &k, NULL, MDB_SET_KEY);
+  if (result)
+    throw0(DB_ERROR(lmdb_error("Failed to get DB record: ", result).c_str()));
+  ptr = (char *)k.mv_data;
+  ptr[new_table_name.length() - 1]++;
+
+  mdb_dbi_close(m_env, table);
+
+  lmdb_db_open(txn, table_name.c_str(), flags | MDB_CREATE, table, "Failed to open db handle for newly revised table");
+  mdb_set_dupsort(txn, table, compare_uint64);
+
+  txn.commit();
+}
+
 void BlockchainLMDB::migrate(const uint32_t oldversion)
 {
   switch(oldversion) {
   case 0:
     migrate_0_1(); /* FALLTHRU */
+  case 1:
+    migrate_1_2();
   default:
     ;
   }

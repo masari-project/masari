@@ -301,12 +301,18 @@ namespace cryptonote
     Nz. */
     m_core.set_target_blockchain_height((hshd.current_height));
     int64_t diff = static_cast<int64_t>(hshd.current_height) - static_cast<int64_t>(m_core.get_current_blockchain_height());
-    uint64_t max_block_height = std::max(hshd.current_height,m_core.get_current_blockchain_height());
+    uint64_t abs_diff = std::abs(diff);
+    uint64_t max_block_height = std::max(hshd.current_height, m_core.get_current_blockchain_height());
+    // TODO-TK: fill in when we have correct fork heights
+    uint64_t last_block_v7 = m_core.get_nettype() == TESTNET ? 94280 : m_core.get_nettype() == MAINNET ? (uint64_t)-1 : (uint64_t)-1;
+    uint64_t diff_v8 = max_block_height > last_block_v7 ? std::min(abs_diff, max_block_height - last_block_v7) : 0;
+
     MCLOG(is_inital ? el::Level::Info : el::Level::Debug, "global", context <<  "Sync data returned a new top block candidate: " << m_core.get_current_blockchain_height() << " -> " << hshd.current_height
-      << " [Your node is " << std::abs(diff) << " blocks (" << (abs(diff)  / (24 * 60 * 60 / DIFFICULTY_TARGET))  << " days) "
+      << " [Your node is " << abs_diff << " blocks (" << ((abs_diff - diff_v8) / (24 * 60 * 60 / DIFFICULTY_TARGET)) + (diff_v8 / (24 * 60 * 60 / DIFFICULTY_TARGET_V8)) << " days) "
       << (0 <= diff ? std::string("behind") : std::string("ahead"))
       << "] " << ENDL << "SYNCHRONIZATION started");
-      m_core.safesyncmode(false);
+      if (hshd.current_height >= m_core.get_current_blockchain_height() + 5) // don't switch to unsafe mode just for a few blocks
+        m_core.safesyncmode(false);
     }
     LOG_PRINT_L1("Remote blockchain height: " << hshd.current_height << ", id: " << hshd.top_id);
     context.m_state = cryptonote_connection_context::state_synchronizing;
@@ -846,7 +852,14 @@ namespace cryptonote
       for (const auto &tx : element.txs)
         blocks_size += tx.size();
     }
+    size_t uncles_size = 0;
+    for (const auto &element : arg.uncles) {
+      uncles_size += element.block.size();
+      for (const auto &tx : element.txs)
+        uncles_size += tx.size();
+    }
     size += blocks_size;
+    size += uncles_size;
 
     for (const auto &element : arg.missed_ids)
       size += sizeof(element.data);
@@ -879,6 +892,37 @@ namespace cryptonote
 
     std::vector<crypto::hash> block_hashes;
     block_hashes.reserve(arg.blocks.size());
+
+    typedef std::unordered_map<crypto::hash, block_complete_entry> block_entries_by_hash;
+
+    block_entries_by_hash uncles;
+    uncles.clear();
+    if (arg.uncles.size())
+    {
+      // very basic dos protection
+      if (arg.uncles.size() > arg.blocks.size())
+      {
+        LOG_ERROR_CCONTEXT("Too many uncles received, dropping connection");
+        drop_connection(context, false, false);
+        return 1;
+      }
+      MDEBUG("Preparing uncles for inclusion");
+      for (const block_complete_entry& uncle_entry: arg.uncles)
+      {
+        cryptonote::block u;
+        if(!parse_and_validate_block_from_blob(uncle_entry.block, u))
+        {
+          LOG_ERROR_CCONTEXT("sent wrong uncle: failed to parse and validate block: "
+                             << epee::string_tools::buff_to_hex_nodelimer(uncle_entry.block) << ", dropping connection");
+          drop_connection(context, false, false);
+          return 1;
+        }
+        uncles.insert(block_entries_by_hash::value_type(get_block_hash(u), uncle_entry));
+      }
+    }
+
+    std::list<block_complete_entry> blocks;
+
     const boost::posix_time::ptime now = boost::posix_time::microsec_clock::universal_time();
     uint64_t start_height = std::numeric_limits<uint64_t>::max();
     cryptonote::block b;
@@ -907,10 +951,11 @@ namespace cryptonote
         start_height = boost::get<txin_gen>(b.miner_tx.vin[0]).height;
 
       const crypto::hash block_hash = get_block_hash(b);
+      MTRACE("Block hash fetched = " << block_hash);
       auto req_it = context.m_requested_objects.find(block_hash);
       if(req_it == context.m_requested_objects.end())
       {
-        LOG_ERROR_CCONTEXT("sent wrong NOTIFY_RESPONSE_GET_OBJECTS: block with id=" << epee::string_tools::pod_to_hex(get_blob_hash(block_entry.block))
+        LOG_ERROR_CCONTEXT("sent wrong NOTIFY_RESPONSE_GET_OBJECTS: block with id=" << epee::string_tools::pod_to_hex(get_blob_hash(block_entry.block)) << " hash=" << block_hash
           << " wasn't requested, dropping connection");
         drop_connection(context, false, false);
         return 1;
@@ -924,7 +969,20 @@ namespace cryptonote
       }
 
       context.m_requested_objects.erase(req_it);
+      if (b.uncle != crypto::null_hash)
+      {
+        block_hashes.push_back(b.uncle);
+        auto it = uncles.find(b.uncle);
+        if (it == uncles.end())
+        {
+          LOG_ERROR_CCONTEXT("Uncle " << b.uncle << " not found in response");
+          drop_connection(context, false, false);
+          return 1;
+        }
+        blocks.push_back(it->second);
+      }
       block_hashes.push_back(block_hash);
+      blocks.push_back(block_entry);
     }
 
     if(context.m_requested_objects.size())
@@ -953,7 +1011,7 @@ namespace cryptonote
       const boost::posix_time::time_duration dt = now - context.m_last_request_time;
       const float rate = size * 1e6 / (dt.total_microseconds() + 1);
       MDEBUG(context << " adding span: " << arg.blocks.size() << " at height " << start_height << ", " << dt.total_microseconds()/1e6 << " seconds, " << (rate/1e3) << " kB/s, size now " << (m_block_queue.get_data_size() + blocks_size) / 1048576.f << " MB");
-      m_block_queue.add_blocks(start_height, arg.blocks, context.m_connection_id, rate, blocks_size);
+      m_block_queue.add_blocks(start_height, blocks, context.m_connection_id, rate, blocks_size);
 
       context.m_last_known_hash = last_block_hash;
 

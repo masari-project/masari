@@ -72,6 +72,7 @@ namespace cryptonote
       std::vector<transaction> txs;
       size_t block_size;
       difficulty_type cumulative_difficulty;
+      difficulty_type cumulative_weight;
       uint64_t coins_generated;
 
       BEGIN_SERIALIZE()
@@ -79,6 +80,7 @@ namespace cryptonote
         FIELD(txs)
         VARINT_FIELD(block_size)
         VARINT_FIELD(cumulative_difficulty)
+        VARINT_FIELD(cumulative_weight)
         VARINT_FIELD(coins_generated)
       END_SERIALIZE()
     };

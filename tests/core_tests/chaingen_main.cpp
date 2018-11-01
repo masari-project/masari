@@ -1,3 +1,4 @@
+// Copyright (c) 2017-2018, The Masari Project
 // Copyright (c) 2014-2018, The Monero Project
 // 
 // All rights reserved.
@@ -218,6 +219,26 @@ int main(int argc, char* argv[])
     GENERATE_AND_PLAY(gen_multisig_tx_invalid_33_1__no_threshold);
     GENERATE_AND_PLAY(gen_multisig_tx_invalid_33_1_2_no_threshold);
     GENERATE_AND_PLAY(gen_multisig_tx_invalid_33_1_3_no_threshold);
+
+    GENERATE_AND_PLAY(gen_uncle);
+    GENERATE_AND_PLAY(gen_uncle_reorg);
+    GENERATE_AND_PLAY(gen_uncle_alt_nephews);
+    GENERATE_AND_PLAY(gen_uncle_reorg_alt_nephews);
+    GENERATE_AND_PLAY(gen_uncle_alt_nephews_as_uncle);
+    GENERATE_AND_PLAY(gen_uncle_reorg_alt_nephews_as_uncle);
+    GENERATE_AND_PLAY(gen_uncle_is_parent);
+    GENERATE_AND_PLAY(gen_uncle_wrong_uncle);
+    GENERATE_AND_PLAY(gen_uncle_wrong_height);
+    GENERATE_AND_PLAY(gen_uncle_wrong_version);
+    GENERATE_AND_PLAY(gen_uncle_bad_ancestry);
+    GENERATE_AND_PLAY(gen_uncle_bad_timestamp);
+    GENERATE_AND_PLAY(gen_uncle_too_far_extended_ancestry);
+    GENERATE_AND_PLAY(gen_uncle_wrong_out);
+    GENERATE_AND_PLAY(gen_uncle_wrong_amount);
+    GENERATE_AND_PLAY(gen_uncle_overflow_amount);
+    //GENERATE_AND_PLAY(gen_uncle_hash_too_low);
+    //GENERATE_AND_PLAY(spend_uncle_original_miner_tx);
+    //GENERATE_AND_PLAY(spend_uncle_mined_txs);
 
     el::Level level = (failed_tests.empty() ? el::Level::Info : el::Level::Error);
     MLOG(level, "\nREPORT:");

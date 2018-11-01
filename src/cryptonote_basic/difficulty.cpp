@@ -334,6 +334,9 @@ namespace cryptonote {
     if (high != 0) {
       return 0;
     }
+    if (low < weighted_timespans) {
+      return 1;
+    }
     return low / weighted_timespans;
   }
 
@@ -363,11 +366,12 @@ namespace cryptonote {
 
   // Cryptonote clones:  #define DIFFICULTY_BLOCKS_COUNT_V2 DIFFICULTY_WINDOW_V2 + 1
 
-  difficulty_type next_difficulty_v6(std::vector<std::uint64_t> timestamps, std::vector<difficulty_type> cumulative_difficulties, size_t target_seconds) {
+  difficulty_type next_difficulty_v6(std::vector<std::uint64_t> timestamps, std::vector<difficulty_type> cumulative_difficulties, size_t version) {
 
-    const int64_t T = static_cast<int64_t>(target_seconds);
-    size_t N = DIFFICULTY_WINDOW_V6;
-    int64_t FTL = static_cast<int64_t>(CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V6);
+    const int64_t T = static_cast<int64_t>(version < 8 ? DIFFICULTY_TARGET : DIFFICULTY_TARGET_V8);
+    size_t N = version < 8 ? DIFFICULTY_WINDOW_V6 : DIFFICULTY_WINDOW_V8;
+    int64_t FTL = static_cast<int64_t>(version < 8 ? CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V6 : CRYPTONOTE_BLOCK_FUTURE_TIME_LIMIT_V8);
+    int64_t PTL = static_cast<int64_t>(version < 8 ? CRYPTONOTE_BLOCK_PAST_TIME_LIMIT_V6 : CRYPTONOTE_BLOCK_PAST_TIME_LIMIT_V8);
 
     // Return a difficulty of 1 for first 3 blocks if it's the start of the chain.
     if (timestamps.size() < 4) {
@@ -395,7 +399,7 @@ namespace cryptonote {
     // Loop through N most recent blocks. N is most recently solved block.
     for (size_t i = 1; i <= N; i++) {
       solveTime = static_cast<int64_t>(timestamps[i]) - static_cast<int64_t>(timestamps[i - 1]);
-      solveTime = std::min<int64_t>((T * 10), std::max<int64_t>(solveTime, -FTL));
+      solveTime = std::min<int64_t>(PTL, std::max<int64_t>(solveTime, -FTL));
       difficulty = cumulative_difficulties[i] - cumulative_difficulties[i - 1];
       LWMA += (int64_t)(solveTime * i) / k;
       sum_inverse_D += 1 / static_cast<double>(difficulty);
@@ -412,6 +416,11 @@ namespace cryptonote {
     // No limits should be employed, but this is correct way to employ a 20% symmetrical limit:
     // nextDifficulty=max(previous_Difficulty*0.8,min(previous_Difficulty/0.8, next_Difficulty));
     next_difficulty = static_cast<uint64_t>(nextDifficulty);
+
+    if (next_difficulty == 0) {
+      return 1;
+    }
+
     return next_difficulty;
   }
 }

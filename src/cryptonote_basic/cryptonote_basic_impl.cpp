@@ -85,7 +85,8 @@ namespace cryptonote {
   //-----------------------------------------------------------------------------------------------
   bool get_block_reward(size_t median_size, size_t current_block_size, uint64_t already_generated_coins, uint64_t &reward, uint8_t version) {
     static_assert(DIFFICULTY_TARGET % 60 == 0,"difficulty targets must be a multiple of 60");
-    const int target_minutes = DIFFICULTY_TARGET / 60;
+    static_assert(DIFFICULTY_TARGET_V8 % 60 == 0,"difficulty targets must be a multiple of 60");
+    const int target_minutes = version < 8 ? DIFFICULTY_TARGET / 60: DIFFICULTY_TARGET_V8 / 60;
     const int emission_speed_factor = EMISSION_SPEED_FACTOR_PER_MINUTE - (target_minutes-1);
 
     uint64_t base_reward = (MONEY_SUPPLY - already_generated_coins) >> emission_speed_factor;
@@ -191,6 +192,11 @@ namespace cryptonote {
     return true;
   }
   //-----------------------------------------------------------------------
+  bool is_uncle_block_included(const block& bl)
+  {
+    return bl.uncle != crypto::null_hash;
+  }
+  //-----------------------------------------------------------------------
   bool get_account_address_from_str(
       address_parse_info& info
     , network_type nettype
@@ -233,7 +239,7 @@ namespace cryptonote {
         info.has_payment_id = false;
       }
       else {
-        LOG_PRINT_L1("Wrong address prefix: " << prefix << ", expected " << address_prefix 
+        LOG_PRINT_L1("Wrong address prefix: " << prefix << ", expected " << address_prefix
           << " or " << integrated_address_prefix
           << " or " << subaddress_prefix);
         return false;

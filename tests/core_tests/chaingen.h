@@ -187,7 +187,10 @@ public:
     bf_tx_hashes = 1 << 5,
     bf_diffic    = 1 << 6,
     bf_max_outs  = 1 << 7,
-    bf_hf_version= 1 << 8
+    bf_hf_version= 1 << 8,
+    bf_uncle     = 1 << 9,
+    bf_bl_reward = 1 << 10,
+    bf_ul_reward = 1 << 11
   };
 
   void get_block_chain(std::vector<block_info>& blockchain, const crypto::hash& head, size_t n) const;
@@ -208,7 +211,7 @@ public:
     const cryptonote::account_base& miner_acc, int actual_params = bf_none, uint8_t major_ver = 0,
     uint8_t minor_ver = 0, uint64_t timestamp = 0, const crypto::hash& prev_id = crypto::hash(),
     const cryptonote::difficulty_type& diffic = 1, const cryptonote::transaction& miner_tx = cryptonote::transaction(),
-    const std::vector<crypto::hash>& tx_hashes = std::vector<crypto::hash>(), size_t txs_sizes = 0, size_t max_outs = 999, uint8_t hf_version = 1, uint64_t block_fees = 0);
+    const std::vector<crypto::hash>& tx_hashes = std::vector<crypto::hash>(), size_t txs_sizes = 0, size_t max_outs = 999, uint8_t hf_version = 1, uint64_t block_fees = 0, const cryptonote::block& uncle = cryptonote::block(), uint64_t block_reward = 0, uint64_t uncle_reward = 0, uint64_t uncle_reward_ratio = UNCLE_REWARD_RATIO);
   bool construct_block_manually_tx(cryptonote::block& blk, const cryptonote::block& prev_block,
     const cryptonote::account_base& miner_acc, const std::vector<crypto::hash>& tx_hashes, size_t txs_size, uint64_t block_fees = 0);
 
@@ -586,6 +589,32 @@ inline bool do_replay_file(const std::string& filename)
   generator.construct_block(BLK_NAME, PREV_BLOCK, MINER_ACC);                         \
   VEC_EVENTS.push_back(BLK_NAME);
 
+#define PUSH_NEXT_BLOCKVD(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, DIFFICULTY) \
+  generator.construct_block_manually(BLK_NAME, PREV_BLOCK, MINER_ACC, test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_hf_version | test_generator::bf_diffic, MAJOR_VER, MAJOR_VER, 0, crypto::hash(), DIFFICULTY, transaction(), std::vector<crypto::hash>(), 0, 0, MAJOR_VER);         \
+  VEC_EVENTS.push_back(BLK_NAME);
+
+#define MAKE_NEXT_BLOCKVD(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, DIFFICULTY) \
+  cryptonote::block BLK_NAME;                                                         \
+  PUSH_NEXT_BLOCKVD(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, DIFFICULTY);
+
+#define MAKE_NEXT_BLOCKV(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER) \
+  MAKE_NEXT_BLOCKVD(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, 1);
+
+#define PUSH_NEXT_BLOCKVD_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE, DIFFICULTY) \
+  generator.construct_block_manually(BLK_NAME, PREV_BLOCK, MINER_ACC, test_generator::bf_major_ver | test_generator::bf_minor_ver | test_generator::bf_hf_version | test_generator::bf_uncle | test_generator::bf_diffic, MAJOR_VER, MAJOR_VER, 0, crypto::hash(), 0, transaction(), std::vector<crypto::hash>(), DIFFICULTY, 0, MAJOR_VER, 0, UNCLE); \
+  VEC_EVENTS.push_back(BLK_NAME);
+
+#define PUSH_NEXT_BLOCKV_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE) \
+  PUSH_NEXT_BLOCKVD_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE, 1);
+
+#define MAKE_NEXT_BLOCKVD_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE, DIFFICULTY) \
+  cryptonote::block BLK_NAME;                                                         \
+  BLK_NAME.uncle = cryptonote::get_block_hash(UNCLE);                                                \
+  PUSH_NEXT_BLOCKVD_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE, DIFFICULTY);
+
+#define MAKE_NEXT_BLOCKV_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE) \
+  MAKE_NEXT_BLOCKVD_UNCLE(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, UNCLE, 1);
+
 #define MAKE_NEXT_BLOCK_TX1(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, TX1)         \
   cryptonote::block BLK_NAME;                                                           \
   {                                                                                   \
@@ -611,6 +640,21 @@ inline bool do_replay_file(const std::string& filename)
     }                                                                                 \
     BLK_NAME = _blk_last;                                                             \
   }
+
+#define REWIND_BLOCKS_VDN(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, COUNT, DIFFICULTY) \
+  cryptonote::block BLK_NAME;                                                           \
+  {                                                                                     \
+    cryptonote::block _blk_last = PREV_BLOCK;                                           \
+    for (size_t i = 0; i < COUNT; ++i)                                                  \
+    {                                                                                   \
+      MAKE_NEXT_BLOCKVD(VEC_EVENTS, blk, _blk_last, MINER_ACC, MAJOR_VER, DIFFICULTY);  \
+      _blk_last = blk;                                                                  \
+    }                                                                                   \
+    BLK_NAME = _blk_last;                                                               \
+  }
+
+#define REWIND_BLOCKS_VN(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, COUNT) \
+  REWIND_BLOCKS_VDN(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, MAJOR_VER, COUNT, 1)
 
 #define REWIND_BLOCKS(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC) REWIND_BLOCKS_N(VEC_EVENTS, BLK_NAME, PREV_BLOCK, MINER_ACC, CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW)
 

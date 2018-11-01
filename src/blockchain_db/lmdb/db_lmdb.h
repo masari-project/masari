@@ -1,3 +1,4 @@
+// Copyright (c) 2018, The Masari Project
 // Copyright (c) 2014-2018, The Monero Project
 // All rights reserved.
 //
@@ -46,6 +47,10 @@ typedef struct mdb_txn_cursors
   MDB_cursor *m_txc_block_heights;
   MDB_cursor *m_txc_block_info;
 
+  MDB_cursor *m_txc_uncles;
+  MDB_cursor *m_txc_uncle_heights;
+  MDB_cursor *m_txc_uncle_info;
+
   MDB_cursor *m_txc_output_txs;
   MDB_cursor *m_txc_output_amounts;
 
@@ -64,6 +69,9 @@ typedef struct mdb_txn_cursors
 #define m_cur_blocks	m_cursors->m_txc_blocks
 #define m_cur_block_heights	m_cursors->m_txc_block_heights
 #define m_cur_block_info	m_cursors->m_txc_block_info
+#define m_cur_uncles	m_cursors->m_txc_uncles
+#define m_cur_uncle_heights	m_cursors->m_txc_uncle_heights
+#define m_cur_uncle_info	m_cursors->m_txc_uncle_info
 #define m_cur_output_txs	m_cursors->m_txc_output_txs
 #define m_cur_output_amounts	m_cursors->m_txc_output_amounts
 #define m_cur_txs	m_cursors->m_txc_txs
@@ -74,12 +82,34 @@ typedef struct mdb_txn_cursors
 #define m_cur_txpool_blob	m_cursors->m_txc_txpool_blob
 #define m_cur_hf_versions	m_cursors->m_txc_hf_versions
 
+#define block_info_v1 \
+  uint64_t bi_height; \
+  uint64_t bi_timestamp; \
+  uint64_t bi_coins; \
+  uint64_t bi_size; \
+  difficulty_type bi_diff; \
+  crypto::hash bi_hash;
+
+typedef struct mdb_block_info_v1
+{
+  block_info_v1;
+} mdb_block_info_v1;
+
+typedef struct mdb_block_info
+{
+  block_info_v1;
+  difficulty_type bi_weight;
+} mdb_block_info;
+
 typedef struct mdb_rflags
 {
   bool m_rf_txn;
   bool m_rf_blocks;
   bool m_rf_block_heights;
   bool m_rf_block_info;
+  bool m_rf_uncles;
+  bool m_rf_uncle_heights;
+  bool m_rf_uncle_info;
   bool m_rf_output_txs;
   bool m_rf_output_amounts;
   bool m_rf_txs;
@@ -178,13 +208,21 @@ public:
 
   virtual void unlock();
 
+  virtual bool uncle_exists(const crypto::hash& h, uint64_t *height = NULL) const;
+
   virtual bool block_exists(const crypto::hash& h, uint64_t *height = NULL) const;
+
+  virtual uint64_t get_uncle_height(const crypto::hash& h) const;
 
   virtual uint64_t get_block_height(const crypto::hash& h) const;
 
   virtual block_header get_block_header(const crypto::hash& h) const;
 
+  virtual cryptonote::blobdata get_uncle_blob(const crypto::hash& h) const;
+
   virtual cryptonote::blobdata get_block_blob(const crypto::hash& h) const;
+
+  virtual cryptonote::blobdata get_uncle_blob_from_height(const uint64_t& height) const;
 
   virtual cryptonote::blobdata get_block_blob_from_height(const uint64_t& height) const;
 
@@ -194,7 +232,21 @@ public:
 
   virtual size_t get_block_size(const uint64_t& height) const;
 
+  virtual difficulty_type get_block_cumulative_weight(const uint64_t& height) const;
+
   virtual difficulty_type get_block_cumulative_difficulty(const uint64_t& height) const;
+
+  virtual void get_uncle_height_info(const uint64_t& height, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const;
+
+  virtual void get_height_info(const uint64_t& height, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const;
+
+  virtual void get_uncle_height_info(const crypto::hash& h, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const;
+
+  virtual void get_height_info(const crypto::hash& h, difficulty_type& difficulty, difficulty_type& weight, difficulty_type& cumulative_difficulty, difficulty_type& cumulative_weight) const;
+
+  virtual mdb_block_info get_uncle_info(const uint64_t& height) const;
+
+  virtual mdb_block_info get_block_info(const uint64_t& height) const;
 
   virtual difficulty_type get_block_difficulty(const uint64_t& height) const;
 
@@ -261,9 +313,18 @@ public:
   virtual uint64_t add_block( const block& blk
                             , const size_t& block_size
                             , const difficulty_type& cumulative_difficulty
+                            , const difficulty_type& cumulative_weight
                             , const uint64_t& coins_generated
                             , const std::vector<transaction>& txs
                             );
+
+  virtual void add_uncle(const block& uncle,
+                         const size_t& uncle_size,
+                         const difficulty_type& cumulative_difficulty,
+                         const difficulty_type& cumulative_weight,
+                         const uint64_t& coins_generated,
+                         const crypto::hash& uncle_hash,
+                         uint64_t height);
 
   virtual void set_batch_transactions(bool batch_transactions);
   virtual bool batch_start(uint64_t batch_num_blocks=0, uint64_t batch_bytes=0);
@@ -302,6 +363,7 @@ private:
   virtual void add_block( const block& blk
                 , const size_t& block_size
                 , const difficulty_type& cumulative_difficulty
+                , const difficulty_type& cumulative_weight
                 , const uint64_t& coins_generated
                 , const crypto::hash& block_hash
                 );
@@ -367,8 +429,14 @@ private:
   // migrate from older DB version to current
   void migrate(const uint32_t oldversion);
 
+  void update_version(const uint32_t version);
+
   // migrate from DB version 0 to 1
   void migrate_0_1();
+
+  void migrate_1_2();
+
+  void recreate_table(MDB_dbi table, const std::string table_name, const std::function<MDB_val(MDB_val &v)> &modify_payload);
 
   void cleanup_batch();
 
@@ -378,6 +446,10 @@ private:
   MDB_dbi m_blocks;
   MDB_dbi m_block_heights;
   MDB_dbi m_block_info;
+
+  MDB_dbi m_uncles;
+  MDB_dbi m_uncle_heights;
+  MDB_dbi m_uncle_info;
 
   MDB_dbi m_txs;
   MDB_dbi m_tx_indices;

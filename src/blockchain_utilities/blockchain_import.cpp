@@ -476,15 +476,17 @@ int import_from_file(cryptonote::core& core, const std::string& import_file_path
 
           size_t block_size;
           difficulty_type cumulative_difficulty;
+          difficulty_type cumulative_weight;
           uint64_t coins_generated;
 
           block_size = bp.block_size;
           cumulative_difficulty = bp.cumulative_difficulty;
+          cumulative_weight = bp.cumulative_weight;
           coins_generated = bp.coins_generated;
 
           try
           {
-            core.get_blockchain_storage().get_db().add_block(b, block_size, cumulative_difficulty, coins_generated, txs);
+            core.get_blockchain_storage().get_db().add_block(b, block_size, cumulative_difficulty, cumulative_weight, coins_generated, txs);
           }
           catch (const std::exception& e)
           {

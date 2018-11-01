@@ -75,6 +75,7 @@ namespace {
       << "depth: " << boost::lexical_cast<std::string>(header.depth) << std::endl
       << "hash: " << header.hash << std::endl
       << "difficulty: " << boost::lexical_cast<std::string>(header.difficulty) << std::endl
+      << "weight: " << boost::lexical_cast<std::string>(header.weight) << std::endl
       << "reward: " << boost::lexical_cast<std::string>(header.reward);
   }
 
@@ -711,6 +712,36 @@ bool t_rpc_command_executor::print_block_by_height(uint64_t height) {
   return true;
 }
 
+bool t_rpc_command_executor::print_uncle_block(crypto::hash uncle_hash) {
+  cryptonote::COMMAND_RPC_GET_UNCLE_BLOCK::request req;
+  cryptonote::COMMAND_RPC_GET_UNCLE_BLOCK::response res;
+  epee::json_rpc::error error_resp;
+
+  req.hash = epee::string_tools::pod_to_hex(uncle_hash);
+
+  std::string fail_message = "Unsuccessful";
+
+  if (m_is_rpc)
+  {
+    if (!m_rpc_client->json_rpc_request(req, res, "get_uncle_block", fail_message.c_str()))
+    {
+      return true;
+    }
+  }
+  else
+  {
+    if (!m_rpc_server->on_get_uncle_block(req, res, error_resp) || res.status != CORE_RPC_STATUS_OK)
+    {
+      tools::fail_msg_writer() << make_error(fail_message, res.status);
+      return true;
+    }
+  }
+
+  tools::success_msg_writer() << res.json << ENDL;
+
+  return true;
+}
+
 bool t_rpc_command_executor::print_transaction(crypto::hash transaction_hash,
   bool include_hex,
   bool include_json) {
@@ -999,7 +1030,7 @@ bool t_rpc_command_executor::print_transaction_pool_stats() {
   else
   {
     uint64_t backlog = (res.pool_stats.bytes_total + full_reward_zone - 1) / full_reward_zone;
-    backlog_message = (boost::format("estimated %u block (%u minutes) backlog") % backlog % (backlog * DIFFICULTY_TARGET / 60)).str();
+    backlog_message = (boost::format("estimated %u block (%u minutes) backlog") % backlog % (backlog * DIFFICULTY_TARGET_V8 / 60)).str();
   }
 
   tools::msg_writer() << n_transactions << " tx(es), " << res.pool_stats.bytes_total << " bytes total (min " << res.pool_stats.bytes_min << ", max " << res.pool_stats.bytes_max << ", avg " << avg_bytes << ", median " << res.pool_stats.bytes_med << ")" << std::endl
@@ -1665,7 +1696,7 @@ bool t_rpc_command_executor::alt_chain_info()
   {
     uint64_t start_height = (chain.height - chain.length + 1);
     tools::msg_writer() << chain.length << " blocks long, from height " << start_height << " (" << (ires.height - start_height - 1)
-        << " deep), diff " << chain.difficulty << ": " << chain.block_hash;
+        << " deep), diff " << chain.difficulty << ", weight " << chain.weight << ": " << chain.block_hash;
   }
   return true;
 }

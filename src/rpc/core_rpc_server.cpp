@@ -1458,6 +1458,7 @@ namespace cryptonote
     response.depth = m_core.get_current_blockchain_height() - height - 1;
     response.hash = string_tools::pod_to_hex(hash);
     response.difficulty = m_core.get_blockchain_storage().block_difficulty(height);
+    response.weight = m_core.get_block_weight(height);
     response.reward = get_block_reward(blk);
     response.block_size = m_core.get_blockchain_storage().get_db().get_block_size(height);
     response.num_txes = blk.tx_hashes.size();
@@ -1745,6 +1746,40 @@ namespace cryptonote
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
+  bool core_rpc_server::on_get_uncle_block(const COMMAND_RPC_GET_UNCLE_BLOCK::request& req, COMMAND_RPC_GET_UNCLE_BLOCK::response& res, epee::json_rpc::error& error_resp)
+  {
+    PERF_TIMER(on_get_uncle_block);
+    bool r;
+    if (use_bootstrap_daemon_if_necessary<COMMAND_RPC_GET_UNCLE_BLOCK>(invoke_http_mode::JON_RPC, "get_uncle_block", req, res, r))
+      return r;
+
+    crypto::hash block_hash;
+    if (!req.hash.empty())
+    {
+      bool hash_parsed = parse_hash256(req.hash, block_hash);
+      if(!hash_parsed)
+      {
+        error_resp.code = CORE_RPC_ERROR_CODE_WRONG_PARAM;
+        error_resp.message = "Failed to parse hex representation of block hash. Hex = " + req.hash + '.';
+        return false;
+      }
+    }
+    
+    block uncle;
+    if(!m_core.get_uncle_by_hash(block_hash, uncle))
+    {
+      error_resp.code = CORE_RPC_ERROR_CODE_WRONG_PARAM;
+      error_resp.message = "No uncle block with hash " + req.hash + " found";
+      return false;
+    }
+    
+    res.blob = string_tools::buff_to_hex_nodelimer(t_serializable_object_to_blob(uncle));
+    res.json = obj_to_json_str(uncle);
+    res.status = CORE_RPC_STATUS_OK;
+    
+    return true;
+  }
+  //------------------------------------------------------------------------------------------------------------------------------
   bool core_rpc_server::on_get_connections(const COMMAND_RPC_GET_CONNECTIONS::request& req, COMMAND_RPC_GET_CONNECTIONS::response& res, epee::json_rpc::error& error_resp)
   {
     PERF_TIMER(on_get_connections);
@@ -1776,7 +1811,8 @@ namespace cryptonote
     res.top_block_hash = string_tools::pod_to_hex(top_hash);
     res.target_height = m_core.get_target_blockchain_height();
     res.difficulty = m_core.get_blockchain_storage().get_difficulty_for_next_block();
-    res.target = DIFFICULTY_TARGET;
+    res.target = m_core.get_blockchain_storage().get_current_hard_fork_version() < 8 ? DIFFICULTY_TARGET : DIFFICULTY_TARGET_V8;
+
     res.tx_count = m_core.get_blockchain_storage().get_total_transactions() - res.height; //without coinbase
     res.tx_pool_size = m_core.get_pool_transactions_count();
     res.alt_blocks_count = m_core.get_blockchain_storage().get_alternative_blocks_count();
@@ -1790,6 +1826,7 @@ namespace cryptonote
     res.testnet = m_nettype == TESTNET;
     res.stagenet = m_nettype == STAGENET;
     res.cumulative_difficulty = m_core.get_blockchain_storage().get_db().get_block_cumulative_difficulty(res.height - 1);
+    res.cumulative_weight = m_core.get_blockchain_storage().get_db().get_block_cumulative_weight(res.height - 1);
     res.block_size_limit = m_core.get_blockchain_storage().get_current_cumulative_blocksize_limit();
     res.block_size_median = m_core.get_blockchain_storage().get_current_cumulative_blocksize_median();
     res.status = CORE_RPC_STATUS_OK;
@@ -2002,7 +2039,7 @@ namespace cryptonote
       std::list<std::pair<Blockchain::block_extended_info, uint64_t>> chains = m_core.get_blockchain_storage().get_alternative_chains();
       for (const auto &i: chains)
       {
-        res.chains.push_back(COMMAND_RPC_GET_ALTERNATE_CHAINS::chain_info{epee::string_tools::pod_to_hex(get_block_hash(i.first.bl)), i.first.height, i.second, i.first.cumulative_difficulty});
+        res.chains.push_back(COMMAND_RPC_GET_ALTERNATE_CHAINS::chain_info{epee::string_tools::pod_to_hex(get_block_hash(i.first.bl)), i.first.height, i.second, i.first.cumulative_difficulty, i.first.cumulative_weight});
       }
       res.status = CORE_RPC_STATUS_OK;
     }

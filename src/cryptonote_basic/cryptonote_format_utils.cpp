@@ -815,6 +815,9 @@ namespace cryptonote
     crypto::hash tree_root_hash = get_tx_tree_hash(b);
     blob.append(reinterpret_cast<const char*>(&tree_root_hash), sizeof(tree_root_hash));
     blob.append(tools::get_varint_data(b.tx_hashes.size()+1));
+    if (b.major_version > 7) {
+      blob.append(reinterpret_cast<const char*>(&b.uncle), sizeof(b.uncle));
+    }
     return blob;
   }
   //---------------------------------------------------------------
@@ -868,6 +871,13 @@ namespace cryptonote
     
     crypto::cn_slow_hash(bd.data(), bd.size(), res, cn_variant);
     return true;
+  }
+  //---------------------------------------------------------------
+  crypto::hash get_block_longhash(const block& b)
+  {
+    crypto::hash proof_of_work = null_hash;
+    get_block_longhash(b, proof_of_work, 0); // TODO-TK: address unsused height parameter
+    return proof_of_work;
   }
   //---------------------------------------------------------------
   std::vector<uint64_t> relative_output_offsets_to_absolute(const std::vector<uint64_t>& off)

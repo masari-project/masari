@@ -186,6 +186,8 @@ namespace boost
     //------------------
     a & b.miner_tx;
     a & b.tx_hashes;
+    if(b.major_version > 7)
+      a & b.uncle;
   }
 
   template <class Archive>

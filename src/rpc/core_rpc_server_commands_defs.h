@@ -1019,6 +1019,7 @@ namespace cryptonote
       bool stagenet;
       std::string top_block_hash;
       uint64_t cumulative_difficulty;
+      uint64_t cumulative_weight;
       uint64_t block_size_limit;
       uint64_t block_size_median;
       uint64_t start_time;
@@ -1048,6 +1049,7 @@ namespace cryptonote
         KV_SERIALIZE(stagenet)
         KV_SERIALIZE(top_block_hash)
         KV_SERIALIZE(cumulative_difficulty)
+        KV_SERIALIZE(cumulative_weight)
         KV_SERIALIZE(block_size_limit)
         KV_SERIALIZE(block_size_median)
         KV_SERIALIZE(start_time)
@@ -1251,6 +1253,7 @@ namespace cryptonote
       uint64_t depth;
       std::string hash;
       difficulty_type difficulty;
+      difficulty_type weight;
       uint64_t reward;
       uint64_t block_size;
       uint64_t num_txes;
@@ -1266,6 +1269,7 @@ namespace cryptonote
         KV_SERIALIZE(depth)
         KV_SERIALIZE(hash)
         KV_SERIALIZE(difficulty)
+        KV_SERIALIZE(weight)
         KV_SERIALIZE(reward)
         KV_SERIALIZE(block_size)
         KV_SERIALIZE(num_txes)
@@ -1374,6 +1378,34 @@ namespace cryptonote
         KV_SERIALIZE(block_header)
         KV_SERIALIZE(miner_tx_hash)
         KV_SERIALIZE(tx_hashes)
+        KV_SERIALIZE(status)
+        KV_SERIALIZE(blob)
+        KV_SERIALIZE(json)
+        KV_SERIALIZE(untrusted)
+      END_KV_SERIALIZE_MAP()
+    };
+
+  };
+  
+  struct COMMAND_RPC_GET_UNCLE_BLOCK
+  {
+    struct request
+    {
+      std::string hash;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(hash)
+      END_KV_SERIALIZE_MAP()
+    };
+
+    struct response
+    {
+      std::string status;
+      std::string blob;
+      std::string json;
+      bool untrusted;
+      
+      BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(status)
         KV_SERIALIZE(blob)
         KV_SERIALIZE(json)
@@ -2186,12 +2218,14 @@ namespace cryptonote
       uint64_t height;
       uint64_t length;
       uint64_t difficulty;
+      uint64_t weight;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(block_hash)
         KV_SERIALIZE(height)
         KV_SERIALIZE(length)
         KV_SERIALIZE(difficulty)
+        KV_SERIALIZE(weight)
       END_KV_SERIALIZE_MAP()
     };
 

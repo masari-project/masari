@@ -1259,6 +1259,13 @@ namespace cryptonote
     return m_blockchain_storage.get_db().get_block_cumulative_difficulty(height);
   }
   //-----------------------------------------------------------------------------------------------
+  difficulty_type core::get_block_weight(uint64_t height) const
+  {
+    difficulty_type diff, weight, cum_diff, cum_weight;
+    m_blockchain_storage.get_db().get_height_info(height, diff, weight, cum_diff, cum_weight);
+    return weight;
+  }
+  //-----------------------------------------------------------------------------------------------
   size_t core::get_pool_transactions_count() const
   {
     return m_mempool.get_transactions_count();
@@ -1335,6 +1342,20 @@ namespace cryptonote
   bool core::get_block_by_hash(const crypto::hash &h, block &blk, bool *orphan) const
   {
     return m_blockchain_storage.get_block_by_hash(h, blk, orphan);
+  }
+  //-----------------------------------------------------------------------------------------------
+  bool core::get_uncle_by_hash(const crypto::hash &h, block &uncle) const
+  {
+    try 
+    {
+      uncle = m_blockchain_storage.get_db().get_uncle(h);
+      return true;
+    }
+    catch (const BLOCK_DNE& e)
+    {
+      MDEBUG("No uncle block with hash " << h << " exists in the database");
+      return false;
+    }
   }
   //-----------------------------------------------------------------------------------------------
   std::string core::print_pool(bool short_format) const
