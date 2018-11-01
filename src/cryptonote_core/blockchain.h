@@ -1051,7 +1051,6 @@ namespace cryptonote
     blocks_ext_by_hash m_alternative_chains; // crypto::hash -> block_extended_info
 
     // used for uncle references when an ex-main chain contains an uncle in the new one
-    // TODO-TK: this is a bit hacky but avoids recursive-ish dependencies
     blocks_ext_by_hash m_disconnected_chain; // crypto::hash -> block_extended_info
 
     // some invalid blocks

@@ -1122,7 +1122,6 @@ bool Blockchain::switch_to_alternative_blockchain(std::list<blocks_ext_by_hash::
     block_verification_context bvc = boost::value_initialized<block_verification_context>();
 
     // add block to main chain
-    // TODO-TK: need to handle uncles in rollbacks
     bool r = handle_block_to_main_chain(ch_ent->second.bl, bvc);
 
     // if adding block to main chain failed, rollback to previous state and

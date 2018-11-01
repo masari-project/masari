@@ -194,8 +194,7 @@ namespace cryptonote {
   //-----------------------------------------------------------------------
   bool is_uncle_block_included(const block& bl)
   {
-    // TODO-TK: could do this better
-    return strcmp(bl.uncle.data, crypto::null_hash.data) != 0;
+    return bl.uncle != crypto::null_hash;
   }
   //-----------------------------------------------------------------------
   bool get_account_address_from_str(

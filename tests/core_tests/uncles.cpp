@@ -193,7 +193,6 @@ bool gen_uncle_wrong_height::generate(std::vector<test_event_entry>& events) con
   return generate_with(events, modifier);
 }
 
-// TODO-TK: tx affected but bl.uncle is getting lost somewhere (potentially serialization)
 bool gen_uncle_wrong_version::generate(std::vector<test_event_entry>& events) const
 {
   CHAIN_BASE(1);

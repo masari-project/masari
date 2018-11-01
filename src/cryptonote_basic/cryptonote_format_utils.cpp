@@ -876,7 +876,7 @@ namespace cryptonote
   crypto::hash get_block_longhash(const block& b)
   {
     crypto::hash proof_of_work = null_hash;
-    get_block_longhash(b, proof_of_work, 0 /* TODO-TK: why does it need this? looks like it could be mismatched in current state */);
+    get_block_longhash(b, proof_of_work, 0); // TODO-TK: address unsused height parameter
     return proof_of_work;
   }
   //---------------------------------------------------------------

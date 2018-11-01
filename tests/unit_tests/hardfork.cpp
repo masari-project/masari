@@ -151,7 +151,6 @@ public:
   virtual block get_block_from_height(const uint64_t& height) const {
     return blocks.at(height);
   }
-  // TODO-TK: vector height != uncle block height here, fix when testing for it
   virtual block get_uncle_from_height(const uint64_t& height) const {
     return uncles.at(height);
   }
