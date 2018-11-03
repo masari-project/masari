@@ -71,7 +71,7 @@ namespace {
       << "previous hash: " << header.prev_hash << std::endl
       << "nonce: " << boost::lexical_cast<std::string>(header.nonce) << std::endl
       << "is orphan: " << header.orphan_status << std::endl
-      << "is uncle: " << header.uncle_status << std::endl;
+      << "is uncle: " << header.uncle_status << std::endl
       << "height: " << boost::lexical_cast<std::string>(header.height) << std::endl
       << "depth: " << boost::lexical_cast<std::string>(header.depth) << std::endl
       << "hash: " << header.hash << std::endl
