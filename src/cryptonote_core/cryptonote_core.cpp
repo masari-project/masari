@@ -1266,6 +1266,13 @@ namespace cryptonote
     return weight;
   }
   //-----------------------------------------------------------------------------------------------
+  difficulty_type core::get_uncle_weight(uint64_t height) const
+  {
+    difficulty_type diff, weight, cum_diff, cum_weight;
+    m_blockchain_storage.get_db().get_uncle_height_info(height, diff, weight, cum_diff, cum_weight);
+    return weight;
+  }
+  //-----------------------------------------------------------------------------------------------
   size_t core::get_pool_transactions_count() const
   {
     return m_mempool.get_transactions_count();
