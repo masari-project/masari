@@ -71,6 +71,18 @@ namespace {
       << "previous hash: " << header.prev_hash << std::endl
       << "nonce: " << boost::lexical_cast<std::string>(header.nonce) << std::endl
       << "is orphan: " << header.orphan_status << std::endl
+      << "is uncle: " << header.uncle_status << std::endl;
+      << "height: " << boost::lexical_cast<std::string>(header.height) << std::endl
+      << "depth: " << boost::lexical_cast<std::string>(header.depth) << std::endl
+      << "hash: " << header.hash << std::endl
+      << "difficulty: " << boost::lexical_cast<std::string>(header.difficulty) << std::endl
+      << "weight: " << boost::lexical_cast<std::string>(header.weight) << std::endl
+      << "reward: " << boost::lexical_cast<std::string>(header.reward);
+  }
+  
+  void print_uncle_header(cryptonote::uncle_header_response const & header)
+  {
+    tools::success_msg_writer()
       << "height: " << boost::lexical_cast<std::string>(header.height) << std::endl
       << "depth: " << boost::lexical_cast<std::string>(header.depth) << std::endl
       << "hash: " << header.hash << std::endl
@@ -737,6 +749,7 @@ bool t_rpc_command_executor::print_uncle_block(crypto::hash uncle_hash) {
     }
   }
 
+  print_uncle_header(res.header_response);
   tools::success_msg_writer() << res.json << ENDL;
 
   return true;
