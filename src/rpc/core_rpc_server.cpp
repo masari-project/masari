@@ -1465,6 +1465,19 @@ namespace cryptonote
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
+  bool core_rpc_server::fill_uncle_header_response(const block& blk, uint64_t height, const crypto::hash& hash, uncle_header_response& response)
+  {
+    PERF_TIMER(fill_uncle_header_response);
+    response.height = height;
+    response.depth = m_core.get_current_blockchain_height() - height - 1;
+    response.hash = string_tools::pod_to_hex(hash);
+    response.difficulty = m_core.get_blockchain_storage().block_difficulty(height);
+    response.weight = m_core.get_uncle_weight(height);
+    response.reward = get_block_reward(blk);
+    response.num_txes = blk.tx_hashes.size();
+    return true;
+  }
+  //------------------------------------------------------------------------------------------------------------------------------
   template <typename COMMAND_TYPE>
   bool core_rpc_server::use_bootstrap_daemon_if_necessary(const invoke_http_mode &mode, const std::string &command_name, const typename COMMAND_TYPE::request& req, typename COMMAND_TYPE::response& res, bool &r)
   {
@@ -1772,7 +1785,13 @@ namespace cryptonote
       error_resp.message = "No uncle block with hash " + req.hash + " found";
       return false;
     }
+    uint64_t height = get_block_height(uncle);
     
+    if(!fill_uncle_header_response(uncle, height, block_hash, res.header_response))
+    {
+      error_resp.message = "Failed to fill uncle header response";
+      return false;
+    }
     res.blob = string_tools::buff_to_hex_nodelimer(t_serializable_object_to_blob(uncle));
     res.json = obj_to_json_str(uncle);
     res.status = CORE_RPC_STATUS_OK;

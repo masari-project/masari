@@ -560,6 +560,11 @@ namespace cryptonote
       * @brief get a single block's weight
       */
      difficulty_type get_block_weight(uint64_t height) const;
+     
+     /**
+      * @brief get an uncle block's individual weight
+      */
+     difficulty_type get_uncle_weight(uint64_t height) const;
 
      /**
       * @copydoc Blockchain::get_random_outs_for_amounts

@@ -1387,6 +1387,27 @@ namespace cryptonote
 
   };
   
+  struct uncle_header_response
+  {
+      uint64_t height;
+      uint64_t depth;
+      std::string hash;
+      difficulty_type difficulty;
+      difficulty_type weight;
+      uint64_t reward;
+      uint64_t num_txes;
+      
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(height)
+        KV_SERIALIZE(depth)
+        KV_SERIALIZE(hash)
+        KV_SERIALIZE(difficulty)
+        KV_SERIALIZE(weight)
+        KV_SERIALIZE(reward)
+        KV_SERIALIZE(num_txes)
+      END_KV_SERIALIZE_MAP()
+  };
+  
   struct COMMAND_RPC_GET_UNCLE_BLOCK
   {
     struct request
@@ -1401,12 +1422,14 @@ namespace cryptonote
     struct response
     {
       std::string status;
+      uncle_header_response header_response;
       std::string blob;
       std::string json;
       bool untrusted;
       
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(status)
+        KV_SERIALIZE(header_response)
         KV_SERIALIZE(blob)
         KV_SERIALIZE(json)
         KV_SERIALIZE(untrusted)
