@@ -485,7 +485,7 @@ namespace cryptonote
       {
         //we lucky!
         ++m_config.current_extra_message_index;
-        MGINFO_GREEN("Found block for difficulty: " << local_diff);
+        MGINFO_GREEN("Found block for difficulty: " << local_diff << " at height: " << height);
         if(!m_phandler->handle_block_found(b))
         {
           --m_config.current_extra_message_index;
