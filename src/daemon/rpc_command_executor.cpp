@@ -78,6 +78,17 @@ namespace {
       << "weight: " << boost::lexical_cast<std::string>(header.weight) << std::endl
       << "reward: " << boost::lexical_cast<std::string>(header.reward);
   }
+  
+  void print_uncle_header(cryptonote::uncle_header_response const & header)
+  {
+    tools::success_msg_writer()
+      << "height: " << boost::lexical_cast<std::string>(header.height) << std::endl
+      << "depth: " << boost::lexical_cast<std::string>(header.depth) << std::endl
+      << "hash: " << header.hash << std::endl
+      << "difficulty: " << boost::lexical_cast<std::string>(header.difficulty) << std::endl
+      << "weight: " << boost::lexical_cast<std::string>(header.weight) << std::endl
+      << "reward: " << boost::lexical_cast<std::string>(header.reward);
+  }
 
   std::string get_human_time_ago(time_t t, time_t now)
   {
@@ -737,6 +748,7 @@ bool t_rpc_command_executor::print_uncle_block(crypto::hash uncle_hash) {
     }
   }
 
+  print_uncle_header(res.header_response);
   tools::success_msg_writer() << res.json << ENDL;
 
   return true;
