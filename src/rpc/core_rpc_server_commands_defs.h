@@ -1249,6 +1249,7 @@ namespace cryptonote
       std::string prev_hash;
       uint32_t nonce;
       bool orphan_status;
+      bool uncle_status;
       uint64_t height;
       uint64_t depth;
       std::string hash;
@@ -1265,6 +1266,7 @@ namespace cryptonote
         KV_SERIALIZE(prev_hash)
         KV_SERIALIZE(nonce)
         KV_SERIALIZE(orphan_status)
+        KV_SERIALIZE(uncle_status)
         KV_SERIALIZE(height)
         KV_SERIALIZE(depth)
         KV_SERIALIZE(hash)
