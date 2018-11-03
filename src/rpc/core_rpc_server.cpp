@@ -1453,8 +1453,8 @@ namespace cryptonote
     response.timestamp = blk.timestamp;
     response.prev_hash = string_tools::pod_to_hex(blk.prev_id);
     response.nonce = blk.nonce;
-    response.orphan_status = orphan_status;
     response.uncle_status = m_core.get_blockchain_storage().get_db().uncle_exists(hash);
+    response.orphan_status = response.uncle_status ? false : orphan_status;
     response.height = height;
     response.depth = m_core.get_current_blockchain_height() - height - 1;
     response.hash = string_tools::pod_to_hex(hash);
