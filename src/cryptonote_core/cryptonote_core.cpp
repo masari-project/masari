@@ -1417,11 +1417,6 @@ namespace cryptonote
         MCLOG_RED(level, "global", "We are most likely forked from the network. Daemon update needed now.");
         MCLOG_RED(level, "global", "**********************************************************************");
         break;
-      case HardFork::UpdateNeeded:
-        MCLOG_RED(level, "global", "**********************************************************************");
-        MCLOG_RED(level, "global", "Last scheduled hard fork time shows a daemon update is needed soon.");
-        MCLOG_RED(level, "global", "**********************************************************************");
-        break;
       default:
         break;
     }
