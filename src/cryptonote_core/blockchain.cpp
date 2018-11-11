@@ -2762,6 +2762,12 @@ bool Blockchain::have_block(const crypto::hash& id) const
     return true;
   }
 
+  if(m_disconnected_chain.count(id))
+  {
+    LOG_PRINT_L3("block found in m_disconnected_chain");
+    return true;
+  }
+
   if(m_invalid_blocks.count(id))
   {
     LOG_PRINT_L3("block found in m_invalid_blocks");
