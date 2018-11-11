@@ -1369,7 +1369,7 @@ namespace cryptonote
     {
       error_resp.code = CORE_RPC_ERROR_CODE_INTERNAL_ERROR;
       error_resp.message = "Internal error: failed to create block template";
-      LOG_ERROR("Failed to calculate offset for ");
+      LOG_ERROR("Failed to calculate tx pub key reserved offset");
       return false;
     }
     blobdata hashing_blob = get_block_hashing_blob(b);
