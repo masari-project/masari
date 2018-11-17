@@ -1062,6 +1062,7 @@ namespace cryptonote
     
     if(height == 0)
     {
+      CHECK_CORE_READY();
       height = m_core.get_current_blockchain_height() - 1;
     }
     
