@@ -1080,7 +1080,13 @@ namespace cryptonote
       CHECK_CORE_READY();
       height = m_core.get_current_blockchain_height() - 1;
     }
-    
+
+    if(m_core.get_current_blockchain_height() <= req.height)
+    {
+      res.status = std::string("Requested block height: ") + std::to_string(req.height) + " greater than current top block height: " +  std::to_string(m_core.get_current_blockchain_height() - 1);
+      return true;
+    }
+
     res.amount = m_core.get_generated_coins(height);
     
     res.status = CORE_RPC_STATUS_OK;
