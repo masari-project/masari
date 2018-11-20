@@ -1208,17 +1208,25 @@ namespace cryptonote
     
     for (size_t i = 0; i < req.heights.size(); i++)
     {
+      if(m_core.get_current_blockchain_height() <= req.heights[i])
+      {
+        LOG_ERROR("Requested block at height " << req.heights[i] << " which is greater than top block height " << m_core.get_current_blockchain_height() - 1);
+        continue;
+      }
+      
       block blk;
       bool orphan = false;
       crypto::hash block_hash = m_core.get_block_id_by_height(req.heights[i]);
-      bool have_block = m_core.get_block_by_hash(block_hash, blk, &orphan);
+      if (!m_core.get_block_by_hash(block_hash, blk, &orphan))
+      {
+        LOG_ERROR("Block with hash " << block_hash << " not found in database");
+      }
     
       res.blocks.push_back(obj_to_json_str(blk));
     }
     res.status = CORE_RPC_STATUS_OK;
     return true;
   }
-  
   //------------------------------------------------------------------------------------------------------------------------------
   bool core_rpc_server::on_get_transaction_pool_stats(const COMMAND_RPC_GET_TRANSACTION_POOL_STATS::request& req, COMMAND_RPC_GET_TRANSACTION_POOL_STATS::response& res, bool request_has_rpc_origin)
   {
