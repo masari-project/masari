@@ -74,7 +74,7 @@
 #define DIFFICULTY_CUT                                  60  // timestamps to cut after sorting
 #define DIFFICULTY_BLOCKS_COUNT                         DIFFICULTY_WINDOW + DIFFICULTY_LAG
 
-#define UNCLE_DIFFICULTY_TARGET                         DIFFICULTY_TARGET_V8/2
+#define UNCLE_DIFFICULTY_TARGET                         DIFFICULTY_TARGET_V8/4
 #define UNCLE_REWARD_RATIO                              2
 #define NEPHEW_REWARD_RATIO                             20
 
