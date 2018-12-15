@@ -3880,10 +3880,22 @@ bool simple_wallet::show_balance_unlocked(bool detailed)
   if (m_wallet->has_multisig_partial_key_images())
     extra = tr(" (Some owned outputs have partial key images - import_multisig_info needed)");
   success_msg_writer() << tr("Currently selected account: [") << m_current_subaddress_account << tr("] ") << m_wallet->get_subaddress_label({m_current_subaddress_account, 0});
-  const std::string tag = m_wallet->get_account_tags().second[m_current_subaddress_account];
+  const std::pair<std::map<std::string, std::string>, std::vector<std::string>>& account_tags = m_wallet->get_account_tags();
+  const std::string tag = account_tags.second[m_current_subaddress_account];
   success_msg_writer() << tr("Tag: ") << (tag.empty() ? std::string{tr("(No tag assigned)")} : tag);
-  success_msg_writer() << tr("Balance: ") << print_money(m_wallet->balance(m_current_subaddress_account)) << ", "
-    << tr("unlocked balance: ") << print_money(m_wallet->unlocked_balance(m_current_subaddress_account)) << extra;
+  
+  uint64_t total_balance = 0, total_unlocked_balance = 0;
+  for (uint32_t account_index = 0; account_index < m_wallet->get_num_subaddress_accounts(); ++account_index)
+  {
+    if (account_tags.second[account_index] != tag)
+      continue;
+    total_balance += m_wallet->balance(account_index);
+    total_unlocked_balance += m_wallet->unlocked_balance(account_index);
+  }
+  
+  success_msg_writer() << tr("Account #") << m_current_subaddress_account << tr(" balance: ") << print_money(m_wallet->balance(m_current_subaddress_account)) << ", "
+    << tr("Account #") << m_current_subaddress_account << tr(" unlocked balance: ") << print_money(m_wallet->unlocked_balance(m_current_subaddress_account)) << ", "
+    << tr("Total balance: ") << print_money(total_balance) << ", " << tr("Total unlocked balance: ") << print_money(total_unlocked_balance) << extra;
   std::map<uint32_t, uint64_t> balance_per_subaddress = m_wallet->balance_per_subaddress(m_current_subaddress_account);
   std::map<uint32_t, uint64_t> unlocked_balance_per_subaddress = m_wallet->unlocked_balance_per_subaddress(m_current_subaddress_account);
   if (!detailed || balance_per_subaddress.empty())
