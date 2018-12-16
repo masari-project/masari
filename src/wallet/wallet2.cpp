@@ -1518,6 +1518,7 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
       MCLOG_RED(level, "global", "Consistency failure in amounts received");
       MCLOG_RED(level, "global", "Check transaction " << txid);
       MCLOG_RED(level, "global", "**********************************************************************");
+      std::cerr << "Exiting due to consistency failure in amounts received in tx " << txid << std::endl;
       exit(1);
       return;
     }
