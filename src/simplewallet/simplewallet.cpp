@@ -3893,9 +3893,18 @@ bool simple_wallet::show_balance_unlocked(bool detailed)
     total_unlocked_balance += m_wallet->unlocked_balance(account_index);
   }
   
-  success_msg_writer() << tr("Account #") << m_current_subaddress_account << tr(" balance: ") << print_money(m_wallet->balance(m_current_subaddress_account)) << ", "
+  if(total_balance != m_wallet->balance(m_current_subaddress_account))
+  {
+    success_msg_writer() << tr("Account #") << m_current_subaddress_account << tr(" balance: ") << print_money(m_wallet->balance(m_current_subaddress_account)) << ", "
     << tr("Account #") << m_current_subaddress_account << tr(" unlocked balance: ") << print_money(m_wallet->unlocked_balance(m_current_subaddress_account)) << std::endl
     << tr("Total balance: ") << print_money(total_balance) << ", " << tr("Total unlocked balance: ") << print_money(total_unlocked_balance) << extra;
+  }
+  else
+  {
+    success_msg_writer() << tr("Balance: ") << print_money(m_wallet->balance(m_current_subaddress_account)) << ", "
+    << tr("unlocked balance: ") << print_money(m_wallet->unlocked_balance(m_current_subaddress_account)) << extra;
+  }
+  
   std::map<uint32_t, uint64_t> balance_per_subaddress = m_wallet->balance_per_subaddress(m_current_subaddress_account);
   std::map<uint32_t, uint64_t> unlocked_balance_per_subaddress = m_wallet->unlocked_balance_per_subaddress(m_current_subaddress_account);
   if (!detailed || balance_per_subaddress.empty())
