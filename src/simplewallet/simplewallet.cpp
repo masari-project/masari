@@ -4508,8 +4508,10 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
         }
 
         std::stringstream prompt;
+        uint64_t tx_size = 0;
         for (size_t n = 0; n < ptx_vector.size(); ++n)
         {
+          tx_size += cryptonote::tx_to_blob(ptx_vector[n].tx).size();
           prompt << tr("\nTransaction ") << (n + 1) << "/" << ptx_vector.size() << ":\n";
           subaddr_indices.clear();
           for (uint32_t i : ptx_vector[n].construction_data.subaddr_indices)
@@ -4523,13 +4525,13 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
         if (ptx_vector.size() > 1)
         {
           prompt << boost::format(tr("Your transaction needs to be split into %llu transactions.  "
-            "This will result in a transaction fee being applied to each transaction, for a total fee of %s")) %
-            ((unsigned long long)ptx_vector.size()) % print_money(total_fee);
+            "This will result in a transaction fee being applied to each transaction, for a total fee of %s (total transaction size %d bytes)")) %
+            ((unsigned long long)ptx_vector.size()) % print_money(total_fee) % tx_size;
         }
         else
         {
-          prompt << boost::format(tr("The transaction fee is %s")) %
-            print_money(total_fee);
+          prompt << boost::format(tr("The transaction fee is %s (transaction size %d bytes)")) %
+            print_money(total_fee) % tx_size;
         }
         if (transfer_type == TransferLocked)
         {
