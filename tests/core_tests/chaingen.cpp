@@ -251,20 +251,15 @@ bool test_generator::construct_block_manually(block& blk, const block& prev_bloc
   else
   {
     // TODO: This will work, until size of constructed block is less then CRYPTONOTE_BLOCK_GRANTED_FULL_REWARD_ZONE
-    if (!construct_miner_tx(height, median_size, already_generated_coins, current_block_size, block_fees, miner_acc.get_public_address_str(MAINNET), blk.miner_tx, blobdata(), max_outs, hf_version, uncle_included))
-      return false;
-  }
-
-  if (!(actual_params & bf_miner_tx) && uncle_included) {
-    crypto::public_key uncle_out = boost::get<txout_to_key>(uncle.miner_tx.vout[0].target).key;
-    crypto::public_key uncle_tx_pubkey = get_tx_pub_key_from_extra(uncle.miner_tx);
-    uncle_reward = actual_params & bf_ul_reward ? uncle_reward : block_reward;
-    if (!construct_uncle_miner_tx(height, uncle_reward, uncle_out, uncle_tx_pubkey, blk.miner_tx)) {
+    bool r = construct_miner_tx(height, median_size, already_generated_coins, current_block_size, block_fees, miner_acc.get_public_address_str(MAINNET), blk.miner_tx, blobdata(), max_outs, hf_version, uncle_included, &uncle);
+    if (!r) {
       return false;
     }
-    blk.miner_tx.vout.back().amount = uncle_reward / uncle_reward_ratio;
+    if (!(actual_params & bf_miner_tx) && uncle_included)
+    {
+      blk.miner_tx.vout.front().amount = actual_params & bf_ul_reward ? uncle_reward : block_reward / uncle_reward_ratio;
+    }
   }
-
   //blk.tree_root_hash = get_tx_tree_hash(blk);
 
   difficulty_type a_diffic = actual_params & bf_diffic ? diffic : get_test_difficulty();

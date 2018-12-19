@@ -74,7 +74,7 @@ namespace cryptonote
     LOG_PRINT_L2("destinations include " << num_stdaddresses << " standard addresses and " << num_subaddresses << " subaddresses");
   }
   //---------------------------------------------------------------
-  bool construct_miner_tx(size_t height, size_t median_size, uint64_t already_generated_coins, size_t current_block_size, uint64_t fee, std::string miner_address_str, transaction& tx, const blobdata& extra_nonce, size_t max_outs, uint8_t hard_fork_version, bool include_nephew_reward) {
+  bool construct_miner_tx(size_t height, size_t median_size, uint64_t already_generated_coins, size_t current_block_size, uint64_t fee, std::string miner_address_str, transaction& tx, const blobdata& extra_nonce, size_t max_outs, uint8_t hard_fork_version, bool uncle_included, const cryptonote::block *uncle) {
     tx.vin.clear();
     tx.vout.clear();
     tx.extra.clear();
@@ -94,15 +94,6 @@ namespace cryptonote
 
     cryptonote::account_public_address miner_address = info.address;
 
-    if(info.is_subaddress)
-    {
-      txkey.pub = rct::rct2pk(hwdev.scalarmultKey(rct::pk2rct(miner_address.m_spend_public_key), rct::sk2rct(txkey.sec)));
-    }
-    add_tx_pub_key_to_extra(tx, txkey.pub);
-    if(!extra_nonce.empty())
-      if(!add_extra_nonce_to_tx_extra(tx.extra, extra_nonce))
-        return false;
-
     txin_gen in;
     in.height = height;
 
@@ -114,6 +105,34 @@ namespace cryptonote
       return false;
     }
 
+    size_t miner_index = 0;
+
+    if (uncle_included)
+    {
+      block_reward += (base_reward / NEPHEW_REWARD_RATIO);
+      miner_index = 1;
+
+      add_tx_pub_key_to_extra(tx, get_tx_pub_key_from_extra(uncle->miner_tx));
+
+      txout_to_key tku;
+      tku.key = boost::get<txout_to_key>(uncle->miner_tx.vout[0].target).key;
+
+      tx_out outu;
+      outu.amount = base_reward / UNCLE_REWARD_RATIO;
+      outu.target = tku;
+      tx.vout.push_back(outu);
+    }
+
+    if(info.is_subaddress)
+    {
+      txkey.pub = rct::rct2pk(hwdev.scalarmultKey(rct::pk2rct(miner_address.m_spend_public_key), rct::sk2rct(txkey.sec)));
+    }
+
+    add_tx_pub_key_to_extra(tx, txkey.pub);
+    if(!extra_nonce.empty())
+      if(!add_extra_nonce_to_tx_extra(tx.extra, extra_nonce))
+        return false;
+
 #if defined(DEBUG_CREATE_BLOCK_TEMPLATE)
     LOG_PRINT_L1("Creating block template: reward " << base_reward <<
       ", fee " << fee);
@@ -121,18 +140,13 @@ namespace cryptonote
 
     block_reward += base_reward;
     block_reward += fee;
-    
-    if(include_nephew_reward) 
-    {
-     block_reward += (base_reward / NEPHEW_REWARD_RATIO);
-    }
 
     crypto::key_derivation derivation = AUTO_VAL_INIT(derivation);;
     crypto::public_key out_eph_public_key = AUTO_VAL_INIT(out_eph_public_key);
     bool r = crypto::generate_key_derivation(miner_address.m_view_public_key, txkey.sec, derivation);
     CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to generate_key_derivation(" << miner_address.m_view_public_key << ", " << txkey.sec << ")");
 
-    r = crypto::derive_public_key(derivation, 0, miner_address.m_spend_public_key, out_eph_public_key);
+    r = crypto::derive_public_key(derivation, miner_index, miner_address.m_spend_public_key, out_eph_public_key);
     CHECK_AND_ASSERT_MES(r, false, "while creating outs: failed to derive_public_key(" << derivation << ", " << miner_address.m_spend_public_key << ")");
 
     txout_to_key tk;
@@ -153,25 +167,6 @@ namespace cryptonote
 
     //LOG_PRINT("MINER_TX generated ok, block_reward=" << print_money(block_reward) << "("  << print_money(block_reward - fee) << "+" << print_money(fee)
     //  << "), current_block_size=" << current_block_size << ", already_generated_coins=" << already_generated_coins << ", tx_id=" << get_transaction_hash(tx), LOG_LEVEL_2);
-    return true;
-  }
-  //---------------------------------------------------------------
-  bool construct_uncle_miner_tx(size_t height, uint64_t amount, crypto::public_key out_eph_public_key, crypto::public_key tx_pubkey, transaction& tx)
-  {
-
-    add_tx_pub_key_to_extra(tx, tx_pubkey);
-
-    txout_to_key tk;
-    tk.key = out_eph_public_key;
-
-    tx_out out;
-    out.amount = amount / UNCLE_REWARD_RATIO;
-    out.target = tk;
-    tx.vout.push_back(out);
-
-    //lock
-    tx.invalidate_hashes();
-
     return true;
   }
   //---------------------------------------------------------------

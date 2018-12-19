@@ -1810,7 +1810,7 @@ namespace tools
       real_oe.second.dest = rct::pk2rct(boost::get<txout_to_key>(td.m_tx.vout[td.m_internal_output_index].target).key);
       real_oe.second.mask = rct::identity();
       auto interted_it = src.outputs.insert(it_to_insert, real_oe);
-      src.real_out_tx_key = get_tx_pub_key_from_extra(td.m_tx);
+      src.real_out_tx_key = get_tx_pub_key_from_extra(td.m_tx, td.m_pk_index);
       src.real_output = interted_it - src.outputs.begin();
       src.real_output_in_tx_index = td.m_internal_output_index;
       src.multisig_kLRki = rct::multisig_kLRki({rct::zero(), rct::zero(), rct::zero(), rct::zero()});
