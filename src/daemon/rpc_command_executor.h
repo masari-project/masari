@@ -6,6 +6,7 @@
 
 */
 
+// Copyright (c) 2018, The Masari Project
 // Copyright (c) 2014-2018, The Monero Project
 // 
 // All rights reserved.
@@ -97,7 +98,7 @@ public:
   
   bool print_uncle_block(crypto::hash uncle_hash);
 
-  bool print_transaction(crypto::hash transaction_hash, bool include_hex, bool include_json);
+  bool print_transaction(crypto::hash transaction_hash, bool include_hex, bool include_json, bool prune);
 
   bool is_key_image_spent(const crypto::key_image &ki);
 
