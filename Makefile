@@ -1,3 +1,4 @@
+# Copyright (c) 2018, The Masari Project
 # Copyright (c) 2014-2018, The Monero Project
 #
 # All rights reserved.
@@ -48,6 +49,35 @@ debug-all:
 debug-static-all:
 	mkdir -p build/debug
 	cd build/debug && cmake -D BUILD_TESTS=ON -D STATIC=ON -D CMAKE_BUILD_TYPE=Debug ../.. && $(MAKE)
+
+# Options to only run specific tests after build
+debug-test-core:
+	mkdir -p build/debug
+	cd build/debug && cmake -D BUILD_TESTS=ON -D CMAKE_BUILD_TYPE=debug ../.. && $(MAKE) && cd tests/core_tests && ctest
+
+debug-test-hash:
+	mkdir -p build/debug
+	cd build/debug && cmake -D BUILD_TESTS=ON -D CMAKE_BUILD_TYPE=debug ../.. && $(MAKE) && cd tests/hash && ctest
+
+debug-test-difficulty:
+	mkdir -p build/debug
+	cd build/debug && cmake -D BUILD_TESTS=ON -D CMAKE_BUILD_TYPE=debug ../.. && $(MAKE) && cd tests/difficulty && ctest
+
+debug-test-performance:
+	mkdir -p build/debug
+	cd build/debug && cmake -D BUILD_TESTS=ON -D CMAKE_BUILD_TYPE=debug ../.. && $(MAKE) && cd tests/performance_tests && ctest
+
+debug-test-proxy:
+	mkdir -p build/debug
+	cd build/debug && cmake -D BUILD_TESTS=ON -D CMAKE_BUILD_TYPE=debug ../.. && $(MAKE) && cd tests/core_proxy && ctest
+
+debug-test-fuzz:
+	mkdir -p build/debug
+	cd build/debug && cmake -D BUILD_TESTS=ON -D CMAKE_BUILD_TYPE=debug ../.. && $(MAKE) && cd tests/fuzz && ctest
+
+debug-test-unit-tests:
+	mkdir -p build/debug
+	cd build/debug && cmake -D BUILD_TESTS=ON -D CMAKE_BUILD_TYPE=debug ../.. && $(MAKE) && cd tests/unit_tests && ctest
 
 cmake-release:
 	mkdir -p build/release
