@@ -127,6 +127,8 @@ bool gen_uncle_alt_nephews_as_uncle::generate(std::vector<test_event_entry>& eve
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew0, top_bl, original_miner, 8, alt_bl);
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew1, top_bl, original_miner, 8, alt_bl);
 
+    // TK: extended ancestry disallowed for time being
+    DO_CALLBACK(events, "mark_invalid_block");
     // no reorg between two different nephews and mine alt as an uncle
     MAKE_NEXT_BLOCKV_UNCLE(events, new_top, nephew0, original_miner, 8, nephew1);
     return true;
@@ -143,6 +145,8 @@ bool gen_uncle_reorg_alt_nephews_as_uncle::generate(std::vector<test_event_entry
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew0, top_bl, original_miner, 8, alt_bl);
     MAKE_NEXT_BLOCKV_UNCLE(events, nephew1, top_bl, original_miner, 8, alt_bl);
 
+    // TK: extended ancestry disallowed for time being
+    DO_CALLBACK(events, "mark_invalid_block");
     // reorg between two different nephews and mine the other as an uncle
     MAKE_NEXT_BLOCKV_UNCLE(events, new_top, nephew1, original_miner, 8, nephew0);
     return true;

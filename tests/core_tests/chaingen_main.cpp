@@ -232,7 +232,7 @@ int main(int argc, char* argv[])
     GENERATE_AND_PLAY(gen_uncle_wrong_version);
     GENERATE_AND_PLAY(gen_uncle_bad_ancestry);
     GENERATE_AND_PLAY(gen_uncle_bad_timestamp);
-    GENERATE_AND_PLAY(gen_uncle_too_far_extended_ancestry);
+    //GENERATE_AND_PLAY(gen_uncle_too_far_extended_ancestry); /* TK: extended ancestry disabled for now */
     GENERATE_AND_PLAY(gen_uncle_wrong_out);
     GENERATE_AND_PLAY(gen_uncle_wrong_amount);
     GENERATE_AND_PLAY(gen_uncle_overflow_amount);

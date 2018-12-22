@@ -1285,7 +1285,13 @@ bool Blockchain::validate_uncle_reward(const block& nephew, const block& uncle)
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
 
-  crypto::public_key nephew_uncle_out = boost::get<txout_to_key>(nephew.miner_tx.vout[1].target).key;
+  if(nephew.miner_tx.vout.size() != 2)
+  {
+    MERROR_VER("Nephew block doesn't have the right number of outs");
+    return false;
+  }
+
+  crypto::public_key nephew_uncle_out = boost::get<txout_to_key>(nephew.miner_tx.vout[0].target).key;
   crypto::public_key uncle_out = boost::get<txout_to_key>(uncle.miner_tx.vout[0].target).key;
   if (nephew_uncle_out != uncle_out)
   {
@@ -1293,7 +1299,7 @@ bool Blockchain::validate_uncle_reward(const block& nephew, const block& uncle)
     return false;
   }
 
-  crypto::public_key nephew_uncle_tx_pubkey = get_tx_pub_key_from_extra(nephew.miner_tx, 1);
+  crypto::public_key nephew_uncle_tx_pubkey = get_tx_pub_key_from_extra(nephew.miner_tx, 0);
   crypto::public_key uncle_tx_pubkey = get_tx_pub_key_from_extra(uncle.miner_tx, 0);
   if (nephew_uncle_tx_pubkey != uncle_tx_pubkey)
   {
@@ -1362,9 +1368,17 @@ bool Blockchain::validate_uncle_block(const block& nephew, const block& uncle)
     return false;
   }
 
-  if (parent.prev_id != uncle.prev_id && (parent.prev_id != uncle.uncle || parent.uncle != uncle.prev_id))
+  // TODO-TK: putting this limitation in place for now to have cleaner uncle rewards in first implementation
+  if (uncle.uncle != null_hash)
   {
-    MERROR_VER("Nephew " << nephew_id << std::endl << "has uncle block at parent height " << parent_height << " with no common (uncle parent " << uncle.prev_id << " == grandparent " << parent.prev_id << ") or extended ancestry (grandparent " << parent.prev_id << " == uncle's uncle " << uncle.uncle << " and parent's uncle " << parent.uncle << " == uncle's parent " << uncle.prev_id << ")");
+    MERROR_VER("Mining uncles that have mined uncles is not allowed");
+    return false;
+  }
+
+  if (parent.prev_id != uncle.prev_id)// && (parent.prev_id != uncle.uncle || parent.uncle != uncle.prev_id))
+  {
+    MERROR_VER("Nephew " << nephew_id << std::endl << "has uncle block at parent height " << parent_height << " with no common (uncle parent " << uncle.prev_id << " == grandparent " << parent.prev_id << ")");
+    //MERROR_VER("Nephew " << nephew_id << std::endl << "has uncle block at parent height " << parent_height << " with no common (uncle parent " << uncle.prev_id << " == grandparent " << parent.prev_id << ") or extended ancestry (grandparent " << parent.prev_id << " == uncle's uncle " << uncle.uncle << " and parent's uncle " << parent.uncle << " == uncle's parent " << uncle.prev_id << ")");
     return false;
   }
 
@@ -1386,29 +1400,30 @@ bool Blockchain::validate_uncle_block(const block& nephew, const block& uncle)
     return false;
   }
 
-  if (parent.prev_id == uncle.uncle && parent.uncle == uncle.prev_id)
-  {
-    block grandparent;
-    block uncleparent;
-    r = get_block_by_hash(parent.prev_id, grandparent, NULL, true);
-    if (!r)
-    {
-      MERROR_VER("Unable to get grandparent block");
-      return false;
-    }
-    r = get_block_by_hash(uncle.prev_id, uncleparent, NULL, true);
-    if (!r)
-    {
-      MERROR_VER("Unable to get uncleparent block");
-      return false;
-    }
+  // disable extended ancestry for now to opt for a cleaner uncle rewards first implementation
+  //if (parent.prev_id == uncle.uncle && parent.uncle == uncle.prev_id)
+  //{
+  //  block grandparent;
+  //  block uncleparent;
+  //  r = get_block_by_hash(parent.prev_id, grandparent, NULL, true);
+  //  if (!r)
+  //  {
+  //    MERROR_VER("Unable to get grandparent block");
+  //    return false;
+  //  }
+  //  r = get_block_by_hash(uncle.prev_id, uncleparent, NULL, true);
+  //  if (!r)
+  //  {
+  //    MERROR_VER("Unable to get uncleparent block");
+  //    return false;
+  //  }
 
-    if (grandparent.prev_id != uncleparent.prev_id)
-    {
-      MERROR_VER("Extended ancestory further than 2nd uncles are not allowed (grandparent's parent " << grandparent.prev_id << " != uncleparent's parent " << uncleparent.prev_id << ")");
-      return false;
-    }
-  }
+  //  if (grandparent.prev_id != uncleparent.prev_id)
+  //  {
+  //    MERROR_VER("Extended ancestory further than 2nd uncles are not allowed (grandparent's parent " << grandparent.prev_id << " != uncleparent's parent " << uncleparent.prev_id << ")");
+  //    return false;
+  //  }
+  //}
 
   MDEBUG("Uncle " << uncle_id << " validations passed");
   return true;
@@ -1454,9 +1469,9 @@ bool Blockchain::validate_miner_transaction(const block& b, size_t cumulative_bl
     return false;
   }
 
-  if (uncle_included && b.miner_tx.vout[1].amount != max_uncle_reward)
+  if (uncle_included && b.miner_tx.vout.size() == 2 && b.miner_tx.vout[0].amount != max_uncle_reward)
   {
-    MERROR_VER("Uncle isn't rewarded the correct amount, reported is " << b.miner_tx.vout[1].amount << " and expected is " << max_uncle_reward);
+    MERROR_VER("Uncle isn't rewarded the correct amount, reported is " << b.miner_tx.vout[0].amount << " and expected is " << max_uncle_reward);
     return false;
   }
 
@@ -1584,18 +1599,7 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
       ", fee " << fee);
 #endif
 
-  /*
-   two-phase miner transaction generation: we don't know exact block size until we prepare block, but we don't know reward until we know
-   block size, so first miner transaction generated with fake amount of money, and with phase we know think we know expected block size
-   */
-  //make blocks coin-base tx looks close to real coinbase tx to get truthful blob size
-  uint8_t hf_version = m_hardfork->get_current_version();
-  bool r = construct_miner_tx(height, median_size, already_generated_coins, txs_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version);
-  uint64_t block_reward = r ? get_block_reward(median_size, txs_size, already_generated_coins, block_reward, hf_version) : 0;
-
   cryptonote::block uncle;
-  crypto::public_key uncle_out = null_pkey;
-  crypto::public_key uncle_tx_pubkey = null_pkey;
   bool uncle_included = false;
   if(m_hardfork->get_current_version() > 7)
   {
@@ -1617,15 +1621,20 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
         }
 
         uncle_included = true;
-
         uncle = alt_bl;
-        uncle_out = boost::get<txout_to_key>(uncle.miner_tx.vout[0].target).key;
-        uncle_tx_pubkey = get_tx_pub_key_from_extra(uncle.miner_tx);
-        construct_uncle_miner_tx(height, block_reward, uncle_out, uncle_tx_pubkey, b.miner_tx);
         break;
       }
     }
   }
+
+  /*
+   two-phase miner transaction generation: we don't know exact block size until we prepare block, but we don't know reward until we know
+   block size, so first miner transaction generated with fake amount of money, and with phase we know think we know expected block size
+   */
+  //make blocks coin-base tx looks close to real coinbase tx to get truthful blob size
+  uint8_t hf_version = m_hardfork->get_current_version();
+  bool r = construct_miner_tx(height, median_size, already_generated_coins, txs_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version, uncle_included, &uncle);
+
 
   CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, first chance");
   size_t cumulative_size = txs_size + get_object_blobsize(b.miner_tx);
@@ -1635,12 +1644,7 @@ bool Blockchain::create_block_template(block& b, std::string miner_address, diff
 #endif
   for (size_t try_count = 0; try_count != 10; ++try_count)
   {
-    r = construct_miner_tx(height, median_size, already_generated_coins, cumulative_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version, uncle_included);
-    if (uncle_included) {
-      uint64_t base_reward;
-      get_block_reward(median_size, cumulative_size, already_generated_coins, base_reward, hf_version);
-      construct_uncle_miner_tx(height, base_reward, uncle_out, uncle_tx_pubkey, b.miner_tx);
-    }
+    r = construct_miner_tx(height, median_size, already_generated_coins, cumulative_size, fee, miner_address, b.miner_tx, ex_nonce, 0, hf_version, uncle_included, &uncle);
 
     CHECK_AND_ASSERT_MES(r, false, "Failed to construct miner tx, second chance");
     size_t coinbase_blob_size = get_object_blobsize(b.miner_tx);
