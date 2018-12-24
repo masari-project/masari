@@ -48,3 +48,7 @@ foreach (hash IN ITEMS fast slow slow-1 tree extra-blake extra-groestl extra-jh 
     NAME    "hash-${hash}"
     COMMAND hash-tests "${hash}" "${CMAKE_CURRENT_SOURCE_DIR}/tests-${hash}.txt")
 endforeach ()
+
+add_test(
+  NAME    "hash-variant2-int-sqrt"
+  COMMAND hash-tests "variant2_int_sqrt")
