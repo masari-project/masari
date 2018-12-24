@@ -1086,7 +1086,7 @@ skip:
             {
               // this can happen if a connection was sicced onto a late span, if it did not have those blocks,
               // since we don't know that at the sic time
-              LOG_ERROR_CCONTEXT("Got block with unknown parent which was not requested - querying block hashes");
+              LOG_ERROR_CCONTEXT("Got block " << new_block.hash << " with unknown parent " << new_block.prev_id << " which was not requested - querying block hashes");
               context.m_needed_objects.clear();
               context.m_last_response_height = 0;
               goto skip;
