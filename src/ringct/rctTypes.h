@@ -190,6 +190,8 @@ namespace rct {
       Bulletproof() {}
       Bulletproof(const rct::key &V, const rct::key &A, const rct::key &S, const rct::key &T1, const rct::key &T2, const rct::key &taux, const rct::key &mu, const rct::keyV &L, const rct::keyV &R, const rct::key &a, const rct::key &b, const rct::key &t):
         V({V}), A(A), S(S), T1(T1), T2(T2), taux(taux), mu(mu), L(L), R(R), a(a), b(b), t(t) {}
+      Bulletproof(const rct::keyV &V, const rct::key &A, const rct::key &S, const rct::key &T1, const rct::key &T2, const rct::key &taux, const rct::key &mu, const rct::keyV &L, const rct::keyV &R, const rct::key &a, const rct::key &b, const rct::key &t):
+        V(V), A(A), S(S), T1(T1), T2(T2), taux(taux), mu(mu), L(L), R(R), a(a), b(b), t(t) {}
 
       BEGIN_SERIALIZE_OBJECT()
         // Commitments aren't saved, they're restored via outPk
@@ -211,6 +213,8 @@ namespace rct {
       END_SERIALIZE()
     };
 
+    size_t n_bulletproof_amounts(const std::vector<Bulletproof> &proofs);
+
     //A container to hold all signatures necessary for RingCT
     // rangeSigs holds all the rangeproof data of a transaction
     // MG holds the MLSAG signature of a transaction
@@ -225,6 +229,7 @@ namespace rct {
       RCTTypeFullBulletproof = 3,
       RCTTypeSimpleBulletproof = 4,
     };
+    enum RangeProofType { RangeProofBorromean, RangeProofBulletproof, RangeProofMultiOutputBulletproof };
     struct rctSigBase {
         uint8_t type;
         key message;
@@ -308,15 +313,19 @@ namespace rct {
           {
             ar.tag("bp");
             ar.begin_array();
-            PREPARE_CUSTOM_VECTOR_SERIALIZATION(outputs, bulletproofs);
-            if (bulletproofs.size() != outputs)
+            uint32_t nbp = bulletproofs.size();
+            FIELD(nbp)
+            PREPARE_CUSTOM_VECTOR_SERIALIZATION(nbp, bulletproofs);
+            if (bulletproofs.size() > outputs)
               return false;
-            for (size_t i = 0; i < outputs; ++i)
+            for (size_t i = 0; i < nbp; ++i)
             {
               FIELDS(bulletproofs[i])
-              if (outputs - i > 1)
+              if (nbp - i > 1)
                 ar.delimit_array();
             }
+            if (n_bulletproof_amounts(bulletproofs) != outputs)
+              return false;
             ar.end_array();
           }
           else
@@ -507,14 +516,17 @@ namespace rct {
     //int[64] to uint long long
     xmr_amount b2d(bits amountb);
 
-    static inline const rct::key pk2rct(const crypto::public_key &pk) { return (const rct::key&)pk; }
-    static inline const rct::key sk2rct(const crypto::secret_key &sk) { return (const rct::key&)sk; }
-    static inline const rct::key ki2rct(const crypto::key_image &ki) { return (const rct::key&)ki; }
-    static inline const rct::key hash2rct(const crypto::hash &h) { return (const rct::key&)h; }
-    static inline const crypto::public_key rct2pk(const rct::key &k) { return (const crypto::public_key&)k; }
-    static inline const crypto::secret_key rct2sk(const rct::key &k) { return (const crypto::secret_key&)k; }
-    static inline const crypto::key_image rct2ki(const rct::key &k) { return (const crypto::key_image&)k; }
-    static inline const crypto::hash rct2hash(const rct::key &k) { return (const crypto::hash&)k; }
+    bool is_rct_simple(int type);
+    bool is_rct_bulletproof(int type);
+
+    static inline const rct::key &pk2rct(const crypto::public_key &pk) { return (const rct::key&)pk; }
+    static inline const rct::key &sk2rct(const crypto::secret_key &sk) { return (const rct::key&)sk; }
+    static inline const rct::key &ki2rct(const crypto::key_image &ki) { return (const rct::key&)ki; }
+    static inline const rct::key &hash2rct(const crypto::hash &h) { return (const rct::key&)h; }
+    static inline const crypto::public_key &rct2pk(const rct::key &k) { return (const crypto::public_key&)k; }
+    static inline const crypto::secret_key &rct2sk(const rct::key &k) { return (const crypto::secret_key&)k; }
+    static inline const crypto::key_image &rct2ki(const rct::key &k) { return (const crypto::key_image&)k; }
+    static inline const crypto::hash &rct2hash(const rct::key &k) { return (const crypto::hash&)k; }
     static inline bool operator==(const rct::key &k0, const crypto::public_key &k1) { return !crypto_verify_32(k0.bytes, (const unsigned char*)&k1); }
     static inline bool operator!=(const rct::key &k0, const crypto::public_key &k1) { return crypto_verify_32(k0.bytes, (const unsigned char*)&k1); }
 }

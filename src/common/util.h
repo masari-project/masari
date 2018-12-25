@@ -212,4 +212,7 @@ namespace tools
 
   bool sha256sum(const uint8_t *data, size_t len, crypto::hash &hash);
   bool sha256sum(const std::string &filename, crypto::hash &hash);
+  bool is_hdd(const char *path);
+
+  std::string glob_to_regex(const std::string &val);
 }

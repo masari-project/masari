@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018, The Monero Project
+// Copyright (c) 2014-2017, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -25,25 +25,38 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Adapted from Java code by Sarang Noether
+// 
+// Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #pragma once
 
-#ifndef BULLETPROOFS_H
-#define BULLETPROOFS_H
+#include "ringct/rctSigs.h"
+#include "ringct/bulletproofs.h"
 
-#include "rctTypes.h"
-
-namespace rct
+template<bool a_verify, size_t n_amounts>
+class test_bulletproof
 {
+public:
+  static const size_t approx_loop_count = 100 / n_amounts;
+  static const size_t loop_count = (approx_loop_count >= 10 ? approx_loop_count : 10) / (a_verify ? 1 : 5);
+  static const bool verify = a_verify;
 
-Bulletproof bulletproof_PROVE(const rct::key &v, const rct::key &gamma);
-Bulletproof bulletproof_PROVE(uint64_t v, const rct::key &gamma);
-Bulletproof bulletproof_PROVE(const rct::keyV &v, const rct::keyV &gamma);
-Bulletproof bulletproof_PROVE(const std::vector<uint64_t> &v, const rct::keyV &gamma);
-bool bulletproof_VERIFY(const Bulletproof &proof);
+  bool init()
+  {
+    proof = rct::bulletproof_PROVE(std::vector<uint64_t>(n_amounts, 749327532984), rct::skvGen(n_amounts));
+    return true;
+  }
 
-}
+  bool test()
+  {
+    bool ret = true;
+    if (verify)
+      ret = rct::bulletproof_VERIFY(proof);
+    else
+      rct::bulletproof_PROVE(std::vector<uint64_t>(n_amounts, 749327532984), rct::skvGen(n_amounts));
+    return ret;
+  }
 
-#endif
+private:
+  rct::Bulletproof proof;
+};
