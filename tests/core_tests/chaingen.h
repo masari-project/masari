@@ -372,7 +372,7 @@ public:
   {
     log_event("cryptonote::transaction");
 
-    std::vector<cryptonote::blobdata> tx_blobs;
+    std::list<cryptonote::blobdata> tx_blobs;
     std::vector<cryptonote::tx_verification_context> tvcs;
      cryptonote::tx_verification_context tvc0 = AUTO_VAL_INIT(tvc0);
     for (const auto &tx: txs)

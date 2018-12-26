@@ -151,7 +151,7 @@ namespace rct {
     };
     
     //just contains the necessary keys to represent MLSAG sigs
-    //c.f. http://eprint.iacr.org/2015/1098
+    //c.f. https://eprint.iacr.org/2015/1098
     struct mgSig {
         keyM ss;
         key cc;
@@ -187,7 +187,8 @@ namespace rct {
       rct::keyV L, R;
       rct::key a, b, t;
 
-      Bulletproof() {}
+      Bulletproof():
+        A({}), S({}), T1({}), T2({}), taux({}), mu({}), a({}), b({}), t({}) {}
       Bulletproof(const rct::key &V, const rct::key &A, const rct::key &S, const rct::key &T1, const rct::key &T2, const rct::key &taux, const rct::key &mu, const rct::keyV &L, const rct::keyV &R, const rct::key &a, const rct::key &b, const rct::key &t):
         V({V}), A(A), S(S), T1(T1), T2(T2), taux(taux), mu(mu), L(L), R(R), a(a), b(b), t(t) {}
       Bulletproof(const rct::keyV &V, const rct::key &A, const rct::key &S, const rct::key &T1, const rct::key &T2, const rct::key &taux, const rct::key &mu, const rct::keyV &L, const rct::keyV &R, const rct::key &a, const rct::key &b, const rct::key &t):
@@ -214,7 +215,9 @@ namespace rct {
     };
 
     size_t n_bulletproof_amounts(const Bulletproof &proof);
+    size_t n_bulletproof_max_amounts(const Bulletproof &proof);
     size_t n_bulletproof_amounts(const std::vector<Bulletproof> &proofs);
+    size_t n_bulletproof_max_amounts(const std::vector<Bulletproof> &proofs);
 
     //A container to hold all signatures necessary for RingCT
     // rangeSigs holds all the rangeproof data of a transaction
@@ -229,7 +232,7 @@ namespace rct {
       RCTTypeSimple = 2,
       RCTTypeBulletproof = 3,
     };
-    enum RangeProofType { RangeProofBorromean, RangeProofBulletproof, RangeProofMultiOutputBulletproof };
+    enum RangeProofType { RangeProofBorromean, RangeProofBulletproof, RangeProofMultiOutputBulletproof, RangeProofPaddedBulletproof };
     struct rctSigBase {
         uint8_t type;
         key message;
@@ -311,10 +314,10 @@ namespace rct {
             return false;
           if (type == RCTTypeBulletproof)
           {
-            ar.tag("bp");
-            ar.begin_array();
             uint32_t nbp = bulletproofs.size();
             FIELD(nbp)
+            ar.tag("bp");
+            ar.begin_array();
             if (nbp > outputs)
               return false;
             PREPARE_CUSTOM_VECTOR_SERIALIZATION(nbp, bulletproofs);
@@ -324,7 +327,7 @@ namespace rct {
               if (nbp - i > 1)
                 ar.delimit_array();
             }
-            if (n_bulletproof_amounts(bulletproofs) != outputs)
+            if (n_bulletproof_max_amounts(bulletproofs) < outputs)
               return false;
             ar.end_array();
           }
@@ -528,6 +531,7 @@ namespace rct {
 
     bool is_rct_simple(int type);
     bool is_rct_bulletproof(int type);
+    bool is_rct_borromean(int type);
 
     static inline const rct::key &pk2rct(const crypto::public_key &pk) { return (const rct::key&)pk; }
     static inline const rct::key &sk2rct(const crypto::secret_key &sk) { return (const rct::key&)sk; }

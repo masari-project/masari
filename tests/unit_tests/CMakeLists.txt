@@ -70,9 +70,6 @@ set(unit_tests_sources
   ringct.cpp
   output_selection.cpp
   vercmp.cpp
-  ringdb.cpp
-  wipeable_string.cpp
-  is_hdd.cpp
   aligned.cpp)
 
 set(unit_tests_headers

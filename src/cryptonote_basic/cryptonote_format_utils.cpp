@@ -150,23 +150,21 @@ namespace cryptonote
         const bool bulletproof = rct::is_rct_bulletproof(rv.type);
         if (bulletproof)
         {
-          if (rct::n_bulletproof_amounts(rv.p.bulletproofs) != tx.vout.size())
+          if (rv.p.bulletproofs.size() != 1)
           {
             LOG_PRINT_L1("Failed to parse transaction from blob, bad bulletproofs size in tx " << get_transaction_hash(tx));
             return false;
           }
-          size_t idx = 0;
-          for (size_t n = 0; n < rv.p.bulletproofs.size(); ++n)
+          if (rv.p.bulletproofs[0].L.size() < 6)
           {
-            //rv.p.bulletproofs[n].V.resize(1);
-            //rv.p.bulletproofs[n].V[0] = rv.outPk[n].mask;
-            CHECK_AND_ASSERT_MES(rv.p.bulletproofs[n].L.size() >= 6, false, "Bad bulletproofs L size"); // at least 64 bits
-            const size_t n_amounts = rct::n_bulletproof_amounts(rv.p.bulletproofs[n]);
-            CHECK_AND_ASSERT_MES(idx + n_amounts <= rv.outPk.size(), false, "Internal error filling out V");
-            rv.p.bulletproofs[n].V.resize(n_amounts);
-            rv.p.bulletproofs[n].V.clear();
-            for (size_t i = 0; i < n_amounts; ++i)
-              rv.p.bulletproofs[n].V[i] = rv.outPk[idx++].mask;
+            LOG_PRINT_L1("Failed to parse transaction from blob, bad bulletproofs L size in tx " << get_transaction_hash(tx));
+            return false;
+          }
+          const size_t max_outputs = 1 << (rv.p.bulletproofs[0].L.size() - 6);
+          if (max_outputs < tx.vout.size())
+          {
+            LOG_PRINT_L1("Failed to parse transaction from blob, bad bulletproofs max outputs in tx " << get_transaction_hash(tx));
+            return false;
           }
           const size_t n_amounts = tx.vout.size();
           CHECK_AND_ASSERT_MES(n_amounts == rv.outPk.size(), false, "Internal error filling out V");
@@ -186,6 +184,7 @@ namespace cryptonote
     binary_archive<false> ba(ss);
     bool r = ::serialization::serialize(ba, tx);
     CHECK_AND_ASSERT_MES(r, false, "Failed to parse transaction from blob");
+    CHECK_AND_ASSERT_MES(expand_transaction_1(tx, false), false, "Failed to expand transaction data");
     tx.invalidate_hashes();
     return true;
   }
@@ -197,6 +196,7 @@ namespace cryptonote
     binary_archive<false> ba(ss);
     bool r = tx.serialize_base(ba);
     CHECK_AND_ASSERT_MES(r, false, "Failed to parse transaction from blob");
+    CHECK_AND_ASSERT_MES(expand_transaction_1(tx, true), false, "Failed to expand transaction data");
     return true;
   }
   //---------------------------------------------------------------
@@ -207,6 +207,7 @@ namespace cryptonote
     binary_archive<false> ba(ss);
     bool r = ::serialization::serialize(ba, tx);
     CHECK_AND_ASSERT_MES(r, false, "Failed to parse transaction from blob");
+    CHECK_AND_ASSERT_MES(expand_transaction_1(tx, false), false, "Failed to expand transaction data");
     tx.invalidate_hashes();
     //TODO: validate tx
 

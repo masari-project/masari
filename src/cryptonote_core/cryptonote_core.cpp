@@ -644,43 +644,6 @@ namespace cryptonote
       return false;
     }
 
-    // resolve outPk references in rct txes
-    // outPk aren't the only thing that need resolving for a fully resolved tx,
-    // but outPk (1) are needed now to check range proof semantics, and
-    // (2) do not need access to the blockchain to find data
-    if (tx.version >= 1)
-    {
-      rct::rctSig &rv = tx.rct_signatures;
-      if (rv.outPk.size() != tx.vout.size())
-      {
-        LOG_PRINT_L1("WRONG TRANSACTION BLOB, Bad outPk size in tx " << tx_hash << ", rejected");
-        tvc.m_verifivation_failed = true;
-        return false;
-      }
-      for (size_t n = 0; n < tx.rct_signatures.outPk.size(); ++n)
-        rv.outPk[n].dest = rct::pk2rct(boost::get<txout_to_key>(tx.vout[n].target).key);
-
-      const bool bulletproof = rct::is_rct_bulletproof(rv.type);
-      if (bulletproof)
-      {
-        if (rct::n_bulletproof_amounts(rv.p.bulletproofs) != tx.vout.size())
-        {
-          LOG_PRINT_L1("WRONG TRANSACTION BLOB, Bad bulletproofs size in tx " << tx_hash << ", rejected");
-          tvc.m_verifivation_failed = true;
-          return false;
-        }
-        size_t idx = 0;
-        for (size_t n = 0; n < rv.p.bulletproofs.size(); ++n)
-        {
-          CHECK_AND_ASSERT_MES(rv.p.bulletproofs[n].L.size() >= 6, false, "Bad bulletproofs L size"); // at least 64 bits
-          const size_t n_amounts = rct::n_bulletproof_amounts(rv.p.bulletproofs[n]);
-          CHECK_AND_ASSERT_MES(idx + n_amounts <= rv.outPk.size(), false, "Internal error filling out V");
-          rv.p.bulletproofs[n].V.clear();
-          for (size_t i = 0; i < n_amounts; ++i)
-            rv.p.bulletproofs[n].V.push_back(rv.outPk[idx++].mask);
-        }
-      }
-    }
     return true;
   }
   //-----------------------------------------------------------------------------------------------
@@ -699,20 +662,11 @@ namespace cryptonote
   //-----------------------------------------------------------------------------------------------
   static bool is_canonical_bulletproof_layout(const std::vector<rct::Bulletproof> &proofs)
   {
-    size_t n_amounts = rct::n_bulletproof_amounts(proofs), amounts_proved = 0;
-    size_t n = 0;
-    while (amounts_proved < n_amounts)
-    {
-      if (n >= proofs.size())
-        return false;
-      size_t batch_size = 1;
-      while (batch_size * 2 + amounts_proved <= n_amounts && batch_size * 2 <= BULLETPROOF_MAX_OUTPUTS)
-        batch_size *= 2;
-      if (rct::n_bulletproof_amounts(proofs[n]) != batch_size)
-        return false;
-      amounts_proved += batch_size;
-      ++n;
-    }
+    if (proofs.size() != 1)
+      return false;
+    const size_t sz = proofs[0].V.size();
+    if (sz == 0 || sz > BULLETPROOF_MAX_OUTPUTS)
+      return false;
     return true;
   }
   //-----------------------------------------------------------------------------------------------

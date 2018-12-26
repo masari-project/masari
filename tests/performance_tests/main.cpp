@@ -68,17 +68,16 @@ int main(int argc, char** argv)
   set_thread_high_priority();
 
   mlog_configure(mlog_get_default_log_path("performance_tests.log"), true);
-  mlog_set_log_level(0);
 
   po::options_description desc_options("Command line options");
   const command_line::arg_descriptor<std::string> arg_filter = { "filter", "Regular expression filter for which tests to run" };
   const command_line::arg_descriptor<bool> arg_verbose = { "verbose", "Verbose output", false };
   const command_line::arg_descriptor<bool> arg_stats = { "stats", "Including statistics (min/median)", false };
   const command_line::arg_descriptor<unsigned> arg_loop_multiplier = { "loop-multiplier", "Run for that many times more loops", 1 };
-  command_line::add_arg(desc_options, arg_filter, "");
-  command_line::add_arg(desc_options, arg_verbose, "");
-  command_line::add_arg(desc_options, arg_stats, "");
-  command_line::add_arg(desc_options, arg_loop_multiplier, "");
+  command_line::add_arg(desc_options, arg_filter);
+  command_line::add_arg(desc_options, arg_verbose);
+  command_line::add_arg(desc_options, arg_stats);
+  command_line::add_arg(desc_options, arg_loop_multiplier);
 
   po::variables_map vm;
   bool r = command_line::handle_error_helper(desc_options, [&]()
@@ -201,11 +200,6 @@ int main(int argc, char** argv)
   TEST_PERFORMANCE3(filter, p, test_ringct_mlsag, 1, 5, true);
   TEST_PERFORMANCE3(filter, p, test_ringct_mlsag, 1, 10, true);
   TEST_PERFORMANCE3(filter, p, test_ringct_mlsag, 1, 100, true);
-
-  TEST_PERFORMANCE2(filter, p, test_equality, memcmp32, true);
-  TEST_PERFORMANCE2(filter, p, test_equality, memcmp32, false);
-  TEST_PERFORMANCE2(filter, p, test_equality, verify32, false);
-  TEST_PERFORMANCE2(filter, p, test_equality, verify32, false);
 
   TEST_PERFORMANCE1(filter, p, test_range_proof, true);
   TEST_PERFORMANCE1(filter, p, test_range_proof, false);
