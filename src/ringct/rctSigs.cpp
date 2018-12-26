@@ -981,7 +981,7 @@ namespace rct {
           return false;
         }
 
-        waiter.wait(&tpool);
+        waiter.wait();
         for (size_t i = 0; i < results.size(); ++i) {
           if (!results[i]) {
             LOG_PRINT_L1("Range proof verified failed for proof " << i);
@@ -1041,7 +1041,7 @@ namespace rct {
               results[i] = verRctMGSimple(message, rv.p.MGs[i], rv.mixRing[i], pseudoOuts[i]);
           });
         }
-        waiter.wait(&tpool);
+        waiter.wait();
 
         for (size_t i = 0; i < results.size(); ++i) {
           if (!results[i]) {
