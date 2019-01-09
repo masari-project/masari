@@ -1,5 +1,4 @@
-// Copyright (c) 2018, The Masari Project
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2017, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -31,37 +30,71 @@
 
 #pragma once
 
-#include "chaingen.h"
-#include "block_reward.h"
-#include "block_validation.h"
-#include "chain_split_1.h"
-#include "chain_switch_1.h"
-#include "double_spend.h"
-#include "integer_overflow.h"
-#include "ring_signature_1.h"
-#include "tx_validation.h"
-#include "v2_tests.h"
-#include "rct.h"
-#include "uncles.h"
-#include "multisig.h"
-#include "bulletproofs.h"
-/************************************************************************/
-/*                                                                      */
-/************************************************************************/
-class gen_simple_chain_001: public test_chain_unit_base 
+#include "ringct/rctSigs.h"
+#include "ringct/bulletproofs.h"
+
+template<bool a_verify, size_t n_amounts>
+class test_bulletproof
 {
-public: 
-  gen_simple_chain_001();
-  bool generate(std::vector<test_event_entry> &events);
-  bool verify_callback_1(cryptonote::core& c, size_t ev_index, const std::vector<test_event_entry> &events); 
-  bool verify_callback_2(cryptonote::core& c, size_t ev_index, const std::vector<test_event_entry> &events); 
+public:
+  static const size_t approx_loop_count = 100 / n_amounts;
+  static const size_t loop_count = (approx_loop_count >= 10 ? approx_loop_count : 10) / (a_verify ? 1 : 5);
+  static const bool verify = a_verify;
+
+  bool init()
+  {
+    proof = rct::bulletproof_PROVE(std::vector<uint64_t>(n_amounts, 749327532984), rct::skvGen(n_amounts));
+    return true;
+  }
+
+  bool test()
+  {
+    bool ret = true;
+    if (verify)
+      ret = rct::bulletproof_VERIFY(proof);
+    else
+      rct::bulletproof_PROVE(std::vector<uint64_t>(n_amounts, 749327532984), rct::skvGen(n_amounts));
+    return ret;
+  }
+
+private:
+  rct::Bulletproof proof;
 };
 
-class one_block: public test_chain_unit_base
+template<bool batch, size_t start, size_t repeat, size_t mul, size_t add, size_t N>
+class test_aggregated_bulletproof
 {
-  cryptonote::account_base alice;
 public:
-  one_block();
-  bool generate(std::vector<test_event_entry> &events);
-  bool verify_1(cryptonote::core& c, size_t ev_index, const std::vector<test_event_entry> &events);
+  static const size_t loop_count = 500 / (N * repeat);
+
+  bool init()
+  {
+    size_t o = start;
+    for (size_t n = 0; n < N; ++n)
+    {
+      //printf("adding %zu times %zu\n", repeat, o);
+      for (size_t i = 0; i < repeat; ++i)
+        proofs.push_back(rct::bulletproof_PROVE(std::vector<uint64_t>(o, 749327532984), rct::skvGen(o)));
+      o = o * mul + add;
+    }
+    return true;
+  }
+
+  bool test()
+  {
+    if (batch)
+    {
+      return rct::bulletproof_VERIFY(proofs);
+    }
+    else
+    {
+      for (const rct::Bulletproof &proof: proofs)
+        if (!rct::bulletproof_VERIFY(proof))
+          return false;
+      return true;
+    }
+  }
+
+private:
+  std::vector<rct::Bulletproof> proofs;
 };

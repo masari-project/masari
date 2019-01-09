@@ -59,7 +59,7 @@ namespace rct {
 
 
     //Various key generation functions
-    
+
     bool toPointCheckOrder(ge_p3 *P, const unsigned char *data)
     {
         if (ge_frombytes_vartime(P, data))
@@ -209,15 +209,26 @@ namespace rct {
 
     //Computes aH where H= toPoint(cn_fast_hash(G)), G the basepoint
     key scalarmultH(const key & a) {
-        ge_p3 A;
         ge_p2 R;
-        CHECK_AND_ASSERT_THROW_MES_L1(ge_frombytes_vartime(&A, H.bytes) == 0, "ge_frombytes_vartime failed at "+boost::lexical_cast<std::string>(__LINE__));
-        ge_scalarmult(&R, a.bytes, &A);
+        ge_scalarmult(&R, a.bytes, &ge_p3_H);
         key aP;
         ge_tobytes(aP.bytes, &R);
         return aP;
     }
-    
+
+    //Computes 8P
+    key scalarmult8(const key & P) {
+        ge_p3 p3;
+        CHECK_AND_ASSERT_THROW_MES_L1(ge_frombytes_vartime(&p3, P.bytes) == 0, "ge_frombytes_vartime failed at "+boost::lexical_cast<std::string>(__LINE__));
+        ge_p2 p2;
+        ge_p3_to_p2(&p2, &p3);
+        ge_p1p1 p1;
+        ge_mul8(&p1, &p2);
+        ge_p1p1_to_p2(&p2, &p1);
+        rct::key res;
+        ge_tobytes(res.bytes, &p2);
+        return res;
+    }
 
     //Computes aL where L is the curve order
     bool isInMainSubgroup(const key & a) {

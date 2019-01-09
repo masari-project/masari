@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018, The Monero Project
+// Copyright (c) 2014-2017, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -25,27 +25,39 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Adapted from Java code by Sarang Noether
+// 
+// Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #pragma once
 
-#ifndef BULLETPROOFS_H
-#define BULLETPROOFS_H
+#include "ringct/rctSigs.h"
 
-#include "rctTypes.h"
-
-namespace rct
+template<bool a_verify>
+class test_range_proof
 {
+public:
+  static const size_t loop_count = 50;
+  static const bool verify = a_verify;
 
-Bulletproof bulletproof_PROVE(const rct::key &v, const rct::key &gamma);
-Bulletproof bulletproof_PROVE(uint64_t v, const rct::key &gamma);
-Bulletproof bulletproof_PROVE(const rct::keyV &v, const rct::keyV &gamma);
-Bulletproof bulletproof_PROVE(const std::vector<uint64_t> &v, const rct::keyV &gamma);
-bool bulletproof_VERIFY(const Bulletproof &proof);
-bool bulletproof_VERIFY(const std::vector<const Bulletproof*> &proofs);
-bool bulletproof_VERIFY(const std::vector<Bulletproof> &proofs);
+  bool init()
+  {
+    rct::key mask;
+    sig = rct::proveRange(C, mask, 84932483243793);
+    return true;
+  }
 
-}
+  bool test()
+  {
+    bool ret = true;
+    rct::key mask;
+    if (verify)
+      ret = rct::verRange(C, sig);
+    else
+      rct::proveRange(C, mask, 84932483243793);
+    return ret;
+  }
 
-#endif
+private:
+  rct::key C;
+  rct::rangeSig sig;
+};

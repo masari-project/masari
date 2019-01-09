@@ -25,27 +25,46 @@
 // INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
 // STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 // THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Adapted from Java code by Sarang Noether
 
-#pragma once
+#include "include_base_utils.h"
+#include "file_io_utils.h"
+#include "cryptonote_basic/blobdatatype.h"
+#include "cryptonote_basic/cryptonote_basic.h"
+#include "cryptonote_basic/cryptonote_format_utils.h"
+#include "fuzzer.h"
 
-#ifndef BULLETPROOFS_H
-#define BULLETPROOFS_H
-
-#include "rctTypes.h"
-
-namespace rct
+class BulletproofFuzzer: public Fuzzer
 {
+public:
+  virtual int run(const std::string &filename);
 
-Bulletproof bulletproof_PROVE(const rct::key &v, const rct::key &gamma);
-Bulletproof bulletproof_PROVE(uint64_t v, const rct::key &gamma);
-Bulletproof bulletproof_PROVE(const rct::keyV &v, const rct::keyV &gamma);
-Bulletproof bulletproof_PROVE(const std::vector<uint64_t> &v, const rct::keyV &gamma);
-bool bulletproof_VERIFY(const Bulletproof &proof);
-bool bulletproof_VERIFY(const std::vector<const Bulletproof*> &proofs);
-bool bulletproof_VERIFY(const std::vector<Bulletproof> &proofs);
+private:
+};
 
+int BulletproofFuzzer::run(const std::string &filename)
+{
+  std::string s;
+
+  if (!epee::file_io_utils::load_file_to_string(filename, s))
+  {
+    std::cout << "Error: failed to load file " << filename << std::endl;
+    return 1;
+  }
+  std::stringstream ss;
+  ss << s;
+  binary_archive<false> ba(ss);
+  rct::Bulletproof proof = AUTO_VAL_INIT(proof);
+  bool r = ::serialization::serialize(ba, proof);
+  if(!r)
+  {
+    std::cout << "Error: failed to parse bulletproof from file  " << filename << std::endl;
+    return 1;
+  }
+  return 0;
 }
 
-#endif
+int main(int argc, const char **argv)
+{
+  BulletproofFuzzer fuzzer;
+  return run_fuzzer(argc, argv, fuzzer);
+}
