@@ -89,7 +89,7 @@ extern int aesb_pseudo_round(const uint8_t *in, uint8_t *out, const uint8_t *exp
   { \
     VARIANT1_CHECK(); \
   } \
-  const uint64_t tweak1_2 = (variant == 1) ? (state.hs.w[24] ^ (*((const uint64_t*)NONCE_POINTER))) : 0
+  const uint64_t tweak1_2 = (variant > 0 && variant < 3) ? (state.hs.w[24] ^ (*((const uint64_t*)NONCE_POINTER))) : 0
 
 #define VARIANT2_INIT64() \
   uint64_t division_result = 0; \
