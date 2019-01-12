@@ -96,7 +96,9 @@ static const struct {
   { 4, 70000, 0, 1513136914 },
   { 5, 170000, 0, 1525150523},
   { 6, 172500, 0, 1525504168},
-  { 7, 204000, 0, 1529361270}
+  { 7, 204000, 0, 1529361270},
+  { 8, 363000, 0, 1548465980}
+
 };
 
 static const struct {
@@ -4946,7 +4948,7 @@ void Blockchain::cancel()
 }
 
 #if defined(PER_BLOCK_CHECKPOINT)
-static const char expected_block_hashes_hash[] = "e54dd76f1f9f650f11edc49782d3cca5afc370013cad0cbb27a5bdff0c56cb43";
+static const char expected_block_hashes_hash[] = "fde723635bab019c8c81ffa17baa3b09a36566ff16fb3225f7a3544ea4f36544";
 void Blockchain::load_compiled_in_block_hashes()
 {
   LOG_PRINT_L3("Blockchain::" << __func__);
