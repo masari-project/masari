@@ -74,6 +74,9 @@ Dates are provided in the format YYYY-MM-DD.
 | 2017-11-29        | v3                | 0.1.3.0                | 0.1.3.1                    | Difficulty adjustment algorithm updated to WWHM                     |
 | 2017-12-06        | v4                | 0.1.4.0                | 0.1.4.0                    | Difficulty adjustment tweaks                                        |
 | 2018-05-01        | v5                | 0.2.0.0                | 0.2.0.2                    | Upstream track of v0.12.0 with Multisig, Subaddresses, CN variant 1 |
+| 2018-05-05        | v6                | 0.2.3.0                | 0.2.3.0                    | LWMA + stricter FTL settings                                        |
+| 2018-06-18        | v7                | 0.2.4.0                | 0.2.4.5                    | CryptoNight-Fast PoW                                                |
+| 2019-01-26        | v8                | 0.3.0.0                | 0.3.0.0                    | SECOR (uncle mining) protocol, multi-output Bulletproofs, CNFastv2  |
 
 X's indicate that these details have not been determined as of commit date.
 
