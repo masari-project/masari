@@ -690,8 +690,6 @@ namespace cryptonote
         continue;
       }
 
-      if (tx_info[n].tx->version < 2)
-        continue;
       const rct::rctSig &rv = tx_info[n].tx->rct_signatures;
       switch (rv.type) {
         case rct::RCTTypeNull:
@@ -790,16 +788,19 @@ namespace cryptonote
     }
     waiter.wait();
     it = tx_blobs.begin();
+    std::vector<bool> already_have(tx_blobs.size(), false);
     for (size_t i = 0; i < tx_blobs.size(); i++, ++it) {
       if (!results[i].res)
         continue;
       if(m_mempool.have_tx(results[i].hash))
       {
         LOG_PRINT_L2("tx " << results[i].hash << "already have transaction in tx_pool");
+        already_have[i] = true;
       }
       else if(m_blockchain_storage.have_tx(results[i].hash))
       {
         LOG_PRINT_L2("tx " << results[i].hash << " already have transaction in blockchain");
+        already_have[i] = true;
       }
       else
       {
@@ -821,7 +822,7 @@ namespace cryptonote
     std::vector<tx_verification_batch_info> tx_info;
     tx_info.reserve(tx_blobs.size());
     for (size_t i = 0; i < tx_blobs.size(); i++) {
-      if (!results[i].res)
+      if (!results[i].res || already_have[i])
         continue;
       tx_info.push_back({&results[i].tx, results[i].hash, tvc[i], results[i].res});
     }
@@ -836,6 +837,10 @@ namespace cryptonote
         ok = false;
         continue;
       }
+      if (keeped_by_block)
+        get_blockchain_storage().on_new_tx_from_block(results[i].tx);
+      if (already_have[i])
+        continue;
 
       ok &= add_new_tx(results[i].tx, results[i].hash, results[i].prefix_hash, it->size(), tvc[i], keeped_by_block, relayed, do_not_relay);
       if(tvc[i].m_verifivation_failed)
@@ -1052,9 +1057,6 @@ namespace cryptonote
   //-----------------------------------------------------------------------------------------------
   bool core::add_new_tx(transaction& tx, const crypto::hash& tx_hash, const crypto::hash& tx_prefix_hash, size_t blob_size, tx_verification_context& tvc, bool keeped_by_block, bool relayed, bool do_not_relay)
   {
-    if (keeped_by_block)
-      get_blockchain_storage().on_new_tx_from_block(tx);
-
     if(m_mempool.have_tx(tx_hash))
     {
       LOG_PRINT_L2("tx " << tx_hash << "already have transaction in tx_pool");
