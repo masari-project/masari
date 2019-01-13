@@ -2,7 +2,7 @@
 ## How to build
 Inside the masari root directory, execute
 ```
-docker build -t masari docker/Dockerfile .
+docker build -t masari -f docker/Dockerfile .
 ```
 
 ## How to use
