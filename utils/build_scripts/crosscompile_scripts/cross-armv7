@@ -1,0 +1,165 @@
+#!/bin/bash
+# Modified Dockerfile to bash script for cross-compiling MASARI CLI binaries linux amd64 -> armv7-a
+# Tested on Ubuntu 18.04. For libc incompatibility issues, see README
+
+# Must be root to use this tool
+if [[ ! $EUID -eq 0 ]];then
+  if [[ -x "$(command -v sudo)" ]]; then
+    exec sudo bash "$0" "$@"
+    exit $?
+  else
+    echo -e "  ${CROSS} sudo is needed to run commands.  Please run this script as root or install sudo."
+    exit 1
+  fi
+fi
+
+export WORKDIR=/opt/arm
+mkdir -p ${WORKDIR}
+cd ${WORKDIR}
+export NPROC=$(nproc)
+
+# Check if workdir is empty. Ask for deletion confirmation.
+if [ "$(ls -A ${WORKDIR})" ]; then
+     echo "${WORKDIR} is not empty, do you want to empty it?"
+	 select yn in "Yes" "No"; do
+    case $yn in
+        Yes ) rm -rf *; break;;
+        No ) exit;;
+    esac
+done
+fi
+
+
+PS3='Which version of gcc would you like to use?'
+echo "Note: Ubuntu 16.04 has packages up to GCC 5, Debian Stretch up to 6 and Ubuntu 18.04 up to 8"
+options=("5" "6" "8" "Quit")
+select opt in "${options[@]}"
+do
+    case $opt in
+        "5")
+            export CC=arm-linux-gnueabihf-gcc-5 && export CXX=arm-linux-gnueabihf-g++-5 && export GCCV=5 && apt-get update && apt-get install -y git curl libtool-bin autoconf pkg-config automake make cmake g++-5-arm-linux-gnueabihf gcc-5-arm-linux-gnueabihf
+            export CXXFLAGS="-I ${WORKDIR}/zeromq/include/ -I ${WORKDIR}/libsodium/include"
+			break
+            ;;
+        "6")
+            export CC=arm-linux-gnueabihf-gcc-6 && export CXX=arm-linux-gnueabihf-g++-6 && export GCCV=6 && apt-get update && apt-get install -y git curl libtool-bin autoconf pkg-config automake make cmake g++-6-arm-linux-gnueabihf gcc-6-arm-linux-gnueabihf
+            export CXXFLAGS="-I ${WORKDIR}/zeromq/include/ -I ${WORKDIR}/libsodium/include"
+			break
+            ;;
+		"8")
+            export CC=arm-linux-gnueabihf-gcc-8 && export CXX=arm-linux-gnueabihf-g++-8 && export GCCV=8 && apt-get update && apt-get install -y git curl libtool-bin autoconf pkg-config automake make cmake g++-8-arm-linux-gnueabihf gcc-8-arm-linux-gnueabihf
+            export CXXFLAGS="-I ${WORKDIR}/zeromq/include/ -I ${WORKDIR}/libsodium/include -Wno-error=class-memaccess" && export CFLAGS="-Wno-error=class-memaccess"
+			break
+            ;;
+        "Quit")
+            break
+            ;;
+        *) echo "invalid option $REPLY";;
+    esac
+done
+
+## Boost
+export BOOST_VERSION=1_68_0
+export BOOST_VERSION_DOT=1.68.0
+export BOOST_HASH=7f6130bc3cf65f56a618888ce9d5ea704fa10b462be126ad053e80e553d6d8b7
+	curl -s -L -o  boost_${BOOST_VERSION}.tar.bz2 https://dl.bintray.com/boostorg/release/${BOOST_VERSION_DOT}/source/boost_${BOOST_VERSION}.tar.bz2 \
+    && echo "${BOOST_HASH} boost_${BOOST_VERSION}.tar.bz2" | sha256sum -c \
+    && tar -xvf boost_${BOOST_VERSION}.tar.bz2 \
+    && cd boost_${BOOST_VERSION} \
+    && ./bootstrap.sh \
+	&& echo "using gcc : arm : ${CXX} ;" > user-config.jam \
+	&& mv user-config.jam ~ \
+    && ./b2 --build-type=minimal link=static runtime-link=static --with-chrono --with-date_time --with-filesystem --with-program_options --with-regex --with-serialization --with-system --with-thread --with-locale threading=multi threadapi=pthread cflags="-fPIC" cxxflags="-fPIC" --build-dir=arm --stagedir=arm toolset=gcc-arm stage -j $(nproc)
+export BOOST_ROOT=${WORKDIR}/boost_${BOOST_VERSION}
+export BOOST_LIBRARYDIR=${WORKDIR}/boost_${BOOST_VERSION}/arm/lib
+cd ${WORKDIR}
+
+# OpenSSL
+export OPENSSL_VERSION=1.1.1a
+export OPENSSL_HASH=fc20130f8b7cbd2fb918b2f14e2f429e109c31ddd0fb38fc5d71d9ffed3f9f41
+	curl -s -O https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz \
+    && echo "${OPENSSL_HASH} openssl-${OPENSSL_VERSION}.tar.gz" | sha256sum -c \
+    && tar -xzf openssl-${OPENSSL_VERSION}.tar.gz \
+    && cd openssl-${OPENSSL_VERSION} \
+    && ./Configure gcc no-shared --static -fPIC --prefix=${WORKDIR}/openssl \
+    && make -j $(nproc)\
+    && make install
+export OPENSSL_ROOT_DIR=${WORKDIR}/openssl-${OPENSSL_VERSION}
+cd ${WORKDIR}
+
+# Libsodium
+export LIBSODIUM_VERSION=1.0.17
+export LIBSODIUM_HASH=b732443c442239c2e0184820e9b23cca0de0828c
+	git clone https://github.com/jedisct1/libsodium.git -b ${LIBSODIUM_VERSION} \
+    && cd libsodium \
+	&& test `git rev-parse HEAD` = ${LIBSODIUM_HASH} || exit 1 \
+    && ./autogen.sh \
+    && CFLAGS="-fPIC" CXXFLAGS="-fPIC" ./configure --enable-static --disable-shared --host=arm-linux-gnueabihf --prefix=${WORKDIR}/libsodium\
+    && make -j$(nproc)  \
+	&& make install
+cd ${WORKDIR}
+
+# ZMQ
+export ZMQ_VERSION=v4.3.1
+export ZMQ_HASH=2cb1240db64ce1ea299e00474c646a2453a8435b
+	git clone https://github.com/zeromq/libzmq.git -b ${ZMQ_VERSION} \
+    && cd libzmq \
+    && test `git rev-parse HEAD` = ${ZMQ_HASH} || exit 1 \
+    && ./autogen.sh \
+    && CFLAGS="-fPIC" CXXFLAGS="-fPIC" ./configure --enable-static --disable-shared --disable-libunwind --host=arm-linux-gnueabihf --prefix=${WORKDIR}/zeromq\
+    && make -j$(nproc)  \
+	&& make install
+cd ${WORKDIR}
+
+# zmq.hpp
+	git clone https://github.com/zeromq/cppzmq.git -b v4.3.0 \
+    && cd cppzmq \
+    && mv *.hpp /usr/local/include \
+	&& cd ${WORKDIR}	
+
+# Readline
+export READLINE_VERSION=8.0
+export READLINE_HASH=e339f51971478d369f8a053a330a190781acb9864cf4c541060f12078948e461
+	curl -s -O https://ftp.gnu.org/gnu/readline/readline-${READLINE_VERSION}.tar.gz \
+    && echo "${READLINE_HASH} readline-${READLINE_VERSION}.tar.gz" | sha256sum -c \
+    && tar -xzf readline-${READLINE_VERSION}.tar.gz \
+    && cd readline-${READLINE_VERSION} \
+    && CFLAGS="-fPIC" CXXFLAGS="-fPIC" ./configure --host=arm-linux-gnueabihf --prefix=${WORKDIR}/readline \
+    && make  -j$(nproc)\
+    && make install
+cd ${WORKDIR}
+
+
+# NCURSES
+export NCURSES_VERSION=6.0
+export NCURSES_HASH=f551c24b30ce8bfb6e96d9f59b42fbea30fa3a6123384172f9e7284bcf647260
+	curl -s -O ftp://ftp.gnu.org/pub/gnu/ncurses/ncurses-${NCURSES_VERSION}.tar.gz \
+	&& echo "${NCURSES_HASH} ncurses-${NCURSES_VERSION}.tar.gz" | sha256sum -c \
+	&& tar -xvf ncurses-${NCURSES_VERSION}.tar.gz \
+	&& cd ncurses-${NCURSES_VERSION} \
+    && CFLAGS="-fPIC" CXXFLAGS="-fPIC -P" CPPFLAGS="-P" ./configure --host=arm-linux-gnueabihf --prefix=${WORKDIR}/ncurses \
+    && make install
+cd ${WORKDIR}
+
+export CMAKE_PREFIX_PATH=${WORKDIR}/ncurses/:${WORKDIR}/libsodium
+export CMAKE_INCLUDE_PATH=${WORKDIR}/zeromq/:${WORKDIR}/libsodium:${WORKDIR}/libsodium/include
+export CMAKE_LIBRARY_PATH=${WORKDIR}/zeromq/lib:${WORKDIR}/libsodium/lib:${WORKDIR}/libsodium
+	
+	git clone --recursive https://github.com/masari-project/masari.git\
+	&& cd masari \
+	# Unorthodox workaround for generate_translations_header failure. Arm version can't run on local machine and the build fails. We generate it beforehand with the host compiler and run cmake twice.
+	for i in {1..2};
+    do
+    cd translations \
+    && cc generate_translations_header.c -o generate_translations_header \
+    && ./generate_translations_header monero_fr.ts  monero_it.ts  monero_sv.ts  monero.ts > translation_files.h \
+    && cd .. \
+    
+	if [ ${GCCV}==5 ]; then
+    cmake -D BUILD_TESTS=OFF -D ARCH="armv7-a" -DCMAKE_CXX_COMPILER_RANLIB=/usr/bin/arm-linux-gnueabihf-gcc-ranlib-5 -DCMAKE_CXX_COMPILER_AR=/usr/bin/arm-linux-gnueabihf-gcc-ar-5 -DCMAKE_C_COMPILER_RANLIB=/usr/bin/arm-linux-gnueabihf-gcc-ranlib-5 -DCMAKE_C_COMPILER_AR=/usr/bin/arm-linux-gnueabihf-gcc-ar-5 -DCMAKE_LINKER=/usr/bin/arm-linux-gnueabihf-ld -D STATIC=ON -D BUILD_64=OFF -D CMAKE_BUILD_TYPE=release -D BUILD_TAG="linux-armv7" -DReadline_ROOT_DIR=${WORKDIR}/readline/ -D RT:FILEPATH=/usr/arm-linux-gnueabihf/lib/librt.a .
+    elif [ ${GCCV}==6 ]; then
+    cmake -D BUILD_TESTS=OFF -D ARCH="armv7-a" -DCMAKE_CXX_COMPILER_RANLIB=/usr/bin/arm-linux-gnueabihf-gcc-ranlib-6 -DCMAKE_CXX_COMPILER_AR=/usr/bin/arm-linux-gnueabihf-gcc-ar-6 -DCMAKE_C_COMPILER_RANLIB=/usr/bin/arm-linux-gnueabihf-gcc-ranlib-6 -DCMAKE_C_COMPILER_AR=/usr/bin/arm-linux-gnueabihf-gcc-ar-6 -DCMAKE_LINKER=/usr/bin/arm-linux-gnueabihf-ld -D STATIC=ON -D BUILD_64=OFF -D CMAKE_BUILD_TYPE=release -D BUILD_TAG="linux-armv7" -DReadline_ROOT_DIR=${WORKDIR}/readline/ -D RT:FILEPATH=/usr/arm-linux-gnueabihf/lib/librt.a .
+    elif [ ${GCCV}==8 ]; then
+    cmake -D BUILD_TESTS=OFF -D ARCH="armv7-a" -DCMAKE_CXX_COMPILER_RANLIB=/usr/bin/arm-linux-gnueabihf-gcc-ranlib-8 -DCMAKE_CXX_COMPILER_AR=/usr/bin/arm-linux-gnueabihf-gcc-ar-8 -DCMAKE_C_COMPILER_RANLIB=/usr/bin/arm-linux-gnueabihf-gcc-ranlib-8 -DCMAKE_C_COMPILER_AR=/usr/bin/arm-linux-gnueabihf-gcc-ar-8 -DCMAKE_LINKER=/usr/bin/arm-linux-gnueabihf-ld -D STATIC=ON -D BUILD_64=OFF -D CMAKE_BUILD_TYPE=release -D BUILD_TAG="linux-armv7" -DReadline_ROOT_DIR=${WORKDIR}/readline/ -D RT:FILEPATH=/usr/arm-linux-gnueabihf/lib/librt.a .
+    fi
+    make -j$(nproc); done
