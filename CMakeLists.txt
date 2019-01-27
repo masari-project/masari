@@ -556,10 +556,12 @@ else()
   add_cxx_flag_if_supported(-Wformat-security CXX_SECURITY_FLAGS)
 
   # -fstack-protector
-  add_c_flag_if_supported(-fstack-protector C_SECURITY_FLAGS)
-  add_cxx_flag_if_supported(-fstack-protector CXX_SECURITY_FLAGS)
-  add_c_flag_if_supported(-fstack-protector-strong C_SECURITY_FLAGS)
-  add_cxx_flag_if_supported(-fstack-protector-strong CXX_SECURITY_FLAGS)
+  if (NOT WIN32)
+    add_c_flag_if_supported(-fstack-protector C_SECURITY_FLAGS)
+    add_cxx_flag_if_supported(-fstack-protector CXX_SECURITY_FLAGS)
+    add_c_flag_if_supported(-fstack-protector-strong C_SECURITY_FLAGS)
+    add_cxx_flag_if_supported(-fstack-protector-strong CXX_SECURITY_FLAGS)
+  endif()
 
   # linker
   if (NOT WIN32)
@@ -802,7 +804,7 @@ endif()
 
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 if(MINGW)
-  set(EXTRA_LIBRARIES mswsock;ws2_32;iphlpapi)
+  set(EXTRA_LIBRARIES mswsock;ws2_32;iphlpapi;crypt32)
   set(ICU_LIBRARIES ${Boost_LOCALE_LIBRARY} icuio icuin icuuc icudt icutu iconv)
 elseif(APPLE OR OPENBSD OR ANDROID)
   set(EXTRA_LIBRARIES "")
