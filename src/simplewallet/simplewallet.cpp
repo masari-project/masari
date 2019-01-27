@@ -6798,6 +6798,20 @@ bool simple_wallet::wallet_info(const std::vector<std::string> &args)
   message_writer() << tr("Network type: ") << (
     m_wallet->nettype() == cryptonote::TESTNET ? tr("Testnet") :
     m_wallet->nettype() == cryptonote::STAGENET ? tr("Stagenet") : tr("Mainnet"));
+  
+  tools::wallet2::transfer_container transfers;
+  m_wallet->get_transfers(transfers);
+  uint64_t min_height = std::numeric_limits<uint64_t>::max();
+  for (const auto& td : transfers)
+  {
+    if (min_height > td.m_block_height && !td.m_spent)
+      min_height = td.m_block_height;
+  }
+  if(min_height == std::numeric_limits<uint64_t>::max())
+    message_writer() << "Earliest unspent output: N/A";
+  else
+    message_writer() << "Earliest unspent output: " << min_height;
+  
   return true;
 }
 //----------------------------------------------------------------------------------------------------
