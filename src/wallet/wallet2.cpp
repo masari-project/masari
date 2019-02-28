@@ -1072,7 +1072,7 @@ static uint64_t decodeRct(const rct::rctSig & rv, const crypto::key_derivation &
   }
 }
 //----------------------------------------------------------------------------------------------------
-void wallet2::scan_output(const cryptonote::transaction &tx, const crypto::public_key &tx_pub_key, size_t i, tx_scan_info_t &tx_scan_info, int &num_vouts_received, std::unordered_map<cryptonote::subaddress_index, uint64_t> &tx_money_got_in_outs, std::vector<size_t> &outs) const
+void wallet2::scan_output(const cryptonote::transaction &tx, bool miner_tx, const crypto::public_key &tx_pub_key, size_t i, tx_scan_info_t &tx_scan_info, int &num_vouts_received, std::unordered_map<cryptonote::subaddress_index, uint64_t> &tx_money_got_in_outs, std::vector<size_t> &outs) const
 {
   THROW_WALLET_EXCEPTION_IF(i >= tx.vout.size(), error::wallet_internal_error, "Invalid vout index");
   if (m_multisig)
@@ -1093,11 +1093,14 @@ void wallet2::scan_output(const cryptonote::transaction &tx, const crypto::publi
     }
   }
 
+  THROW_WALLET_EXCEPTION_IF(std::find(outs.begin(), outs.end(), i) != outs.end(), error::wallet_internal_error, "Same output cannot be added twice");
   outs.push_back(i);
-  if (tx_scan_info.money_transfered == 0)
+  if (tx_scan_info.money_transfered == 0 && !miner_tx)
   {
     tx_scan_info.money_transfered = tools::decodeRct(tx.rct_signatures, tx_scan_info.received->derivation, i, tx_scan_info.mask, m_account.get_device());
   }
+  THROW_WALLET_EXCEPTION_IF(tx_money_got_in_outs[tx_scan_info.received->index] >= std::numeric_limits<uint64_t>::max() - tx_scan_info.money_transfered,
+      error::wallet_internal_error, "Overflow in received amounts");
   tx_money_got_in_outs[tx_scan_info.received->index] += tx_scan_info.money_transfered;
   tx_scan_info.amount = tx_scan_info.money_transfered;
   ++num_vouts_received;
@@ -1206,7 +1209,7 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
           hwdev.set_mode(hw::device::NONE);
           THROW_WALLET_EXCEPTION_IF(tx_scan_info[i].error, error::acc_outs_lookup_error, tx, pubkey_i, m_account.get_keys());
           hwdev.generate_key_derivation(pubkey_i,  keys.m_view_secret_key, tx_scan_info[i].received->derivation);
-          scan_output(tx, pubkey_i, i, tx_scan_info[i], num_vouts_received, tx_money_got_in_outs, outs);
+          scan_output(tx, miner_tx, pubkey_i, i, tx_scan_info[i], num_vouts_received, tx_money_got_in_outs, outs);
           hwdev_lock.unlock();
           outs_indices.insert(std::pair<size_t,size_t>(i, i));
         } else {
@@ -1231,7 +1234,7 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
         if (tx_scan_info[i].received)
         {
           hwdev.generate_key_derivation(tx_pub_key,  keys.m_view_secret_key, tx_scan_info[i].received->derivation);
-          scan_output(tx, tx_pub_key, i, tx_scan_info[i], num_vouts_received, tx_money_got_in_outs, outs);
+          scan_output(tx, miner_tx, tx_pub_key, i, tx_scan_info[i], num_vouts_received, tx_money_got_in_outs, outs);
           outs_indices.insert(std::pair<size_t,size_t>(i, pk_index - 1));
         }
       }
@@ -1248,7 +1251,7 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
           hwdev_lock.lock();
           hwdev.set_mode(hw::device::NONE);
           hwdev.generate_key_derivation(tx_pub_key,  keys.m_view_secret_key, tx_scan_info[i].received->derivation);
-          scan_output(tx, tx_pub_key, i, tx_scan_info[i], num_vouts_received, tx_money_got_in_outs, outs);
+          scan_output(tx, miner_tx, tx_pub_key, i, tx_scan_info[i], num_vouts_received, tx_money_got_in_outs, outs);
           outs_indices.insert(std::pair<size_t,size_t>(i, pk_index - 1));
           hwdev_lock.unlock();
         }
@@ -9637,6 +9640,7 @@ uint64_t wallet2::import_key_images(const std::vector<std::pair<crypto::key_imag
         THROW_WALLET_EXCEPTION_IF(!r, error::wallet_internal_error, "Failed to generate key derivation");
       }
       size_t output_index = 0;
+      bool miner_tx = cryptonote::is_coinbase(spent_tx);
       for (const cryptonote::tx_out& out : spent_tx.vout)
       {
         tx_scan_info_t tx_scan_info;
@@ -9644,11 +9648,13 @@ uint64_t wallet2::import_key_images(const std::vector<std::pair<crypto::key_imag
         THROW_WALLET_EXCEPTION_IF(tx_scan_info.error, error::wallet_internal_error, "check_acc_out_precomp failed");
         if (tx_scan_info.received)
         {
-          if (tx_scan_info.money_transfered == 0)
+          if (tx_scan_info.money_transfered == 0 && !miner_tx)
           {
             rct::key mask;
             tx_scan_info.money_transfered = tools::decodeRct(spent_tx.rct_signatures, tx_scan_info.received->derivation, output_index, mask, hwdev);
           }
+          THROW_WALLET_EXCEPTION_IF(tx_money_got_in_outs >= std::numeric_limits<uint64_t>::max() - tx_scan_info.money_transfered,
+              error::wallet_internal_error, "Overflow in received amounts");
           tx_money_got_in_outs += tx_scan_info.money_transfered;
         }
         ++output_index;
