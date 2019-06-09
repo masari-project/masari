@@ -6087,7 +6087,7 @@ bool simple_wallet::unspent_outputs(const std::vector<std::string> &args_)
     {
       std::ostringstream oss;
       for (size_t j = 0; j < 8 && i < tds.size(); ++i, ++j)
-        oss << tds[i].m_block_height << tr(" ");
+        oss << tr("Height: ") << tds[i].m_block_height << tr(", k_image: ") << tds[i].m_key_image;
       success_msg_writer() << oss.str();
     }
   }
