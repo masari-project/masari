@@ -115,7 +115,6 @@ struct UnsignedTransaction
 
     virtual ~UnsignedTransaction() = 0;
     virtual int status() const = 0;
-    virtual bool isMultisig() const = 0;
     virtual std::string errorString() const = 0;
     virtual std::vector<uint64_t> amount() const = 0;
     virtual std::vector<uint64_t>  fee() const = 0;
@@ -360,6 +359,7 @@ struct Wallet
     virtual void setSeedLanguage(const std::string &arg) = 0;
     //! returns wallet status (Status_Ok | Status_Error)
     virtual int status() const = 0;
+    virtual bool isMultisig() const = 0;
     //! in case error status, returns error string
     virtual std::string errorString() const = 0;
     virtual bool setPassword(const std::string &password) = 0;
