@@ -158,14 +158,17 @@ void do_prepare_file_names(const std::string& file_path, std::string& keys_file,
   keys_file = file_path;
   wallet_file = file_path;
   boost::system::error_code e;
-  if(string_tools::get_extension(keys_file) == "keys")
+  if(string_tools::get_extension(keys_file) == "keys" || string_tools::get_extension(keys_file) == "cache")
   {//provided keys file name
     wallet_file = string_tools::cut_off_extension(wallet_file);
   }else
   {//provided wallet file name
     keys_file += ".keys";
+  } 
+  if(string_tools::get_extension(wallet_file) != "cache")
+  {
+    wallet_file += ".cache";
   }
-  wallet_file += ".cache";
 }
 
 uint64_t calculate_fee(uint64_t fee_per_kb, size_t bytes, uint64_t fee_multiplier)
