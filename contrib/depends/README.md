@@ -1,5 +1,7 @@
 ### Usage
 
+Requirements: gcc, cmake, autoconfig, python, curl
+
 To build dependencies for the current arch+OS:
 
 ```bash
