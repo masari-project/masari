@@ -713,6 +713,9 @@ namespace cryptonote
     
       for(auto& btxs: blk.tx_hashes)
         vh.push_back(btxs);
+
+     if(req.include_miner_txs)
+       vh.push_back(get_transaction_hash(blk.miner_tx));
     }
     
     std::list<crypto::hash> missed_txs;
