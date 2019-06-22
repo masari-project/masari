@@ -1,0 +1,43 @@
+sudo: required
+dist: trusty
+os: linux
+language: minimal
+cache:
+  directories:
+  - $HOME/.ccache
+env:
+  global:
+    - MAKEJOBS=-j3
+    - RUN_TESTS=false
+    - BOOST_TEST_RANDOM=1$TRAVIS_BUILD_ID
+    - CCACHE_SIZE=100M
+    - CCACHE_TEMPDIR=/tmp/.ccache-temp
+    - CCACHE_COMPRESS=1
+    - CCACHE_DIR=$HOME/.ccache
+    - BASE_OUTDIR=$TRAVIS_BUILD_DIR/out
+    - PYTHON_DEBUG=1
+    - WINEDEBUG=fixme-all
+    - DOCKER_PACKAGES="build-essential libtool cmake autotools-dev automake pkg-config bsdmainutils curl git ca-certificates ccache libboost-all-dev libssl-dev libzmq3-dev libunbound-dev libsodium-dev libunwind8-dev liblzma-dev libreadline6-dev libldns-dev libexpat1-dev doxygen graphviz libpcsclite-dev libpgm-dev"
+  matrix:
+# x86_64 Linux
+    - HOST=x86_64-unknown-linux-gnu PACKAGES="cmake python3-zmq protobuf-compiler libdbus-1-dev libharfbuzz-dev libprotobuf-dev" RUN_TESTS=true
+before_install:
+    - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
+install:
+    - env | grep -E '^(CCACHE_|WINEDEBUG|DISPLAY|BOOST_TEST_RANDOM|CONFIG_SHELL)' | tee /tmp/env
+    - if [[ $HOST = *-mingw32 ]]; then DOCKER_ADMIN="--cap-add SYS_ADMIN"; fi
+    - DOCKER_ID=$(docker run $DOCKER_ADMIN -idt --mount type=bind,src=$TRAVIS_BUILD_DIR,dst=$TRAVIS_BUILD_DIR --mount type=bind,src=$CCACHE_DIR,dst=$CCACHE_DIR -w $TRAVIS_BUILD_DIR --env-file /tmp/env ubuntu:18.04)
+    - DOCKER_EXEC="docker exec $DOCKER_ID"
+    - if [ -n "$DPKG_ADD_ARCH" ]; then $DOCKER_EXEC dpkg --add-architecture "$DPKG_ADD_ARCH" ; fi
+    - travis_retry $DOCKER_EXEC apt-get update
+    - travis_retry $DOCKER_EXEC apt-get install --no-install-recommends --no-upgrade -qq $PACKAGES $DOCKER_PACKAGES
+before_script:
+    - if [[ $HOST = *-mingw32 ]]; then $DOCKER_EXEC bash -c "update-alternatives --set $HOST-g++ \$(which $HOST-g++-posix)"; fi
+script:
+    - git submodule init && git submodule update
+    - export TRAVIS_COMMIT_LOG=`git log --format=fuller -1`
+    - OUTDIR=$BASE_OUTDIR/$TRAVIS_PULL_REQUEST/$TRAVIS_JOB_NUMBER-$HOST
+    - $DOCKER_EXEC bash -c "mkdir build && cd build && cmake .. && USE_SINGLE_BUILDDIR=1 make $MAKEJOBS"
+after_script:
+    - echo $TRAVIS_COMMIT_RANGE
+    - echo $TRAVIS_COMMIT_LOG
