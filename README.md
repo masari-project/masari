@@ -23,6 +23,12 @@ Portions Copyright (c) 2012-2013 The Cryptonote developers.
 |-----------|--------|
 | License   | [![License](https://img.shields.io/badge/license-BSD3-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
+## Build
+
+| OS        | Status |
+|-----------|--------|
+| Linux x64 | [![Build Status](https://travis-ci.org/masari-project/masari.svg?branch=master)](https://travis-ci.org/masari-project/masari) |
+
 ## Introduction
 
 Masari is a private, secure, untraceable, decentralised digital currency. You are your bank, you control your funds, and nobody can trace your transfers unless you allow them to do so.
