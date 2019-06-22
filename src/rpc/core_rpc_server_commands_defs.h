@@ -597,10 +597,6 @@ namespace cryptonote
 
     struct response
     {
-      // older compatibility stuff
-      std::list<std::string> txs_as_hex;  //transactions blobs as hex (old compat)
-      std::list<std::string> txs_as_json; //transactions decoded as json (old compat)
-
       // in both old and new
       std::list<std::string> missed_tx;   //not found transactions
 
@@ -610,8 +606,6 @@ namespace cryptonote
       bool untrusted;
 
       BEGIN_KV_SERIALIZE_MAP()
-        KV_SERIALIZE(txs_as_hex)
-        KV_SERIALIZE(txs_as_json)
         KV_SERIALIZE(txs)
         KV_SERIALIZE(missed_tx)
         KV_SERIALIZE(status)
