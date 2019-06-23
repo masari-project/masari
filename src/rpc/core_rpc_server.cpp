@@ -1841,7 +1841,7 @@ namespace cryptonote
     bool dnssec_valid;
     res.addresses = tools::dns_utils::addresses_from_url(req.url, dnssec_valid);
 	
-	if(!res.addresses.empty())
+    if(res.addresses.empty())
       res.status = "No addresses found at url " + req.url;
     else
       res.status = CORE_RPC_STATUS_OK;
