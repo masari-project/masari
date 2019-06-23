@@ -233,15 +233,6 @@ namespace cryptonote
     return get_pruned_tx_blob(tx);
   }
   //------------------------------------------------------------------------------------------------------------------------------
-  static cryptonote::blobdata get_pruned_tx_json(cryptonote::transaction &tx)
-  {
-    std::stringstream ss;
-    json_archive<true> ar(ss);
-    bool r = tx.serialize_base(ar);
-    CHECK_AND_ASSERT_MES(r, cryptonote::blobdata(), "Failed to serialize rct signatures base");
-    return ss.str();
-  }
-  //------------------------------------------------------------------------------------------------------------------------------
   class pruned_transaction {
     transaction& tx;
   public:
