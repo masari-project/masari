@@ -629,12 +629,14 @@ namespace cryptonote
       bool decode_as_json;
       bool prune;
       bool include_miner_txs;
+      bool range;
 
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(heights)
         KV_SERIALIZE_OPT(decode_as_json, false)
         KV_SERIALIZE_OPT(prune, false)
         KV_SERIALIZE_OPT(include_miner_txs, false)
+        KV_SERIALIZE_OPT(range, false)
       END_KV_SERIALIZE_MAP()
     };
 
