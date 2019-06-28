@@ -836,7 +836,9 @@ namespace cryptonote
       e.as_hex = string_tools::buff_to_hex_nodelimer(blob);
       if (req.decode_as_json)
         e.as_json = req.prune ? obj_to_json_str(pruned_tx) : obj_to_json_str(tx);
-      e.in_pool = pool_tx_hashes.find(tx_hash) != pool_tx_hashes.end();
+
+      bool in_pool = pool_tx_hashes.find(tx_hash) != pool_tx_hashes.end();
+      e.in_pool = in_pool;
       if (e.in_pool)
       {
         e.block_height = e.block_timestamp = std::numeric_limits<uint64_t>::max();
@@ -858,7 +860,7 @@ namespace cryptonote
       }
 
       // output indices too if not in pool
-      if (pool_tx_hashes.find(tx_hash) == pool_tx_hashes.end())
+      if (!in_pool)
       {
         bool r = m_core.get_tx_outputs_gindexs(tx_hash, e.output_indices);
         if (!r)
