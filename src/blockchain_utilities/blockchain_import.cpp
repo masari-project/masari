@@ -444,6 +444,13 @@ int import_from_file(cryptonote::core& core, const std::string& import_file_path
             txs.push_back(cryptonote::blobdata());
             cryptonote::tx_to_blob(tx, txs.back());
           }
+          if (b.uncle != crypto::null_hash)
+          {
+            cryptonote::blobdata uncle_block;
+            cryptonote::block_to_blob(bp.uncle, uncle_block);
+            std::list<cryptonote::blobdata> empty_list; // dummy list as uncle blocks don't contain full transactions
+            blocks.push_back({uncle_block, empty_list});
+          }
           blocks.push_back({block, txs});
           int ret = check_flush(core, blocks, false);
           if (ret)
@@ -486,10 +493,8 @@ int import_from_file(cryptonote::core& core, const std::string& import_file_path
 
           if (b.major_version > 7 && b.uncle != crypto::null_hash)
           {
-            std::cout << "uncle seen" << std::endl;
             try
             {
-              std::cout << "try uncle" << std::endl;
               core.get_blockchain_storage().get_db().add_uncle(bp.uncle, bp.uncle_size, bp.uncle_difficulty, bp.uncle_weight, bp.uncle_coins_generated, b.uncle, h-2);
             }
             catch (const std::exception& e)
