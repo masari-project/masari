@@ -1,3 +1,4 @@
+// Copyright (c) 2019, The Masari Project
 // Copyright (c) 2014-2018, The Monero Project
 //
 // All rights reserved.
@@ -75,6 +76,12 @@ namespace cryptonote
       difficulty_type cumulative_weight;
       uint64_t coins_generated;
 
+      cryptonote::block uncle;
+      size_t uncle_size;
+      difficulty_type uncle_difficulty; // cumulative
+      difficulty_type uncle_weight; // cumulative
+      uint64_t uncle_coins_generated;
+
       BEGIN_SERIALIZE()
         FIELD(block)
         FIELD(txs)
@@ -82,6 +89,14 @@ namespace cryptonote
         VARINT_FIELD(cumulative_difficulty)
         VARINT_FIELD(cumulative_weight)
         VARINT_FIELD(coins_generated)
+        if (block.uncle != crypto::null_hash)
+        {
+          FIELD(uncle)
+          VARINT_FIELD(uncle_size)
+          VARINT_FIELD(uncle_difficulty)
+          VARINT_FIELD(uncle_weight)
+          VARINT_FIELD(uncle_coins_generated)
+        }
       END_SERIALIZE()
     };
 

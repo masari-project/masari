@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018, The Masari Project
+// Copyright (c) 2017-2019, The Masari Project
 // Copyright (c) 2014-2018, The Monero Project
 //
 // All rights reserved.
@@ -483,6 +483,23 @@ int import_from_file(cryptonote::core& core, const std::string& import_file_path
           cumulative_difficulty = bp.cumulative_difficulty;
           cumulative_weight = bp.cumulative_weight;
           coins_generated = bp.coins_generated;
+
+          if (b.major_version > 7 && b.uncle != crypto::null_hash)
+          {
+            std::cout << "uncle seen" << std::endl;
+            try
+            {
+              std::cout << "try uncle" << std::endl;
+              core.get_blockchain_storage().get_db().add_uncle(bp.uncle, bp.uncle_size, bp.uncle_difficulty, bp.uncle_weight, bp.uncle_coins_generated, b.uncle, h-2);
+            }
+            catch (const std::exception& e)
+            {
+              std::cout << refresh_string;
+              MFATAL("Error adding uncle block to blockchain: " << e.what());
+              quit = 2; // make sure we don't commit partial block data
+              break;
+            }
+          }
 
           try
           {

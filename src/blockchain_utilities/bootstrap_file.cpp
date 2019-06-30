@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018, The Masari Project
+// Copyright (c) 2017-2019, The Masari Project
 // Copyright (c) 2014-2018, The Monero Project
 //
 // All rights reserved.
@@ -246,6 +246,12 @@ void BootstrapFile::write_block(block& block)
     bp.coins_generated = coins_generated;
   }
 
+  // include full uncle block if applicable
+  if (block.major_version > 7)
+  {
+    if (block.uncle != crypto::null_hash)
+      bp.uncle = m_blockchain_storage->get_db().get_uncle(block.uncle);
+  }
   blobdata bd = t_serializable_object_to_blob(bp);
   m_output_stream->write((const char*)bd.data(), bd.size());
 }
