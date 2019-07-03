@@ -1648,9 +1648,12 @@ namespace cryptonote
     bool have_block = m_core.get_block_by_hash(block_hash, blk, &orphan);
     if (!have_block)
     {
-      error_resp.code = CORE_RPC_ERROR_CODE_INTERNAL_ERROR;
-      error_resp.message = "Internal error: can't get block by hash. Hash = " + req.hash + '.';
-      return false;
+      if(!m_core.get_uncle_by_hash(block_hash, blk))
+      {
+        error_resp.code = CORE_RPC_ERROR_CODE_INTERNAL_ERROR;
+        error_resp.message = "Internal error: can't get block by hash. Hash = " + req.hash + '.';
+        return false;
+      }
     }
     if (blk.miner_tx.vin.size() != 1 || blk.miner_tx.vin.front().type() != typeid(txin_gen))
     {
