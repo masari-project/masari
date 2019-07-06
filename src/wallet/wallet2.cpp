@@ -1162,7 +1162,7 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
     hwdev.set_mode(hw::device::TRANSACTION_PARSE);
     if (!hwdev.generate_key_derivation(tx_pub_key, keys.m_view_secret_key, derivation))
     {
-      MWARNING("Failed to generate key derivation from tx pubkey, skipping");
+      MWARNING("Failed to generate key derivation from tx pubkey " <<  tx_pub_key << " for tx with hash " << txid << ", skipping");
       static_assert(sizeof(derivation) == sizeof(rct::key), "Mismatched sizes of key_derivation and rct::key");
       memcpy(&derivation, rct::identity().bytes, sizeof(derivation));
     }
@@ -1196,7 +1196,7 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
         crypto::key_derivation deriv_i;
         if (!hwdev.generate_key_derivation(pubkey_i, keys.m_view_secret_key, deriv_i))
         {
-          MWARNING("Failed to generate key derivation from tx pubkey, skipping");
+          MWARNING("Failed to generate key derivation from tx pubkey " <<  pubkey_i << " at index " << i << " for tx with hash " << txid << ", skipping");
           continue;
         }
         check_acc_out_precomp_once(tx.vout[i], deriv_i, additional_derivations, i, tx_scan_info[i], output_found[i]);
