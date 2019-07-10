@@ -153,6 +153,11 @@ namespace cryptonote
   , "Set maximum txpool size in bytes."
   , DEFAULT_TXPOOL_MAX_SIZE
   };
+  const command_line::arg_descriptor<difficulty_type> arg_fixed_difficulty  = {
+    "fixed-difficulty"
+  , "Fixed difficulty used for testing."
+  , 0
+  };
 
   //-----------------------------------------------------------------------------------------------
   core::core(i_cryptonote_protocol* pprotocol):
@@ -259,6 +264,7 @@ namespace cryptonote
     command_line::add_arg(desc, arg_offline);
     command_line::add_arg(desc, arg_disable_dns_checkpoints);
     command_line::add_arg(desc, arg_max_txpool_size);
+    command_line::add_arg(desc, arg_fixed_difficulty);
 
     miner::init_options(desc);
     BlockchainDB::init_options(desc);
@@ -500,7 +506,8 @@ namespace cryptonote
     m_blockchain_storage.set_user_options(blocks_threads,
         blocks_per_sync, sync_mode, fast_sync);
 
-    r = m_blockchain_storage.init(db.release(), m_nettype, m_offline, test_options);
+    const difficulty_type fixed_difficulty = command_line::get_arg(vm, arg_fixed_difficulty);
+    r = m_blockchain_storage.init(db.release(), m_nettype, m_offline, test_options, fixed_difficulty);
 
     r = m_mempool.init(max_txpool_size);
     CHECK_AND_ASSERT_MES(r, false, "Failed to initialize memory pool");
