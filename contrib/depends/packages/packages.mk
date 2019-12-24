@@ -2,7 +2,7 @@ packages:=boost openssl zeromq cppzmq expat ldns readline libiconv hidapi protob
 native_packages := native_ccache native_protobuf
 
 darwin_native_packages = native_biplist native_ds_store native_mac_alias
-darwin_packages = sodium-darwin
+darwin_packages = sodium_darwin
 
 linux_packages = eudev
 qt_packages = qt
@@ -11,12 +11,13 @@ ifeq ($(build_tests),ON)
 packages += gtest
 endif
 
-ifeq ($(host_os),linux)
-packages += unwind
-packages += sodium
-endif
 ifeq ($(host_os),mingw32)
 packages += icu4c
+packages += sodium
+endif
+
+ifeq ($(host_os),linux)
+packages += unwind
 packages += sodium
 endif
 
