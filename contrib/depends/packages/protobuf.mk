@@ -25,7 +25,5 @@ define $(package)_stage_cmds
 endef
 
 define $(package)_postprocess_cmds
-  rm lib/libprotoc.a &&\
-  rm lib/*.la
+  rm lib/libprotoc.a
 endef
-
