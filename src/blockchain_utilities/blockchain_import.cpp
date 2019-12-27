@@ -166,7 +166,7 @@ int pop_blocks(cryptonote::core& core, int num_blocks)
   return num_blocks;
 }
 
-int check_flush(cryptonote::core &core, std::vector<block_complete_entry> &blocks, bool force)
+int check_flush(cryptonote::core &core, std::list<block_complete_entry> &blocks, bool force)
 {
   if (blocks.empty())
     return 0;
@@ -178,7 +178,7 @@ int check_flush(cryptonote::core &core, std::vector<block_complete_entry> &block
   if (!force && new_height % HASH_OF_HASHES_STEP)
     return 0;
 
-  std::vector<crypto::hash> hashes;
+  std::list<crypto::hash> hashes;
   for (const auto &b: blocks)
   {
     cryptonote::block block;
@@ -314,7 +314,7 @@ int import_from_file(cryptonote::core& core, const std::string& import_file_path
   MINFO("Reading blockchain from bootstrap file...");
   std::cout << ENDL;
 
-  std::vector<block_complete_entry> blocks;
+  std::list<block_complete_entry> blocks;
 
   // Skip to start_height before we start adding.
   {
@@ -396,7 +396,7 @@ int import_from_file(cryptonote::core& core, const std::string& import_file_path
     {
       std::cout << refresh_string << "block " << h-1
         << " / " << block_stop
-        << "\r" << std::flush;
+        << std::flush;
       std::cout << ENDL << ENDL;
       MINFO("Specified block number reached - stopping.  block: " << h-1 << "  total blocks: " << h);
       quit = 1;
@@ -432,18 +432,25 @@ int import_from_file(cryptonote::core& core, const std::string& import_file_path
         {
           std::cout << refresh_string << "block " << h-1
             << " / " << block_stop
-            << "\r" << std::flush;
+            << std::flush;
         }
 
         if (opt_verify)
         {
           cryptonote::blobdata block;
           cryptonote::block_to_blob(bp.block, block);
-          std::vector<cryptonote::blobdata> txs;
+          std::list<cryptonote::blobdata> txs;
           for (const auto &tx: bp.txs)
           {
             txs.push_back(cryptonote::blobdata());
             cryptonote::tx_to_blob(tx, txs.back());
+          }
+          if (b.uncle != crypto::null_hash)
+          {
+            cryptonote::blobdata uncle_block;
+            cryptonote::block_to_blob(bp.uncle, uncle_block);
+            std::list<cryptonote::blobdata> empty_list; // dummy list as uncle blocks don't contain full transactions
+            blocks.push_back({uncle_block, empty_list});
           }
           blocks.push_back({block, txs});
           int ret = check_flush(core, blocks, false);
@@ -475,18 +482,34 @@ int import_from_file(cryptonote::core& core, const std::string& import_file_path
             txs.push_back(tx);
           }
 
-          size_t block_weight;
+          size_t block_size;
           difficulty_type cumulative_difficulty;
+          difficulty_type cumulative_weight;
           uint64_t coins_generated;
 
-          block_weight = bp.block_weight;
+          block_size = bp.block_size;
           cumulative_difficulty = bp.cumulative_difficulty;
+          cumulative_weight = bp.cumulative_weight;
           coins_generated = bp.coins_generated;
+
+          if (b.major_version > 7 && b.uncle != crypto::null_hash)
+          {
+            try
+            {
+              core.get_blockchain_storage().get_db().add_uncle(bp.uncle, bp.uncle_size, bp.uncle_difficulty, bp.uncle_weight, bp.uncle_coins_generated, b.uncle, h-2);
+            }
+            catch (const std::exception& e)
+            {
+              std::cout << refresh_string;
+              MFATAL("Error adding uncle block to blockchain: " << e.what());
+              quit = 2; // make sure we don't commit partial block data
+              break;
+            }
+          }
 
           try
           {
-            uint64_t long_term_block_weight = core.get_blockchain_storage().get_next_long_term_block_weight(block_weight);
-            core.get_blockchain_storage().get_db().add_block(b, block_weight, long_term_block_weight, cumulative_difficulty, coins_generated, txs);
+            core.get_blockchain_storage().get_db().add_block(b, block_size, cumulative_difficulty, cumulative_weight, coins_generated, txs);
           }
           catch (const std::exception& e)
           {
@@ -659,6 +682,19 @@ int main(int argc, char* argv[])
     std::cerr << "Error: batch-size must be > 0" << ENDL;
     return 1;
   }
+  
+  if (!opt_verify)
+  {
+    MCLOG_RED(el::Level::Warning, "global", "\n"
+      "Import is set to proceed WITHOUT VERIFICATION.\n"
+      "This is a DANGEROUS operation: if the file was tampered with in transit, or obtained from a malicious source,\n"
+      "you could end up with a compromised database. It is recommended to NOT use " << arg_noverify.name << ".\n"
+      "*****************************************************************************************\n"
+      "You have 90 seconds to press ^C or terminate this program before unverified import starts\n"
+      "*****************************************************************************************");
+    sleep(90);
+  }
+  
   if (opt_verify && command_line::is_arg_defaulted(vm, arg_batch_size))
   {
     // usually want batch size default lower if verify on, so progress can be
@@ -741,18 +777,6 @@ int main(int argc, char* argv[])
   MINFO("bootstrap file path: " << import_file_path);
   MINFO("database path:       " << m_config_folder);
 
-  if (!opt_verify)
-  {
-    MCLOG_RED(el::Level::Warning, "global", "\n"
-      "Import is set to proceed WITHOUT VERIFICATION.\n"
-      "This is a DANGEROUS operation: if the file was tampered with in transit, or obtained from a malicious source,\n"
-      "you could end up with a compromised database. It is recommended to NOT use " << arg_noverify.name << ".\n"
-      "*****************************************************************************************\n"
-      "You have 90 seconds to press ^C or terminate this program before unverified import starts\n"
-      "*****************************************************************************************");
-    sleep(90);
-  }
-
   cryptonote::cryptonote_protocol_stub pr; //TODO: stub only for this kind of test, make real validation of relayed objects
   cryptonote::core core(&pr);
 
@@ -760,12 +784,7 @@ int main(int argc, char* argv[])
   {
 
   core.disable_dns_checkpoints(true);
-#if defined(PER_BLOCK_CHECKPOINT)
-  const GetCheckpointsCallback& get_checkpoints = blocks::GetCheckpointsData;
-#else
-  const GetCheckpointsCallback& get_checkpoints = nullptr;
-#endif
-  if (!core.init(vm, nullptr, get_checkpoints))
+  if (!core.init(vm, NULL))
   {
     std::cerr << "Failed to initialize core" << ENDL;
     return 1;
