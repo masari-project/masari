@@ -34,7 +34,7 @@
 using namespace epee;
 
 #include "checkpoints.h"
-
+#include <functional>
 #include "common/dns_utils.h"
 #include "include_base_utils.h"
 #include "string_tools.h"
@@ -136,11 +136,9 @@ namespace cryptonote
   //---------------------------------------------------------------------------
   uint64_t checkpoints::get_max_height() const
   {
-    std::map< uint64_t, crypto::hash >::const_iterator highest = 
-        std::max_element( m_points.begin(), m_points.end(),
-                         ( boost::bind(&std::map< uint64_t, crypto::hash >::value_type::first, _1) < 
-                           boost::bind(&std::map< uint64_t, crypto::hash >::value_type::first, _2 ) ) );
-    return highest->first;
+    if (m_points.empty())
+      return 0;
+    return m_points.rbegin()->first;
   }
   //---------------------------------------------------------------------------
   const std::map<uint64_t, crypto::hash>& checkpoints::get_points() const
