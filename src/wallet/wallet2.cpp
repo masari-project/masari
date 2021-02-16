@@ -1227,7 +1227,7 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
     {
       for (size_t i = 0; i < tx.vout.size(); ++i)
       {
-        tpool.submit(&waiter, boost::bind(&wallet2::check_acc_out_precomp_once, this, std::cref(tx.vout[i]), std::cref(derivation), std::cref(additional_derivations), i,
+        tpool.submit(&waiter, std::bind(&wallet2::check_acc_out_precomp_once, this, std::cref(tx.vout[i]), std::cref(derivation), std::cref(additional_derivations), i,
         std::ref(tx_scan_info[i]), std::ref(output_found[i])));
       }
       waiter.wait();
@@ -1826,7 +1826,7 @@ void wallet2::process_blocks(uint64_t start_height, const std::list<cryptonote::
       std::list<block_complete_entry>::const_iterator tmpblocki = blocki;
       for (size_t i = 0; i < round_size; ++i)
       {
-        tpool.submit(&waiter, boost::bind(&wallet2::parse_block_round, this, std::cref(tmpblocki->block),
+        tpool.submit(&waiter, std::bind(&wallet2::parse_block_round, this, std::cref(tmpblocki->block),
           std::ref(round_blocks[i]), std::ref(round_block_hashes[i]), std::ref(error[i])));
         ++tmpblocki;
       }
