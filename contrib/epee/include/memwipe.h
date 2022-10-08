@@ -30,6 +30,7 @@
 
 #pragma once
 
+#include <stdio.h>
 #ifdef __cplusplus
 #include <array>
 

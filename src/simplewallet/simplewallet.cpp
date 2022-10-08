@@ -1968,72 +1968,72 @@ simple_wallet::simple_wallet()
   , m_current_subaddress_account(0)
 {
   m_cmd_binder.set_handler("start_mining",
-                           boost::bind(&simple_wallet::start_mining, this, _1),
+                           boost::bind(&simple_wallet::start_mining, this, boost::placeholders::_1),
                            tr("start_mining [<number_of_threads>] [bg_mining] [ignore_battery]"),
                            tr("Start mining in the daemon (bg_mining and ignore_battery are optional booleans)."));
   m_cmd_binder.set_handler("stop_mining",
-                           boost::bind(&simple_wallet::stop_mining, this, _1),
+                           boost::bind(&simple_wallet::stop_mining, this, boost::placeholders::_1),
                            tr("Stop mining in the daemon."));
   m_cmd_binder.set_handler("set_daemon",
-                           boost::bind(&simple_wallet::set_daemon, this, _1),
+                           boost::bind(&simple_wallet::set_daemon, this, boost::placeholders::_1),
                            tr("set_daemon <host>[:<port>]"),
                            tr("Set another daemon to connect to."));
   m_cmd_binder.set_handler("save_bc",
-                           boost::bind(&simple_wallet::save_bc, this, _1),
+                           boost::bind(&simple_wallet::save_bc, this, boost::placeholders::_1),
                            tr("Save the current blockchain data."));
   m_cmd_binder.set_handler("refresh",
-                           boost::bind(&simple_wallet::refresh, this, _1),
+                           boost::bind(&simple_wallet::refresh, this, boost::placeholders::_1),
                            tr("Synchronize the transactions and balance."));
   m_cmd_binder.set_handler("balance",
-                           boost::bind(&simple_wallet::show_balance, this, _1),
+                           boost::bind(&simple_wallet::show_balance, this, boost::placeholders::_1),
                            tr("balance [detail]"),
                            tr("Show the wallet's balance of the currently selected account."));
   m_cmd_binder.set_handler("incoming_transfers",
-                           boost::bind(&simple_wallet::show_incoming_transfers, this, _1),
+                           boost::bind(&simple_wallet::show_incoming_transfers, this, boost::placeholders::_1),
                            tr("incoming_transfers [available|unavailable] [verbose] [index=<N1>[,<N2>[,...]]]"),
                            tr("Show the incoming transfers, all or filtered by availability and address index."));
   m_cmd_binder.set_handler("payments",
-                           boost::bind(&simple_wallet::show_payments, this, _1),
+                           boost::bind(&simple_wallet::show_payments, this, boost::placeholders::_1),
                            tr("payments <PID_1> [<PID_2> ... <PID_N>]"),
                            tr("Show the payments for the given payment IDs."));
   m_cmd_binder.set_handler("bc_height",
-                           boost::bind(&simple_wallet::show_blockchain_height, this, _1),
+                           boost::bind(&simple_wallet::show_blockchain_height, this, boost::placeholders::_1),
                            tr("Show the blockchain height."));
-  m_cmd_binder.set_handler("transfer", boost::bind(&simple_wallet::transfer, this, _1),
+  m_cmd_binder.set_handler("transfer", boost::bind(&simple_wallet::transfer, this, boost::placeholders::_1),
                            tr("transfer [index=<N1>[,<N2>,...]] [<priority>] <address> <amount> [<payment_id>]"),
                            tr("Transfer <amount> to <address>. If the parameter \"index=<N1>[,<N2>,...]\" is specified, the wallet uses outputs received by addresses of those indices. If omitted, the wallet randomly chooses address indices to be used. In any case, it tries its best not to combine outputs across multiple addresses. <priority> is the priority of the transaction. The higher the priority, the higher the transaction fee. Valid values in priority order (from lowest to highest) are: low, medium, high. If omitted, the default value (see the command \"set priority\") is used. Multiple payments can be made at once by adding <address_2> <amount_2> etcetera (before the payment ID, if it's included)"));
   m_cmd_binder.set_handler("locked_transfer",
-                           boost::bind(&simple_wallet::locked_transfer, this, _1),
+                           boost::bind(&simple_wallet::locked_transfer, this, boost::placeholders::_1),
                            tr("locked_transfer [index=<N1>[,<N2>,...]] [<priority>] <addr> <amount> <lockblocks> [<payment_id>]"),
                            tr("Transfer <amount> to <address> and lock it for <lockblocks> (max. 1000000). If the parameter \"index=<N1>[,<N2>,...]\" is specified, the wallet uses outputs received by addresses of those indices. If omitted, the wallet randomly chooses address indices to be used. In any case, it tries its best not to combine outputs across multiple addresses. <priority> is the priority of the transaction. The higher the priority, the higher the transaction fee. Valid values in priority order (from lowest to highest) are: low, medium, high. If omitted, the default value (see the command \"set priority\") is used. Multiple payments can be made at once by adding <address_2> <amount_2> etcetera (before the payment ID, if it's included)"));
-  m_cmd_binder.set_handler("sweep_all", boost::bind(&simple_wallet::sweep_all, this, _1),
+  m_cmd_binder.set_handler("sweep_all", boost::bind(&simple_wallet::sweep_all, this, boost::placeholders::_1),
                            tr("sweep_all [index=<N1>[,<N2>,...]] [<priority>] <address> [<payment_id>]"),
                            tr("Send all unlocked balance to an address. If the parameter \"index<N1>[,<N2>,...]\" is specified, the wallet sweeps outputs received by those address indices. If omitted, the wallet randomly chooses an address index to be used."));
   m_cmd_binder.set_handler("sweep_below",
-                           boost::bind(&simple_wallet::sweep_below, this, _1),
+                           boost::bind(&simple_wallet::sweep_below, this, boost::placeholders::_1),
                            tr("sweep_below <amount_threshold> [index=<N1>[,<N2>,...]] [<priority>] <address> [<payment_id>]"),
                            tr("Send all unlocked outputs below the threshold to an address."));
   m_cmd_binder.set_handler("sweep_single",
-                           boost::bind(&simple_wallet::sweep_single, this, _1),
+                           boost::bind(&simple_wallet::sweep_single, this, boost::placeholders::_1),
                            tr("sweep_single [<priority>] <key_image> <address> [<payment_id>]"),
                            tr("Send a single output of the given key image to an address without change."));
   m_cmd_binder.set_handler("donate",
-                           boost::bind(&simple_wallet::donate, this, _1),
+                           boost::bind(&simple_wallet::donate, this, boost::placeholders::_1),
                            tr("donate [index=<N1>[,<N2>,...]] [<priority>] <amount> [<payment_id>]"),
                            tr("Donate <amount> to the development team (donate.masari.org)."));
   m_cmd_binder.set_handler("sign_transfer",
-                           boost::bind(&simple_wallet::sign_transfer, this, _1),
+                           boost::bind(&simple_wallet::sign_transfer, this, boost::placeholders::_1),
                            tr("sign_transfer <file>"),
                            tr("Sign a transaction from a <file>."));
   m_cmd_binder.set_handler("submit_transfer",
-                           boost::bind(&simple_wallet::submit_transfer, this, _1),
+                           boost::bind(&simple_wallet::submit_transfer, this, boost::placeholders::_1),
                            tr("Submit a signed transaction from a file."));
   m_cmd_binder.set_handler("set_log",
-                           boost::bind(&simple_wallet::set_log, this, _1),
+                           boost::bind(&simple_wallet::set_log, this, boost::placeholders::_1),
                            tr("set_log <level>|{+,-,}<categories>"),
                            tr("Change the current log detail (level must be <0-4>)."));
   m_cmd_binder.set_handler("account",
-                           boost::bind(&simple_wallet::account, this, _1),
+                           boost::bind(&simple_wallet::account, this, boost::placeholders::_1),
                            tr("account\n"
                             "  account new <label text with white spaces allowed>\n"
                             "  account switch <index> \n"
@@ -2049,34 +2049,34 @@ simple_wallet::simple_wallet()
                               "If the \"untag\" argument is specified, the tags assigned to the specified accounts <account_index_1>, <account_index_2> ..., are removed.\n"
                               "If the \"tag_description\" argument is specified, the tag <tag_name> is assigned an arbitrary text <description>."));
   m_cmd_binder.set_handler("address",
-                           boost::bind(&simple_wallet::print_address, this, _1),
+                           boost::bind(&simple_wallet::print_address, this, boost::placeholders::_1),
                            tr("address [ new <label text with white spaces allowed> | all | <index_min> [<index_max>] | label <index> <label text with white spaces allowed>]"),
                            tr("If no arguments are specified or <index> is specified, the wallet shows the default or specified address. If \"all\" is specified, the wallet shows all the existing addresses in the currently selected account. If \"new \" is specified, the wallet creates a new address with the provided label text (which can be empty). If \"label\" is specified, the wallet sets the label of the address specified by <index> to the provided label text."));
   m_cmd_binder.set_handler("integrated_address",
-                           boost::bind(&simple_wallet::print_integrated_address, this, _1),
+                           boost::bind(&simple_wallet::print_integrated_address, this, boost::placeholders::_1),
                            tr("integrated_address [<payment_id> | <address>]"),
                            tr("Encode a payment ID into an integrated address for the current wallet public address (no argument uses a random payment ID), or decode an integrated address to standard address and payment ID"));
   m_cmd_binder.set_handler("address_book",
-                           boost::bind(&simple_wallet::address_book, this, _1),
+                           boost::bind(&simple_wallet::address_book, this, boost::placeholders::_1),
                            tr("address_book [(add ((<address> [pid <id>])|<integrated address>) [<description possibly with whitespaces>])|(delete <index>)]"),
                            tr("Print all entries in the address book, optionally adding/deleting an entry to/from it."));
   m_cmd_binder.set_handler("save",
-                           boost::bind(&simple_wallet::save, this, _1),
+                           boost::bind(&simple_wallet::save, this, boost::placeholders::_1),
                            tr("Save the wallet data."));
   m_cmd_binder.set_handler("save_watch_only",
-                           boost::bind(&simple_wallet::save_watch_only, this, _1),
+                           boost::bind(&simple_wallet::save_watch_only, this, boost::placeholders::_1),
                            tr("Save a watch-only keys file."));
   m_cmd_binder.set_handler("viewkey",
-                           boost::bind(&simple_wallet::viewkey, this, _1),
+                           boost::bind(&simple_wallet::viewkey, this, boost::placeholders::_1),
                            tr("Display the private view key."));
   m_cmd_binder.set_handler("spendkey",
-                           boost::bind(&simple_wallet::spendkey, this, _1),
+                           boost::bind(&simple_wallet::spendkey, this, boost::placeholders::_1),
                            tr("Display the private spend key."));
   m_cmd_binder.set_handler("seed",
-                           boost::bind(&simple_wallet::seed, this, _1),
+                           boost::bind(&simple_wallet::seed, this, boost::placeholders::_1),
                            tr("Display the Electrum-style mnemonic seed"));
   m_cmd_binder.set_handler("set",
-                           boost::bind(&simple_wallet::set_variable, this, _1),
+                           boost::bind(&simple_wallet::set_variable, this, boost::placeholders::_1),
                            tr("set <option> [<value>]"),
                            tr("Available options:\n "
                                   "seed language\n "
@@ -2123,169 +2123,169 @@ simple_wallet::simple_wallet()
                                   "segregation-height <n>\n "
                                   "  Set to the height of a key reusing fork you want to use, 0 to use default."));
   m_cmd_binder.set_handler("encrypted_seed",
-                           boost::bind(&simple_wallet::encrypted_seed, this, _1),
+                           boost::bind(&simple_wallet::encrypted_seed, this, boost::placeholders::_1),
                            tr("Display the encrypted Electrum-style mnemonic seed."));
   m_cmd_binder.set_handler("rescan_spent",
-                           boost::bind(&simple_wallet::rescan_spent, this, _1),
+                           boost::bind(&simple_wallet::rescan_spent, this, boost::placeholders::_1),
                            tr("Rescan the blockchain for spent outputs."));
   m_cmd_binder.set_handler("get_tx_key",
-                           boost::bind(&simple_wallet::get_tx_key, this, _1),
+                           boost::bind(&simple_wallet::get_tx_key, this, boost::placeholders::_1),
                            tr("get_tx_key <txid>"),
                            tr("Get the transaction key (r) for a given <txid>."));
   m_cmd_binder.set_handler("check_tx_key",
-                           boost::bind(&simple_wallet::check_tx_key, this, _1),
+                           boost::bind(&simple_wallet::check_tx_key, this, boost::placeholders::_1),
                            tr("check_tx_key <txid> <txkey> <address>"),
                            tr("Check the amount going to <address> in <txid>."));
   m_cmd_binder.set_handler("get_tx_proof",
-                           boost::bind(&simple_wallet::get_tx_proof, this, _1),
+                           boost::bind(&simple_wallet::get_tx_proof, this, boost::placeholders::_1),
                            tr("get_tx_proof <txid> <address> [<message>]"),
                            tr("Generate a signature proving funds sent to <address> in <txid>, optionally with a challenge string <message>, using either the transaction secret key (when <address> is not your wallet's address) or the view secret key (otherwise), which does not disclose the secret key."));
   m_cmd_binder.set_handler("check_tx_proof",
-                           boost::bind(&simple_wallet::check_tx_proof, this, _1),
+                           boost::bind(&simple_wallet::check_tx_proof, this, boost::placeholders::_1),
                            tr("check_tx_proof <txid> <address> <signature_file> [<message>]"),
                            tr("Check the proof for funds going to <address> in <txid> with the challenge string <message> if any."));
   m_cmd_binder.set_handler("get_spend_proof",
-                           boost::bind(&simple_wallet::get_spend_proof, this, _1),
+                           boost::bind(&simple_wallet::get_spend_proof, this, boost::placeholders::_1),
                            tr("get_spend_proof <txid> [<message>]"),
                            tr("Generate a signature proving that you generated <txid> using the spend secret key, optionally with a challenge string <message>."));
   m_cmd_binder.set_handler("check_spend_proof",
-                           boost::bind(&simple_wallet::check_spend_proof, this, _1),
+                           boost::bind(&simple_wallet::check_spend_proof, this, boost::placeholders::_1),
                            tr("check_spend_proof <txid> <signature_file> [<message>]"),
                            tr("Check a signature proving that the signer generated <txid>, optionally with a challenge string <message>."));
   m_cmd_binder.set_handler("get_reserve_proof",
-                           boost::bind(&simple_wallet::get_reserve_proof, this, _1),
+                           boost::bind(&simple_wallet::get_reserve_proof, this, boost::placeholders::_1),
                            tr("get_reserve_proof (all|<amount>) [<message>]"),
                            tr("Generate a signature proving that you own at least this much, optionally with a challenge string <message>.\n"
                               "If 'all' is specified, you prove the entire sum of all of your existing accounts' balances.\n"
                               "Otherwise, you prove the reserve of the smallest possible amount above <amount> available in your current account."));
   m_cmd_binder.set_handler("check_reserve_proof",
-                           boost::bind(&simple_wallet::check_reserve_proof, this, _1),
+                           boost::bind(&simple_wallet::check_reserve_proof, this, boost::placeholders::_1),
                            tr("check_reserve_proof <address> <signature_file> [<message>]"),
                            tr("Check a signature proving that the owner of <address> holds at least this much, optionally with a challenge string <message>."));
   m_cmd_binder.set_handler("show_transfers",
-                           boost::bind(&simple_wallet::show_transfers, this, _1),
+                           boost::bind(&simple_wallet::show_transfers, this, boost::placeholders::_1),
                            tr("show_transfers [in|out|pending|failed|pool] [index=<N1>[,<N2>,...]] [<min_height> [<max_height>]]"),
                            tr("Show the incoming/outgoing transfers within an optional height range."));
   m_cmd_binder.set_handler("unspent_outputs",
-                           boost::bind(&simple_wallet::unspent_outputs, this, _1),
+                           boost::bind(&simple_wallet::unspent_outputs, this, boost::placeholders::_1),
                            tr("unspent_outputs [index=<N1>[,<N2>,...]] [<min_amount> [<max_amount>]]"),
                            tr("Show the unspent outputs of a specified address within an optional amount range."));
   m_cmd_binder.set_handler("rescan_bc",
-                           boost::bind(&simple_wallet::rescan_blockchain, this, _1),
+                           boost::bind(&simple_wallet::rescan_blockchain, this, boost::placeholders::_1),
                            tr("Rescan the blockchain from scratch."));
   m_cmd_binder.set_handler("set_tx_note",
-                           boost::bind(&simple_wallet::set_tx_note, this, _1),
+                           boost::bind(&simple_wallet::set_tx_note, this, boost::placeholders::_1),
                            tr("set_tx_note <txid> [free text note]"),
                            tr("Set an arbitrary string note for a <txid>."));
   m_cmd_binder.set_handler("get_tx_note",
-                           boost::bind(&simple_wallet::get_tx_note, this, _1),
+                           boost::bind(&simple_wallet::get_tx_note, this, boost::placeholders::_1),
                            tr("get_tx_note <txid>"),
                            tr("Get a string note for a txid."));
   m_cmd_binder.set_handler("set_description",
-                           boost::bind(&simple_wallet::set_description, this, _1),
+                           boost::bind(&simple_wallet::set_description, this, boost::placeholders::_1),
                            tr("set_description [free text note]"),
                            tr("Set an arbitrary description for the wallet."));
   m_cmd_binder.set_handler("get_description",
-                           boost::bind(&simple_wallet::get_description, this, _1),
+                           boost::bind(&simple_wallet::get_description, this, boost::placeholders::_1),
                            tr("Get the description of the wallet."));
   m_cmd_binder.set_handler("status",
-                           boost::bind(&simple_wallet::status, this, _1),
+                           boost::bind(&simple_wallet::status, this, boost::placeholders::_1),
                            tr("Show the wallet's status."));
   m_cmd_binder.set_handler("wallet_info",
-                           boost::bind(&simple_wallet::wallet_info, this, _1),
+                           boost::bind(&simple_wallet::wallet_info, this, boost::placeholders::_1),
                            tr("Show the wallet's information."));
   m_cmd_binder.set_handler("sign",
-                           boost::bind(&simple_wallet::sign, this, _1),
+                           boost::bind(&simple_wallet::sign, this, boost::placeholders::_1),
                            tr("sign <file>"),
                            tr("Sign the contents of a file."));
   m_cmd_binder.set_handler("verify",
-                           boost::bind(&simple_wallet::verify, this, _1),
+                           boost::bind(&simple_wallet::verify, this, boost::placeholders::_1),
                            tr("verify <filename> <address> <signature>"),
                            tr("Verify a signature on the contents of a file."));
   m_cmd_binder.set_handler("export_key_images",
-                           boost::bind(&simple_wallet::export_key_images, this, _1),
+                           boost::bind(&simple_wallet::export_key_images, this, boost::placeholders::_1),
                            tr("export_key_images <file>"),
                            tr("Export a signed set of key images to a <file>."));
   m_cmd_binder.set_handler("import_key_images",
-                           boost::bind(&simple_wallet::import_key_images, this, _1),
+                           boost::bind(&simple_wallet::import_key_images, this, boost::placeholders::_1),
                            tr("import_key_images <file>"),
                            tr("Import a signed key images list and verify their spent status."));
   m_cmd_binder.set_handler("export_outputs",
-                           boost::bind(&simple_wallet::export_outputs, this, _1),
+                           boost::bind(&simple_wallet::export_outputs, this, boost::placeholders::_1),
                            tr("export_outputs <file>"),
                            tr("Export a set of outputs owned by this wallet."));
   m_cmd_binder.set_handler("import_outputs",
-                           boost::bind(&simple_wallet::import_outputs, this, _1),
+                           boost::bind(&simple_wallet::import_outputs, this, boost::placeholders::_1),
                            tr("import_outputs <file>"),
                            tr("Import a set of outputs owned by this wallet."));
   m_cmd_binder.set_handler("show_transfer",
-                           boost::bind(&simple_wallet::show_transfer, this, _1),
+                           boost::bind(&simple_wallet::show_transfer, this, boost::placeholders::_1),
                            tr("show_transfer <txid>"),
                            tr("Show information about a transfer to/from this address."));
   m_cmd_binder.set_handler("password",
-                           boost::bind(&simple_wallet::change_password, this, _1),
+                           boost::bind(&simple_wallet::change_password, this, boost::placeholders::_1),
                            tr("Change the wallet's password."));
   m_cmd_binder.set_handler("payment_id",
-                           boost::bind(&simple_wallet::payment_id, this, _1),
+                           boost::bind(&simple_wallet::payment_id, this, boost::placeholders::_1),
                            tr("Generate a new random full size payment id. These will be unencrypted on the blockchain, see integrated_address for encrypted short payment ids."));
   m_cmd_binder.set_handler("fee",
-                           boost::bind(&simple_wallet::print_fee_info, this, _1),
+                           boost::bind(&simple_wallet::print_fee_info, this, boost::placeholders::_1),
                            tr("Print the information about the current fee and transaction backlog."));
-  m_cmd_binder.set_handler("prepare_multisig", boost::bind(&simple_wallet::prepare_multisig, this, _1),
+  m_cmd_binder.set_handler("prepare_multisig", boost::bind(&simple_wallet::prepare_multisig, this, boost::placeholders::_1),
                            tr("Export data needed to create a multisig wallet"));
-  m_cmd_binder.set_handler("make_multisig", boost::bind(&simple_wallet::make_multisig, this, _1),
+  m_cmd_binder.set_handler("make_multisig", boost::bind(&simple_wallet::make_multisig, this, boost::placeholders::_1),
                            tr("make_multisig <threshold> <string1> [<string>...]"),
                            tr("Turn this wallet into a multisig wallet"));
   m_cmd_binder.set_handler("finalize_multisig",
-                           boost::bind(&simple_wallet::finalize_multisig, this, _1),
+                           boost::bind(&simple_wallet::finalize_multisig, this, boost::placeholders::_1),
                            tr("finalize_multisig <string> [<string>...]"),
                            tr("Turn this wallet into a multisig wallet, extra step for N-1/N wallets"));
   m_cmd_binder.set_handler("export_multisig_info",
-                           boost::bind(&simple_wallet::export_multisig, this, _1),
+                           boost::bind(&simple_wallet::export_multisig, this, boost::placeholders::_1),
                            tr("export_multisig_info <filename>"),
                            tr("Export multisig info for other participants"));
   m_cmd_binder.set_handler("import_multisig_info",
-                           boost::bind(&simple_wallet::import_multisig, this, _1),
+                           boost::bind(&simple_wallet::import_multisig, this, boost::placeholders::_1),
                            tr("import_multisig_info <filename> [<filename>...]"),
                            tr("Import multisig info from other participants"));
   m_cmd_binder.set_handler("sign_multisig",
-                           boost::bind(&simple_wallet::sign_multisig, this, _1),
+                           boost::bind(&simple_wallet::sign_multisig, this, boost::placeholders::_1),
                            tr("sign_multisig <filename>"),
                            tr("Sign a multisig transaction from a file"));
   m_cmd_binder.set_handler("submit_multisig",
-                           boost::bind(&simple_wallet::submit_multisig, this, _1),
+                           boost::bind(&simple_wallet::submit_multisig, this, boost::placeholders::_1),
                            tr("submit_multisig <filename>"),
                            tr("Submit a signed multisig transaction from a file"));
   m_cmd_binder.set_handler("export_raw_multisig_tx",
-                           boost::bind(&simple_wallet::export_raw_multisig, this, _1),
+                           boost::bind(&simple_wallet::export_raw_multisig, this, boost::placeholders::_1),
                            tr("export_raw_multisig_tx <filename>"),
                            tr("Export a signed multisig transaction to a file"));
   m_cmd_binder.set_handler("print_ring",
-                           boost::bind(&simple_wallet::print_ring, this, _1),
+                           boost::bind(&simple_wallet::print_ring, this, boost::placeholders::_1),
                            tr("print_ring <key_image> | <txid>"),
                            tr("Print the ring(s) used to spend a given key image or transaction (if the ring size is > 1)"));
   m_cmd_binder.set_handler("set_ring",
-                           boost::bind(&simple_wallet::set_ring, this, _1),
+                           boost::bind(&simple_wallet::set_ring, this, boost::placeholders::_1),
                            tr("set_ring <key_image> absolute|relative <index> [<index>...]"),
                            tr("Set the ring used for a given key image, so it can be reused in a fork"));
   m_cmd_binder.set_handler("save_known_rings",
-                           boost::bind(&simple_wallet::save_known_rings, this, _1),
+                           boost::bind(&simple_wallet::save_known_rings, this, boost::placeholders::_1),
                            tr("save_known_rings"),
                            tr("Save known rings to the shared rings database"));
   m_cmd_binder.set_handler("blackball",
-                           boost::bind(&simple_wallet::blackball, this, _1),
+                           boost::bind(&simple_wallet::blackball, this, boost::placeholders::_1),
                            tr("blackball <output public key> | <filename> [add]"),
                            tr("Blackball output(s) so they never get selected as fake outputs in a ring"));
   m_cmd_binder.set_handler("unblackball",
-                           boost::bind(&simple_wallet::unblackball, this, _1),
+                           boost::bind(&simple_wallet::unblackball, this, boost::placeholders::_1),
                            tr("unblackball <output public key>"),
                            tr("Unblackballs an output so it may get selected as a fake output in a ring"));
   m_cmd_binder.set_handler("blackballed",
-                           boost::bind(&simple_wallet::blackballed, this, _1),
+                           boost::bind(&simple_wallet::blackballed, this, boost::placeholders::_1),
                            tr("blackballed <output public key>"),
                            tr("Checks whether an output is blackballed"));
   m_cmd_binder.set_handler("help",
-                           boost::bind(&simple_wallet::help, this, _1),
+                           boost::bind(&simple_wallet::help, this, boost::placeholders::_1),
                            tr("help [<command>]"),
                            tr("Show the help section or the documentation about a <command>."));
 }
