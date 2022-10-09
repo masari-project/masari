@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018, The Monero Project
+// Copyright (c) 2017-2022, The Monero Project
 //
 // All rights reserved.
 //
@@ -109,7 +109,8 @@ namespace epee
     constexpr std::size_t size() const noexcept { return len; }
     constexpr std::size_t size_bytes() const noexcept { return size() * sizeof(value_type); }
 
-    const T &operator[](size_t idx) const { return ptr[idx]; }
+    T &operator[](size_t idx) noexcept { return ptr[idx]; }
+    const T &operator[](size_t idx) const noexcept { return ptr[idx]; }
 
   private:
     T* ptr;
@@ -162,5 +163,14 @@ namespace epee
     static_assert(!std::is_empty<T>(), "empty types will not work -> sizeof == 1");
     static_assert(!has_padding<T>(), "source type may have padding");
     return {reinterpret_cast<std::uint8_t*>(std::addressof(src)), sizeof(T)};
+  }
+
+  //! make a span from a std::string
+  template<typename T, typename U>
+  span<const T> strspan(const U&s) noexcept
+  {
+    static_assert(std::is_same<typename U::value_type, char>(), "unexpected source type");
+    static_assert(std::is_same<T, char>() || std::is_same<T, unsigned char>() || std::is_same<T, int8_t>() || std::is_same<T, uint8_t>(), "Unexpected destination type");
+    return {reinterpret_cast<const T*>(s.data()), s.size()};
   }
 }

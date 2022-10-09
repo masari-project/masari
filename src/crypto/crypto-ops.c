@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -1234,6 +1234,56 @@ void ge_double_scalarmult_base_vartime(ge_p2 *r, const unsigned char *a, const g
   }
 }
 
+// Computes aG + bB + cC (G is the fixed basepoint)
+void ge_triple_scalarmult_base_vartime(ge_p2 *r, const unsigned char *a, const unsigned char *b, const ge_dsmp Bi, const unsigned char *c, const ge_dsmp Ci) {
+  signed char aslide[256];
+  signed char bslide[256];
+  signed char cslide[256];
+  ge_p1p1 t;
+  ge_p3 u;
+  int i;
+
+  slide(aslide, a);
+  slide(bslide, b);
+  slide(cslide, c);
+
+  ge_p2_0(r);
+
+  for (i = 255; i >= 0; --i) {
+    if (aslide[i] || bslide[i] || cslide[i]) break;
+  }
+
+  for (; i >= 0; --i) {
+    ge_p2_dbl(&t, r);
+
+    if (aslide[i] > 0) {
+      ge_p1p1_to_p3(&u, &t);
+      ge_madd(&t, &u, &ge_Bi[aslide[i]/2]);
+    } else if (aslide[i] < 0) {
+      ge_p1p1_to_p3(&u, &t);
+      ge_msub(&t, &u, &ge_Bi[(-aslide[i])/2]);
+    }
+
+    if (bslide[i] > 0) {
+      ge_p1p1_to_p3(&u, &t);
+      ge_add(&t, &u, &Bi[bslide[i]/2]);
+    } else if (bslide[i] < 0) {
+      ge_p1p1_to_p3(&u, &t);
+      ge_sub(&t, &u, &Bi[(-bslide[i])/2]);
+    }
+
+    if (cslide[i] > 0) {
+      ge_p1p1_to_p3(&u, &t);
+      ge_add(&t, &u, &Ci[cslide[i]/2]);
+    } else if (cslide[i] < 0) {
+      ge_p1p1_to_p3(&u, &t);
+      ge_sub(&t, &u, &Ci[(-cslide[i])/2]);
+    }
+
+    ge_p1p1_to_p2(r, &t);
+  }
+}
+
 void ge_double_scalarmult_base_vartime_p3(ge_p3 *r3, const unsigned char *a, const ge_p3 *A, const unsigned char *b) {
   signed char aslide[256];
   signed char bslide[256];
@@ -2142,6 +2192,56 @@ void ge_double_scalarmult_precomp_vartime2(ge_p2 *r, const unsigned char *a, con
     } else if (bslide[i] < 0) {
       ge_p1p1_to_p3(&u, &t);
       ge_sub(&t, &u, &Bi[(-bslide[i])/2]);
+    }
+
+    ge_p1p1_to_p2(r, &t);
+  }
+}
+
+// Computes aA + bB + cC (all points require precomputation)
+void ge_triple_scalarmult_precomp_vartime(ge_p2 *r, const unsigned char *a, const ge_dsmp Ai, const unsigned char *b, const ge_dsmp Bi, const unsigned char *c, const ge_dsmp Ci) {
+  signed char aslide[256];
+  signed char bslide[256];
+  signed char cslide[256];
+  ge_p1p1 t;
+  ge_p3 u;
+  int i;
+
+  slide(aslide, a);
+  slide(bslide, b);
+  slide(cslide, c);
+
+  ge_p2_0(r);
+
+  for (i = 255; i >= 0; --i) {
+    if (aslide[i] || bslide[i] || cslide[i]) break;
+  }
+
+  for (; i >= 0; --i) {
+    ge_p2_dbl(&t, r);
+
+    if (aslide[i] > 0) {
+      ge_p1p1_to_p3(&u, &t);
+      ge_add(&t, &u, &Ai[aslide[i]/2]);
+    } else if (aslide[i] < 0) {
+      ge_p1p1_to_p3(&u, &t);
+      ge_sub(&t, &u, &Ai[(-aslide[i])/2]);
+    }
+
+    if (bslide[i] > 0) {
+      ge_p1p1_to_p3(&u, &t);
+      ge_add(&t, &u, &Bi[bslide[i]/2]);
+    } else if (bslide[i] < 0) {
+      ge_p1p1_to_p3(&u, &t);
+      ge_sub(&t, &u, &Bi[(-bslide[i])/2]);
+    }
+
+    if (cslide[i] > 0) {
+      ge_p1p1_to_p3(&u, &t);
+      ge_add(&t, &u, &Ci[cslide[i]/2]);
+    } else if (cslide[i] < 0) {
+      ge_p1p1_to_p3(&u, &t);
+      ge_sub(&t, &u, &Ci[(-cslide[i])/2]);
     }
 
     ge_p1p1_to_p2(r, &t);
@@ -3730,15 +3830,51 @@ int sc_isnonzero(const unsigned char *s) {
     s[27] | s[28] | s[29] | s[30] | s[31]) - 1) >> 8) + 1;
 }
 
-int ge_p3_is_point_at_infinity(const ge_p3 *p) {
-  // X = 0 and Y == Z
-  int n;
-  for (n = 0; n < 10; ++n)
+int ge_p3_is_point_at_infinity_vartime(const ge_p3 *p) {
+  // https://eprint.iacr.org/2008/522
+  // X == T == 0 and Y/Z == 1
+  // note: convert all pieces to canonical bytes in case rounding is required (i.e. an element is > q)
+  // note2: even though T = XY/Z is true for valid point representations (implying it isn't necessary to
+  //        test T == 0), the input to this function might NOT be valid, so we must test T == 0
+  char result_X_bytes[32];
+  fe_tobytes((unsigned char*)&result_X_bytes, p->X);
+
+  // X != 0
+  for (int i = 0; i < 32; ++i)
   {
-    if (p->X[n] | p->T[n])
-      return 0;
-    if (p->Y[n] != p->Z[n])
+    if (result_X_bytes[i])
       return 0;
   }
-  return 1;
+
+  char result_T_bytes[32];
+  fe_tobytes((unsigned char*)&result_T_bytes, p->T);
+
+  // T != 0
+  for (int i = 0; i < 32; ++i)
+  {
+    if (result_T_bytes[i])
+      return 0;
+  }
+
+  char result_Y_bytes[32];
+  char result_Z_bytes[32];
+  fe_tobytes((unsigned char*)&result_Y_bytes, p->Y);
+  fe_tobytes((unsigned char*)&result_Z_bytes, p->Z);
+
+  // Y != Z
+  for (int i = 0; i < 32; ++i)
+  {
+    if (result_Y_bytes[i] != result_Z_bytes[i])
+      return 0;
+  }
+
+  // is Y nonzero? then Y/Z == 1
+  for (int i = 0; i < 32; ++i)
+  {
+    if (result_Y_bytes[i] != 0)
+      return 1;
+  }
+
+  // Y/Z = 0/0
+  return 0;
 }

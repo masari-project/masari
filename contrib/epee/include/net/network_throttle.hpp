@@ -2,7 +2,7 @@
 /// @author rfree (current maintainer in monero.cc project)
 /// @brief interface for throttling of connection (count and rate-limit speed etc)
 
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -42,14 +42,9 @@
 #include <vector>
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
-#include <atomic>
 
-#include <boost/asio.hpp>
 #include <boost/array.hpp>
-#include <boost/noncopyable.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include <boost/interprocess/detail/atomic.hpp>
 #include <boost/thread/thread.hpp>
 
 #include "syncobj.h"
@@ -63,9 +58,7 @@
 #include <boost/utility/value_init.hpp>
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
-#include <boost/thread/thread.hpp> 
 #include "misc_language.h"
-#include "pragma_comp_defs.h"
 #include <sstream>
 #include <iomanip>
 #include <algorithm>
@@ -152,7 +145,8 @@ class i_network_throttle {
 		virtual size_t get_recommended_size_of_planned_transport() const =0; // what should be the recommended limit of data size that we can transport over current network_throttle in near future
 
 		virtual double get_time_seconds() const =0; // a timer
-        virtual void logger_handle_net(const std::string &filename, double time, size_t size)=0;
+		virtual void logger_handle_net(const std::string &filename, double time, size_t size)=0;
+		virtual void get_stats(uint64_t &total_packets, uint64_t &total_bytes) const =0;
 
 
 };

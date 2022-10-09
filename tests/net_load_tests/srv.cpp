@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -34,6 +34,7 @@
 #include "include_base_utils.h"
 #include "misc_log_ex.h"
 #include "storages/levin_abstract_invoke2.h"
+#include "common/util.h"
 
 #include "net_load_tests.h"
 
@@ -146,7 +147,7 @@ namespace
           CMD_DATA_REQUEST::request req2;
           req2.data.resize(req.request_size);
 
-          bool r = epee::net_utils::async_invoke_remote_command2<CMD_DATA_REQUEST::response>(ctx.m_connection_id, CMD_DATA_REQUEST::ID, req2,
+          bool r = epee::net_utils::async_invoke_remote_command2<CMD_DATA_REQUEST::response>(ctx, CMD_DATA_REQUEST::ID, req2,
             m_tcp_server.get_config_object(), [=](int code, const CMD_DATA_REQUEST::response& rsp, const test_connection_context&) {
               if (code <= 0)
               {
@@ -168,7 +169,7 @@ namespace
       LOG_PRINT_L0("Closing connections. Number of opened connections: " << m_tcp_server.get_config_object().get_connections_count());
 
       size_t count = 0;
-      bool r = m_tcp_server.get_config_object().foreach_connection([&](test_connection_context& ctx) {
+      m_tcp_server.get_config_object().foreach_connection([&](test_connection_context& ctx) {
         if (ctx.m_connection_id != cmd_conn_id)
         {
           ++count;
@@ -215,6 +216,7 @@ namespace
 
 int main(int argc, char** argv)
 {
+  TRY_ENTRY();
   tools::on_startup();
   //set up logging options
   mlog_configure(mlog_get_default_log_path("net_load_tests_srv.log"), true);
@@ -233,4 +235,5 @@ int main(int argc, char** argv)
   if (!tcp_server.run_server(thread_count, true))
     return 2;
   return 0;
+  CATCH_ENTRY_L0("main", 1);
 }

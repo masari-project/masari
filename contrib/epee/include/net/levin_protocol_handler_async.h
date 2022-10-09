@@ -28,15 +28,17 @@
 #include <boost/asio/deadline_timer.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/unordered_map.hpp>
-#include <boost/interprocess/detail/atomic.hpp>
 #include <boost/smart_ptr/make_shared.hpp>
 
 #include <atomic>
+#include <deque>
 
 #include "levin_base.h"
+#include "buffer.h"
 #include "misc_language.h"
 #include "syncobj.h"
-#include "misc_os_dependent.h"
+#include "time_helper.h"
+#include "int-util.h"
 
 #include <random>
 #include <chrono>
@@ -47,6 +49,21 @@
 #ifndef MIN_BYTES_WANTED
 #define MIN_BYTES_WANTED	512
 #endif
+
+template<typename context_t>
+void on_levin_traffic(const context_t &context, bool initiator, bool sent, bool error, size_t bytes, const char* category)
+{
+  MCINFO("net.p2p.traffic", context << bytes << " bytes " << (sent ? "sent" : "received") << (error ? "/corrupt" : "")
+      << " for category " << category << " initiated by " << (initiator ? "us" : "peer"));
+}
+
+template<typename context_t>
+void on_levin_traffic(const context_t &context, bool initiator, bool sent, bool error, size_t bytes, int command)
+{
+  char buf[32];
+  snprintf(buf, sizeof(buf),  "command-%u", command);
+  on_levin_traffic(context, initiator, sent, error, bytes, buf);
+}
 
 namespace epee
 {
@@ -81,14 +98,15 @@ class async_protocol_handler_config
 
 public:
   typedef t_connection_context connection_context;
-  uint64_t m_max_packet_size; 
+  uint64_t m_initial_max_packet_size;
+  uint64_t m_max_packet_size;
   uint64_t m_invoke_timeout;
 
-  int invoke(int command, const std::string& in_buff, std::string& buff_out, boost::uuids::uuid connection_id);
+  int invoke(int command, message_writer in_msg, std::string& buff_out, boost::uuids::uuid connection_id);
   template<class callback_t>
-  int invoke_async(int command, const std::string& in_buff, boost::uuids::uuid connection_id, const callback_t &cb, size_t timeout = LEVIN_DEFAULT_TIMEOUT_PRECONFIGURED);
+  int invoke_async(int command, message_writer in_msg, boost::uuids::uuid connection_id, const callback_t &cb, size_t timeout = LEVIN_DEFAULT_TIMEOUT_PRECONFIGURED);
 
-  int notify(int command, const std::string& in_buff, boost::uuids::uuid connection_id);
+  int send(epee::byte_slice message, const boost::uuids::uuid& connection_id);
   bool close(boost::uuids::uuid connection_id);
   bool update_connection_context(const t_connection_context& contxt);
   bool request_callback(boost::uuids::uuid connection_id);
@@ -97,9 +115,11 @@ public:
   template<class callback_t>
   bool for_connection(const boost::uuids::uuid &connection_id, const callback_t &cb);
   size_t get_connections_count();
+  size_t get_out_connections_count();
+  size_t get_in_connections_count();
   void set_handler(levin_commands_handler<t_connection_context>* handler, void (*destroy)(levin_commands_handler<t_connection_context>*) = NULL);
 
-  async_protocol_handler_config():m_pcommands_handler(NULL), m_pcommands_handler_destroy(NULL), m_max_packet_size(LEVIN_DEFAULT_MAX_PACKET_SIZE)
+  async_protocol_handler_config():m_pcommands_handler(NULL), m_pcommands_handler_destroy(NULL), m_initial_max_packet_size(LEVIN_INITIAL_MAX_PACKET_SIZE), m_max_packet_size(LEVIN_DEFAULT_MAX_PACKET_SIZE), m_invoke_timeout(LEVIN_DEFAULT_TIMEOUT_PRECONFIGURED)
   {}
   ~async_protocol_handler_config() { set_handler(NULL, NULL); }
   void del_out_connections(size_t count);
@@ -113,6 +133,27 @@ public:
 template<class t_connection_context = net_utils::connection_context_base>
 class async_protocol_handler
 {
+  std::string m_fragment_buffer;
+
+  bool send_message(byte_slice message)
+  {
+    if (message.size() < sizeof(message_writer::header))
+      return false;
+
+    message_writer::header head;
+    std::memcpy(std::addressof(head), message.data(), sizeof(head));
+    if(!m_pservice_endpoint->do_send(std::move(message)))
+      return false;
+
+    on_levin_traffic(m_connection_context, true, true, false, head.m_cb, head.m_command);
+    MDEBUG(m_connection_context << "LEVIN_PACKET_SENT. [len=" << head.m_cb
+        << ", flags" << head.m_flags
+        << ", r?=" << head.m_have_to_return_data
+        <<", cmd = " << head.m_command
+        << ", ver=" << head.m_protocol_version);
+    return true;
+  }
+
 public:
   typedef t_connection_context connection_context;
   typedef async_protocol_handler_config<t_connection_context> config_type;
@@ -123,26 +164,25 @@ public:
     stream_state_body
   };
 
-  std::atomic<bool> m_deletion_initiated;
   std::atomic<bool> m_protocol_released;
-  volatile uint32_t m_invoke_buf_ready;
+  std::atomic<bool> m_invoke_buf_ready;
 
   volatile int m_invoke_result_code;
 
   critical_section m_local_inv_buff_lock;
   std::string m_local_inv_buff;
 
-  critical_section m_send_lock;
   critical_section m_call_lock;
 
-  volatile uint32_t m_wait_count;
-  volatile uint32_t m_close_called;
+  std::atomic<uint32_t> m_wait_count;
+  std::atomic<uint32_t> m_close_called;
   bucket_head2 m_current_head;
   net_utils::i_service_endpoint* m_pservice_endpoint; 
   config_type& m_config;
   t_connection_context& m_connection_context;
+  std::atomic<uint64_t> m_max_packet_size;
 
-  std::string m_cache_in_buffer;
+  net_utils::buffer m_cache_in_buffer;
   stream_state m_state;
 
   int32_t m_oponent_protocol_ver;
@@ -150,7 +190,7 @@ public:
 
   struct invoke_response_handler_base
   {
-    virtual bool handle(int res, const std::string& buff, connection_context& context)=0;
+    virtual bool handle(int res, const epee::span<const uint8_t> buff, connection_context& context)=0;
     virtual bool is_timer_started() const=0;
     virtual void cancel()=0;
     virtual bool cancel_timer()=0;
@@ -172,7 +212,7 @@ public:
           if(ec == boost::asio::error::operation_aborted)
             return;
           MINFO(con.get_context_ref() << "Timeout on invoke operation happened, command: " << command << " timeout: " << timeout);
-          std::string fake;
+          epee::span<const uint8_t> fake;
           cb(LEVIN_ERROR_CONNECTION_TIMEDOUT, fake, con.get_context_ref());
           con.close();
           con.finish_outer_call();
@@ -190,7 +230,7 @@ public:
     bool m_timer_cancelled;
     uint64_t m_timeout;
     int m_command;
-    virtual bool handle(int res, const std::string& buff, typename async_protocol_handler::connection_context& context)
+    virtual bool handle(int res, const epee::span<const uint8_t> buff, typename async_protocol_handler::connection_context& context)
     {
       if(!cancel_timer())
         return false;
@@ -206,7 +246,7 @@ public:
     {
       if(cancel_timer())
       {
-        std::string fake;
+        epee::span<const uint8_t> fake;
         m_cb(LEVIN_ERROR_CONNECTION_DESTROYED, fake, m_con.get_context_ref());
         m_con.finish_outer_call();
       }
@@ -236,7 +276,7 @@ public:
           if(ec == boost::asio::error::operation_aborted)
             return;
           MINFO(con.get_context_ref() << "Timeout on invoke operation happened, command: " << command << " timeout: " << timeout);
-          std::string fake;
+          epee::span<const uint8_t> fake;
           cb(LEVIN_ERROR_CONNECTION_TIMEDOUT, fake, con.get_context_ref());
           con.close();
           con.finish_outer_call();
@@ -251,6 +291,11 @@ public:
   bool add_invoke_response_handler(const callback_t &cb, uint64_t timeout,  async_protocol_handler& con, int command)
   {
     CRITICAL_REGION_LOCAL(m_invoke_response_handlers_lock);
+    if (m_protocol_released)
+    {
+      MERROR("Adding response handler to a released object");
+      return false;
+    }
     boost::shared_ptr<invoke_response_handler_base> handler(boost::make_shared<anvoke_handler<callback_t>>(cb, timeout, con, command));
     m_invoke_response_handlers.push_back(handler);
     return handler->is_timer_started();
@@ -263,31 +308,39 @@ public:
             m_current_head(bucket_head2()),
             m_pservice_endpoint(psnd_hndlr), 
             m_config(config), 
-            m_connection_context(conn_context), 
+            m_connection_context(conn_context),
+            m_max_packet_size(config.m_initial_max_packet_size),
+            m_cache_in_buffer(4 * 1024),
             m_state(stream_state_head)
   {
     m_close_called = 0;
-    m_deletion_initiated = false;
     m_protocol_released = false;
     m_wait_count = 0;
     m_oponent_protocol_ver = 0;
     m_connection_initialized = false;
+    m_invoke_buf_ready = false;
+    m_invoke_result_code = LEVIN_ERROR_CONNECTION;
   }
   virtual ~async_protocol_handler()
   {
-    m_deletion_initiated = true;
+    try
+    {
+
     if(m_connection_initialized)
     {
       m_config.del_connection(this);
     }
 
-    for (size_t i = 0; i < 60 * 1000 / 100 && 0 != boost::interprocess::ipcdetail::atomic_read32(&m_wait_count); ++i)
+    for (size_t i = 0; i < 60 * 1000 / 100 && 0 != m_wait_count; ++i)
     {
       misc_utils::sleep_no_w(100);
     }
-    CHECK_AND_ASSERT_MES_NO_RET(0 == boost::interprocess::ipcdetail::atomic_read32(&m_wait_count), "Failed to wait for operation completion. m_wait_count = " << m_wait_count);
+    CHECK_AND_ASSERT_MES_NO_RET(0 == m_wait_count, "Failed to wait for operation completion. m_wait_count = " << m_wait_count.load());
 
     MTRACE(m_connection_context << "~async_protocol_handler()");
+
+    }
+    catch (...) { /* ignore */ }
   }
 
   bool start_outer_call()
@@ -298,13 +351,13 @@ public:
       MERROR(m_connection_context << "[levin_protocol] -->> start_outer_call failed");
       return false;
     }
-    boost::interprocess::ipcdetail::atomic_inc32(&m_wait_count);
+    ++m_wait_count;
     return true;
   }
   bool finish_outer_call()
   {
     MTRACE(m_connection_context << "[levin_protocol] <<-- finish_outer_call");
-    boost::interprocess::ipcdetail::atomic_dec32(&m_wait_count);
+    --m_wait_count;
     m_pservice_endpoint->release();
     return true;
   }
@@ -328,7 +381,7 @@ public:
   
   bool close()
   {    
-    boost::interprocess::ipcdetail::atomic_inc32(&m_close_called);
+    ++m_close_called;
 
     m_pservice_endpoint->close();
     return true;
@@ -354,7 +407,7 @@ public:
 
   virtual bool handle_recv(const void* ptr, size_t cb)
   {
-    if(boost::interprocess::ipcdetail::atomic_read32(&m_close_called))
+    if(m_close_called)
       return false; //closing connections
 
     if(!m_config.m_pcommands_handler)
@@ -363,9 +416,15 @@ public:
       return false;
     }
 
-    if(m_cache_in_buffer.size() +  cb > m_config.m_max_packet_size)
+    // these should never fail, but do runtime check for safety
+    const uint64_t max_packet_size = m_max_packet_size;
+    CHECK_AND_ASSERT_MES(max_packet_size >= m_cache_in_buffer.size(), false, "Bad m_cache_in_buffer.size()");
+    CHECK_AND_ASSERT_MES(max_packet_size - m_cache_in_buffer.size() >= m_fragment_buffer.size(), false, "Bad m_cache_in_buffer.size() + m_fragment_buffer.size()");
+
+    // flipped to subtraction; prevent overflow since m_max_packet_size is variable and public
+    if(cb > max_packet_size - m_cache_in_buffer.size() - m_fragment_buffer.size())
     {
-      MWARNING(m_connection_context << "Maximum packet size exceed!, m_max_packet_size = " << m_config.m_max_packet_size
+      MWARNING(m_connection_context << "Maximum packet size exceed!, m_max_packet_size = " << max_packet_size
                           << ", packet received " << m_cache_in_buffer.size() +  cb 
                           << ", connection will be closed.");
       return false;
@@ -390,24 +449,55 @@ public:
               //async call scenario
               boost::shared_ptr<invoke_response_handler_base> response_handler = m_invoke_response_handlers.front();
               response_handler->reset_timer();
-              MDEBUG(m_connection_context << "LEVIN_PACKET partial msg received. len=" << cb);
+              MDEBUG(m_connection_context << "LEVIN_PACKET partial msg received. len=" << cb << ", current total " << m_cache_in_buffer.size() << "/" << m_current_head.m_cb << " (" << (100.0f * m_cache_in_buffer.size() / (m_current_head.m_cb ? m_current_head.m_cb : 1)) << "%)");
             }
           }
           break;
         }
+
         {
-          std::string buff_to_invoke;
-          if(m_cache_in_buffer.size()  == m_current_head.m_cb)
-            buff_to_invoke.swap(m_cache_in_buffer);
-          else
+          std::string temp{};
+          epee::span<const uint8_t> buff_to_invoke = m_cache_in_buffer.carve((std::string::size_type)m_current_head.m_cb);
+          m_state = stream_state_head;
+
+          // abstract_tcp_server2.h manages max bandwidth for a p2p link
+          if (!(m_current_head.m_flags & (LEVIN_PACKET_REQUEST | LEVIN_PACKET_RESPONSE)))
           {
-            buff_to_invoke.assign(m_cache_in_buffer, 0, (std::string::size_type)m_current_head.m_cb);
-            m_cache_in_buffer.erase(0, (std::string::size_type)m_current_head.m_cb);
+            // special noise/fragment command
+            static constexpr const uint32_t both_flags = (LEVIN_PACKET_BEGIN | LEVIN_PACKET_END);
+            if ((m_current_head.m_flags & both_flags) == both_flags)
+              break; // noise message, skip to next message
+
+            if (m_current_head.m_flags & LEVIN_PACKET_BEGIN)
+              m_fragment_buffer.clear();
+
+            m_fragment_buffer.append(reinterpret_cast<const char*>(buff_to_invoke.data()), buff_to_invoke.size());
+            if (!(m_current_head.m_flags & LEVIN_PACKET_END))
+              break; // skip to next message
+
+            if (m_fragment_buffer.size() < sizeof(bucket_head2))
+            {
+              MERROR(m_connection_context << "Fragmented data too small for levin header");
+              return false;
+            }
+
+            temp = std::move(m_fragment_buffer);
+            m_fragment_buffer.clear();
+            std::memcpy(std::addressof(m_current_head), std::addressof(temp[0]), sizeof(bucket_head2));
+            const size_t max_bytes = m_connection_context.get_max_bytes(m_current_head.m_command);
+            if(m_current_head.m_cb > std::min<size_t>(max_packet_size, max_bytes))
+            {
+              MERROR(m_connection_context << "Maximum packet size exceed!, m_max_packet_size = " << std::min<size_t>(max_packet_size, max_bytes)
+                << ", packet header received " << m_current_head.m_cb << ", command " << m_current_head.m_command
+                << ", connection will be closed.");
+              return false;
+            }
+            buff_to_invoke = {reinterpret_cast<const uint8_t*>(temp.data()) + sizeof(bucket_head2), temp.size() - sizeof(bucket_head2)};
           }
 
           bool is_response = (m_oponent_protocol_ver == LEVIN_PROTOCOL_VER_1 && m_current_head.m_flags&LEVIN_PACKET_RESPONSE);
 
-          MDEBUG(m_connection_context << "LEVIN_PACKET_RECIEVED. [len=" << m_current_head.m_cb
+          MDEBUG(m_connection_context << "LEVIN_PACKET_RECEIVED. [len=" << m_current_head.m_cb
             << ", flags" << m_current_head.m_flags 
             << ", r?=" << m_current_head.m_have_to_return_data 
             <<", cmd = " << m_current_head.m_command 
@@ -433,57 +523,52 @@ public:
             {
               invoke_response_handlers_guard.unlock();
               //use sync call scenario
-              if(!boost::interprocess::ipcdetail::atomic_read32(&m_wait_count) && !boost::interprocess::ipcdetail::atomic_read32(&m_close_called))
+              if(!m_wait_count && !m_close_called)
               {
                 MERROR(m_connection_context << "no active invoke when response came, wtf?");
                 return false;
               }else
               {
                 CRITICAL_REGION_BEGIN(m_local_inv_buff_lock);
-                buff_to_invoke.swap(m_local_inv_buff);
-                buff_to_invoke.clear();
+                m_local_inv_buff = std::string((const char*)buff_to_invoke.data(), buff_to_invoke.size());
+                buff_to_invoke = epee::span<const uint8_t>((const uint8_t*)NULL, 0);
                 m_invoke_result_code = m_current_head.m_return_code;
                 CRITICAL_REGION_END();
-                boost::interprocess::ipcdetail::atomic_write32(&m_invoke_buf_ready, 1);
+                m_invoke_buf_ready = true;
               }
             }
           }else
           {
             if(m_current_head.m_have_to_return_data)
             {
-              std::string return_buff;
-              m_current_head.m_return_code = m_config.m_pcommands_handler->invoke(
-                                                                  m_current_head.m_command, 
-                                                                  buff_to_invoke, 
-                                                                  return_buff, 
-                                                                  m_connection_context);
-              m_current_head.m_cb = return_buff.size();
-              m_current_head.m_have_to_return_data = false;
-              m_current_head.m_protocol_version = LEVIN_PROTOCOL_VER_1;
-              m_current_head.m_flags = LEVIN_PACKET_RESPONSE;
-              std::string send_buff((const char*)&m_current_head, sizeof(m_current_head));
-              send_buff += return_buff;
-              CRITICAL_REGION_BEGIN(m_send_lock);
-              if(!m_pservice_endpoint->do_send(send_buff.data(), send_buff.size()))
+              levin::message_writer return_message{32 * 1024};
+              const uint32_t return_code = m_config.m_pcommands_handler->invoke(
+                m_current_head.m_command, buff_to_invoke, return_message.buffer, m_connection_context
+              );
+
+              // peer_id remains unset if dropped
+              if (m_current_head.m_command == m_connection_context.handshake_command() && m_connection_context.handshake_complete())
+                m_max_packet_size = m_config.m_max_packet_size;
+
+              if(!send_message(return_message.finalize_response(m_current_head.m_command, return_code)))
                 return false;
-              CRITICAL_REGION_END();
-              MDEBUG(m_connection_context << "LEVIN_PACKET_SENT. [len=" << m_current_head.m_cb
-                << ", flags" << m_current_head.m_flags 
-                << ", r?=" << m_current_head.m_have_to_return_data 
-                <<", cmd = " << m_current_head.m_command 
-                << ", ver=" << m_current_head.m_protocol_version);
             }
             else
               m_config.m_pcommands_handler->notify(m_current_head.m_command, buff_to_invoke, m_connection_context);
           }
+          // reuse small buffer
+          if (!temp.empty() && temp.capacity() <= 64 * 1024)
+          {
+            temp.clear();
+            m_fragment_buffer = std::move(temp);
+          }
         }
-        m_state = stream_state_head;
         break;
       case stream_state_head:
         {
           if(m_cache_in_buffer.size() < sizeof(bucket_head2))
           {
-            if(m_cache_in_buffer.size() >= sizeof(uint64_t) && *((uint64_t*)m_cache_in_buffer.data()) != LEVIN_SIGNATURE)
+            if(m_cache_in_buffer.size() >= sizeof(uint64_t) && *((uint64_t*)m_cache_in_buffer.span(8).data()) != SWAP64LE(LEVIN_SIGNATURE))
             {
               MWARNING(m_connection_context << "Signature mismatch, connection will be closed");
               return false;
@@ -492,21 +577,32 @@ public:
             break;
           }
 
-          bucket_head2* phead = (bucket_head2*)m_cache_in_buffer.data();
-          if(LEVIN_SIGNATURE != phead->m_signature)
+#if BYTE_ORDER == LITTLE_ENDIAN
+          bucket_head2& phead = *(bucket_head2*)m_cache_in_buffer.span(sizeof(bucket_head2)).data();
+#else
+          bucket_head2 phead = *(bucket_head2*)m_cache_in_buffer.span(sizeof(bucket_head2)).data();
+          phead.m_signature = SWAP64LE(phead.m_signature);
+          phead.m_cb = SWAP64LE(phead.m_cb);
+          phead.m_command = SWAP32LE(phead.m_command);
+          phead.m_return_code = SWAP32LE(phead.m_return_code);
+          phead.m_flags = SWAP32LE(phead.m_flags);
+          phead.m_protocol_version = SWAP32LE(phead.m_protocol_version);
+#endif
+          if(LEVIN_SIGNATURE != phead.m_signature)
           {
             LOG_ERROR_CC(m_connection_context, "Signature mismatch, connection will be closed");
             return false;
           }
-          m_current_head = *phead;
+          m_current_head = phead;
 
-          m_cache_in_buffer.erase(0, sizeof(bucket_head2));
+          m_cache_in_buffer.erase(sizeof(bucket_head2));
           m_state = stream_state_body;
           m_oponent_protocol_ver = m_current_head.m_protocol_version;
-          if(m_current_head.m_cb > m_config.m_max_packet_size)
+          const size_t max_bytes = m_connection_context.get_max_bytes(m_current_head.m_command);
+          if(m_current_head.m_cb > std::min<size_t>(max_packet_size, max_bytes))
           {
-            LOG_ERROR_CC(m_connection_context, "Maximum packet size exceed!, m_max_packet_size = " << m_config.m_max_packet_size 
-              << ", packet header received " << m_current_head.m_cb 
+            LOG_ERROR_CC(m_connection_context, "Maximum packet size exceed!, m_max_packet_size = " << std::min<size_t>(max_packet_size, max_bytes)
+              << ", packet header received " << m_current_head.m_cb << ", command " << m_current_head.m_command
               << ", connection will be closed.");
             return false;
           }
@@ -532,7 +628,7 @@ public:
   }
 
   template<class callback_t>
-  bool async_invoke(int command, const std::string& in_buff, const callback_t &cb, size_t timeout = LEVIN_DEFAULT_TIMEOUT_PRECONFIGURED)
+  bool async_invoke(int command, message_writer in_msg, const callback_t &cb, size_t timeout = LEVIN_DEFAULT_TIMEOUT_PRECONFIGURED)
   {
     misc_utils::auto_scope_leave_caller scope_exit_handler = misc_utils::create_scope_leave_handler(
       boost::bind(&async_protocol_handler::finish_outer_call, this));
@@ -543,40 +639,15 @@ public:
     int err_code = LEVIN_OK;
     do
     {
-      if(m_deletion_initiated)
-      {
-        err_code = LEVIN_ERROR_CONNECTION_DESTROYED;
-        break;
-      }
-
       CRITICAL_REGION_LOCAL(m_call_lock);
 
-      if(m_deletion_initiated)
-      {
-        err_code = LEVIN_ERROR_CONNECTION_DESTROYED;
-        break;
-      }
+      m_invoke_buf_ready = false;
+      CRITICAL_REGION_BEGIN(m_invoke_response_handlers_lock);
 
-      bucket_head2 head = {0};
-      head.m_signature = LEVIN_SIGNATURE;
-      head.m_cb = in_buff.size();
-      head.m_have_to_return_data = true;
+      if (command == m_connection_context.handshake_command())
+        m_max_packet_size = m_config.m_max_packet_size;
 
-      head.m_flags = LEVIN_PACKET_REQUEST;
-      head.m_command = command;
-      head.m_protocol_version = LEVIN_PROTOCOL_VER_1;
-
-      boost::interprocess::ipcdetail::atomic_write32(&m_invoke_buf_ready, 0);
-      CRITICAL_REGION_BEGIN(m_send_lock);
-      CRITICAL_REGION_LOCAL1(m_invoke_response_handlers_lock);
-      if(!m_pservice_endpoint->do_send(&head, sizeof(head)))
-      {
-        LOG_ERROR_CC(m_connection_context, "Failed to do_send");
-        err_code = LEVIN_ERROR_CONNECTION;
-        break;
-      }
-
-      if(!m_pservice_endpoint->do_send(in_buff.data(), (int)in_buff.size()))
+      if(!send_message(in_msg.finalize_invoke(command)))
       {
         LOG_ERROR_CC(m_connection_context, "Failed to do_send");
         err_code = LEVIN_ERROR_CONNECTION;
@@ -593,7 +664,7 @@ public:
 
     if (LEVIN_OK != err_code)
     {
-      std::string stub_buff;
+      epee::span<const uint8_t> stub_buff = nullptr;
       // Never call callback inside critical section, that can cause deadlock
       cb(err_code, stub_buff, m_connection_context);
       return false;
@@ -602,53 +673,28 @@ public:
     return true;
   }
 
-  int invoke(int command, const std::string& in_buff, std::string& buff_out)
+  int invoke(int command, message_writer in_msg, std::string& buff_out)
   {
     misc_utils::auto_scope_leave_caller scope_exit_handler = misc_utils::create_scope_leave_handler(
                                       boost::bind(&async_protocol_handler::finish_outer_call, this));
 
-    if(m_deletion_initiated)
-      return LEVIN_ERROR_CONNECTION_DESTROYED;
-
     CRITICAL_REGION_LOCAL(m_call_lock);
 
-    if(m_deletion_initiated)
-      return LEVIN_ERROR_CONNECTION_DESTROYED;
+    m_invoke_buf_ready = false;
 
-    bucket_head2 head = {0};
-    head.m_signature = LEVIN_SIGNATURE;
-    head.m_cb = in_buff.size();
-    head.m_have_to_return_data = true;
+    if (command == m_connection_context.handshake_command())
+      m_max_packet_size = m_config.m_max_packet_size;
 
-    head.m_flags = LEVIN_PACKET_REQUEST;
-    head.m_command = command;
-    head.m_protocol_version = LEVIN_PROTOCOL_VER_1;
-
-    boost::interprocess::ipcdetail::atomic_write32(&m_invoke_buf_ready, 0);
-    CRITICAL_REGION_BEGIN(m_send_lock);
-    if(!m_pservice_endpoint->do_send(&head, sizeof(head)))
+    if (!send_message(in_msg.finalize_invoke(command)))
     {
-      LOG_ERROR_CC(m_connection_context, "Failed to do_send");
+      LOG_ERROR_CC(m_connection_context, "Failed to send request");
       return LEVIN_ERROR_CONNECTION;
     }
-
-    if(!m_pservice_endpoint->do_send(in_buff.data(), (int)in_buff.size()))
-    {
-      LOG_ERROR_CC(m_connection_context, "Failed to do_send");
-      return LEVIN_ERROR_CONNECTION;
-    }
-    CRITICAL_REGION_END();
-
-    MDEBUG(m_connection_context << "LEVIN_PACKET_SENT. [len=" << head.m_cb
-                            << ", f=" << head.m_flags 
-                            << ", r?=" << head.m_have_to_return_data 
-                            << ", cmd = " << head.m_command 
-                            << ", ver=" << head.m_protocol_version);
 
     uint64_t ticks_start = misc_utils::get_tick_count();
     size_t prev_size = 0;
 
-    while(!boost::interprocess::ipcdetail::atomic_read32(&m_invoke_buf_ready) && !m_deletion_initiated && !m_protocol_released)
+    while(!m_invoke_buf_ready && !m_protocol_released)
     {
       if(m_cache_in_buffer.size() - prev_size >= MIN_BYTES_WANTED)
       {
@@ -665,7 +711,7 @@ public:
         return LEVIN_ERROR_CONNECTION_DESTROYED;
     }
 
-    if(m_deletion_initiated || m_protocol_released)
+    if(m_protocol_released)
       return LEVIN_ERROR_CONNECTION_DESTROYED;
 
     CRITICAL_REGION_BEGIN(m_local_inv_buff_lock);
@@ -676,46 +722,23 @@ public:
     return m_invoke_result_code;
   }
 
-  int notify(int command, const std::string& in_buff)
+  /*! Sends `message` without adding a levin header. The message must have been
+      created with `make_noise_notify`, `make_fragmented_notify`, or
+      `message_writer::finalize_notify`. See additional instructions for
+      `make_fragmented_notify`.
+
+      \return 1 on success */
+  int send(byte_slice message)
   {
-    misc_utils::auto_scope_leave_caller scope_exit_handler = misc_utils::create_scope_leave_handler(
-                          boost::bind(&async_protocol_handler::finish_outer_call, this));
+    const misc_utils::auto_scope_leave_caller scope_exit_handler = misc_utils::create_scope_leave_handler(
+      boost::bind(&async_protocol_handler::finish_outer_call, this)
+    );
 
-    if(m_deletion_initiated)
-      return LEVIN_ERROR_CONNECTION_DESTROYED;
-
-    CRITICAL_REGION_LOCAL(m_call_lock);
-
-    if(m_deletion_initiated)
-      return LEVIN_ERROR_CONNECTION_DESTROYED;
-
-    bucket_head2 head = {0};
-    head.m_signature = LEVIN_SIGNATURE;
-    head.m_have_to_return_data = false;
-    head.m_cb = in_buff.size();
-
-    head.m_command = command;
-    head.m_protocol_version = LEVIN_PROTOCOL_VER_1;
-    head.m_flags = LEVIN_PACKET_REQUEST;
-    CRITICAL_REGION_BEGIN(m_send_lock);
-    if(!m_pservice_endpoint->do_send(&head, sizeof(head)))
+    if (!send_message(std::move(message)))
     {
-      LOG_ERROR_CC(m_connection_context, "Failed to do_send()");
+      LOG_ERROR_CC(m_connection_context, "Failed to send message, dropping it");
       return -1;
     }
-
-    if(!m_pservice_endpoint->do_send(in_buff.data(), (int)in_buff.size()))
-    {
-      LOG_ERROR_CC(m_connection_context, "Failed to do_send()");
-      return -1;
-    }
-    CRITICAL_REGION_END();
-    LOG_DEBUG_CC(m_connection_context, "LEVIN_PACKET_SENT. [len=" << head.m_cb <<
-      ", f=" << head.m_flags << 
-      ", r?=" << head.m_have_to_return_data <<
-      ", cmd = " << head.m_command << 
-      ", ver=" << head.m_protocol_version);
-
     return 1;
   }
   //------------------------------------------------------------------------------------------
@@ -736,36 +759,32 @@ void async_protocol_handler_config<t_connection_context>::del_connection(async_p
 template<class t_connection_context>
 void async_protocol_handler_config<t_connection_context>::delete_connections(size_t count, bool incoming)
 {
-  std::vector <boost::uuids::uuid> connections;
+  std::vector<typename connections_map::mapped_type> connections;
+
+  auto scope_exit_handler = misc_utils::create_scope_leave_handler([&connections]{
+    for (auto &aph: connections)
+      aph->finish_outer_call();
+  });
+
   CRITICAL_REGION_BEGIN(m_connects_lock);
   for (auto& c: m_connects)
   {
     if (c.second->m_connection_context.m_is_income == incoming)
-      connections.push_back(c.first);
+      if (c.second->start_outer_call())
+        connections.push_back(c.second);
   }
 
   // close random connections from  the provided set
   // TODO or better just keep removing random elements (performance)
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   shuffle(connections.begin(), connections.end(), std::default_random_engine(seed));
-  while (count > 0 && connections.size() > 0)
-  {
-    try
-    {
-      auto i = connections.end() - 1;
-      async_protocol_handler<t_connection_context> *conn = m_connects.at(*i);
-      del_connection(conn);
-      close(*i);
-      connections.erase(i);
-    }
-    catch (const std::out_of_range &e)
-    {
-      MWARNING("Connection not found in m_connects, continuing");
-    }
-    --count;
-  }
+  for (size_t i = 0; i < connections.size() && i < count; ++i)
+    m_connects.erase(connections[i]->get_connection_id());
 
   CRITICAL_REGION_END();
+
+  for (size_t i = 0; i < connections.size() && i < count; ++i)
+    connections[i]->close();
 }
 //------------------------------------------------------------------------------------------
 template<class t_connection_context>
@@ -809,41 +828,53 @@ int async_protocol_handler_config<t_connection_context>::find_and_lock_connectio
 }
 //------------------------------------------------------------------------------------------
 template<class t_connection_context>
-int async_protocol_handler_config<t_connection_context>::invoke(int command, const std::string& in_buff, std::string& buff_out, boost::uuids::uuid connection_id)
+int async_protocol_handler_config<t_connection_context>::invoke(int command, message_writer in_msg, std::string& buff_out, boost::uuids::uuid connection_id)
 {
   async_protocol_handler<t_connection_context>* aph;
   int r = find_and_lock_connection(connection_id, aph);
-  return LEVIN_OK == r ? aph->invoke(command, in_buff, buff_out) : r;
+  return LEVIN_OK == r ? aph->invoke(command, std::move(in_msg), buff_out) : r;
 }
 //------------------------------------------------------------------------------------------
 template<class t_connection_context> template<class callback_t>
-int async_protocol_handler_config<t_connection_context>::invoke_async(int command, const std::string& in_buff, boost::uuids::uuid connection_id, const callback_t &cb, size_t timeout)
+int async_protocol_handler_config<t_connection_context>::invoke_async(int command, message_writer in_msg, boost::uuids::uuid connection_id, const callback_t &cb, size_t timeout)
 {
   async_protocol_handler<t_connection_context>* aph;
   int r = find_and_lock_connection(connection_id, aph);
-  return LEVIN_OK == r ? aph->async_invoke(command, in_buff, cb, timeout) : r;
+  return LEVIN_OK == r ? aph->async_invoke(command, std::move(in_msg), cb, timeout) : r;
 }
 //------------------------------------------------------------------------------------------
 template<class t_connection_context> template<class callback_t>
 bool async_protocol_handler_config<t_connection_context>::foreach_connection(const callback_t &cb)
 {
-  CRITICAL_REGION_LOCAL(m_connects_lock);
-  for(auto& c: m_connects)
-  {
-    async_protocol_handler<t_connection_context>* aph = c.second;
-    if(!cb(aph->get_context_ref()))
+  std::vector<typename connections_map::mapped_type> conn;
+
+  auto scope_exit_handler = misc_utils::create_scope_leave_handler([&conn]{
+    for (auto &aph: conn)
+      aph->finish_outer_call();
+  });
+
+  CRITICAL_REGION_BEGIN(m_connects_lock);
+  conn.reserve(m_connects.size());
+  for (auto &e: m_connects)
+    if (e.second->start_outer_call())
+      conn.push_back(e.second);
+  CRITICAL_REGION_END()
+
+  for (auto &aph: conn)
+    if (!cb(aph->get_context_ref()))
       return false;
-  }
+
   return true;
 }
 //------------------------------------------------------------------------------------------
 template<class t_connection_context> template<class callback_t>
 bool async_protocol_handler_config<t_connection_context>::for_connection(const boost::uuids::uuid &connection_id, const callback_t &cb)
 {
-  CRITICAL_REGION_LOCAL(m_connects_lock);
-  async_protocol_handler<t_connection_context>* aph = find_connection(connection_id);
-  if (!aph)
+  async_protocol_handler<t_connection_context>* aph = nullptr;
+  if (find_and_lock_connection(connection_id, aph) != LEVIN_OK)
     return false;
+  auto scope_exit_handler = misc_utils::create_scope_leave_handler(
+    boost::bind(&async_protocol_handler<t_connection_context>::finish_outer_call, aph));
   if(!cb(aph->get_context_ref()))
     return false;
   return true;
@@ -857,6 +888,28 @@ size_t async_protocol_handler_config<t_connection_context>::get_connections_coun
 }
 //------------------------------------------------------------------------------------------
 template<class t_connection_context>
+size_t async_protocol_handler_config<t_connection_context>::get_out_connections_count()
+{
+  CRITICAL_REGION_LOCAL(m_connects_lock);
+  size_t count = 0;
+  for (const auto &c: m_connects)
+    if (!c.second->m_connection_context.m_is_income)
+      ++count;
+  return count;
+}
+//------------------------------------------------------------------------------------------
+template<class t_connection_context>
+size_t async_protocol_handler_config<t_connection_context>::get_in_connections_count()
+{
+  CRITICAL_REGION_LOCAL(m_connects_lock);
+  size_t count = 0;
+  for (const auto &c: m_connects)
+    if (c.second->m_connection_context.m_is_income)
+      ++count;
+  return count;
+}
+//------------------------------------------------------------------------------------------
+template<class t_connection_context>
 void async_protocol_handler_config<t_connection_context>::set_handler(levin_commands_handler<t_connection_context>* handler, void (*destroy)(levin_commands_handler<t_connection_context>*))
 {
   if (m_pcommands_handler && m_pcommands_handler_destroy)
@@ -866,19 +919,26 @@ void async_protocol_handler_config<t_connection_context>::set_handler(levin_comm
 }
 //------------------------------------------------------------------------------------------
 template<class t_connection_context>
-int async_protocol_handler_config<t_connection_context>::notify(int command, const std::string& in_buff, boost::uuids::uuid connection_id)
+int async_protocol_handler_config<t_connection_context>::send(byte_slice message, const boost::uuids::uuid& connection_id)
 {
   async_protocol_handler<t_connection_context>* aph;
   int r = find_and_lock_connection(connection_id, aph);
-  return LEVIN_OK == r ? aph->notify(command, in_buff) : r;
+  return LEVIN_OK == r ? aph->send(std::move(message)) : 0;
 }
 //------------------------------------------------------------------------------------------
 template<class t_connection_context>
 bool async_protocol_handler_config<t_connection_context>::close(boost::uuids::uuid connection_id)
 {
+  async_protocol_handler<t_connection_context>* aph = nullptr;
+  if (find_and_lock_connection(connection_id, aph) != LEVIN_OK)
+    return false;
+  auto scope_exit_handler = misc_utils::create_scope_leave_handler(
+    boost::bind(&async_protocol_handler<t_connection_context>::finish_outer_call, aph));
+  if (!aph->close())
+    return false;
   CRITICAL_REGION_LOCAL(m_connects_lock);
-  async_protocol_handler<t_connection_context>* aph = find_connection(connection_id);
-  return 0 != aph ? aph->close() : false;
+  m_connects.erase(connection_id);
+  return true;
 }
 //------------------------------------------------------------------------------------------
 template<class t_connection_context>

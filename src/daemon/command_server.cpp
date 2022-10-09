@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -43,10 +43,11 @@ t_command_server::t_command_server(
     uint32_t ip
   , uint16_t port
   , const boost::optional<tools::login>& login
+  , const epee::net_utils::ssl_options_t& ssl_options
   , bool is_rpc
   , cryptonote::core_rpc_server* rpc_server
   )
-  : m_parser(ip, port, login, is_rpc, rpc_server)
+  : m_parser(ip, port, login, ssl_options, is_rpc, rpc_server)
   , m_command_lookup()
   , m_is_rpc(is_rpc)
 {
@@ -57,6 +58,12 @@ t_command_server::t_command_server(
     , "Show the help section or the documentation about a <command>."
     );
   m_command_lookup.set_handler(
+      "apropos"
+    , std::bind(&t_command_server::apropos, this, p::_1)
+    , "apropos <keyword> [<keyword> ...]"
+    , "Search all command descriptions for keyword(s)."
+    );
+  m_command_lookup.set_handler(
       "print_height"
     , std::bind(&t_command_parser_executor::print_height, &m_parser, p::_1)
     , "Print the local blockchain height."
@@ -64,6 +71,7 @@ t_command_server::t_command_server(
   m_command_lookup.set_handler(
       "print_pl"
     , std::bind(&t_command_parser_executor::print_peer_list, &m_parser, p::_1)
+    , "print_pl [white] [gray] [pruned] [publicrpc] [<limit>]"
     , "Print the current peer list."
     );
   m_command_lookup.set_handler(
@@ -77,6 +85,11 @@ t_command_server::t_command_server(
     , "Print the current connections."
     );
   m_command_lookup.set_handler(
+      "print_net_stats"
+    , std::bind(&t_command_parser_executor::print_net_stats, &m_parser, p::_1)
+    , "Print network statistics."
+    );
+  m_command_lookup.set_handler(
       "print_bc"
     , std::bind(&t_command_parser_executor::print_blockchain_info, &m_parser, p::_1)
     , "print_bc <begin_height> [<end_height>]"
@@ -87,12 +100,6 @@ t_command_server::t_command_server(
     , std::bind(&t_command_parser_executor::print_block, &m_parser, p::_1)
     , "print_block <block_hash> | <block_height>"
     , "Print a given block."
-    );
-  m_command_lookup.set_handler(
-      "print_uncle_block"
-    , std::bind(&t_command_parser_executor::print_uncle_block, &m_parser, p::_1)
-    , "print_uncle_block <uncle_block_hash>"
-    , "Print an uncle block."
     );
   m_command_lookup.set_handler(
       "print_tx"
@@ -109,13 +116,18 @@ t_command_server::t_command_server(
   m_command_lookup.set_handler(
       "start_mining"
     , std::bind(&t_command_parser_executor::start_mining, &m_parser, p::_1)
-    , "start_mining <addr> [<threads>] [do_background_mining] [ignore_battery]"
-    , "Start mining for specified address. Defaults to 1 thread and no background mining."
+    , "start_mining <addr> [<threads>|auto] [do_background_mining] [ignore_battery]"
+    , "Start mining for specified address. Defaults to 1 thread and no background mining. Use \"auto\" to autodetect optimal number of threads."
     );
   m_command_lookup.set_handler(
       "stop_mining"
     , std::bind(&t_command_parser_executor::stop_mining, &m_parser, p::_1)
     , "Stop mining."
+    );
+  m_command_lookup.set_handler(
+      "mining_status"
+    , std::bind(&t_command_parser_executor::mining_status, &m_parser, p::_1)
+    , "Show current mining status."
     );
   m_command_lookup.set_handler(
       "print_pool"
@@ -209,19 +221,10 @@ t_command_server::t_command_server(
     , "Set the <max_number> of in peers."
     );
     m_command_lookup.set_handler(
-      "start_save_graph"
-    , std::bind(&t_command_parser_executor::start_save_graph, &m_parser, p::_1)
-    , "Start saving data for dr monero."
-    );
-    m_command_lookup.set_handler(
-      "stop_save_graph"
-    , std::bind(&t_command_parser_executor::stop_save_graph, &m_parser, p::_1)
-    , "Stop saving data for dr monero."
-    );
-    m_command_lookup.set_handler(
       "hard_fork_info"
     , std::bind(&t_command_parser_executor::hard_fork_info, &m_parser, p::_1)
-    , "Print the hard fork voting information."
+    , "hard_fork_info <version>"
+    , "Print the hard fork voting information. If given a version, prints whether is this version enabled."
     );
     m_command_lookup.set_handler(
       "bans"
@@ -231,14 +234,20 @@ t_command_server::t_command_server(
     m_command_lookup.set_handler(
       "ban"
     , std::bind(&t_command_parser_executor::ban, &m_parser, p::_1)
-    , "ban <IP> [<seconds>]"
-    , "Ban a given <IP> for a given amount of <seconds>."
+    , "ban [<IP>|@<filename>] [<seconds>]"
+    , "Ban a given <IP> or list of IPs from a file for a given amount of <seconds>."
     );
     m_command_lookup.set_handler(
       "unban"
     , std::bind(&t_command_parser_executor::unban, &m_parser, p::_1)
-    , "unban <IP>"
+    , "unban <address>"
     , "Unban a given <IP>."
+    );
+    m_command_lookup.set_handler(
+      "banned"
+    , std::bind(&t_command_parser_executor::banned, &m_parser, p::_1)
+    , "banned <address>"
+    , "Check whether an <address> is banned."
     );
     m_command_lookup.set_handler(
       "flush_txpool"
@@ -261,6 +270,7 @@ t_command_server::t_command_server(
     m_command_lookup.set_handler(
       "alt_chain_info"
     , std::bind(&t_command_parser_executor::alt_chain_info, &m_parser, p::_1)
+    , "alt_chain_info [blockhash]"
     , "Print the information about alternative chains."
     );
     m_command_lookup.set_handler(
@@ -286,6 +296,46 @@ t_command_server::t_command_server(
     , std::bind(&t_command_parser_executor::sync_info, &m_parser, p::_1)
     , "Print information about the blockchain sync state."
     );
+    m_command_lookup.set_handler(
+      "pop_blocks"
+    , std::bind(&t_command_parser_executor::pop_blocks, &m_parser, p::_1)
+    , "pop_blocks <nblocks>"
+    , "Remove blocks from end of blockchain"
+    );
+    m_command_lookup.set_handler(
+      "rpc_payments"
+    , std::bind(&t_command_parser_executor::rpc_payments, &m_parser, p::_1)
+    , "Print information about RPC payments."
+    );
+    m_command_lookup.set_handler(
+      "version"
+    , std::bind(&t_command_parser_executor::version, &m_parser, p::_1)
+    , "Print version information."
+    );
+    m_command_lookup.set_handler(
+      "prune_blockchain"
+    , std::bind(&t_command_parser_executor::prune_blockchain, &m_parser, p::_1)
+    , "prune_blockchain [confirm]"
+    , "Prune the blockchain."
+    );
+    m_command_lookup.set_handler(
+      "check_blockchain_pruning"
+    , std::bind(&t_command_parser_executor::check_blockchain_pruning, &m_parser, p::_1)
+    , "Check the blockchain pruning."
+    );
+    m_command_lookup.set_handler(
+      "set_bootstrap_daemon"
+    , std::bind(&t_command_parser_executor::set_bootstrap_daemon, &m_parser, p::_1)
+    , "set_bootstrap_daemon (auto | none | host[:port] [username] [password]) [proxy_ip:proxy_port]"
+    , "URL of a 'bootstrap' remote daemon that the connected wallets can use while this daemon is still not fully synced.\n"
+      "Use 'auto' to enable automatic public nodes discovering and bootstrap daemon switching"
+    );
+    m_command_lookup.set_handler(
+      "flush_cache"
+    , std::bind(&t_command_parser_executor::flush_cache, &m_parser, p::_1)
+    , "flush_cache [bad-txs] [bad-blocks]"
+    , "Flush the specified cache(s)."
+    );
 }
 
 bool t_command_server::process_command_str(const std::string& cmd)
@@ -307,7 +357,7 @@ bool t_command_server::start_handling(std::function<void(void)> exit_handler)
 {
   if (m_is_rpc) return false;
 
-  m_command_lookup.start_handling("", get_commands_str(), exit_handler);
+  m_command_lookup.start_handling("", "Use \"help\" to list all commands and their usage\n", exit_handler);
 
   return true;
 }
@@ -332,15 +382,42 @@ bool t_command_server::help(const std::vector<std::string>& args)
   return true;
 }
 
+bool t_command_server::apropos(const std::vector<std::string>& args)
+{
+  if (args.empty())
+  {
+    std::cout << "Missing keyword" << std::endl;
+    return true;
+  }
+  const std::vector<std::string>& command_list = m_command_lookup.get_command_list(args);
+  if (command_list.empty())
+  {
+    std::cout << "Nothing found" << std::endl;
+    return true;
+  }
+
+  std::cout << std::endl;
+  for(auto const& command:command_list)
+  {
+    std::vector<std::string> cmd;
+    cmd.push_back(command);
+    std::pair<std::string, std::string> documentation = m_command_lookup.get_documentation(cmd);
+    std::cout << "  " << documentation.first << std::endl;
+  }
+  std::cout << std::endl;
+
+  return true;
+}
+
 std::string t_command_server::get_commands_str()
 {
   std::stringstream ss;
-  ss << "Masari '" << MONERO_RELEASE_NAME << "' (v" << MONERO_VERSION_FULL << ")" << std::endl;
+  ss << "Monero '" << MONERO_RELEASE_NAME << "' (v" << MONERO_VERSION_FULL << ")" << std::endl;
   ss << "Commands: " << std::endl;
   std::string usage = m_command_lookup.get_usage();
   boost::replace_all(usage, "\n", "\n  ");
   usage.insert(0, "  ");
-  ss << usage << std::endl;
+  ss << usage;
   return ss.str();
 }
 

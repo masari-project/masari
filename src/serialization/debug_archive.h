@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -38,6 +38,7 @@ struct debug_archive : public json_archive<W> {
   typedef typename json_archive<W>::stream_type stream_type;
 
   debug_archive(stream_type &s) : json_archive<W>(s) { }
+  stream_type& stream() { return this->stream_; }
 };
 
 template <class T>

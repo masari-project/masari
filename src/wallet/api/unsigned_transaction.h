@@ -1,5 +1,4 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 //
 // All rights reserved.
 //
@@ -44,18 +43,18 @@ class UnsignedTransactionImpl : public UnsignedTransaction
 public:
     UnsignedTransactionImpl(WalletImpl &wallet);
     ~UnsignedTransactionImpl();
-    int status() const;
-    std::string errorString() const;
-    std::vector<uint64_t> amount() const;
-    std::vector<uint64_t> fee() const;
-    std::vector<uint64_t> mixin() const;
-    std::vector<std::string> paymentId() const;
-    std::vector<std::string> recipientAddress() const;
-    uint64_t txCount() const;
+    int status() const override;
+    std::string errorString() const override;
+    std::vector<uint64_t> amount() const override;
+    std::vector<uint64_t> fee() const override;
+    std::vector<uint64_t> mixin() const override;
+    std::vector<std::string> paymentId() const override;
+    std::vector<std::string> recipientAddress() const override;
+    uint64_t txCount() const override;
     // sign txs and save to file
-    bool sign(const std::string &signedFileName);
-    std::string confirmationMessage() const {return m_confirmationMessage;}
-    uint64_t minMixinCount() const;
+    bool sign(const std::string &signedFileName) override;
+    std::string confirmationMessage() const override {return m_confirmationMessage;}
+    uint64_t minMixinCount() const override;
 
 private:
     // Callback function to check all loaded tx's and generate confirmationMessage
@@ -72,5 +71,3 @@ private:
 
 
 }
-
-namespace Bitmonero = Monero;

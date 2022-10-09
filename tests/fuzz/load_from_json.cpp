@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018, The Monero Project
+// Copyright (c) 2017-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -33,44 +33,10 @@
 #include "storages/portable_storage_base.h"
 #include "fuzzer.h"
 
-class PortableStorageFuzzer: public Fuzzer
-{
-public:
-  PortableStorageFuzzer() {}
-  virtual int init();
-  virtual int run(const std::string &filename);
-};
+BEGIN_INIT_SIMPLE_FUZZER()
+END_INIT_SIMPLE_FUZZER()
 
-int PortableStorageFuzzer::init()
-{
-  return 0;
-}
-
-int PortableStorageFuzzer::run(const std::string &filename)
-{
-  std::string s;
-
-  if (!epee::file_io_utils::load_file_to_string(filename, s))
-  {
-    std::cout << "Error: failed to load file " << filename << std::endl;
-    return 1;
-  }
-  try
-  {
-    epee::serialization::portable_storage ps;
-    ps.load_from_json(s);
-  }
-  catch (const std::exception &e)
-  {
-    std::cerr << "Failed to load from binary: " << e.what() << std::endl;
-    return 1;
-  }
-  return 0;
-}
-
-int main(int argc, const char **argv)
-{
-  PortableStorageFuzzer fuzzer;
-  return run_fuzzer(argc, argv, fuzzer);
-}
-
+BEGIN_SIMPLE_FUZZER()
+  epee::serialization::portable_storage ps;
+  ps.load_from_json(std::string((const char*)buf, len));
+END_SIMPLE_FUZZER()

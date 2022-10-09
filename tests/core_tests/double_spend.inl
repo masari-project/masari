@@ -1,5 +1,4 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -98,7 +97,7 @@ bool gen_double_spend_base<concrete_test>::check_double_spend(cryptonote::core& 
   CHECK_NOT_EQ(invalid_index_value, m_invalid_block_index);
 
   std::vector<cryptonote::block> block_list;
-  bool r = c.get_blocks(0, 100 + 3 * CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW, block_list);
+  bool r = c.get_blocks(0, 100 + 2 * CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW, block_list);
   CHECK_TEST_CONDITION(r);
   CHECK_TEST_CONDITION(m_last_valid_block == block_list.back());
 
@@ -127,21 +126,28 @@ bool gen_double_spend_in_tx<txs_keeped_by_block>::generate(std::vector<test_even
   DO_CALLBACK(events, "mark_last_valid_block");
 
   std::vector<cryptonote::tx_source_entry> sources;
+  cryptonote::tx_source_entry se;
+  se.amount = tx_0.vout[0].amount;
+  se.push_output(0, boost::get<cryptonote::txout_to_key>(tx_0.vout[0].target).key, se.amount);
+  se.real_output = 0;
+  se.rct = false;
+  se.real_out_tx_key = get_tx_pub_key_from_extra(tx_0);
+  se.real_output_in_tx_index = 0;
+  sources.push_back(se);
+  // Double spend!
+  sources.push_back(se);
+
+  cryptonote::tx_destination_entry de;
+  de.addr = alice_account.get_keys().m_account_address;
+  de.amount = 2 * se.amount - TESTS_DEFAULT_FEE;
   std::vector<cryptonote::tx_destination_entry> destinations;
-  rct::key mask;
-  uint64_t tx_amount;
-  try { // TODO-TK: temp hack against randomization of destination outs
-    tx_amount = get_tx_amount_and_mask(tx_0, bob_account, 0, mask);
-  } catch (...) {
-    tx_amount = get_tx_amount_and_mask(tx_0, bob_account, 1, mask);
-  }
-  fill_tx_sources_and_destinations(events, blk_1i, bob_account, alice_account, tx_amount - TESTS_DEFAULT_FEE, TESTS_DEFAULT_FEE, DEFAULT_MIXIN, sources, destinations);
-  sources.push_back(sources[0]);
+  destinations.push_back(de);
+
   cryptonote::transaction tx_1;
-  if (!construct_tx(bob_account.get_keys(), sources, destinations, boost::none, std::vector<uint8_t>(), tx_1, 0)) {
+  if (!construct_tx(bob_account.get_keys(), sources, destinations, boost::none, std::vector<uint8_t>(), tx_1, 0))
     return false;
-  }
-  SET_EVENT_VISITOR_SETT(events, event_visitor_settings::set_txs_keeped_by_block, txs_keeped_by_block);
+
+  SET_EVENT_VISITOR_SETT(events, txs_keeped_by_block ? event_visitor_settings::set_txs_keeped_by_block : 0);
   DO_CALLBACK(events, "mark_invalid_tx");
   events.push_back(tx_1);
   DO_CALLBACK(events, "mark_invalid_block");
@@ -157,7 +163,7 @@ bool gen_double_spend_in_the_same_block<txs_keeped_by_block>::generate(std::vect
   INIT_DOUBLE_SPEND_TEST();
 
   DO_CALLBACK(events, "mark_last_valid_block");
-  SET_EVENT_VISITOR_SETT(events, event_visitor_settings::set_txs_keeped_by_block, txs_keeped_by_block);
+  SET_EVENT_VISITOR_SETT(events, txs_keeped_by_block ? event_visitor_settings::set_txs_keeped_by_block : 0);
 
   MAKE_TX_LIST_START(events, txs_1, bob_account, alice_account, send_amount - TESTS_DEFAULT_FEE, blk_1);
   cryptonote::transaction tx_1 = txs_1.front();
@@ -184,7 +190,7 @@ bool gen_double_spend_in_different_blocks<txs_keeped_by_block>::generate(std::ve
   INIT_DOUBLE_SPEND_TEST();
 
   DO_CALLBACK(events, "mark_last_valid_block");
-  SET_EVENT_VISITOR_SETT(events, event_visitor_settings::set_txs_keeped_by_block, txs_keeped_by_block);
+  SET_EVENT_VISITOR_SETT(events, txs_keeped_by_block ? event_visitor_settings::set_txs_keeped_by_block : 0);
 
   // Create two identical transactions, but don't push it to events list
   MAKE_TX(events, tx_blk_2, bob_account, alice_account, send_amount - TESTS_DEFAULT_FEE, blk_1);
@@ -214,7 +220,7 @@ bool gen_double_spend_in_alt_chain_in_the_same_block<txs_keeped_by_block>::gener
 {
   INIT_DOUBLE_SPEND_TEST();
 
-  SET_EVENT_VISITOR_SETT(events, event_visitor_settings::set_txs_keeped_by_block, txs_keeped_by_block);
+  SET_EVENT_VISITOR_SETT(events, txs_keeped_by_block ? event_visitor_settings::set_txs_keeped_by_block : 0);
 
   // Main chain
   MAKE_NEXT_BLOCK(events, blk_2, blk_1r, miner_account);
@@ -249,7 +255,7 @@ bool gen_double_spend_in_alt_chain_in_different_blocks<txs_keeped_by_block>::gen
 {
   INIT_DOUBLE_SPEND_TEST();
 
-  SET_EVENT_VISITOR_SETT(events, event_visitor_settings::set_txs_keeped_by_block, txs_keeped_by_block);
+  SET_EVENT_VISITOR_SETT(events, txs_keeped_by_block ? event_visitor_settings::set_txs_keeped_by_block : 0);
 
   // Main chain
   MAKE_NEXT_BLOCK(events, blk_2, blk_1r, miner_account);

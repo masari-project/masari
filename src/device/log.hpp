@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018, The Monero Project
+// Copyright (c) 2017-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -40,12 +40,26 @@
 
 namespace hw {
 
+    /* Note about debug:
+     * To debug Device you can def the following :
+     * #define DEBUG_HWDEVICE
+     *   Activate debug mechanism:
+     *     - Add more trace
+     *     - All computation done by device are checked by default device.
+     *       Required IODUMMYCRYPT_HWDEVICE or IONOCRYPT_HWDEVICE for fully working
+     * #define IODUMMYCRYPT_HWDEVICE 1
+     *     - It assumes sensitive data encryption is is off on device side. a XOR with 0x55. This allow Ledger Class to make check on clear value
+     * #define IONOCRYPT_HWDEVICE 1
+     *     - It assumes sensitive data encryption is off on device side.
+     */
+
+    void buffer_to_str(char *to_buff,  size_t to_len, const char *buff, size_t len) ;
+    void log_hexbuffer(const std::string &msg,  const char* buff, size_t len);
+    void log_message(const std::string &msg, const std::string &info );
+
     #ifdef WITH_DEVICE_LEDGER    
     namespace ledger {
 
-        void buffer_to_str(char *to_buff,  size_t to_len, const char *buff, size_t len) ;
-        void log_hexbuffer(std::string msg,  const char* buff, size_t len);
-        void log_message(std::string msg,  std::string info );
         #ifdef DEBUG_HWDEVICE
         #define TRACK printf("file %s:%d\n",__FILE__, __LINE__)
         //#define TRACK MCDEBUG("ledger"," At file " << __FILE__ << ":" << __LINE__)
@@ -59,8 +73,9 @@ namespace hw {
         crypto::ec_scalar decrypt(const crypto::ec_scalar &res);
         rct::keyV decrypt(const rct::keyV &keys);
 
-        void check32(std::string msg, std::string info, const char *h, const char *d, bool crypted=false);
-        void check8(std::string msg, std::string info, const char *h, const char *d,  bool crypted=false);
+        void check32(const std::string &msg, const std::string &info, const char *h, const char *d, bool crypted=false);
+        void check8(const std::string &msg, const std::string &info, const char *h, const char *d,  bool crypted=false);
+        void check1(const std::string &msg, const std::string &info, const char *h, const char *d,  bool crypted=false);
 
         void set_check_verbose(bool verbose);
         #endif

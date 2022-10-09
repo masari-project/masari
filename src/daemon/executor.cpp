@@ -1,5 +1,4 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -41,7 +40,7 @@
 
 namespace daemonize
 {
-  std::string const t_executor::NAME = "Masari Daemon";
+  std::string const t_executor::NAME = "Monero Daemon";
 
   void t_executor::init_options(
       boost::program_options::options_description & configurable_options
@@ -59,22 +58,22 @@ namespace daemonize
       boost::program_options::variables_map const & vm
     )
   {
-    LOG_PRINT_L0("Masari '" << MONERO_RELEASE_NAME << "' (v" << MONERO_VERSION_FULL << ") Daemonised");
-    return t_daemon{vm};
+    LOG_PRINT_L0("Monero '" << MONERO_RELEASE_NAME << "' (v" << MONERO_VERSION_FULL << ") Daemonised");
+    return t_daemon{vm, public_rpc_port};
   }
 
   bool t_executor::run_non_interactive(
       boost::program_options::variables_map const & vm
     )
   {
-    return t_daemon{vm}.run(false);
+    return t_daemon{vm, public_rpc_port}.run(false);
   }
 
   bool t_executor::run_interactive(
       boost::program_options::variables_map const & vm
     )
   {
-    return t_daemon{vm}.run(true);
+    return t_daemon{vm, public_rpc_port}.run(true);
   }
 }
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018, The Monero Project
+// Copyright (c) 2017-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -52,6 +52,9 @@ namespace
 
   struct test_levin_connection_context : public epee::net_utils::connection_context_base
   {
+    static constexpr int handshake_command() noexcept { return 1001; }
+    static constexpr bool handshake_complete() noexcept { return true; }
+    size_t get_max_bytes(int command) const { return LEVIN_DEFAULT_MAX_PACKET_SIZE; }
   };
 
   typedef epee::levin::async_protocol_handler_config<test_levin_connection_context> test_levin_protocol_handler_config;
@@ -65,22 +68,22 @@ namespace
     {
     }
 
-    virtual int invoke(int command, const std::string& in_buff, std::string& buff_out, test_levin_connection_context& context)
+    virtual int invoke(int command, const epee::span<const uint8_t> in_buff, epee::byte_stream& buff_out, test_levin_connection_context& context)
     {
       m_invoke_counter.inc();
       boost::unique_lock<boost::mutex> lock(m_mutex);
       m_last_command = command;
-      m_last_in_buf = in_buff;
-      buff_out = m_invoke_out_buf;
+      m_last_in_buf = std::string((const char*)in_buff.data(), in_buff.size());
+      buff_out.write(epee::to_span(m_invoke_out_buf));
       return m_return_code;
     }
 
-    virtual int notify(int command, const std::string& in_buff, test_levin_connection_context& context)
+    virtual int notify(int command, const epee::span<const uint8_t> in_buff, test_levin_connection_context& context)
     {
       m_notify_counter.inc();
       boost::unique_lock<boost::mutex> lock(m_mutex);
       m_last_command = command;
-      m_last_in_buf = in_buff;
+      m_last_in_buf = std::string((const char*)in_buff.data(), in_buff.size());
       return m_return_code;
     }
 
@@ -111,8 +114,7 @@ namespace
     int return_code() const { return m_return_code; }
     void return_code(int v) { m_return_code = v; }
 
-    const std::string& invoke_out_buf() const { return m_invoke_out_buf; }
-    void invoke_out_buf(const std::string& v) { m_invoke_out_buf = v; }
+    void invoke_out_buf(std::string v) { m_invoke_out_buf = epee::byte_slice{std::move(v)}; }
 
     int last_command() const { return m_last_command; }
     const std::string& last_in_buf() const { return m_last_in_buf; }
@@ -127,7 +129,7 @@ namespace
     boost::mutex m_mutex;
 
     int m_return_code;
-    std::string m_invoke_out_buf;
+    epee::byte_slice m_invoke_out_buf;
 
     int m_last_command;
     std::string m_last_in_buf;
@@ -149,15 +151,16 @@ namespace
     }
 
     // Implement epee::net_utils::i_service_endpoint interface
-    virtual bool do_send(const void* ptr, size_t cb)
+    virtual bool do_send(epee::byte_slice message)
     {
       m_send_counter.inc();
       boost::unique_lock<boost::mutex> lock(m_mutex);
-      m_last_send_data.append(reinterpret_cast<const char*>(ptr), cb);
+      m_last_send_data.append(reinterpret_cast<const char*>(message.data()), message.size());
       return m_send_return;
     }
 
     virtual bool close()                              { return true; }
+    virtual bool send_done()                          { return true; }
     virtual bool call_run_once_service_io()           { return true; }
     virtual bool request_callback()                   { return true; }
     virtual boost::asio::io_service& get_io_service() { return m_io_service; }
@@ -278,26 +281,10 @@ namespace
 #endif
 }
 
-class LevinFuzzer: public Fuzzer
-{
-public:
-  LevinFuzzer() {} //: handler(endpoint, config, context) {}
-  virtual int init();
-  virtual int run(const std::string &filename);
+BEGIN_INIT_SIMPLE_FUZZER()
+END_INIT_SIMPLE_FUZZER()
 
-private:
-  //epee::net_utils::connection_context_base context;
-  //epee::levin::async_protocol_handler<> handler;
-};
-
-int LevinFuzzer::init()
-{
-  return 0;
-}
-
-int LevinFuzzer::run(const std::string &filename)
-{
-  std::string s;
+BEGIN_SIMPLE_FUZZER()
 
 #if 0
   epee::levin::bucket_head2 req_head;
@@ -312,13 +299,6 @@ int LevinFuzzer::run(const std::string &filename)
   fwrite(&req_head,sizeof(req_head),1, f);
   fclose(f);
 #endif
-  if (!epee::file_io_utils::load_file_to_string(filename, s))
-  {
-    std::cout << "Error: failed to load file " << filename << std::endl;
-    return 1;
-  }
-  try
-  {
     //std::unique_ptr<test_connection> conn = new test();
     boost::asio::io_service io_service;
     test_levin_protocol_handler_config m_handler_config;
@@ -328,19 +308,5 @@ int LevinFuzzer::run(const std::string &filename)
     conn->start();
     //m_commands_handler.invoke_out_buf(expected_out_data);
     //m_commands_handler.return_code(expected_return_code);
-    conn->m_protocol_handler.handle_recv(s.data(), s.size());
-  }
-  catch (const std::exception &e)
-  {
-    std::cerr << "Failed to test http client: " << e.what() << std::endl;
-    return 1;
-  }
-  return 0;
-}
-
-int main(int argc, const char **argv)
-{
-  LevinFuzzer fuzzer;
-  return run_fuzzer(argc, argv, fuzzer);
-}
-
+    conn->m_protocol_handler.handle_recv(buf, len);
+END_SIMPLE_FUZZER()

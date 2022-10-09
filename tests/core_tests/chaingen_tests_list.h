@@ -1,5 +1,4 @@
-// Copyright (c) 2018, The Masari Project
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -42,9 +41,10 @@
 #include "tx_validation.h"
 #include "v2_tests.h"
 #include "rct.h"
-#include "uncles.h"
 #include "multisig.h"
 #include "bulletproofs.h"
+#include "bulletproof_plus.h"
+#include "rct2.h"
 /************************************************************************/
 /*                                                                      */
 /************************************************************************/

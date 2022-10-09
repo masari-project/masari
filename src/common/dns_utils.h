@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -30,15 +30,18 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <boost/optional/optional_fwd.hpp>
+#include <boost/utility/string_ref_fwd.hpp>
 
 namespace tools
 {
 
 // RFC defines for record types and classes for DNS, gleaned from ldns source
-const static int DNS_CLASS_IN  = 1;
-const static int DNS_TYPE_A    = 1;
-const static int DNS_TYPE_TXT  = 16;
-const static int DNS_TYPE_AAAA = 8;
+constexpr const int DNS_CLASS_IN  = 1;
+constexpr const int DNS_TYPE_A    = 1;
+constexpr const int DNS_TYPE_TXT  = 16;
+constexpr const int DNS_TYPE_AAAA = 8;
+constexpr const int DNS_TYPE_TLSA = 52;
 
 struct DNSResolverData;
 
@@ -105,6 +108,17 @@ public:
    std::vector<std::string> get_txt_record(const std::string& url, bool& dnssec_available, bool& dnssec_valid);
 
   /**
+   * @brief gets all TLSA TCP records from a DNS query for the supplied URL;
+   * if no TLSA record present returns an empty vector.
+   *
+   * @param url A string containing a URL to query for
+   * @param port The service port number (as string) to query
+   *
+   * @return A vector of strings containing all TLSA records; or an empty vector
+   */
+  std::vector<std::string> get_tlsa_tcp_record(boost::string_ref url, boost::string_ref port, bool& dnssec_available, bool& dnssec_valid);
+
+  /**
    * @brief Gets a DNS address from OpenAlias format
    *
    * If the address looks good, but contains one @ symbol, replace that with a .
@@ -143,7 +157,7 @@ private:
    * @return A vector of strings containing the requested record; or an empty vector
    */
   // TODO: modify this to accommodate DNSSEC
-  std::vector<std::string> get_record(const std::string& url, int record_type, std::string (*reader)(const char *,size_t), bool& dnssec_available, bool& dnssec_valid);
+  std::vector<std::string> get_record(const std::string& url, int record_type, boost::optional<std::string> (*reader)(const char *,size_t), bool& dnssec_available, bool& dnssec_valid);
 
   /**
    * @brief Checks a string to see if it looks like a URL

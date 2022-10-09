@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -36,18 +36,19 @@
 
 TEST(protocol_pack, protocol_pack_command) 
 {
-  std::string buff;
+  epee::byte_slice buff;
   cryptonote::NOTIFY_RESPONSE_CHAIN_ENTRY::request r;
   r.start_height = 1;
   r.total_height = 3;
   for(int i = 1; i < 10000; i += i*10)
   {
-    r.m_block_ids.resize(i, boost::value_initialized<crypto::hash>());
+    r.m_block_ids.resize(i, crypto::hash{});
     bool res = epee::serialization::store_t_to_binary(r, buff);
     ASSERT_TRUE(res);
 
     cryptonote::NOTIFY_RESPONSE_CHAIN_ENTRY::request r2;
-    res = epee::serialization::load_t_from_binary(r2, buff);
+    res = epee::serialization::load_t_from_binary(r2, epee::to_span(buff));
+    ASSERT_TRUE(res);
     ASSERT_TRUE(r.m_block_ids.size() == i);
     ASSERT_TRUE(r.start_height == 1);
     ASSERT_TRUE(r.total_height == 3);

@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -32,6 +32,7 @@
 
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/optional.hpp>
 #include <system_error>
 #include <csignal>
 #include <cstdio>
@@ -45,6 +46,7 @@
 #endif
 
 #include "crypto/hash.h"
+#include "cryptonote_config.h"
 
 /*! \brief Various Tools
  *
@@ -90,6 +92,20 @@ namespace tools
     const std::string& filename() const noexcept { return m_filename; }
   };
 
+  class file_locker
+  {
+  public:
+    file_locker(const std::string &filename);
+    ~file_locker();
+    bool locked() const;
+  private:
+#ifdef WIN32
+    HANDLE m_fd;
+#else
+    int m_fd;
+#endif
+  };
+
   /*! \brief Returns the default data directory.
    *
    * \details Windows < Vista: C:\\Documents and Settings\\Username\\Application Data\\CRYPTONOTE_NAME
@@ -130,9 +146,11 @@ namespace tools
   bool create_directories_if_necessary(const std::string& path);
   /*! \brief std::rename wrapper for nix and something strange for windows.
    */
-  std::error_code replace_file(const std::string& replacement_name, const std::string& replaced_name);
+  std::error_code replace_file(const std::string& old_name, const std::string& new_name);
 
   bool sanitize_locale();
+
+  bool disable_core_dumps();
 
   bool on_startup();
 
@@ -204,15 +222,58 @@ namespace tools
 
   void set_strict_default_file_permissions(bool strict);
 
+  ssize_t get_lockable_memory();
+
   void set_max_concurrency(unsigned n);
   unsigned get_max_concurrency();
 
   bool is_local_address(const std::string &address);
+  bool is_privacy_preserving_network(const std::string &address);
   int vercmp(const char *v0, const char *v1); // returns < 0, 0, > 0, similar to strcmp, but more human friendly than lexical - does not attempt to validate
 
+  /**
+   * \brief Creates a SHA-256 digest of a data buffer
+   *
+   * \param[in] data pointer to the buffer
+   * \param[in] len size of the buffer in bytes
+   * \param[out] hash where message digest will be written to
+   *
+   * \returns true if successful, false otherwise
+   */
   bool sha256sum(const uint8_t *data, size_t len, crypto::hash &hash);
+
+  /**
+   * \brief Creates a SHA-256 digest of a file's contents, equivalent to the sha256sum command in Linux
+   *
+   * \param[in] filename path to target file
+   * \param[out] hash where message digest will be written to
+   *
+   * \returns true if successful, false if the file can not be opened or there is an OpenSSL failure
+   *
+   * \throws ios_base::failure if after the file is successfully opened, an error occurs during reading
+   */
   bool sha256sum(const std::string &filename, crypto::hash &hash);
-  bool is_hdd(const char *path);
+
+  boost::optional<bool> is_hdd(const char *path);
+
+  boost::optional<std::pair<uint32_t, uint32_t>> parse_subaddress_lookahead(const std::string& str);
 
   std::string glob_to_regex(const std::string &val);
+#ifdef _WIN32
+  std::string input_line_win();
+#endif
+
+  void closefrom(int fd);
+
+  std::string get_human_readable_timestamp(uint64_t ts);
+
+  std::string get_human_readable_timespan(uint64_t seconds);
+
+  std::string get_human_readable_bytes(uint64_t bytes);
+
+  void clear_screen();
+
+  std::vector<std::pair<std::string, size_t>> split_string_by_width(const std::string &s, size_t columns);
+
+  uint64_t cumulative_block_sync_weight(cryptonote::network_type nettype, uint64_t start_block, uint64_t num_blocks);
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 //
 // All rights reserved.
 //
@@ -45,6 +45,7 @@ public:
     virtual TransactionInfo * transaction(const std::string &id) const;
     virtual std::vector<TransactionInfo*> getAll() const;
     virtual void refresh();
+    virtual void setTxNote(const std::string &txid, const std::string &note);
 
 private:
 
@@ -55,6 +56,3 @@ private:
 };
 
 }
-
-namespace Bitmonero = Monero;
-

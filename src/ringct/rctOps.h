@@ -124,6 +124,7 @@ namespace rct {
     key scalarmultH(const key & a);
     // multiplies a point by 8
     key scalarmult8(const key & P);
+    void scalarmult8(ge_p3 &res, const key & P);
     // checks a is in the main subgroup (ie, not a small one)
     bool isInMainSubgroup(const key & a);
 
@@ -132,6 +133,7 @@ namespace rct {
     //for curve points: AB = A + B
     void addKeys(key &AB, const key &A, const key &B);
     rct::key addKeys(const key &A, const key &B);
+    rct::key addKeys(const keyV &A);
     //aGB = aG + B where a is a scalar, G is the basepoint, and B is a point
     void addKeys1(key &aGB, const key &a, const key & B);
     //aGbB = aG + bB where a, b are scalars, G is the basepoint and B is a point
@@ -143,6 +145,10 @@ namespace rct {
     //B must be input after applying "precomp"
     void addKeys3(key &aAbB, const key &a, const key &A, const key &b, const ge_dsmp B);
     void addKeys3(key &aAbB, const key &a, const ge_dsmp A, const key &b, const ge_dsmp B);
+
+    void addKeys_aGbBcC(key &aGbBcC, const key &a, const key &b, const ge_dsmp B, const key &c, const ge_dsmp C);
+    void addKeys_aAbBcC(key &aAbBcC, const key &a, const ge_dsmp A, const key &b, const ge_dsmp B, const key &c, const ge_dsmp C);
+
     //AB = A - B where A, B are curve points
     void subKeys(key &AB, const key &A, const  key &B);
     //checks if A, B are equal as curve points
@@ -171,17 +177,15 @@ namespace rct {
     key cn_fast_hash(const key64 keys);
     key hash_to_scalar(const key64 keys);
 
-    //returns hashToPoint as described in https://github.com/ShenNoether/ge_fromfe_writeup 
-    key hashToPointSimple(const key &in);
-    key hashToPoint(const key &in);
-    void hashToPoint(key &out, const key &in);
+    void hash_to_p3(ge_p3 &hash8_p3, const key &k);
 
     //sums a vector of curve points (for scalars use sc_add)
     void sumKeys(key & Csum, const key &Cis);
 
     //Elliptic Curve Diffie Helman: encodes and decodes the amount b and mask a
     // where C= aG + bH
-    void ecdhEncode(ecdhTuple & unmasked, const key & sharedSec);
-    void ecdhDecode(ecdhTuple & masked, const key & sharedSec);
+    key genCommitmentMask(const key &sk);
+    void ecdhEncode(ecdhTuple & unmasked, const key & sharedSec, bool v2);
+    void ecdhDecode(ecdhTuple & masked, const key & sharedSec, bool v2);
 }
 #endif  /* RCTOPS_H */

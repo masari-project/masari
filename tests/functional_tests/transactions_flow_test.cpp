@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -29,6 +29,7 @@
 // Parts of this file are originally copyright (c) 2012-2013 The Cryptonote developers
 
 #include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <unordered_map>
 
@@ -40,7 +41,6 @@ using namespace cryptonote;
 namespace
 {
   uint64_t const TEST_FEE = 5000000000; // 5 * 10^9
-  uint64_t const TEST_DUST_THRESHOLD = 5000000000; // 5 * 10^9
 }
 
 std::string generate_random_wallet_name()
@@ -84,10 +84,10 @@ bool do_send_money(tools::wallet2& w1, tools::wallet2& w2, size_t mix_in_factor,
 
   try
   {
-    tools::wallet2::pending_tx ptx;
-    std::vector<size_t> indices = w1.select_available_outputs([](const tools::wallet2::transfer_details&) { return true; });
-    w1.transfer(dsts, mix_in_factor, indices, 0, TEST_FEE, std::vector<uint8_t>(), tools::detail::null_split_strategy, tools::tx_dust_policy(TEST_DUST_THRESHOLD), tx, ptx, true);
-    w1.commit_tx(ptx);
+    std::vector<tools::wallet2::pending_tx> ptx;
+    ptx = w1.create_transactions_2(dsts, mix_in_factor, 0, 0, std::vector<uint8_t>(), 0, {});
+    for (auto &p: ptx)
+      w1.commit_tx(p);
     return true;
   }
   catch (const std::exception&)
@@ -143,7 +143,7 @@ bool transactions_flow_test(std::string& working_folder,
   uint64_t blocks_fetched = 0;
   bool received_money;
   bool ok;
-  if(!w1.refresh(blocks_fetched, received_money, ok))
+  if(!w1.refresh(true, blocks_fetched, received_money, ok))
   {
     LOG_ERROR( "failed to refresh source wallet from " << daemon_addr_a );
     return false;
@@ -167,15 +167,15 @@ bool transactions_flow_test(std::string& working_folder,
   daemon_req.miner_address = w1.get_account().get_public_address_str(MAINNET);
   daemon_req.threads_count = 9;
   r = net_utils::invoke_http_json("/start_mining", daemon_req, daemon_rsp, http_client, std::chrono::seconds(10));
-  CHECK_AND_ASSERT_MES(r, false, "failed to get getrandom_outs");
-  CHECK_AND_ASSERT_MES(daemon_rsp.status == CORE_RPC_STATUS_OK, false, "failed to getrandom_outs.bin");
+  CHECK_AND_ASSERT_MES(r, false, "failed to start mining getrandom_outs");
+  CHECK_AND_ASSERT_MES(daemon_rsp.status == CORE_RPC_STATUS_OK, false, "failed to start mining");
 
   //wait for money, until balance will have enough money
-  w1.refresh(blocks_fetched, received_money, ok);
-  while(w1.unlocked_balance(0) < amount_to_transfer)
+  w1.refresh(true, blocks_fetched, received_money, ok);
+  while(w1.unlocked_balance(0, true) < amount_to_transfer)
   {
     misc_utils::sleep_no_w(1000);
-    w1.refresh(blocks_fetched, received_money, ok);
+    w1.refresh(true, blocks_fetched, received_money, ok);
   }
 
   //lets make a lot of small outs to ourselves
@@ -185,7 +185,7 @@ bool transactions_flow_test(std::string& working_folder,
   {
     tools::wallet2::transfer_container incoming_transfers;
     w1.get_transfers(incoming_transfers);
-    if(incoming_transfers.size() > FIRST_N_TRANSFERS && get_money_in_first_transfers(incoming_transfers, FIRST_N_TRANSFERS) < w1.unlocked_balance(0) )
+    if(incoming_transfers.size() > FIRST_N_TRANSFERS && get_money_in_first_transfers(incoming_transfers, FIRST_N_TRANSFERS) < w1.unlocked_balance(0, true) )
     {
       //lets go!
       size_t count = 0;
@@ -202,7 +202,7 @@ bool transactions_flow_test(std::string& working_folder,
     }else
     {
       misc_utils::sleep_no_w(1000);
-      w1.refresh(blocks_fetched, received_money, ok);
+      w1.refresh(true, blocks_fetched, received_money, ok);
     }
   }
   //do actual transfer
@@ -220,11 +220,11 @@ bool transactions_flow_test(std::string& working_folder,
   for(i = 0; i != transactions_count; i++)
   {
     uint64_t amount_to_tx = (amount_to_transfer - transfered_money) > transfer_size ? transfer_size: (amount_to_transfer - transfered_money);
-    while(w1.unlocked_balance(0) < amount_to_tx + TEST_FEE)
+    while(w1.unlocked_balance(0, true) < amount_to_tx + TEST_FEE)
     {
       misc_utils::sleep_no_w(1000);
       LOG_PRINT_L0("not enough money, waiting for cashback or mining");
-      w1.refresh(blocks_fetched, received_money, ok);
+      w1.refresh(true, blocks_fetched, received_money, ok);
     }
 
     transaction tx;
@@ -239,7 +239,7 @@ bool transactions_flow_test(std::string& working_folder,
     if(!do_send_money(w1, w2, mix_in_factor, amount_to_tx, tx))
     {
       LOG_PRINT_L0("failed to transfer money, tx: " << get_transaction_hash(tx) << ", refresh and try again" );
-      w1.refresh(blocks_fetched, received_money, ok);
+      w1.refresh(true, blocks_fetched, received_money, ok);
       if(!do_send_money(w1, w2, mix_in_factor, amount_to_tx, tx))
       {
         LOG_PRINT_L0( "failed to transfer money, second chance. tx: " << get_transaction_hash(tx) << ", exit" );
@@ -252,7 +252,7 @@ bool transactions_flow_test(std::string& working_folder,
     transfered_money += amount_to_tx;
 
     LOG_PRINT_L0("transferred " << amount_to_tx << ", i=" << i );
-    tx_test_entry& ent = txs[get_transaction_hash(tx)] = boost::value_initialized<tx_test_entry>();
+    tx_test_entry& ent = txs[get_transaction_hash(tx)] = tx_test_entry{};
     ent.amount_transfered = amount_to_tx;
     ent.tx = tx;
     //if(i % transactions_per_second)
@@ -264,12 +264,12 @@ bool transactions_flow_test(std::string& working_folder,
   misc_utils::sleep_no_w(DIFFICULTY_BLOCKS_ESTIMATE_TIMESPAN*20*1000);//wait two blocks before sync on another wallet on another daemon
   LOG_PRINT_L0( "refreshing...");
   bool recvd_money = false;
-  while(w2.refresh(blocks_fetched, recvd_money, ok) && ( (blocks_fetched && recvd_money) || !blocks_fetched  ) )
+  while(w2.refresh(true, blocks_fetched, recvd_money, ok) && ( (blocks_fetched && recvd_money) || !blocks_fetched  ) )
   {
     misc_utils::sleep_no_w(DIFFICULTY_BLOCKS_ESTIMATE_TIMESPAN*1000);//wait two blocks before sync on another wallet on another daemon
   }
 
-  uint64_t money_2 = w2.balance(0);
+  uint64_t money_2 = w2.balance(0, true);
   if(money_2 == transfered_money)
   {
     MGINFO_GREEN("-----------------------FINISHING TRANSACTIONS FLOW TEST OK-----------------------");

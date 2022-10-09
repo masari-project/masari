@@ -1,4 +1,4 @@
-// Copyright (c) 2016-2018, The Monero Project
+// Copyright (c) 2016-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -29,13 +29,17 @@
 #pragma once
 
 #include <boost/thread/thread.hpp>
-#include <zmq.hpp>
-#include <string>
+#include <boost/utility/string_ref.hpp>
+#include <cstdint>
 #include <memory>
+#include <string>
 
 #include "common/command_line.h"
-
-#include "rpc_handler.h"
+#include "cryptonote_basic/fwd.h"
+#include "net/zmq.h"
+#include "rpc/fwd.h"
+#include "rpc/rpc_handler.h"
+#include "span.h"
 
 namespace cryptonote
 {
@@ -43,10 +47,7 @@ namespace cryptonote
 namespace rpc
 {
 
-static constexpr int DEFAULT_NUM_ZMQ_THREADS = 1;
-static constexpr int DEFAULT_RPC_RECV_TIMEOUT_MS = 1000;
-
-class ZmqServer
+class ZmqServer final
 {
   public:
 
@@ -54,12 +55,13 @@ class ZmqServer
 
     ~ZmqServer();
 
-    static void init_options(boost::program_options::options_description& desc);
-
     void serve();
 
-    bool addIPCSocket(std::string address, std::string port);
-    bool addTCPSocket(std::string address, std::string port);
+    //! \return ZMQ context on success, `nullptr` on failure
+    void* init_rpc(boost::string_ref address, boost::string_ref port);
+
+    //! \return `nullptr` on errors.
+    std::shared_ptr<listener::zmq_pub> init_pub(epee::span<const std::string> addresses);
 
     void run();
     void stop();
@@ -67,16 +69,15 @@ class ZmqServer
   private:
     RpcHandler& handler;
 
-    volatile bool stop_signal;
-    volatile bool running;
-
-    zmq::context_t context;
+    net::zmq::context context;
 
     boost::thread run_thread;
 
-    std::unique_ptr<zmq::socket_t> rep_socket;
+    net::zmq::socket rep_socket;
+    net::zmq::socket pub_socket;
+    net::zmq::socket relay_socket;
+    std::shared_ptr<listener::zmq_pub> shared_state;
 };
-
 
 }  // namespace cryptonote
 

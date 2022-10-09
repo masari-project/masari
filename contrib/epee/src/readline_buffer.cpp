@@ -1,11 +1,12 @@
 #include "readline_buffer.h"
 #include <readline/readline.h>
 #include <readline/history.h>
-#include <unistd.h>
 #include <iostream>
-#include <boost/thread.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/lock_guard.hpp>
 #include <boost/algorithm/string.hpp>
 
+static bool same_as_last_line(const std::string&);
 static void install_line_handler();
 static void remove_line_handler();
 
@@ -44,13 +45,14 @@ std::vector<std::string>& rdln::readline_buffer::completion_commands()
 }
 
 rdln::readline_buffer::readline_buffer()
-: std::stringbuf(), m_cout_buf(NULL)
+: std::stringbuf(), m_cout_buf(NULL), m_prompt_length(0)
 {
   current = this;
 }
 
 void rdln::readline_buffer::start()
 {
+  boost::lock_guard<boost::mutex> lock(sync_mutex);
   if(m_cout_buf != NULL)
     return;
   m_cout_buf = std::cout.rdbuf();
@@ -60,6 +62,7 @@ void rdln::readline_buffer::start()
 
 void rdln::readline_buffer::stop()
 {
+  boost::lock_guard<boost::mutex> lock(sync_mutex);
   if(m_cout_buf == NULL)
     return;
   std::cout.rdbuf(m_cout_buf);
@@ -71,6 +74,11 @@ rdln::linestatus rdln::readline_buffer::get_line(std::string& line) const
 {
   boost::lock_guard<boost::mutex> lock(sync_mutex);
   line_stat = rdln::partial;
+  if (!m_cout_buf)
+  {
+    line = "";
+    return rdln::full;
+  }
   rl_callback_read_char();
   if (line_stat == rdln::full)
   {
@@ -83,11 +91,14 @@ rdln::linestatus rdln::readline_buffer::get_line(std::string& line) const
 
 void rdln::readline_buffer::set_prompt(const std::string& prompt)
 {
+  boost::lock_guard<boost::mutex> lock(sync_mutex);
   if(m_cout_buf == NULL)
     return;
-  boost::lock_guard<boost::mutex> lock(sync_mutex);
+  rl_set_prompt(std::string(m_prompt_length, ' ').c_str());
+  rl_redisplay();
   rl_set_prompt(prompt.c_str());
   rl_redisplay();
+  m_prompt_length = prompt.size();
 }
 
 void rdln::readline_buffer::add_completion(const std::string& command)
@@ -105,13 +116,19 @@ const std::vector<std::string>& rdln::readline_buffer::get_completions()
 int rdln::readline_buffer::sync()
 {
   boost::lock_guard<boost::mutex> lock(sync_mutex);
+
+  if (m_cout_buf == nullptr)
+  {
+    return -1;
+  }
+
 #if RL_READLINE_VERSION < 0x0700
   char lbuf[2] = {0,0};
   char *line = NULL;
   int end = 0, point = 0;
 #endif
 
-  if (rl_end || *rl_prompt)
+  if (rl_end || (rl_prompt && *rl_prompt))
   {
 #if RL_READLINE_VERSION >= 0x0700
     rl_clear_visible_line();
@@ -134,7 +151,7 @@ int rdln::readline_buffer::sync()
   while ( this->snextc() != EOF );
 
 #if RL_READLINE_VERSION < 0x0700
-  if (end || *rl_prompt)
+  if (end || (rl_prompt && *rl_prompt))
   {
     rl_restore_prompt();
     rl_line_buffer = line;
@@ -159,8 +176,11 @@ static void handle_line(char* line)
     boost::trim_right(test_line);
     if(!test_line.empty())
     {
-      add_history(test_line.c_str());
-      history_set_pos(history_length);
+      if (!same_as_last_line(test_line))
+      {
+        add_history(test_line.c_str());
+        history_set_pos(history_length);
+      }
       if (test_line == "exit" || test_line == "q")
         exit = true;
     }
@@ -174,6 +194,16 @@ static void handle_line(char* line)
   if (exit)
     rl_set_prompt("");
   return;
+}
+
+// same_as_last_line returns true, if the last line in the history is
+// equal to test_line.
+static bool same_as_last_line(const std::string& test_line)
+{
+  // Note that state->offset == state->length, when a new line was entered.
+  HISTORY_STATE* state = history_get_history_state();
+  return state->length > 0
+    && test_line.compare(state->entries[state->length-1]->line) == 0;
 }
 
 static char* completion_matches(const char* text, int state)
@@ -219,5 +249,10 @@ static void remove_line_handler()
   rl_set_prompt("");
   rl_redisplay();
   rl_callback_handler_remove();
+}
+
+void rdln::clear_screen()
+{
+  rl_clear_screen(0, 0);
 }
 

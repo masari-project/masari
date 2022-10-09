@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018, The Monero Project
+// Copyright (c) 2017-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -56,7 +56,7 @@ public:
 
   bool test()
   {
-    wallet.expand_subaddresses({0, 0});
+    wallet.expand_subaddresses({1, 0});
     return true;
   }
 
