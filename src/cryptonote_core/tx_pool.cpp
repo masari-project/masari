@@ -113,7 +113,7 @@ namespace cryptonote
     uint64_t get_transaction_weight_limit(uint8_t version)
     {
       // from v8, limit a tx to 50% of the minimum block weight
-      if (version >= 8)
+      if (version >= HF_VERSION_LIMIT_TX_HALF_BLOCK_WEIGHT)
         return get_min_block_weight(version) / 2 - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
       else
         return get_min_block_weight(version) - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
@@ -171,7 +171,7 @@ namespace cryptonote
     // fee per kilobyte, size rounded up.
     uint64_t fee;
 
-    if (tx.version == 1)
+    if (tx.version == V1_TX_VERSION)
     {
       uint64_t inputs_amount = 0;
       if(!get_inputs_money_amount(tx, inputs_amount))
@@ -1500,7 +1500,7 @@ namespace cryptonote
 
     size_t max_total_weight_pre_v5 = (130 * median_weight) / 100 - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
     size_t max_total_weight_v5 = 2 * median_weight - CRYPTONOTE_COINBASE_BLOB_RESERVED_SIZE;
-    size_t max_total_weight = version >= 5 ? max_total_weight_v5 : max_total_weight_pre_v5;
+    size_t max_total_weight = version >= HF_VERSION_V5_OPTIMAL_FILLING ? max_total_weight_v5 : max_total_weight_pre_v5;
     std::unordered_set<crypto::key_image> k_images;
 
     LOG_PRINT_L2("Filling block template, median weight " << median_weight << ", " << m_txs_by_fee_and_receive_time.size() << " txes in the pool");
@@ -1540,7 +1540,7 @@ namespace cryptonote
       }
 
       // start using the optimal filling algorithm from v5
-      if (version >= 5)
+      if (version >= HF_VERSION_V5_OPTIMAL_FILLING)
       {
         // If we're getting lower coinbase tx,
         // stop including more tx

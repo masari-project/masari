@@ -110,17 +110,17 @@ namespace cryptonote
     // from hard fork 4, we use a single "dusty" output. This makes the tx even smaller,
     // and avoids the quantization. These outputs will be added as rct outputs with identity
     // masks, to they can be used as rct inputs.
-    if (hard_fork_version >= 2 && hard_fork_version < 4) {
+    if (hard_fork_version >= HF_VERSION_CUT_LOW_SIGNIFICANT_DIGITS && hard_fork_version < HF_VERSION_SINGLE_DUSTY_OUTPUT) {
       block_reward = block_reward - block_reward % ::config::BASE_REWARD_CLAMP_THRESHOLD;
     }
 
     std::vector<uint64_t> out_amounts;
-    decompose_amount_into_digits(block_reward, hard_fork_version >= 2 ? 0 : ::config::DEFAULT_DUST_THRESHOLD,
+    decompose_amount_into_digits(block_reward, hard_fork_version >= HF_VERSION_CUT_LOW_SIGNIFICANT_DIGITS ? 0 : ::config::DEFAULT_DUST_THRESHOLD,
       [&out_amounts](uint64_t a_chunk) { out_amounts.push_back(a_chunk); },
       [&out_amounts](uint64_t a_dust) { out_amounts.push_back(a_dust); });
 
     CHECK_AND_ASSERT_MES(1 <= max_outs, false, "max_out must be non-zero");
-    if (height == 0 || hard_fork_version >= 4)
+    if (height == 0 || hard_fork_version >= HF_VERSION_SINGLE_DUSTY_OUTPUT)
     {
       // the genesis block was not decomposed, for unknown reasons
       while (max_outs < out_amounts.size())
@@ -165,10 +165,10 @@ namespace cryptonote
 
     CHECK_AND_ASSERT_MES(summary_amounts == block_reward, false, "Failed to construct miner tx, summary_amounts = " << summary_amounts << " not equal block_reward = " << block_reward);
 
-    if (hard_fork_version >= 4)
-      tx.version = 2;
+    if (hard_fork_version >= HF_VERSION_RINGCT_INTRODUCED)
+      tx.version = V2_TX_VERSION;
     else
-      tx.version = 1;
+      tx.version = V1_TX_VERSION;
 
     //lock
     tx.unlock_time = height + CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW;
@@ -217,7 +217,7 @@ namespace cryptonote
     tx.set_null();
     amount_keys.clear();
 
-    tx.version = rct ? 2 : 1;
+    tx.version = rct ? V2_TX_VERSION : V1_TX_VERSION;
     tx.unlock_time = unlock_time;
 
     tx.extra = extra;
@@ -405,7 +405,7 @@ namespace cryptonote
     size_t output_index = 0;
     for(const tx_destination_entry& dst_entr: destinations)
     {
-      CHECK_AND_ASSERT_MES(dst_entr.amount > 0 || tx.version > 1, false, "Destination with wrong amount: " << dst_entr.amount);
+      CHECK_AND_ASSERT_MES(dst_entr.amount > 0 || tx.version > V1_TX_VERSION, false, "Destination with wrong amount: " << dst_entr.amount);
       crypto::public_key out_eph_public_key;
       crypto::view_tag view_tag;
 
@@ -453,7 +453,7 @@ namespace cryptonote
       MDEBUG("Null secret key, skipping signatures");
     }
 
-    if (tx.version == 1)
+    if (tx.version == V1_TX_VERSION)
     {
       //generate ring signatures
       crypto::hash tx_prefix_hash;
@@ -677,13 +677,14 @@ namespace cryptonote
 
   bool get_block_longhash(const Blockchain *pbc, const blobdata& bd, crypto::hash& res, const uint64_t height, const int major_version, const crypto::hash *seed_hash, const int miners)
   {
-    // block 202612 bug workaround
-    if (height == 202612)
-    {
-      static const std::string longhash_202612 = "84f64766475d51837ac9efbef1926486e58563c95a19fef4aec3254f03000000";
-      epee::string_tools::hex_to_pod(longhash_202612, res);
-      return true;
-    }
+    // Remove workaround unneeded for Masari
+    //// block 202612 bug workaround
+    //if (height == 202612)
+    //{
+    //  static const std::string longhash_202612 = "84f64766475d51837ac9efbef1926486e58563c95a19fef4aec3254f03000000";
+    //  epee::string_tools::hex_to_pod(longhash_202612, res);
+    //  return true;
+    //}
     if (major_version >= RX_BLOCK_VERSION)
     {
       uint64_t seed_height, main_height;
@@ -701,7 +702,7 @@ namespace cryptonote
       }
       rx_slow_hash(main_height, seed_height, hash.data, bd.data(), bd.size(), res.data, seed_hash ? 0 : miners, !!seed_hash);
     } else {
-      const int pow_variant = major_version >= 7 ? major_version - 6 : 0;
+      const int pow_variant = major_version >= HF_VERSION_POW_HF7 ? major_version - HF_VERSION_POW_HF7_PLACEHOLDER - 1 : 0;
       crypto::cn_slow_hash(bd.data(), bd.size(), res, pow_variant, height);
     }
     return true;

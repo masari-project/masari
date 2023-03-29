@@ -2073,7 +2073,7 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
     {
       // assume coinbase isn't for us
     }
-    else if (miner_tx && m_refresh_type == RefreshOptimizeCoinbase && tx.version < 2)
+    else if (miner_tx && m_refresh_type == RefreshOptimizeCoinbase && tx.version < V2_TX_VERSION)
     {
       check_acc_out_precomp_once(tx.vout[0], derivation, additional_derivations, 0, is_out_data_ptr, tx_scan_info[0], output_found[0]);
       THROW_WALLET_EXCEPTION_IF(tx_scan_info[0].error, error::acc_outs_lookup_error, tx, tx_pub_key, m_account.get_keys());
@@ -2192,7 +2192,7 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
               td.m_mask = tx_scan_info[o].mask;
               td.m_rct = true;
             }
-            else if (miner_tx && tx.version == 2)
+            else if (miner_tx && tx.version == V2_TX_VERSION)
             {
               td.m_mask = rct::identity();
               td.m_rct = true;
@@ -2272,7 +2272,7 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
               td.m_mask = tx_scan_info[o].mask;
               td.m_rct = true;
             }
-            else if (miner_tx && tx.version == 2)
+            else if (miner_tx && tx.version == V2_TX_VERSION)
             {
               td.m_mask = rct::identity();
               td.m_rct = true;
@@ -2383,7 +2383,7 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
     }
   }
 
-  uint64_t fee = miner_tx ? 0 : tx.version == 1 ? tx_money_spent_in_ins - get_outs_money_amount(tx) : tx.rct_signatures.txnFee;
+  uint64_t fee = miner_tx ? 0 : tx.version == V1_TX_VERSION ? tx_money_spent_in_ins - get_outs_money_amount(tx) : tx.rct_signatures.txnFee;
 
   if (tx_money_spent_in_ins > 0 && !pool)
   {
@@ -2548,7 +2548,7 @@ void wallet2::process_outgoing(const crypto::hash &txid, const cryptonote::trans
     // wallet (eg, we're a cold wallet and the hot wallet sent it). For RCT transactions,
     // we only see 0 input amounts, so have to deduce amount out from other parameters.
     entry.first->second.m_amount_in = spent;
-    if (tx.version == 1)
+    if (tx.version == V1_TX_VERSION)
       entry.first->second.m_amount_out = get_outs_money_amount(tx);
     else
       entry.first->second.m_amount_out = spent - tx.rct_signatures.txnFee;
@@ -2827,7 +2827,7 @@ void wallet2::process_parsed_blocks(uint64_t start_height, const std::vector<cry
     {
       THROW_WALLET_EXCEPTION_IF(txidx >= tx_cache_data.size(), error::wallet_internal_error, "txidx out of range");
       const cryptonote::transaction& tx = parsed_blocks[i].block.miner_tx;
-      const size_t n_vouts = (m_refresh_type == RefreshType::RefreshOptimizeCoinbase && tx.version < 2) ? 1 : tx.vout.size();
+      const size_t n_vouts = (m_refresh_type == RefreshType::RefreshOptimizeCoinbase && tx.version < V2_TX_VERSION) ? V1_TX_VERSION : tx.vout.size();
       if (parsed_blocks[i].block.major_version >= hf_version_view_tags)
         geniods.push_back(geniod_params{ tx, n_vouts, txidx });
       else
@@ -9313,7 +9313,7 @@ void wallet2::transfer_selected_rct(std::vector<cryptonote::tx_destination_entry
   ptx.construction_data.use_rct = true;
   ptx.construction_data.rct_config = {
     rct::RangeProofPaddedBulletproof,
-    use_fork_rules(HF_VERSION_BULLETPROOF_PLUS, -10) ? 4 : 3
+    use_fork_rules(HF_VERSION_BULLETPROOF_PLUS, -10) ? HF_VERSION_BP_V4 : HF_VERSION_BP_V4  // TODO-rebase: double check
   };
   ptx.construction_data.use_view_tags = use_fork_rules(get_view_tag_fork(), 0);
   ptx.construction_data.dests = dsts;
@@ -10949,7 +10949,7 @@ void wallet2::cold_sign_tx(const std::vector<pending_tx>& ptx_vector, signed_tx_
   hw::wallet_shim wallet_shim;
   setup_shim(&wallet_shim, this);
   aux_data.tx_recipients = dsts_info;
-  aux_data.bp_version = (use_fork_rules(HF_VERSION_BULLETPROOF_PLUS, -10) ? 4 : use_fork_rules(HF_VERSION_CLSAG, -10) ? 3 : use_fork_rules(HF_VERSION_SMALLER_BP, -10) ? 2 : 1);
+  aux_data.bp_version = (use_fork_rules(HF_VERSION_BULLETPROOF_PLUS, -10) ? HF_VERSION_BP_V4 : use_fork_rules(HF_VERSION_CLSAG, -10) ? HF_VERSION_BP_V3 : use_fork_rules(HF_VERSION_SMALLER_BP, -10) ? HF_VERSION_BP_V2 : HF_VERSION_BP_V1);
   aux_data.hard_fork = get_current_hard_fork();
   dev_cold->tx_sign(&wallet_shim, txs, exported_txs, aux_data);
   tx_device_aux = aux_data.tx_device_aux;
@@ -11167,7 +11167,7 @@ std::vector<size_t> wallet2::select_available_mixable_outputs()
 std::vector<wallet2::pending_tx> wallet2::create_unmixable_sweep_transactions()
 {
   // From hard fork 1, we don't consider small amounts to be dust anymore
-  const bool hf1_rules = use_fork_rules(2, 10); // first hard fork has version 2
+  const bool hf1_rules = use_fork_rules(HF_VERSION_SMALL_AMOUNTS_NOT_DUST, 10); // first hard fork has version 2
   tx_dust_policy dust_policy(hf1_rules ? 0 : ::config::DEFAULT_DUST_THRESHOLD);
 
   const uint64_t base_fee  = get_base_fee(1);
@@ -11631,7 +11631,7 @@ void wallet2::check_tx_key_helper(const cryptonote::transaction &tx, const crypt
     if (is_out_to_acc(address, output_public_key, derivation, additional_derivations, n, get_output_view_tag(tx.vout[n]), found_derivation))
     {
       uint64_t amount;
-      if (tx.version == 1 || tx.rct_signatures.type == rct::RCTTypeNull)
+      if (tx.version == V1_TX_VERSION || tx.rct_signatures.type == rct::RCTTypeNull)
       {
         amount = tx.vout[n].amount;
       }
@@ -11977,10 +11977,11 @@ bool wallet2::check_tx_proof(const cryptonote::transaction &tx, const cryptonote
   // InProofV1, InProofV2, OutProofV1, OutProofV2
   const bool is_out = sig_str.substr(0, 3) == "Out";
   const std::string header = is_out ? sig_str.substr(0,10) : sig_str.substr(0,9);
-  int version = 2; // InProofV2
-  if (is_out && sig_str.substr(8,2) == "V1") version = 1; // OutProofV1
-  else if (is_out) version = 2; // OutProofV2
-  else if (sig_str.substr(7,2) == "V1") version = 1; // InProofV1
+  // TODO-rebase: revisit ramifications from these hard-coded strings
+  int version = V2_TX_VERSION; // InProofV2
+  if (is_out && sig_str.substr(8,2) == "V1") version = V1_TX_VERSION; // OutProofV1
+  else if (is_out) version = V2_TX_VERSION; // OutProofV2
+  else if (sig_str.substr(7,2) == "V1") version = V1_TX_VERSION; // InProofV1
 
   const size_t header_len = header.size();
   THROW_WALLET_EXCEPTION_IF(sig_str.size() < header_len || sig_str.substr(0, header_len) != header, error::wallet_internal_error,
@@ -12200,11 +12201,11 @@ bool wallet2::check_reserve_proof(const cryptonote::account_public_address &addr
   static constexpr char header_v2[] = "ReserveProofV2"; // assumes same length as header_v1
   THROW_WALLET_EXCEPTION_IF(!boost::string_ref{sig_str}.starts_with(header_v1) && !boost::string_ref{sig_str}.starts_with(header_v2), error::wallet_internal_error,
     "Signature header check error");
-  int version = 2; // assume newest version
+  int version = V2_TX_VERSION; // assume newest version
   if (boost::string_ref{sig_str}.starts_with(header_v1))
-      version = 1;
+      version = V1_TX_VERSION;
   else if (boost::string_ref{sig_str}.starts_with(header_v2))
-      version = 2;
+      version = V2_TX_VERSION;
 
   std::string sig_decoded;
   THROW_WALLET_EXCEPTION_IF(!tools::base58::decode(sig_str.substr(std::strlen(header_v1)), sig_decoded), error::wallet_internal_error,

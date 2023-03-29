@@ -143,7 +143,7 @@ namespace cryptonote
   
   bool expand_transaction_1(transaction &tx, bool base_only)
   {
-    if (tx.version >= 2 && !is_coinbase(tx))
+    if (tx.version >= V2_TX_VERSION && !is_coinbase(tx))
     {
       rct::rctSig &rv = tx.rct_signatures;
       if (rv.type == rct::RCTTypeNull)
@@ -278,7 +278,7 @@ namespace cryptonote
     int read = tools::read_varint(begin, end, version);
     if (read <= 0)
       throw std::runtime_error("Internal error getting transaction version");
-    return version <= 1;
+    return version <= V1_TX_VERSION;
   }
   //---------------------------------------------------------------
   bool is_v1_tx(const blobdata& tx_blob)
@@ -444,7 +444,7 @@ namespace cryptonote
   uint64_t get_transaction_weight(const transaction &tx, size_t blob_size)
   {
     CHECK_AND_ASSERT_MES(!tx.pruned, std::numeric_limits<uint64_t>::max(), "get_transaction_weight does not support pruned txes");
-    if (tx.version < 2)
+    if (tx.version < V2_TX_VERSION)
       return blob_size;
     const rct::rctSig &rv = tx.rct_signatures;
     const bool bulletproof = rct::is_rct_bulletproof(rv.type);
@@ -460,7 +460,7 @@ namespace cryptonote
   uint64_t get_pruned_transaction_weight(const transaction &tx)
   {
     CHECK_AND_ASSERT_MES(tx.pruned, std::numeric_limits<uint64_t>::max(), "get_pruned_transaction_weight does not support non pruned txes");
-    CHECK_AND_ASSERT_MES(tx.version >= 2, std::numeric_limits<uint64_t>::max(), "get_pruned_transaction_weight does not support v1 txes");
+    CHECK_AND_ASSERT_MES(tx.version >= V2_TX_VERSION, std::numeric_limits<uint64_t>::max(), "get_pruned_transaction_weight does not support v1 txes");
     CHECK_AND_ASSERT_MES(tx.rct_signatures.type == rct::RCTTypeBulletproof2 || tx.rct_signatures.type == rct::RCTTypeCLSAG || tx.rct_signatures.type == rct::RCTTypeBulletproofPlus,
         std::numeric_limits<uint64_t>::max(), "Unsupported rct_signatures type in get_pruned_transaction_weight");
     CHECK_AND_ASSERT_MES(!tx.vin.empty(), std::numeric_limits<uint64_t>::max(), "empty vin");
@@ -522,7 +522,7 @@ namespace cryptonote
   //---------------------------------------------------------------
   bool get_tx_fee(const transaction& tx, uint64_t & fee)
   {
-    if (tx.version > 1)
+    if (tx.version > V1_TX_VERSION)
     {
       fee = tx.rct_signatures.txnFee;
       return true;
@@ -857,7 +857,7 @@ namespace cryptonote
       CHECK_AND_ASSERT_MES(get_output_public_key(out, output_public_key), false, "Failed to get output public key (output type: "
         << out.target.type().name() << "), in transaction id=" << get_transaction_hash(tx));
 
-      if (tx.version == 1)
+      if (tx.version == V1_TX_VERSION)
       {
         CHECK_AND_NO_ASSERT_MES(0 < out.amount, false, "zero amount output in transaction id=" << get_transaction_hash(tx));
       }
@@ -1271,7 +1271,7 @@ namespace cryptonote
   //---------------------------------------------------------------
   bool calculate_transaction_prunable_hash(const transaction& t, const cryptonote::blobdata_ref *blob, crypto::hash& res)
   {
-    if (t.version == 1)
+    if (t.version == V1_TX_VERSION)
       return false;
     const unsigned int unprunable_size = t.unprunable_size;
     if (blob && unprunable_size)
@@ -1316,7 +1316,7 @@ namespace cryptonote
   crypto::hash get_pruned_transaction_hash(const transaction& t, const crypto::hash &pruned_data_hash)
   {
     // v1 transactions hash the entire blob
-    CHECK_AND_ASSERT_THROW_MES(t.version > 1, "Hash for pruned v1 tx cannot be calculated");
+    CHECK_AND_ASSERT_THROW_MES(t.version > V1_TX_VERSION, "Hash for pruned v1 tx cannot be calculated");
 
     // v2 transactions hash different parts together, than hash the set of those hashes
     crypto::hash hashes[3];
@@ -1354,7 +1354,7 @@ namespace cryptonote
     CHECK_AND_ASSERT_MES(!t.pruned, false, "Cannot calculate the hash of a pruned transaction");
 
     // v1 transactions hash the entire blob
-    if (t.version == 1)
+    if (t.version == V1_TX_VERSION)
     {
       size_t ignored_blob_size, &blob_size_ref = blob_size ? *blob_size : ignored_blob_size;
       return get_object_hash(t, res, blob_size_ref);

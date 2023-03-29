@@ -64,7 +64,7 @@ namespace signing {
 bool view_tag_required(const int bp_version)
 {
   // view tags were introduced at the same time as BP+, so they are needed after BP+ (v4 and later)
-  if (bp_version <= 3)
+  if (bp_version <= HF_VERSION_BP_V3)
     return false;
   else
     return true;
@@ -538,9 +538,9 @@ static void make_new_range_proofs(const int bp_version,
   sigs.bulletproofs.clear();
   sigs.bulletproofs_plus.clear();
 
-  if (bp_version == 3)
+  if (bp_version == HF_VERSION_BP_V3)
     sigs.bulletproofs.push_back(rct::bulletproof_PROVE(output_amounts, output_amount_masks));
-  else if (bp_version == 4)
+  else if (bp_version == HF_VERSION_BP_V4)
     sigs.bulletproofs_plus.push_back(rct::bulletproof_plus_PROVE(output_amounts, output_amount_masks));
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -565,13 +565,13 @@ static bool try_reconstruct_range_proofs(const int bp_version,
       return true;
     };
 
-  if (bp_version == 3)
+  if (bp_version == HF_VERSION_BP_V3)
   {
     if (not try_reconstruct_range_proofs(original_sigs.bulletproofs, reconstructed_sigs.bulletproofs))
       return false;
     return rct::bulletproof_VERIFY(reconstructed_sigs.bulletproofs);
   }
-  else if (bp_version == 4)
+  else if (bp_version == HF_VERSION_BP_V4)
   {
     if (not try_reconstruct_range_proofs(original_sigs.bulletproofs_plus, reconstructed_sigs.bulletproofs_plus))
       return false;
@@ -596,8 +596,8 @@ static bool set_tx_rct_signatures(
   rct::keyV& cached_w
 )
 {
-  if (rct_config.bp_version != 3 &&
-      rct_config.bp_version != 4)
+  if (rct_config.bp_version != HF_VERSION_BP_V3 &&
+      rct_config.bp_version != HF_VERSION_BP_V4)
     return false;
   if (rct_config.range_proof_type != rct::RangeProofPaddedBulletproof)
     return false;
@@ -609,9 +609,9 @@ static bool set_tx_rct_signatures(
   rct::rctSig rv{};
 
   // set misc. fields
-  if (rct_config.bp_version == 3)
+  if (rct_config.bp_version == HF_VERSION_BP_V3)
     rv.type = rct::RCTTypeCLSAG;
-  else if (rct_config.bp_version == 4)
+  else if (rct_config.bp_version == HF_VERSION_BP_V4)
     rv.type = rct::RCTTypeBulletproofPlus;
   else
     return false;
@@ -853,7 +853,7 @@ bool tx_builder_ringct_t::init(
   const bool use_view_tags{view_tag_required(rct_config.bp_version)};
 
   // misc. fields
-  unsigned_tx.version = 2;  //rct = 2
+  unsigned_tx.version = V2_TX_VERSION;  //rct = 2
   unsigned_tx.unlock_time = unlock_time;
 
   // sort inputs

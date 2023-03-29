@@ -254,7 +254,7 @@ namespace cryptonote
       if (std::is_same<Archive<W>, binary_archive<W>>())
         prefix_size = ar.getpos() - start_pos;
 
-      if (version == 1)
+      if (version == V1_TX_VERSION)
       {
         if (std::is_same<Archive<W>, binary_archive<W>>())
           unprunable_size = ar.getpos() - start_pos;
@@ -321,7 +321,7 @@ namespace cryptonote
     {
       FIELDS(*static_cast<transaction_prefix *>(this))
 
-      if (version == 1)
+      if (version == V1_TX_VERSION)
       {
       }
       else

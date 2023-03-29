@@ -1385,7 +1385,7 @@ namespace cryptonote
     res.is_background_mining_enabled = lMiner.get_is_background_mining_enabled();
     store_difficulty(m_core.get_blockchain_storage().get_difficulty_for_next_block(), res.difficulty, res.wide_difficulty, res.difficulty_top64);
     
-    res.block_target = m_core.get_blockchain_storage().get_current_hard_fork_version() < 2 ? DIFFICULTY_TARGET_V1 : DIFFICULTY_TARGET_V2;
+    res.block_target = m_core.get_blockchain_storage().get_current_hard_fork_version() < HF_VERSION_V2_DIFFICULTY ? DIFFICULTY_TARGET_V1 : DIFFICULTY_TARGET_V2;
     if ( lMiner.is_mining() ) {
       res.speed = lMiner.get_speed();
       res.threads_count = lMiner.get_threads_count();
@@ -1395,7 +1395,7 @@ namespace cryptonote
     if (lMiner.is_mining() || lMiner.get_is_background_mining_enabled())
       res.address = get_account_address_as_str(nettype(), false, lMiningAdr);
     const uint8_t major_version = m_core.get_blockchain_storage().get_current_hard_fork_version();
-    const unsigned variant = major_version >= 7 ? major_version - 6 : 0;
+    const unsigned variant = major_version >= HF_VERSION_POW_HF7 ? major_version - HF_VERSION_POW_HF7 - 1 : 0;
     switch (variant)
     {
       case 0: res.pow_algorithm = "Cryptonight"; break;

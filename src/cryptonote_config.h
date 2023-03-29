@@ -166,10 +166,52 @@
 
 #define THREAD_STACK_SIZE                       5 * 1024 * 1024
 
+#define HF_V1_TX                              1
+#define HF_VERSION_MIXABLE                    3
+#define HF_V2_TX                              2
+#define HF_V2_TX_ENFORCE                      3
+#define HF_FORBID_INVALID_PUBKEYS             4
+#define HF_SORTED_INS                         7
+#define HF_BULLETPROOF_MULTI_OUT              8
+#define HF_FORBID_BORROMEAN_PROOFS            9
+#define HF_VERSION_V5_DYNAMIC_FEE             5
+#define HF_VERSION_V2_DIFFICULTY              2
+#define HF_VERSION_LESS_COINBASE              2
+
+#define V1_TX_VERSION                         1
+#define V2_TX_VERSION                         2
+
+#define HF_V2_FULL_REWARD                     2
+#define HF_V5_FULL_REWARD                     5
+
+#define HF_MAX_OUTS_1                         4
+
+#define HF_VERSION_DISTINCT_RING_MEMBERS      6
+
+#define HF_VERSION_CUT_LOW_SIGNIFICANT_DIGITS 2
+#define HF_VERSION_SINGLE_DUSTY_OUTPUT        4
+#define HF_VERSION_RINGCT_INTRODUCED          4
+#define HF_VERSION_LIMIT_TX_HALF_BLOCK_WEIGHT 8
+#define HF_VERSION_V5_OPTIMAL_FILLING         5
+#define HF_VERSION_REJECT_MISMATCHING_VOTES   6
+#define HF_VERSION_DIFFICULTY_TARGET_V2       2
+
+
+#define HF_VERSION_BP_V1                      1
+#define HF_VERSION_BP_V2                      2
+#define HF_VERSION_BP_V3                      3
+#define HF_VERSION_BP_V4                      4
+
+#define HF_VERSION_POW_HF7                    7
+#define HF_VERSION_SMALL_AMOUNTS_NOT_DUST     2
+
 #define HF_VERSION_DYNAMIC_FEE                  4
+#define HF_VERSION_MIN_MIXIN_2                  2
 #define HF_VERSION_MIN_MIXIN_4                  6
 #define HF_VERSION_MIN_MIXIN_6                  7
 #define HF_VERSION_MIN_MIXIN_10                 8
+#define HF_VERSION_MIN_MIXIN_12                 1
+#define HF_VERSION_MAX_MIXIN_12                 1
 #define HF_VERSION_MIN_MIXIN_15                 15
 #define HF_VERSION_ENFORCE_RCT                  6
 #define HF_VERSION_PER_BYTE_FEE                 8

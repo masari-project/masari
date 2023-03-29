@@ -836,8 +836,8 @@ namespace cryptonote
     bad_semantics_txes_lock.unlock();
 
     uint8_t version = m_blockchain_storage.get_current_hard_fork_version();
-    const size_t max_tx_version = version == 1 ? 1 : 2;
-    if (tx.version == 0 || tx.version > max_tx_version)
+    const size_t max_tx_version = version == V1_TX_VERSION ? V1_TX_VERSION : V2_TX_VERSION;
+    if (tx.version > max_tx_version)  // TODO-rebase: revisit modification
     {
       // v2 is the latest one we know
       MERROR_VER("Bad tx version (" << tx.version << ", max is " << max_tx_version << ")");
@@ -913,7 +913,7 @@ namespace cryptonote
         continue;
       }
 
-      if (tx_info[n].tx->version < 2)
+      if (tx_info[n].tx->version < V2_TX_VERSION)
         continue;
       const rct::rctSig &rv = tx_info[n].tx->rct_signatures;
       switch (rv.type) {
@@ -1139,7 +1139,7 @@ namespace cryptonote
       MERROR_VER("tx with invalid outputs, rejected for tx id= " << get_transaction_hash(tx));
       return false;
     }
-    if (tx.version > 1)
+    if (tx.version > V1_TX_VERSION)
     {
       if (tx.rct_signatures.outPk.size() != tx.vout.size())
       {
@@ -1154,7 +1154,7 @@ namespace cryptonote
       return false;
     }
 
-    if (tx.version == 1)
+    if (tx.version == V1_TX_VERSION)
     {
       uint64_t amount_in = 0;
       get_inputs_money_amount(tx, amount_in);
@@ -1308,7 +1308,7 @@ namespace cryptonote
   //-----------------------------------------------------------------------------------------------
   bool core::check_tx_inputs_ring_members_diff(const transaction& tx, const uint8_t hf_version) const
   {
-    if (hf_version >= 6)
+    if (hf_version >= HF_VERSION_DISTINCT_RING_MEMBERS) // TODO-rebasse: to confirm
     {
       for(const auto& in: tx.vin)
       {
