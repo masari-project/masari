@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -40,7 +40,7 @@
 #include "serialization/json_archive.h"
 #include "serialization/debug_archive.h"
 #include "serialization/variant.h"
-#include "serialization/vector.h"
+#include "serialization/containers.h"
 #include "serialization/binary_utils.h"
 #include "gtest/gtest.h"
 using namespace std;
@@ -56,7 +56,6 @@ TEST(varint, equal)
     ASSERT_TRUE (bytes > 0 && bytes <= sizeof(buf));
 
     uint64_t idx2;
-    bufptr = buf;
     std::string s(buf, bytes);
     int read = tools::read_varint(s.begin(), s.end(), idx2);
     ASSERT_EQ (read, bytes);

@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2018, The Monero Project
+# Copyright (c) 2014-2022, The Monero Project
 #
 # All rights reserved.
 #
@@ -26,32 +26,50 @@
 # STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
 # THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+include_directories(SYSTEM ${ZMQ_INCLUDE_PATH})
+
 set(rpc_base_sources
-  rpc_args.cpp)
+  rpc_args.cpp
+  rpc_payment_signature.cpp
+  rpc_handler.cpp)
 
 set(rpc_sources
+  bootstrap_daemon.cpp
+  bootstrap_node_selector.cpp
   core_rpc_server.cpp
-  instanciations)
+  rpc_payment.cpp
+  rpc_version_str.cpp
+  instanciations.cpp)
 
 set(daemon_messages_sources
   message.cpp
   daemon_messages.cpp)
 
+set(rpc_pub_sources zmq_pub.cpp)
+
 set(daemon_rpc_server_sources
   daemon_handler.cpp
+  zmq_pub.cpp
   zmq_server.cpp)
 
 
 set(rpc_base_headers
-  rpc_args.h)
+  rpc_args.h
+  rpc_payment_signature.h
+  rpc_handler.h)
 
-set(rpc_headers)
+set(rpc_headers
+  rpc_version_str.h
+  rpc_handler.h)
+
+set(rpc_pub_headers zmq_pub.h)
 
 set(daemon_rpc_server_headers)
 
-
-set(rpc_daemon_private_headers
+set(rpc_private_headers
+  bootstrap_daemon.h
   core_rpc_server.h
+  rpc_payment.h
   core_rpc_server_commands_defs.h
   core_rpc_server_error_codes.h)
 
@@ -63,12 +81,13 @@ set(daemon_rpc_server_private_headers
   message.h
   daemon_messages.h
   daemon_handler.h
-  rpc_handler.h
   zmq_server.h)
 
 
 monero_private_headers(rpc
   ${rpc_private_headers})
+
+set(rpc_pub_private_headers)
 
 monero_private_headers(daemon_rpc_server
   ${daemon_rpc_server_private_headers})
@@ -83,6 +102,11 @@ monero_add_library(rpc
   ${rpc_sources}
   ${rpc_headers}
   ${rpc_private_headers})
+
+monero_add_library(rpc_pub
+  ${rpc_pub_sources}
+  ${rpc_pub_headers}
+  ${rpc_pub_private_headers})
 
 monero_add_library(daemon_messages
   ${daemon_messages_sources}
@@ -111,24 +135,36 @@ target_link_libraries(rpc
     common
     cryptonote_core
     cryptonote_protocol
-    epee
+    net
+    version
     ${Boost_REGEX_LIBRARY}
     ${Boost_THREAD_LIBRARY}
   PRIVATE
     ${EXTRA_LIBRARIES})
 
+target_link_libraries(rpc_pub
+  PUBLIC
+    epee
+    net
+    cryptonote_basic
+    serialization
+    ${Boost_THREAD_LIBRARY})
+
 target_link_libraries(daemon_messages
   LINK_PRIVATE
     cryptonote_core
     cryptonote_protocol
+    version
     serialization
     ${EXTRA_LIBRARIES})
 
 target_link_libraries(daemon_rpc_server
   LINK_PRIVATE
     rpc
+    rpc_pub
     cryptonote_core
     cryptonote_protocol
+    version
     daemon_messages
     serialization
     ${Boost_CHRONO_LIBRARY}

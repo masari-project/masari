@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -30,7 +30,12 @@
 
 #pragma once
 
+#include <string>
+#include <boost/utility/string_ref_fwd.hpp>
+#include "span.h"
+
 namespace cryptonote
 {
   typedef std::string blobdata;
+  typedef boost::string_ref blobdata_ref;
 }

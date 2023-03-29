@@ -1,5 +1,4 @@
-# Copyright (c) 2017-2018, The Masari Project
-# Copyright (c) 2014-2018, The Monero Project
+# Copyright (c) 2014-2022, The Monero Project
 #
 # All rights reserved.
 #
@@ -32,8 +31,7 @@ set(simplewallet_sources
 
 set(simplewallet_headers)
 
-set(simplewallet_private_headers
-  simplewallet.h)
+monero_find_all_headers(simplewallet_private_headers "${CMAKE_CURRENT_SOURCE_DIR}")
 
 monero_private_headers(simplewallet
   ${simplewallet_private_headers})
@@ -49,12 +47,13 @@ target_link_libraries(simplewallet
     cncrypto
     common
     mnemonics
-    epee
     ${EPEE_READLINE}
+    qrcodegen
     version
     ${Boost_CHRONO_LIBRARY}
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
     ${Boost_FILESYSTEM_LIBRARY}
+    ${Boost_LOCALE_LIBRARY}
     ${ICU_LIBRARIES}
     ${Boost_THREAD_LIBRARY}
     ${CMAKE_THREAD_LIBS_INIT}
@@ -62,5 +61,5 @@ target_link_libraries(simplewallet
     ${EXTRA_LIBRARIES})
 set_property(TARGET simplewallet
   PROPERTY
-    OUTPUT_NAME "masari-wallet-cli")
+    OUTPUT_NAME "monero-wallet-cli")
 install(TARGETS simplewallet DESTINATION bin)

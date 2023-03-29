@@ -1,5 +1,4 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 //
 // All rights reserved.
 //
@@ -29,13 +28,13 @@
 
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/filesystem/path.hpp>
 #include "common/command_line.h"
 #include "common/varint.h"
 #include "cryptonote_core/tx_pool.h"
 #include "cryptonote_core/cryptonote_core.h"
 #include "cryptonote_core/blockchain.h"
 #include "blockchain_db/blockchain_db.h"
-#include "blockchain_db/db_types.h"
 #include "version.h"
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
@@ -83,11 +82,6 @@ int main(int argc, char* argv[])
 
   epee::string_tools::set_module_name_and_folder(argv[0]);
 
-  std::string default_db_type = "lmdb";
-
-  std::string available_dbs = cryptonote::blockchain_db_types(", ");
-  available_dbs = "available: " + available_dbs;
-
   uint32_t log_level = 0;
 
   tools::on_startup();
@@ -97,16 +91,12 @@ int main(int argc, char* argv[])
   po::options_description desc_cmd_only("Command line options");
   po::options_description desc_cmd_sett("Command line options and settings options");
   const command_line::arg_descriptor<std::string> arg_log_level  = {"log-level",  "0-4 or categories", ""};
-  const command_line::arg_descriptor<std::string> arg_database = {
-    "database", available_dbs.c_str(), default_db_type
-  };
   const command_line::arg_descriptor<bool> arg_rct_only  = {"rct-only", "Only work on ringCT outputs", false};
   const command_line::arg_descriptor<std::string> arg_input = {"input", ""};
 
   command_line::add_arg(desc_cmd_sett, cryptonote::arg_testnet_on);
   command_line::add_arg(desc_cmd_sett, cryptonote::arg_stagenet_on);
   command_line::add_arg(desc_cmd_sett, arg_log_level);
-  command_line::add_arg(desc_cmd_sett, arg_database);
   command_line::add_arg(desc_cmd_sett, arg_rct_only);
   command_line::add_arg(desc_cmd_sett, arg_input);
   command_line::add_arg(desc_cmd_only, command_line::arg_help);
@@ -130,12 +120,12 @@ int main(int argc, char* argv[])
 
   if (command_line::get_arg(vm, command_line::arg_help))
   {
-    std::cout << "Masari '" << MONERO_RELEASE_NAME << "' (v" << MONERO_VERSION_FULL << ")" << ENDL << ENDL;
+    std::cout << "Monero '" << MONERO_RELEASE_NAME << "' (v" << MONERO_VERSION_FULL << ")" << ENDL << ENDL;
     std::cout << desc_options << std::endl;
     return 1;
   }
 
-  mlog_configure(mlog_get_default_log_path("masari-blockchain-usage.log"), true);
+  mlog_configure(mlog_get_default_log_path("monero-blockchain-usage.log"), true);
   if (!command_line::is_arg_defaulted(vm, arg_log_level))
     mlog_set_log(command_line::get_arg(vm, arg_log_level).c_str());
   else
@@ -147,13 +137,6 @@ int main(int argc, char* argv[])
   bool opt_stagenet = command_line::get_arg(vm, cryptonote::arg_stagenet_on);
   network_type net_type = opt_testnet ? TESTNET : opt_stagenet ? STAGENET : MAINNET;
   bool opt_rct_only = command_line::get_arg(vm, arg_rct_only);
-
-  std::string db_type = command_line::get_arg(vm, arg_database);
-  if (!cryptonote::blockchain_valid_db_type(db_type))
-  {
-    std::cerr << "Invalid database type: " << db_type << std::endl;
-    return 1;
-  }
 
   // If we wanted to use the memory pool, we would set up a fake_core.
 
@@ -171,13 +154,13 @@ int main(int argc, char* argv[])
   std::unique_ptr<Blockchain> core_storage;
   tx_memory_pool m_mempool(*core_storage);
   core_storage.reset(new Blockchain(m_mempool));
-  BlockchainDB* db = new_db(db_type);
+  BlockchainDB* db = new_db();
   if (db == NULL)
   {
-    LOG_ERROR("Attempted to use non-existent database type: " << db_type);
-    throw std::runtime_error("Attempting to use non-existent database type");
+    LOG_ERROR("Failed to initialize a database");
+    throw std::runtime_error("Failed to initialize a database");
   }
-  LOG_PRINT_L0("database: " << db_type);
+  LOG_PRINT_L0("database: LMDB");
 
   const std::string filename = input;
   LOG_PRINT_L0("Loading blockchain from folder " << filename << " ...");
@@ -198,7 +181,6 @@ int main(int argc, char* argv[])
 
   LOG_PRINT_L0("Building usage patterns...");
 
-  size_t done = 0;
   std::unordered_map<output_data, std::list<reference>> outputs;
   std::unordered_map<uint64_t,uint64_t> indices;
 
@@ -213,7 +195,7 @@ int main(int argc, char* argv[])
     {
       if (opt_rct_only && out.amount)
         continue;
-      uint64_t index = indices[out.amount]++;
+      indices[out.amount]++;
       output_data od(out.amount, indices[out.amount], coinbase, height);
       auto itb = outputs.emplace(od, std::list<reference>());
       itb.first->first.info(coinbase, height);
@@ -235,7 +217,7 @@ int main(int argc, char* argv[])
       }
     }
     return true;
-  });
+  }, true);
 
   std::unordered_map<uint64_t, uint64_t> counts;
   size_t total = 0;
@@ -244,10 +226,17 @@ int main(int argc, char* argv[])
     counts[out.second.size()]++;
     total++;
   }
-  for (const auto &c: counts)
+  if (total > 0)
   {
-    float percent = 100.f * c.second / total;
-    MINFO(std::to_string(c.second) << " outputs used " << c.first << " times (" << percent << "%)");
+    for (const auto &c: counts)
+    {
+      float percent = 100.f * c.second / total;
+      MINFO(std::to_string(c.second) << " outputs used " << c.first << " times (" << percent << "%)");
+    }
+  }
+  else
+  {
+    MINFO("No outputs to process");
   }
 
   LOG_PRINT_L0("Blockchain usage exported OK");

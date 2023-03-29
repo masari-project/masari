@@ -28,9 +28,10 @@
 
 #pragma once 
 
-#include "pragma_comp_defs.h"
 #include "misc_language.h"
 #include "portable_storage_base.h"
+#include "portable_storage_bin_utils.h"
+#include "misc_log_ex.h"
 
 namespace epee
 {
@@ -40,18 +41,14 @@ namespace epee
     template<class pack_value, class t_stream>
     size_t pack_varint_t(t_stream& strm, uint8_t type_or, size_t& pv)
     {
-      pack_value v = (*((pack_value*)&pv)) << 2;
+      pack_value v = pv << 2;
       v |= type_or;
+      v = CONVERT_POD(v);
       strm.write((const char*)&v, sizeof(pack_value));
       return sizeof(pack_value);
     }
 
-    PRAGMA_WARNING_PUSH
-      PRAGMA_GCC("GCC diagnostic ignored \"-Wstrict-aliasing\"")
-#ifdef __clang__
-      PRAGMA_GCC("GCC diagnostic ignored \"-Wtautological-constant-out-of-range-compare\"")
-#endif
-      template<class t_stream>
+    template<class t_stream>
     size_t pack_varint(t_stream& strm, size_t val)
     {   //the first two bits always reserved for size information
 
@@ -67,13 +64,13 @@ namespace epee
         return pack_varint_t<uint32_t>(strm, PORTABLE_RAW_SIZE_MARK_DWORD, val);
       }else
       {
-        CHECK_AND_ASSERT_THROW_MES(val <= 4611686018427387903, "failed to pack varint - too big amount = " << val);
+        // Same as checking val <= 4611686018427387903 except that it's portable for 32-bit size_t
+        CHECK_AND_ASSERT_THROW_MES(!(val >> 31 >> 31), "failed to pack varint - too big amount = " << val);
         return pack_varint_t<uint64_t>(strm, PORTABLE_RAW_SIZE_MARK_INT64, val);
       }
     }
-    PRAGMA_WARNING_POP
 
-      template<class t_stream>
+    template<class t_stream>
     bool put_string(t_stream& strm, const std::string& v)
     {
       pack_varint(strm, v.size());
@@ -93,8 +90,11 @@ namespace epee
         uint8_t type = contained_type|SERIALIZE_FLAG_ARRAY;
         m_strm.write((const char*)&type, 1);
         pack_varint(m_strm, arr_pod.m_array.size());
-        for(const t_pod_type& x: arr_pod.m_array)
+        for(t_pod_type x: arr_pod.m_array)
+        {
+          x = CONVERT_POD(x);
           m_strm.write((const char*)&x, sizeof(t_pod_type));
+        }
         return true;
       }
 
@@ -107,7 +107,7 @@ namespace epee
       bool operator()(const array_entry_t<int32_t>& v) { return pack_pod_array_type(SERIALIZE_TYPE_INT32, v);}
       bool operator()(const array_entry_t<int16_t>& v) { return pack_pod_array_type(SERIALIZE_TYPE_INT16, v);}
       bool operator()(const array_entry_t<int8_t>& v)  { return pack_pod_array_type(SERIALIZE_TYPE_INT8, v);}
-      bool operator()(const array_entry_t<double>& v)  { return pack_pod_array_type(SERIALIZE_TYPE_DUOBLE, v);}
+      bool operator()(const array_entry_t<double>& v)  { return pack_pod_array_type(SERIALIZE_TYPE_DOUBLE, v);}
       bool operator()(const array_entry_t<bool>& v)    { return pack_pod_array_type(SERIALIZE_TYPE_BOOL, v);}
       bool operator()(const array_entry_t<std::string>& arr_str)
       {
@@ -147,7 +147,8 @@ namespace epee
       bool pack_pod_type(uint8_t type, const pod_type& v)
       {
         m_strm.write((const char*)&type, 1);
-        m_strm.write((const char*)&v, sizeof(pod_type));
+        pod_type v0 = CONVERT_POD(v);
+        m_strm.write((const char*)&v0, sizeof(pod_type));
         return true;
       }
       //section, array_entry
@@ -159,7 +160,7 @@ namespace epee
       bool operator()(const int32_t& v) { return pack_pod_type(SERIALIZE_TYPE_INT32, v);}
       bool operator()(const int16_t& v) { return pack_pod_type(SERIALIZE_TYPE_INT16, v);}
       bool operator()(const int8_t& v)  { return pack_pod_type(SERIALIZE_TYPE_INT8, v);}
-      bool operator()(const double& v)  { return pack_pod_type(SERIALIZE_TYPE_DUOBLE, v);}
+      bool operator()(const double& v)  { return pack_pod_type(SERIALIZE_TYPE_DOUBLE, v);}
       bool operator()(const bool& v)  { return pack_pod_type(SERIALIZE_TYPE_BOOL, v);}
       bool operator()(const std::string& v)
       {
@@ -205,6 +206,7 @@ namespace epee
       for(const section_pair& se: sec.m_entries)
       {
         CHECK_AND_ASSERT_THROW_MES(se.first.size() < std::numeric_limits<uint8_t>::max(), "storage_entry_name is too long: " << se.first.size() << ", val: " << se.first);
+        CHECK_AND_ASSERT_THROW_MES(!se.first.empty(), "storage_entry_name is empty");
         uint8_t len = static_cast<uint8_t>(se.first.size());
         strm.write((const char*)&len, sizeof(len));
         strm.write(se.first.data(), size_t(len));

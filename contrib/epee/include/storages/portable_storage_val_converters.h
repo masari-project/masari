@@ -28,12 +28,17 @@
 
 #pragma once
 
-#include <time.h>
 #include <boost/regex.hpp>
 
 #include "misc_language.h"
 #include "portable_storage_base.h"
+#include "parserse_base_utils.h"
 #include "warnings.h"
+#include "misc_log_ex.h"
+
+#include <boost/lexical_cast.hpp>
+#include <typeinfo>
+#include <iomanip>
 
 namespace epee
 {
@@ -144,7 +149,7 @@ POP_WARNINGS
       {
         MTRACE("Converting std::string to uint64_t. Source: " << from);
         // String only contains digits
-        if(std::all_of(from.begin(), from.end(), ::isdigit))
+        if(std::all_of(from.begin(), from.end(), epee::misc_utils::parse::isdigit))
           to = boost::lexical_cast<uint64_t>(from);
         // MyMonero ISO 8061 timestamp (2017-05-06T16:27:06Z)
         else if (boost::regex_match (from, boost::regex("\\d{4}-[01]\\d-[0-3]\\dT[0-2]\\d:[0-5]\\d:[0-5]\\dZ")))

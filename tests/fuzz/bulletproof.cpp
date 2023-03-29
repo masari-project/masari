@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018, The Monero Project
+// Copyright (c) 2017-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -33,38 +33,11 @@
 #include "cryptonote_basic/cryptonote_format_utils.h"
 #include "fuzzer.h"
 
-class BulletproofFuzzer: public Fuzzer
-{
-public:
-  virtual int run(const std::string &filename);
+BEGIN_INIT_SIMPLE_FUZZER()
+END_INIT_SIMPLE_FUZZER()
 
-private:
-};
-
-int BulletproofFuzzer::run(const std::string &filename)
-{
-  std::string s;
-
-  if (!epee::file_io_utils::load_file_to_string(filename, s))
-  {
-    std::cout << "Error: failed to load file " << filename << std::endl;
-    return 1;
-  }
-  std::stringstream ss;
-  ss << s;
-  binary_archive<false> ba(ss);
+BEGIN_SIMPLE_FUZZER()
+  binary_archive<false> ba{{buf, len}};
   rct::Bulletproof proof = AUTO_VAL_INIT(proof);
-  bool r = ::serialization::serialize(ba, proof);
-  if(!r)
-  {
-    std::cout << "Error: failed to parse bulletproof from file  " << filename << std::endl;
-    return 1;
-  }
-  return 0;
-}
-
-int main(int argc, const char **argv)
-{
-  BulletproofFuzzer fuzzer;
-  return run_fuzzer(argc, argv, fuzzer);
-}
+  ::serialization::serialize(ba, proof);
+END_SIMPLE_FUZZER()

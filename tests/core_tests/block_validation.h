@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -205,4 +205,62 @@ struct gen_block_invalid_binary_format : public test_chain_unit_base
 
 private:
   size_t m_corrupt_blocks_begin_idx;
+};
+
+struct gen_block_late_v1_coinbase_tx : public gen_block_verification_base<1>
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+template<>
+struct get_test_options<gen_block_late_v1_coinbase_tx> {
+  const std::pair<uint8_t, uint64_t> hard_forks[3] = {std::make_pair(1, 0), std::make_pair(HF_VERSION_MIN_V2_COINBASE_TX, 1), std::make_pair(0, 0)};
+  const cryptonote::test_options test_options = {
+    hard_forks, 0
+  };
+};
+
+struct gen_block_low_coinbase : public gen_block_verification_base<1>
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+template<>
+struct get_test_options<gen_block_low_coinbase> {
+  const std::pair<uint8_t, uint64_t> hard_forks[3] = {std::make_pair(1, 0), std::make_pair(HF_VERSION_EXACT_COINBASE, 1), std::make_pair(0, 0)};
+  const cryptonote::test_options test_options = {
+    hard_forks, 0
+  };
+};
+
+struct gen_block_miner_tx_out_has_no_view_tag_before_hf_view_tags : public gen_block_accepted_base<2>
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+
+struct gen_block_miner_tx_out_has_no_view_tag_from_hf_view_tags : public gen_block_verification_base<1>
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+template<>
+struct get_test_options<gen_block_miner_tx_out_has_no_view_tag_from_hf_view_tags> {
+  const std::pair<uint8_t, uint64_t> hard_forks[3] = {std::make_pair(1, 0), std::make_pair(HF_VERSION_VIEW_TAGS+1, 1), std::make_pair(0, 0)};
+  const cryptonote::test_options test_options = {
+    hard_forks, 0
+  };
+};
+
+struct gen_block_miner_tx_out_has_view_tag_before_hf_view_tags : public gen_block_verification_base<1>
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+
+struct gen_block_miner_tx_out_has_view_tag_from_hf_view_tags : public gen_block_accepted_base<2>
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+template<>
+struct get_test_options<gen_block_miner_tx_out_has_view_tag_from_hf_view_tags> {
+  const std::pair<uint8_t, uint64_t> hard_forks[3] = {std::make_pair(1, 0), std::make_pair(HF_VERSION_VIEW_TAGS, 1), std::make_pair(0, 0)};
+  const cryptonote::test_options test_options = {
+    hard_forks, 0
+  };
 };

@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -54,15 +54,15 @@ public:
     , t_core & core
     , t_p2p & p2p
     , const bool restricted
-    , const cryptonote::network_type nettype
     , const std::string & port
     , const std::string & description
+    , bool allow_rpc_payment
     )
     : m_server{core.get(), p2p.get()}, m_description{description}
   {
     MGINFO("Initializing " << m_description << " RPC server...");
 
-    if (!m_server.init(vm, restricted, nettype, port))
+    if (!m_server.init(vm, restricted, port, allow_rpc_payment, command_line::get_arg(vm, daemon_args::arg_proxy)))
     {
       throw std::runtime_error("Failed to initialize " + m_description + " RPC server.");
     }

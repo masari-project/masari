@@ -33,29 +33,25 @@
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/contains_fwd.hpp>
 
+#undef MONERO_DEFAULT_LOG_CATEGORY
+#define MONERO_DEFAULT_LOG_CATEGORY "serialization"
+
 namespace epee
 {
+  namespace
+  {
+    template<class C> void hint_resize(C &container, size_t size) {}
+    template<class C> void hint_resize(std::vector<C> &container, size_t size) { container.reserve(size); }
+  }
   namespace serialization
   {
 
     //-------------------------------------------------------------------------------------------------------------------
     template<class t_type, class t_storage>
-    static bool serialize_t_val(const t_type& d, t_storage& stg, typename t_storage::hsection hparent_section, const char* pname)
-    {
-      return stg.set_value(pname, d, hparent_section);
-    }
-    //-------------------------------------------------------------------------------------------------------------------
-    template<class t_type, class t_storage>
-    static bool unserialize_t_val(t_type& d, t_storage& stg, typename t_storage::hsection hparent_section, const char* pname)
-    {
-      return stg.get_value(pname, d, hparent_section);
-    } 
-    //-------------------------------------------------------------------------------------------------------------------
-    template<class t_type, class t_storage>
     static bool serialize_t_val_as_blob(const t_type& d, t_storage& stg, typename t_storage::hsection hparent_section, const char* pname)
     {      
       std::string blob((const char *)&d, sizeof(d));
-      return stg.set_value(pname, blob, hparent_section);
+      return stg.set_value(pname, std::move(blob), hparent_section);
     }
     //-------------------------------------------------------------------------------------------------------------------
     template<class t_type, class t_storage>
@@ -85,34 +81,18 @@ namespace epee
       return obj._load(stg, hchild_section);
     }
     //-------------------------------------------------------------------------------------------------------------------
-    template<class serializible_type, class t_storage>
-    static bool serialize_t_obj(enableable<serializible_type>& obj, t_storage& stg, typename t_storage::hsection hparent_section, const char* pname)
-    {
-      if(!obj.enabled)
-        return true;
-      return serialize_t_obj(obj.v, stg, hparent_section, pname);
-    }
-    //-------------------------------------------------------------------------------------------------------------------
-    template<class serializible_type, class t_storage>
-    static bool unserialize_t_obj(enableable<serializible_type>& obj, t_storage& stg, typename t_storage::hsection hparent_section, const char* pname)
-    {
-      obj.enabled = false;
-      typename t_storage::hsection	hchild_section = stg.open_section(pname, hparent_section, false);
-      if(!hchild_section) return false;
-      obj.enabled = true;
-      return obj.v._load(stg, hchild_section);
-    }
-    //-------------------------------------------------------------------------------------------------------------------
     template<class stl_container, class t_storage>
     static bool serialize_stl_container_t_val  (const stl_container& container, t_storage& stg, typename t_storage::hsection hparent_section, const char* pname)
     {
+      using value_type = typename stl_container::value_type;
+
       if(!container.size()) return true;
       typename stl_container::const_iterator it = container.begin();
-      typename t_storage::harray hval_array = stg.insert_first_value(pname, *it, hparent_section);
+      typename t_storage::harray hval_array = stg.insert_first_value(pname, value_type(*it), hparent_section);
       CHECK_AND_ASSERT_MES(hval_array, false, "failed to insert first value to storage");
       it++;
       for(;it!= container.end();it++)
-        stg.insert_next_value(hval_array, *it);
+        stg.insert_next_value(hval_array, value_type(*it));
 
       return true;
     }
@@ -141,7 +121,7 @@ namespace epee
         *p_elem = v;
         p_elem++;
       }
-      return stg.set_value(pname, mb, hparent_section);
+      return stg.set_value(pname, std::move(mb), hparent_section);
     }
     //--------------------------------------------------------------------------------------------------------------------
     template<class stl_container, class t_storage>
@@ -156,8 +136,9 @@ namespace epee
         typename stl_container::value_type* pelem =  (typename stl_container::value_type*)buff.data();
         CHECK_AND_ASSERT_MES(!(loaded_size%sizeof(typename stl_container::value_type)), 
           false, 
-          "size in blob " << loaded_size << " not have not zero modulo for sizeof(value_type) = " << sizeof(typename stl_container::value_type));
+          "size in blob " << loaded_size << " not have not zero modulo for sizeof(value_type) = " << sizeof(typename stl_container::value_type) << ", type " << typeid(typename stl_container::value_type).name());
         size_t count = (loaded_size/sizeof(typename stl_container::value_type));
+        hint_resize(container, count);
         for(size_t i = 0; i < count; i++)
           container.insert(container.end(), *(pelem++));
       }
@@ -212,7 +193,7 @@ namespace epee
       template<class t_type, class t_storage>
       static bool kv_serialize(const t_type& d, t_storage& stg, typename t_storage::hsection hparent_section, const char* pname)
       {
-        return stg.set_value(pname, d, hparent_section);
+        return stg.set_value(pname, t_type(d), hparent_section);
       }
       //-------------------------------------------------------------------------------------------------------------------
       template<class t_type, class t_storage>

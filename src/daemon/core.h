@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -28,9 +28,11 @@
 
 #pragma once
 
+#include "blocks/blocks.h"
 #include "cryptonote_core/cryptonote_core.h"
 #include "cryptonote_protocol/cryptonote_protocol_handler.h"
 #include "misc_log_ex.h"
+#include "daemon/command_line_args.h"
 
 #undef MONERO_DEFAULT_LOG_CATEGORY
 #define MONERO_DEFAULT_LOG_CATEGORY "daemon"
@@ -58,6 +60,25 @@ public:
     : m_core{nullptr}
     , m_vm_HACK{vm}
   {
+    //initialize core here
+    MGINFO("Initializing core...");
+#if defined(PER_BLOCK_CHECKPOINT)
+    const cryptonote::GetCheckpointsCallback& get_checkpoints = blocks::GetCheckpointsData;
+#else
+    const cryptonote::GetCheckpointsCallback& get_checkpoints = nullptr;
+#endif
+
+    if (command_line::is_arg_defaulted(vm, daemon_args::arg_proxy) && command_line::get_arg(vm, daemon_args::arg_proxy_allow_dns_leaks)) {
+      MLOG_RED(el::Level::Warning, "--" << daemon_args::arg_proxy_allow_dns_leaks.name << " is enabled, but --"
+        << daemon_args::arg_proxy.name << " is not specified.");
+    }
+
+    const bool allow_dns = command_line::is_arg_defaulted(vm, daemon_args::arg_proxy) || command_line::get_arg(vm, daemon_args::arg_proxy_allow_dns_leaks);
+    if (!m_core.init(m_vm_HACK, nullptr, get_checkpoints, allow_dns))
+    {
+      throw std::runtime_error("Failed to initialize core");
+    }
+    MGINFO("Core initialized OK");
   }
 
   // TODO - get rid of circular dependencies in internals
@@ -66,30 +87,8 @@ public:
     m_core.set_cryptonote_protocol(&protocol);
   }
 
-  std::string get_config_subdir() const
-  {
-    bool testnet = command_line::get_arg(m_vm_HACK, cryptonote::arg_testnet_on);
-    bool stagenet = command_line::get_arg(m_vm_HACK, cryptonote::arg_stagenet_on);
-    bool mainnet = !testnet && !stagenet;
-    std::string port = command_line::get_arg(m_vm_HACK, nodetool::arg_p2p_bind_port);
-    if ((mainnet && port != std::to_string(::config::P2P_DEFAULT_PORT))
-        || (testnet && port != std::to_string(::config::testnet::P2P_DEFAULT_PORT))
-        || (stagenet && port != std::to_string(::config::stagenet::P2P_DEFAULT_PORT))) {
-      return port;
-    }
-    return std::string();
-  }
-
   bool run()
   {
-    //initialize core here
-    MGINFO("Initializing core...");
-    std::string config_subdir = get_config_subdir();
-    if (!m_core.init(m_vm_HACK, config_subdir.empty() ? NULL : config_subdir.c_str()))
-    {
-      return false;
-    }
-    MGINFO("Core initialized OK");
     return true;
   }
 

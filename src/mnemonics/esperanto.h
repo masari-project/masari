@@ -1,5 +1,4 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -38,7 +37,7 @@
  * Sources:
  *   Baza Radikaro Oficiala
  *   Reta Vortaro (http://www.reta-vortaro.de/revo/)
- *   Esperanto Panorama - Esperanto-English Dictionary (http://www.esperanto-panorama.net/vortaro/eoen.htm)
+ *   Esperanto Panorama - Esperanto-English Dictionary (https://www.esperanto-panorama.net/vortaro/eoen.htm)
  *   ESPDIC - Paul Denisowski (http://www.denisowski.org/Esperanto/ESPDIC/espdic.txt)
  */
 
@@ -59,7 +58,10 @@ namespace Language
   class Esperanto: public Base
   {
   public:
-    Esperanto(): Base("Esperanto", "Esperanto", std::vector<std::string>({
+    Esperanto(): Base("Esperanto", "Esperanto", {}, 4)
+    {
+      static constexpr const char * const words[NWORDS] =
+      {
       "abako",
       "abdiki",
       "abelo",
@@ -1095,7 +1097,7 @@ namespace Language
       "mokadi",
       "molaro",
       "momento",
-      "masari",
+      "monero",
       "mopso",
       "mordi",
       "moskito",
@@ -1686,8 +1688,8 @@ namespace Language
       "zorgi",
       "zukino",
       "zumilo",
-      }), 4)
-    {
+      };
+      set_words(words);
       populate_maps();
     }
   };

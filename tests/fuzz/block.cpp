@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018, The Monero Project
+// Copyright (c) 2017-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -33,34 +33,10 @@
 #include "cryptonote_basic/cryptonote_format_utils.h"
 #include "fuzzer.h"
 
-class BlockFuzzer: public Fuzzer
-{
-public:
-  virtual int run(const std::string &filename);
+BEGIN_INIT_SIMPLE_FUZZER()
+END_INIT_SIMPLE_FUZZER()
 
-private:
-};
-
-int BlockFuzzer::run(const std::string &filename)
-{
-  std::string s;
-
-  if (!epee::file_io_utils::load_file_to_string(filename, s))
-  {
-    std::cout << "Error: failed to load file " << filename << std::endl;
-    return 1;
-  }
+BEGIN_SIMPLE_FUZZER()
   cryptonote::block b = AUTO_VAL_INIT(b);
-  if(!parse_and_validate_block_from_blob(s, b))
-  {
-    std::cout << "Error: failed to parse block from file  " << filename << std::endl;
-    return 1;
-  }
-  return 0;
-}
-
-int main(int argc, const char **argv)
-{
-  BlockFuzzer fuzzer;
-  return run_fuzzer(argc, argv, fuzzer);
-}
+  parse_and_validate_block_from_blob(std::string((const char*)buf, len), b);
+END_SIMPLE_FUZZER()

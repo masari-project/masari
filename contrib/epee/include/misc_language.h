@@ -28,83 +28,24 @@
 
 #pragma once
 
-#include <limits>
-#include <boost/thread.hpp>
 #include <boost/utility/value_init.hpp>
+#include <boost/shared_ptr.hpp>
+#include <vector>
 namespace epee
 {
-#define STD_TRY_BEGIN() try {
-
-#define STD_TRY_CATCH(where_, ret_val) \
-	} \
-	catch (const std::exception  &e) \
-	{ \
-		LOG_ERROR("EXCEPTION: " << where_  << ", mes: "<< e.what());  \
-		return ret_val; \
-	} \
-	catch (...) \
-	{ \
-		LOG_ERROR("EXCEPTION: " << where_ ); \
-		return ret_val; \
-	}
-
-
-
 #define AUTO_VAL_INIT(v)   boost::value_initialized<decltype(v)>()
 
 namespace misc_utils
 {
-	template<typename t_type>
-		t_type get_max_t_val(t_type t)
-		{
-			return (std::numeric_limits<t_type>::max)();
-		}
+  bool sleep_no_w(long ms);
 
-		
-	template<typename t_iterator>
-		t_iterator move_it_forward(t_iterator it, size_t count)
-		{
-			while(count--)
-				it++;
-			return it;
-		}
-
-    template<typename t_iterator>
-    t_iterator move_it_backward(t_iterator it, size_t count)
-    {
-      while(count--)
-        it--;
-      return it;
-    }
-
-
-	// TEMPLATE STRUCT less
-	template<class _Ty>
-	struct less_as_pod
-		: public std::binary_function<_Ty, _Ty, bool>
-	{	// functor for operator<
-		bool operator()(const _Ty& _Left, const _Ty& _Right) const
-		{	// apply operator< to operands
-			return memcmp(&_Left, &_Right, sizeof(_Left)) < 0;
-		}
-	};
-
-  template<class _Ty>
-  bool is_less_as_pod(const _Ty& _Left, const _Ty& _Right)
-  {	// apply operator< to operands
-      return memcmp(&_Left, &_Right, sizeof(_Left)) < 0;
+  template <typename T>
+  T get_mid(const T &a, const T &b)
+  {
+    //returns the average of two numbers; overflow safe and works with at least all integral and floating point types
+    //(a+b)/2 = (a/2) + (b/2) + ((a - 2*(a/2)) + (b - 2*(b/2)))/2
+    return (a/2) + (b/2) + ((a - 2*(a/2)) + (b - 2*(b/2)))/2;
   }
-	
-
-	inline
-	bool sleep_no_w(long ms )
-	{
-		boost::this_thread::sleep( 
-			boost::get_system_time() + 
-			boost::posix_time::milliseconds( std::max<long>(ms,0) ) );
-		
-		return true;
-	}
 
   template<class type_vec_type>
   type_vec_type median(std::vector<type_vec_type> &v)
@@ -122,7 +63,7 @@ namespace misc_utils
       return v[n];
     }else 
     {//2, 4, 6...
-      return (v[n-1] + v[n])/2;
+      return get_mid<type_vec_type>(v[n-1],v[n]);
     }
 
   }
@@ -147,7 +88,8 @@ namespace misc_utils
     {}
     ~call_befor_die()
     {
-      m_func();
+      try { m_func(); }
+      catch (...) { /* ignore */ }
     }
   };
 
@@ -157,6 +99,11 @@ namespace misc_utils
     auto_scope_leave_caller slc(new call_befor_die<t_scope_leave_handler>(f));
     return slc;
   }
+
+  template<typename T> struct struct_init: T
+  {
+    struct_init(): T{} {}
+  };
 
 }
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018, The Monero Project
+// Copyright (c) 2017-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -33,6 +33,8 @@
 #include "common/util.h"
 #include "fuzzer.h"
 
+#ifndef OSSFUZZ
+
 #if (!defined(__clang__) || (__clang__ < 5))
 static int __AFL_LOOP(int)
 {
@@ -46,11 +48,17 @@ static int __AFL_LOOP(int)
 
 int run_fuzzer(int argc, const char **argv, Fuzzer &fuzzer)
 {
+  TRY_ENTRY();
+
   if (argc < 2)
   {
     std::cout << "usage: " << argv[0] << " " << "<filename>" << std::endl;
     return 1;
   }
+
+#ifdef __AFL_HAVE_MANUAL_CONTROL
+  __AFL_INIT();
+#endif
 
   int ret = fuzzer.init();
   if (ret)
@@ -65,4 +73,8 @@ int run_fuzzer(int argc, const char **argv, Fuzzer &fuzzer)
   }
 
   return 0;
+
+  CATCH_ENTRY_L0("run_fuzzer", 1);
 }
+
+#endif

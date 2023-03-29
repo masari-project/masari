@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2018, The Monero Project
+# Copyright (c) 2014-2022, The Monero Project
 #
 # All rights reserved.
 #
@@ -31,6 +31,7 @@ set(performance_tests_sources
 
 set(performance_tests_headers
   check_tx_signature.h
+  check_hash.h
   cn_slow_hash.h
   construct_tx.h
   derive_public_key.h
@@ -42,17 +43,21 @@ set(performance_tests_headers
   generate_keypair.h
   signature.h
   is_out_to_acc.h
+  out_can_be_to_acc.h
   subaddress_expand.h
   range_proof.h
   bulletproof.h
+  bulletproof_plus.h
   crypto_ops.h
+  sc_reduce32.h
+  sc_check.h
   multiexp.h
   multi_tx_test_base.h
   performance_tests.h
   performance_utils.h
   single_tx_test_base.h)
 
-add_executable(performance_tests
+monero_add_minimal_executable(performance_tests
   ${performance_tests_sources}
   ${performance_tests_headers})
 target_link_libraries(performance_tests

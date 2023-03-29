@@ -1,4 +1,4 @@
-# Copyright (c) 2014-2018, The Monero Project
+# Copyright (c) 2014-2022, The Monero Project
 #
 # All rights reserved.
 #
@@ -30,22 +30,12 @@ set(cryptonote_core_sources
   blockchain.cpp
   cryptonote_core.cpp
   tx_pool.cpp
+  tx_sanity_check.cpp
   cryptonote_tx_utils.cpp)
 
 set(cryptonote_core_headers)
 
-set(cryptonote_core_private_headers
-  blockchain_storage_boost_serialization.h
-  blockchain.h
-  cryptonote_core.h
-  tx_pool.h
-  cryptonote_tx_utils.h)
-
-if(PER_BLOCK_CHECKPOINT)
-  set(Blocks "blocks")
-else()
-  set(Blocks "")
-endif()
+monero_find_all_headers(cryptonote_core_private_headers "${CMAKE_CURRENT_SOURCE_DIR}")
 
 monero_private_headers(cryptonote_core
   ${cryptonote_core_private_headers})
@@ -59,9 +49,9 @@ target_link_libraries(cryptonote_core
     common
     cncrypto
     blockchain_db
-    multisig
     ringct
     device
+    hardforks
     ${Boost_DATE_TIME_LIBRARY}
     ${Boost_PROGRAM_OPTIONS_LIBRARY}
     ${Boost_SERIALIZATION_LIBRARY}
@@ -69,5 +59,4 @@ target_link_libraries(cryptonote_core
     ${Boost_SYSTEM_LIBRARY}
     ${Boost_THREAD_LIBRARY}
   PRIVATE
-    ${Blocks}
     ${EXTRA_LIBRARIES})

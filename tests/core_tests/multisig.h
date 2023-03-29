@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018, The Monero Project
+// Copyright (c) 2017-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -71,7 +71,7 @@ struct gen_multisig_tx_validation_base : public test_chain_unit_base
 
   bool generate_with(std::vector<test_event_entry>& events, size_t inputs, size_t mixin,
       uint64_t amount_paid, bool valid,
-      size_t threshold, size_t total, size_t creator, std::vector<size_t> signers,
+      size_t threshold, size_t total, size_t creator, std::vector<size_t> other_signers,
       const std::function<void(std::vector<cryptonote::tx_source_entry> &sources, std::vector<cryptonote::tx_destination_entry> &destinations)> &pre_tx,
       const std::function<void(cryptonote::transaction &tx)> &post_tx) const;
 
@@ -82,9 +82,9 @@ private:
 
 template<>
 struct get_test_options<gen_multisig_tx_validation_base> {
-  const std::pair<uint8_t, uint64_t> hard_forks[2] = {std::make_pair(1, 0), std::make_pair(0, 0)};
+  const std::pair<uint8_t, uint64_t> hard_forks[3] = {std::make_pair(1, 0), std::make_pair(HF_VERSION_BULLETPROOF_PLUS, 1), std::make_pair(0, 0)};
   const cryptonote::test_options test_options = {
-    hard_forks
+    hard_forks, 0
   };
 };
 
@@ -161,6 +161,42 @@ struct gen_multisig_tx_valid_89_3_1245789: public gen_multisig_tx_validation_bas
 };
 template<> struct get_test_options<gen_multisig_tx_valid_89_3_1245789>: public get_test_options<gen_multisig_tx_validation_base> {};
 
+struct gen_multisig_tx_valid_24_1_2: public gen_multisig_tx_validation_base
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+template<> struct get_test_options<gen_multisig_tx_valid_24_1_2>: public get_test_options<gen_multisig_tx_validation_base> {};
+
+struct gen_multisig_tx_valid_24_1_2_many_inputs: public gen_multisig_tx_validation_base
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+template<> struct get_test_options<gen_multisig_tx_valid_24_1_2_many_inputs>: public get_test_options<gen_multisig_tx_validation_base> {};
+
+struct gen_multisig_tx_valid_25_1_2: public gen_multisig_tx_validation_base
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+template<> struct get_test_options<gen_multisig_tx_valid_25_1_2>: public get_test_options<gen_multisig_tx_validation_base> {};
+
+struct gen_multisig_tx_valid_25_1_2_many_inputs: public gen_multisig_tx_validation_base
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+template<> struct get_test_options<gen_multisig_tx_valid_25_1_2_many_inputs>: public get_test_options<gen_multisig_tx_validation_base> {};
+
+struct gen_multisig_tx_valid_48_1_234: public gen_multisig_tx_validation_base
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+template<> struct get_test_options<gen_multisig_tx_valid_48_1_234>: public get_test_options<gen_multisig_tx_validation_base> {};
+
+struct gen_multisig_tx_valid_48_1_234_many_inputs: public gen_multisig_tx_validation_base
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+template<> struct get_test_options<gen_multisig_tx_valid_48_1_234_many_inputs>: public get_test_options<gen_multisig_tx_validation_base> {};
+
 // invalid
 struct gen_multisig_tx_invalid_22_1__no_threshold: public gen_multisig_tx_validation_base
 {
@@ -197,3 +233,27 @@ struct gen_multisig_tx_invalid_45_5_23_no_threshold: public gen_multisig_tx_vali
   bool generate(std::vector<test_event_entry>& events) const;
 };
 template<> struct get_test_options<gen_multisig_tx_invalid_45_5_23_no_threshold>: public get_test_options<gen_multisig_tx_validation_base> {};
+
+struct gen_multisig_tx_invalid_24_1_no_signers: public gen_multisig_tx_validation_base
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+template<> struct get_test_options<gen_multisig_tx_invalid_24_1_no_signers>: public get_test_options<gen_multisig_tx_validation_base> {};
+
+struct gen_multisig_tx_invalid_25_1_no_signers: public gen_multisig_tx_validation_base
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+template<> struct get_test_options<gen_multisig_tx_invalid_25_1_no_signers>: public get_test_options<gen_multisig_tx_validation_base> {};
+
+struct gen_multisig_tx_invalid_48_1_no_signers: public gen_multisig_tx_validation_base
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+template<> struct get_test_options<gen_multisig_tx_invalid_48_1_no_signers>: public get_test_options<gen_multisig_tx_validation_base> {};
+
+struct gen_multisig_tx_invalid_48_1_23_no_threshold: public gen_multisig_tx_validation_base
+{
+  bool generate(std::vector<test_event_entry>& events) const;
+};
+template<> struct get_test_options<gen_multisig_tx_invalid_48_1_23_no_threshold>: public get_test_options<gen_multisig_tx_validation_base> {};

@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -35,6 +35,7 @@
 #include <vector>
 
 #include "warnings.h"
+#include "misc_log_ex.h"
 #include "crypto/crypto.h"
 #include "crypto/hash.h"
 #include "crypto-tests.h"
@@ -59,6 +60,7 @@ bool operator !=(const key_derivation &a, const key_derivation &b) {
 DISABLE_GCC_WARNING(maybe-uninitialized)
 
 int main(int argc, char *argv[]) {
+  TRY_ENTRY();
   fstream input;
   string cmd;
   size_t test = 0;
@@ -257,6 +259,24 @@ int main(int argc, char *argv[]) {
       if (expected != actual) {
         goto error;
       }
+    } else if (cmd == "check_ge_p3_identity") {
+      public_key point;
+      bool expected_bad, expected_good, result_badfunc, result_goodfunc;
+      get(input, point, expected_bad, expected_good);
+      result_badfunc = check_ge_p3_identity_failure(point);
+      result_goodfunc = check_ge_p3_identity_success(point);
+      if (expected_bad != result_badfunc || expected_good != result_goodfunc) {
+        goto error;
+      }
+    } else if (cmd == "derive_view_tag") {
+      key_derivation derivation;
+      size_t output_index;
+      view_tag expected, actual;
+      get(input, derivation, output_index, expected);
+      derive_view_tag(derivation, output_index, actual);
+      if (expected != actual) {
+        goto error;
+      }
     } else {
       throw ios_base::failure("Unknown function: " + cmd);
     }
@@ -266,4 +286,5 @@ error:
     error = true;
   }
   return error ? 1 : 0;
+  CATCH_ENTRY_L0("main", 1);
 }

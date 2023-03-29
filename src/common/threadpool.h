@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018, The Monero Project
+// Copyright (c) 2017-2022, The Monero Project
 //
 // All rights reserved.
 //
@@ -42,9 +42,16 @@ namespace tools
 class threadpool
 {
 public:
-  static threadpool& getInstance() {
+  static threadpool& getInstanceForCompute() {
     static threadpool instance;
     return instance;
+  }
+  static threadpool& getInstanceForIO() {
+    static threadpool instance(8);
+    return instance;
+  }
+  static threadpool *getNewForUnitTests(unsigned max_threads = 0) {
+    return new threadpool(max_threads);
   }
 
   // The waiter lets the caller know when all of its
@@ -52,37 +59,48 @@ public:
   class waiter {
     boost::mutex mt;
     boost::condition_variable cv;
+    threadpool &pool;
     int num;
+    bool error_flag;
     public:
     void inc();
     void dec();
-    void wait();  //! Wait for a set of tasks to finish.
-    waiter() : num(0){}
+    bool wait();  //! Wait for a set of tasks to finish, returns false iff any error
+    void set_error() noexcept { error_flag = true; }
+    bool error() const noexcept { return error_flag; }
+    waiter(threadpool &pool) : pool(pool), num(0), error_flag(false) {}
     ~waiter();
   };
 
   // Submit a task to the pool. The waiter pointer may be
   // NULL if the caller doesn't care to wait for the
   // task to finish.
-  void submit(waiter *waiter, std::function<void()> f);
+  void submit(waiter *waiter, std::function<void()> f, bool leaf = false);
 
-  int get_max_concurrency();
+  // destroy and recreate threads
+  void recycle();
+
+  unsigned int get_max_concurrency() const;
+
+  ~threadpool();
 
   private:
-    threadpool();
-    ~threadpool();
+    threadpool(unsigned int max_threads = 0);
+    void destroy();
+    void create(unsigned int max_threads);
     typedef struct entry {
       waiter *wo;
       std::function<void()> f;
+      bool leaf;
     } entry;
     std::deque<entry> queue;
     boost::condition_variable has_work;
     boost::mutex mutex;
     std::vector<boost::thread> threads;
-    int active;
-    int max;
+    unsigned int active;
+    unsigned int max;
     bool running;
-    void run();
+    void run(bool flush = false);
 };
 
 }

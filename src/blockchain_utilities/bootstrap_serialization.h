@@ -1,5 +1,4 @@
-// Copyright (c) 2019, The Masari Project
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 //
 // All rights reserved.
 //
@@ -30,7 +29,7 @@
 #pragma once
 
 #include "cryptonote_basic/cryptonote_boost_serialization.h"
-#include "cryptonote_basic/difficulty.h"
+#include "serialization/difficulty_type.h"
 
 
 namespace cryptonote
@@ -67,36 +66,37 @@ namespace cryptonote
       END_SERIALIZE()
     };
 
-    struct block_package
+    struct block_package_1
     {
       cryptonote::block block;
       std::vector<transaction> txs;
-      size_t block_size;
-      difficulty_type cumulative_difficulty;
-      difficulty_type cumulative_weight;
+      size_t block_weight;
+      uint64_t cumulative_difficulty;
       uint64_t coins_generated;
-
-      cryptonote::block uncle;
-      size_t uncle_size;
-      difficulty_type uncle_difficulty; // cumulative
-      difficulty_type uncle_weight; // cumulative
-      uint64_t uncle_coins_generated;
 
       BEGIN_SERIALIZE()
         FIELD(block)
         FIELD(txs)
-        VARINT_FIELD(block_size)
+        VARINT_FIELD(block_weight)
         VARINT_FIELD(cumulative_difficulty)
-        VARINT_FIELD(cumulative_weight)
         VARINT_FIELD(coins_generated)
-        if (block.uncle != crypto::null_hash)
-        {
-          FIELD(uncle)
-          VARINT_FIELD(uncle_size)
-          VARINT_FIELD(uncle_difficulty)
-          VARINT_FIELD(uncle_weight)
-          VARINT_FIELD(uncle_coins_generated)
-        }
+      END_SERIALIZE()
+    };
+
+    struct block_package
+    {
+      cryptonote::block block;
+      std::vector<transaction> txs;
+      size_t block_weight;
+      difficulty_type cumulative_difficulty;
+      uint64_t coins_generated;
+
+      BEGIN_SERIALIZE()
+        FIELD(block)
+        FIELD(txs)
+        VARINT_FIELD(block_weight)
+        FIELD(cumulative_difficulty)
+        VARINT_FIELD(coins_generated)
       END_SERIALIZE()
     };
 

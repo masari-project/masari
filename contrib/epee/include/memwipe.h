@@ -1,4 +1,4 @@
-// Copyright (c) 2017-2018, The Monero Project
+// Copyright (c) 2017-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -30,9 +30,9 @@
 
 #pragma once
 
-#include <stdio.h>
 #ifdef __cplusplus
 #include <array>
+#include <cstddef>
 
 extern "C" {
 #endif

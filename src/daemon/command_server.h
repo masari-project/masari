@@ -9,7 +9,7 @@ Passing RPC commands:
 
 */
 
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -57,6 +57,7 @@ public:
       uint32_t ip
     , uint16_t port
     , const boost::optional<tools::login>& login
+    , const epee::net_utils::ssl_options_t& ssl_options
     , bool is_rpc = true
     , cryptonote::core_rpc_server* rpc_server = NULL
     );
@@ -71,6 +72,7 @@ public:
 
 private:
   bool help(const std::vector<std::string>& args);
+  bool apropos(const std::vector<std::string>& args);
 
   std::string get_commands_str();
   std::string get_command_usage(const std::vector<std::string> &args);

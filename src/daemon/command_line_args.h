@@ -1,5 +1,4 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2018, The Monero Project
+// Copyright (c) 2014-2022, The Monero Project
 // 
 // All rights reserved.
 // 
@@ -36,7 +35,7 @@
 
 namespace daemon_args
 {
-  std::string const WINDOWS_SERVICE_NAME = "Masari Daemon";
+  std::string const WINDOWS_SERVICE_NAME = "Monero Daemon";
 
   const command_line::arg_descriptor<std::string, false, true, 2> arg_config_file = {
     "config-file"
@@ -73,6 +72,11 @@ namespace daemon_args
   , "Specify maximum log file size [B]"
   , MAX_LOG_FILE_SIZE
   };
+  const command_line::arg_descriptor<std::size_t> arg_max_log_files = {
+    "max-log-files"
+  , "Specify maximum number of rotated log files to be saved (no limit by setting to 0)"
+  , MAX_LOG_FILES
+  };
   const command_line::arg_descriptor<std::string> arg_log_level = {
     "log-level"
   , ""
@@ -90,6 +94,22 @@ namespace daemon_args
     "max-concurrency"
   , "Max number of threads to use for a parallel job"
   , 0
+  };
+
+  const command_line::arg_descriptor<std::string> arg_proxy = {
+    "proxy",
+    "Network communication through proxy: <socks-ip:port> i.e. \"127.0.0.1:9050\"",
+    "",
+  };
+  const command_line::arg_descriptor<bool> arg_proxy_allow_dns_leaks = {
+    "proxy-allow-dns-leaks",
+    "Allow DNS leaks outside of proxy",
+    false,
+  };
+  const command_line::arg_descriptor<bool> arg_public_node = {
+    "public-node"
+  , "Allow other users to use the node as a remote (restricted RPC mode, view-only commands) and advertise it over P2P"
+  , false
   };
 
   const command_line::arg_descriptor<std::string> arg_zmq_rpc_bind_ip   = {
@@ -110,6 +130,15 @@ namespace daemon_args
         return std::to_string(config::stagenet::ZMQ_RPC_DEFAULT_PORT);
       return val;
     }
+  };
+  const command_line::arg_descriptor<std::vector<std::string>> arg_zmq_pub = {
+    "zmq-pub"
+  , "Address for ZMQ pub - tcp://ip:port or ipc://path"
+  };
+
+  const command_line::arg_descriptor<bool> arg_zmq_rpc_disabled = {
+    "no-zmq"
+  , "Disable ZMQ RPC server"
   };
 
 }  // namespace daemon_args

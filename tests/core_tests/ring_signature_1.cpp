@@ -1,6 +1,5 @@
-// Copyright (c) 2017-2018, The Masari Project
-// Copyright (c) 2014-2018, The Monero Project
-//
+// Copyright (c) 2014-2022, The Monero Project
+// 
 // All rights reserved.
 // 
 // Redistribution and use in source and binary forms, with or without modification, are
@@ -88,7 +87,7 @@ bool gen_ring_signature_1::generate(std::vector<test_event_entry>& events) const
   DO_CALLBACK(events, "check_balances_1");                                                             // 23 + 2N
   REWIND_BLOCKS(events, blk_6r, blk_6, miner_account);                                                 // <N blocks>
   // 129 = 11 + 11 + 20 + 29 + 29 + 29
-  MAKE_TX_MIX(events, tx_0, bob_account, alice_account, MK_COINS(129) + 2 * rnd_11 + rnd_20 + 3 * rnd_29 - TESTS_DEFAULT_FEE, 12, blk_6);  // 24 + 3N
+  MAKE_TX_MIX(events, tx_0, bob_account, alice_account, MK_COINS(129) + 2 * rnd_11 + rnd_20 + 3 * rnd_29 - TESTS_DEFAULT_FEE, 2, blk_6);  // 24 + 3N
   MAKE_NEXT_BLOCK_TX1(events, blk_7, blk_6r, miner_account, tx_0);                                     // 25 + 3N
   DO_CALLBACK(events, "check_balances_2");                                                             // 26 + 3N
 
@@ -161,16 +160,15 @@ bool gen_ring_signature_2::generate(std::vector<test_event_entry>& events) const
   MAKE_NEXT_BLOCK(events, blk_1, blk_0, miner_account);                                                 //  3
   MAKE_NEXT_BLOCK(events, blk_2, blk_1, miner_account);                                                 //  4
   MAKE_NEXT_BLOCK(events, blk_3, blk_2, miner_account);                                                 //  5
-  REWIND_BLOCKS(events, blk_3i, blk_3, miner_account);                                                  // <N blocks>
-  REWIND_BLOCKS(events, blk_3r, blk_3i, miner_account);                                                  // <N blocks>
-  MAKE_TX_LIST_START(events, txs_blk_4, miner_account, bob_account, MK_COINS(13), blk_3i);               //  6 + N
-  MAKE_TX_LIST(events, txs_blk_4, miner_account, bob_account, MK_COINS(13), blk_3i);                     //  7 + N
-  MAKE_TX_LIST(events, txs_blk_4, miner_account, bob_account, MK_COINS(13), blk_3i);                     //  8 + N
-  MAKE_TX_LIST(events, txs_blk_4, miner_account, bob_account, MK_COINS(13), blk_3i);                     //  9 + N
+  REWIND_BLOCKS(events, blk_3r, blk_3, miner_account);                                                  // <N blocks>
+  MAKE_TX_LIST_START(events, txs_blk_4, miner_account, bob_account, MK_COINS(13), blk_3);               //  6 + N
+  MAKE_TX_LIST(events, txs_blk_4, miner_account, bob_account, MK_COINS(13), blk_3);                     //  7 + N
+  MAKE_TX_LIST(events, txs_blk_4, miner_account, bob_account, MK_COINS(13), blk_3);                     //  8 + N
+  MAKE_TX_LIST(events, txs_blk_4, miner_account, bob_account, MK_COINS(13), blk_3);                     //  9 + N
   MAKE_NEXT_BLOCK_TX_LIST(events, blk_4, blk_3r, miner_account, txs_blk_4);                             // 10 + N
   DO_CALLBACK(events, "check_balances_1");                                                              // 11 + N
   REWIND_BLOCKS(events, blk_4r, blk_4, miner_account);                                                  // <N blocks>
-  MAKE_TX_MIX(events, tx_0, bob_account, alice_account, MK_COINS(52) - TESTS_DEFAULT_FEE, 12, blk_4);   // 12 + 2N
+  MAKE_TX_MIX(events, tx_0, bob_account, alice_account, MK_COINS(52) - TESTS_DEFAULT_FEE, 3, blk_4);   // 12 + 2N
   MAKE_NEXT_BLOCK_TX1(events, blk_5, blk_4r, miner_account, tx_0);                                      // 13 + 2N
   DO_CALLBACK(events, "check_balances_2");                                                              // 14 + 2N
 
@@ -337,7 +335,11 @@ bool gen_ring_signature_big::check_balances_2(cryptonote::core& c, size_t ev_ind
     CHECK_EQ(balance, get_balance(an_account, chain, mtx));
   }
 
-  CHECK_EQ(m_tx_amount, get_tx_amount(boost::get<transaction>(events[events.size() - 3]), m_alice_account));
+  std::vector<size_t> tx_outs;
+  uint64_t transfered;
+  const transaction& tx = boost::get<transaction>(events[events.size() - 3]);
+  lookup_acc_outs(m_alice_account.get_keys(), boost::get<transaction>(events[events.size() - 3]), get_tx_pub_key_from_extra(tx), get_additional_tx_pub_keys_from_extra(tx), tx_outs, transfered);
+  CHECK_EQ(m_tx_amount, transfered);
 
   return true;
 }
